@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace 'com.pure.diary'
+    namespace 'com.wanderer.journal'
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId "com.pure.diary"
+        applicationId "com.wanderer.journal"
         minSdk 28
         //noinspection OldTargetApi
         targetSdk 36

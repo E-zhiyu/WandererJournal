@@ -1,4 +1,4 @@
-package com.pure.diary;
+package com.wanderer.journal;
 
 import android.content.Context;
 
