@@ -5,13 +5,12 @@ import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.Tables;
 
 import java.time.LocalDate;
 
-@Entity(tableName = Tables.DIARY)
+@Entity(tableName = "diaries")
 @TypeConverters({DateTimeConverter.class})
-public class Diary {
+public class DiaryEntity {
     @PrimaryKey(autoGenerate = true)
     public long diaryId;        //自增主键
     public LocalDate diaryDate; //日记的日期
@@ -21,7 +20,7 @@ public class Diary {
      *
      * @param localDate 日记的日期
      */
-    public Diary(LocalDate localDate) {
+    public DiaryEntity(LocalDate localDate) {
         diaryDate = localDate;
     }
 }

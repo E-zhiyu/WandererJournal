@@ -7,14 +7,13 @@ import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.Tables;
 
 import java.time.LocalDateTime;
 
 @Entity(
-        tableName = Tables.PARAGRAPH,
+        tableName = "paragraphs",
         foreignKeys = @ForeignKey(
-                entity = Diary.class,
+                entity = DiaryEntity.class,
                 parentColumns = "diaryId",
                 childColumns = "parentDiaryId",
                 onDelete = ForeignKey.CASCADE
@@ -22,7 +21,7 @@ import java.time.LocalDateTime;
         indices = {@Index("parentDiaryId")}
 )
 @TypeConverters({DateTimeConverter.class})
-public class Paragraph {
+public class ParagraphEntity {
     @PrimaryKey(autoGenerate = true)
     public long paragraphId;            //自增主键
     public long parentDiaryId;          //所属的日记的编号
@@ -38,7 +37,7 @@ public class Paragraph {
      * @param createTime    写下该段落的具体时间
      * @param orderIndex    在同一个日记中的排序下标
      */
-    public Paragraph(long parentDiaryId, String content, LocalDateTime createTime, int orderIndex) {
+    public ParagraphEntity(long parentDiaryId, String content, LocalDateTime createTime, int orderIndex) {
         this.parentDiaryId = parentDiaryId;
         this.content = content;
         this.createTime = createTime;

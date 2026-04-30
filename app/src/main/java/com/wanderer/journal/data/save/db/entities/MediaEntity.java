@@ -8,13 +8,12 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import com.wanderer.journal.data.save.db.Tables;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 
 @Entity(
-        tableName = Tables.MEDIA,
+        tableName = "medias",
         foreignKeys = @ForeignKey(
-                entity = Paragraph.class,
+                entity = ParagraphEntity.class,
                 parentColumns = "paragraphId",      //参照的列名
                 childColumns = "parentParagraphId", //子列名
                 onDelete = ForeignKey.CASCADE
@@ -22,7 +21,7 @@ import com.wanderer.journal.data.save.db.converters.UriConverter;
         indices = {@Index("parentParagraphId")}     //索引
 )
 @TypeConverters({UriConverter.class})
-public class Media {
+public class MediaEntity {
     @PrimaryKey(autoGenerate = true)
     public long mediaId;            //自增主键
     public Uri fileUri;             //文件Uri
@@ -34,7 +33,7 @@ public class Media {
      * @param parentParagraphId 所属段落的编号
      * @param fileUri           媒体文件的Uri
      */
-    public Media(long parentParagraphId, Uri fileUri) {
+    public MediaEntity(long parentParagraphId, Uri fileUri) {
         this.parentParagraphId = parentParagraphId;
         this.fileUri = fileUri;
     }
