@@ -8,4 +8,17 @@
         <item name="contentInsetStart">10dp</item>
         <item name="titleTextAppearance">?attr/textAppearanceHeadlineSmall</item>
     </style>
+
+    <!-- 底部导航栏样式 -->
+    <style name="NaviStyle" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemTextColor">@color/bottom_navigation_selector</item>
+        <item name="itemIconTint">@color/bottom_navigation_selector</item>
+        <item name="backgroundTint">?attr/colorSurface</item>
+        <item name="itemActiveIndicatorStyle">@style/NaviActiveIndicator</item>
+    </style>
+
+    <!-- 底部导航栏指示器颜色 -->
+    <style name="NaviActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?attr/colorSecondaryContainer</item>
+    </style>
 </resources>
