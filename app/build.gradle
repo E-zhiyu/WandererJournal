@@ -17,6 +17,13 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                // 告诉 Room 将数据库架构导出到指定的 JSON 文件中
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     buildTypes {
@@ -55,4 +62,6 @@ dependencies {
     implementation libs.photoview
     implementation libs.devicecompat                //系统名称判断
     implementation libs.biometric                   //生物验证依赖
+    implementation libs.room.runtime                // Room 核心库
+    annotationProcessor libs.room.compiler          // Room 注解处理器
 }
