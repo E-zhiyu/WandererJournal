@@ -26,8 +26,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -54,4 +53,6 @@ dependencies {
     implementation libs.swiperefreshlayout
     implementation libs.glide
     implementation libs.photoview
+    implementation libs.devicecompat                //系统名称判断
+    implementation libs.biometric                   //生物验证依赖
 }

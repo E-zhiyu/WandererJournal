@@ -12,8 +12,10 @@ viewpager2 = "1.1.0"
 swiperefreshlayout = "1.2.0"
 glide = "5.0.7"
 photoview = "2.3.0"
-activityKtx = "1.8.0"
-constraintlayout = "2.1.4"
+activityKtx = "1.13.0"
+constraintlayout = "2.2.1"
+devicecompat = "2.6"
+biometric = "1.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -30,6 +32,8 @@ glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 photoview = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoview" }
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+devicecompat = { module = "com.github.getActivity:DeviceCompat", version.ref = "devicecompat" }
+biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
