@@ -20,7 +20,6 @@ import com.wanderer.journal.data.save.db.converters.UriConverter;
         ),
         indices = {@Index("parentParagraphId")}     //索引
 )
-@TypeConverters({UriConverter.class})
 public class MediaEntity {
     @PrimaryKey(autoGenerate = true)
     public long mediaId;            //自增主键

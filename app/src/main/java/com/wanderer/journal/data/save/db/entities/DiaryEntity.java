@@ -9,7 +9,6 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import java.time.LocalDate;
 
 @Entity(tableName = "diaries")
-@TypeConverters({DateTimeConverter.class})
 public class DiaryEntity {
     @PrimaryKey(autoGenerate = true)
     public long diaryId;        //自增主键
@@ -18,9 +17,9 @@ public class DiaryEntity {
     /**
      * 日记实体构造方法
      *
-     * @param localDate 日记的日期
+     * @param diaryDate 日记的日期
      */
-    public DiaryEntity(LocalDate localDate) {
-        diaryDate = localDate;
+    public DiaryEntity(LocalDate diaryDate) {
+        this.diaryDate = diaryDate;
     }
 }

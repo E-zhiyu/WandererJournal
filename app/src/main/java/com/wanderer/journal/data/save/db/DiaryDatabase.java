@@ -5,7 +5,10 @@ import android.content.Context;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -21,6 +24,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
         },
         version = 1
 )
+@TypeConverters({DateTimeConverter.class, UriConverter.class})
 public abstract class DiaryDatabase extends RoomDatabase {
     private static volatile DiaryDatabase INSTANCE; //单例实例
 
