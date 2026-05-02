@@ -6,9 +6,6 @@ import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
-
-import com.wanderer.journal.data.save.db.converters.UriConverter;
 
 @Entity(
         tableName = "medias",
@@ -22,9 +19,9 @@ import com.wanderer.journal.data.save.db.converters.UriConverter;
 )
 public class MediaEntity {
     @PrimaryKey(autoGenerate = true)
-    public long mediaId;            //自增主键
-    public Uri fileUri;             //文件Uri
-    public long parentParagraphId;  //所属的段落的编号
+    private long mediaId;            //自增主键
+    private Uri fileUri;             //文件Uri
+    private long parentParagraphId;  //所属的段落的编号
 
     /**
      * 媒体文件实体类的构造方法
@@ -35,5 +32,29 @@ public class MediaEntity {
     public MediaEntity(long parentParagraphId, Uri fileUri) {
         this.parentParagraphId = parentParagraphId;
         this.fileUri = fileUri;
+    }
+
+    public long getMediaId() {
+        return mediaId;
+    }
+
+    public void setMediaId(long mediaId) {
+        this.mediaId = mediaId;
+    }
+
+    public Uri getFileUri() {
+        return fileUri;
+    }
+
+    public void setFileUri(Uri fileUri) {
+        this.fileUri = fileUri;
+    }
+
+    public long getParentParagraphId() {
+        return parentParagraphId;
+    }
+
+    public void setParentParagraphId(long parentParagraphId) {
+        this.parentParagraphId = parentParagraphId;
     }
 }
