@@ -13,9 +13,9 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.widget.TextViewCompat;
 
 import com.google.android.material.textview.MaterialTextView;
-import com.manager.assistant.R;
-import com.manager.assistant.databinding.ViewSettingOptionBinding;
-import com.manager.assistant.helpers.appearence.ColorHelper;
+import com.wanderer.journal.R;
+import com.wanderer.journal.databinding.ViewSettingOptionBinding;
+import com.wanderer.journal.helpers.appearance.ColorHelper;
 
 public class SettingSpinnerView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
     /**

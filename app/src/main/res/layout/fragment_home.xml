@@ -4,10 +4,4 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.pages.main.home.HomeFragment">
-
-    <com.google.android.material.textview.MaterialTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="这是一个"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
 </FrameLayout>

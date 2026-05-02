@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 public class DiaryFragment extends Fragment {
     private FragmentDiaryBinding binding;   //绑定的XML布局
@@ -27,6 +28,8 @@ public class DiaryFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
-
+        //添加FAB
+        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.addFab);
     }
 }

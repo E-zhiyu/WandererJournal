@@ -8,8 +8,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 
 import com.google.android.material.materialswitch.MaterialSwitch;
-import com.manager.assistant.R;
-import com.manager.assistant.databinding.ViewSettingOptionBinding;
+import com.wanderer.journal.R;
+import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 
 public class SettingSwitchView extends SettingOptionViewBase<MaterialSwitch, CompoundButton.OnCheckedChangeListener> {
     /**
