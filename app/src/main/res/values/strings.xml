@@ -4,4 +4,7 @@
     <string name="home_page">主页</string>
     <string name="settings">设置</string>
     <string name="button_to_add">添加按钮</string>
+    <string name="date">日期</string>
+    <string name="paragraph">段落</string>
+    <string name="diary_content">日记内容</string>
 </resources>

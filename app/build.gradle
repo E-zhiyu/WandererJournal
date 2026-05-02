@@ -65,4 +65,5 @@ dependencies {
     implementation libs.biometric                   //生物验证依赖
     implementation libs.room.runtime                // Room 核心库
     annotationProcessor libs.room.compiler          // Room 注解处理器
+    implementation libs.room.rxjava3                // Room的 RxJava 支持
 }
