@@ -7,8 +7,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
-import com.manager.assistant.databinding.ViewSettingOptionBinding;
-import com.manager.assistant.helpers.appearence.AppearanceAnimationHelper;
+import com.wanderer.journal.databinding.ViewSettingOptionBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import org.jetbrains.annotations.Contract;
 

@@ -21,4 +21,25 @@
     <style name="NaviActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">?attr/colorSecondaryContainer</item>
     </style>
+
+    <!-- 卡片样式基类 -->
+    <style name="CardStyleBase" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">@color/card_background_color</item>
+    </style>
+
+    <!-- 中等圆角卡片容器 -->
+    <style name="MediumRadiusCardStyle" parent="CardStyleBase">
+        <item name="cardCornerRadius">20dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+        <item name="android:layout_marginBottom">10dp</item>
+    </style>
+
+    <!-- 图片视图样式 -->
+    <style name="ImageViewStyle">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="tint">?attr/colorPrimary</item>
+        <item name="android:padding">10dp</item>
+    </style>
 </resources>
