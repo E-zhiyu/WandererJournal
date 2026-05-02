@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.diary;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -47,10 +49,16 @@ public class DiaryFragment extends Fragment {
         //添加FAB
         AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
         AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.addFab);
+        binding.addFab.setOnClickListener(view -> {
+            //TODO:这里换成当天日记编辑界面
+            Intent skip2DiaryContent = new Intent(requireContext(), DiaryReadActivity.class);
+            startActivity(skip2DiaryContent);
+        });
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(diary -> {
-            //TODO:点击监听
+            Intent skip2DiaryContent = new Intent(requireContext(), DiaryReadActivity.class);
+            startActivity(skip2DiaryContent);
         });
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());

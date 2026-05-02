@@ -9,6 +9,11 @@
         <item name="titleTextAppearance">?attr/textAppearanceHeadlineSmall</item>
     </style>
 
+    <!-- AppBarLayout样式 -->
+    <style name="AppBarLayoutStyle" parent="Widget.Material3.AppBarLayout">
+        <item name="android:background">?attr/colorSurface</item>
+    </style>
+
     <!-- 底部导航栏样式 -->
     <style name="NaviStyle" parent="Widget.Material3.BottomNavigationView">
         <item name="itemTextColor">@color/bottom_navigation_selector</item>

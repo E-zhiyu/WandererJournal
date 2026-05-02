@@ -7,4 +7,5 @@
     <string name="date">日期</string>
     <string name="paragraph">段落</string>
     <string name="diary_content">日记内容</string>
+    <string name="search_for_diary_content">搜索日记内容……</string>
 </resources>

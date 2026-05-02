@@ -19,6 +19,7 @@ activityKtx = "1.13.0"
 constraintlayout = "2.2.1"
 devicecompat = "2.6"
 biometric = "1.1.0"
+flexbox = "3.0.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -41,6 +42,7 @@ activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 devicecompat = { module = "com.github.getActivity:DeviceCompat", version.ref = "devicecompat" }
 biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
