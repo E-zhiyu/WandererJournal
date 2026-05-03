@@ -41,6 +41,11 @@
         <item name="android:layout_marginBottom">10dp</item>
     </style>
 
+    <!-- 直角卡片容器 -->
+    <style name="RightAngleCardStyle" parent="CardStyleBase">
+        <item name="cardCornerRadius">0dp</item>
+    </style>
+
     <!-- 图片视图样式 -->
     <style name="ImageViewStyle">
         <item name="backgroundTint">@android:color/transparent</item>
@@ -61,5 +66,12 @@
         <item name="android:drawablePadding">5dp</item>
         <item name="android:textSize">18sp</item>
         <item name="android:padding">10dp</item>
+    </style>
+
+    <!-- 图标按钮样式 -->
+    <style name="ImageButtonStyle" parent="Widget.AppCompat.ImageButton">
+        <item name="tint">?attr/colorPrimary</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:background">@drawable/ripple_circle</item>
     </style>
 </resources>

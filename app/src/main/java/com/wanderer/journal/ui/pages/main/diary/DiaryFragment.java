@@ -17,6 +17,7 @@ import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.write.WriteActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -51,7 +52,7 @@ public class DiaryFragment extends Fragment {
         AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.addFab);
         binding.addFab.setOnClickListener(view -> {
             //TODO:这里换成当天日记编辑界面
-            Intent skip2DiaryContent = new Intent(requireContext(), DiaryReadActivity.class);
+            Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
         });
 
