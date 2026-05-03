@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -13,11 +14,21 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHolderDiary> {
     private final OnClickListener listener;
+    private static final DiffUtil.ItemCallback<DiaryEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull DiaryEntity oldItem, @NonNull DiaryEntity newItem) {
+            return oldItem.getDiaryId() == newItem.getDiaryId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull DiaryEntity oldItem, @NonNull DiaryEntity newItem) {
+            //TODO:完成内容是否改变的判断条件
+            return false;
+        }
+    };
 
     /**
      * 日记列表适配器构造方法
@@ -25,7 +36,7 @@ public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHold
      * @param listener ViewHolder点击监听器
      */
     public DiaryAdapter(OnClickListener listener) {
-        super(new DiaryDiffCallback());
+        super(ITEM_CALLBACK);
         this.listener = listener;
     }
 

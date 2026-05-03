@@ -7,6 +7,7 @@ gradle = "9.2.0"
 appcompat = "1.7.1"
 material = "1.13.0"
 materialdatetimepicker = "4.2.3"
+pagingRxjava3 = "3.4.2"
 roomRuntime = "2.8.4"
 roomCompiler = "2.8.4"
 rxjava = "3.1.12"
@@ -29,7 +30,10 @@ gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 materialdatetimepicker = { module = "com.wdullaer:materialdatetimepicker", version.ref = "materialdatetimepicker" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRxjava3" }
+paging-rxjava3 = { module = "androidx.paging:paging-rxjava3", version.ref = "pagingRxjava3" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
+room-paging = { module = "androidx.room:room-paging", version.ref = "roomRuntime" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 room-rxjava3 = { module = "androidx.room:room-rxjava3", version.ref = "roomRuntime" }
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }

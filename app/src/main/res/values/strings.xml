@@ -8,4 +8,6 @@
     <string name="paragraph">段落</string>
     <string name="diary_content">日记内容</string>
     <string name="search_for_diary_content">搜索日记内容……</string>
+    <string name="diary_paragraph">日记段落</string>
+    <string name="date_time">日期和时间</string>
 </resources>

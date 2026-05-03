@@ -64,7 +64,10 @@ dependencies {
     implementation libs.devicecompat                //系统名称判断
     implementation libs.biometric                   //生物验证依赖
     implementation libs.room.runtime                // Room 核心库
+    implementation libs.room.paging                 // Room 的Paging 3支持
     annotationProcessor libs.room.compiler          // Room 注解处理器
     implementation libs.room.rxjava3                // Room的 RxJava 支持
-    implementation libs.flexbox                     //Web上的Flex布局
+    implementation libs.flexbox                     // Web上的Flex布局
+    implementation libs.paging.rxjava3              // Paging 3的 RxJava支持
+    implementation libs.paging.runtime              // RecyclerView 局部加载
 }
