@@ -10,4 +10,5 @@
     <string name="search_for_diary_content">搜索日记内容……</string>
     <string name="diary_paragraph">日记段落</string>
     <string name="date_time">日期和时间</string>
+    <string name="send_btn">发送按钮</string>
 </resources>

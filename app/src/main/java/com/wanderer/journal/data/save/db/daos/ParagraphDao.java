@@ -6,6 +6,8 @@ import androidx.room.Query;
 
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
+import java.time.LocalDate;
+
 @Dao
 public interface ParagraphDao {
     /**
@@ -15,4 +17,14 @@ public interface ParagraphDao {
      */
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
     PagingSource<Integer, ParagraphEntity> getAllParagraphPagingSource();
+
+    /**
+     * 查询某个日期范围内的
+     *
+     * @param start 起始日期
+     * @param end   结束日期（不包含）
+     * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
+     */
+    @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime")
+    PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 }
