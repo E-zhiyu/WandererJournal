@@ -27,7 +27,6 @@ public class ParagraphEntity {
     private long parentDiaryId;          //所属的日记的编号
     private String content;              //段落内容
     private LocalDateTime createTime;    //写下该段落的具体时间
-    private int orderIndex;              //在同一个日记中的排序下标
 
     /**
      * 段落实体类的构造方法
@@ -35,13 +34,11 @@ public class ParagraphEntity {
      * @param parentDiaryId 所属的日记的编号
      * @param content       段落内容
      * @param createTime    写下该段落的具体时间
-     * @param orderIndex    在同一个日记中的排序下标
      */
-    public ParagraphEntity(long parentDiaryId, String content, LocalDateTime createTime, int orderIndex) {
+    public ParagraphEntity(long parentDiaryId, String content, LocalDateTime createTime) {
         this.parentDiaryId = parentDiaryId;
         this.content = content;
         this.createTime = createTime;
-        this.orderIndex = orderIndex;
     }
 
     public long getParagraphId() {
@@ -66,14 +63,6 @@ public class ParagraphEntity {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public int getOrderIndex() {
-        return orderIndex;
-    }
-
-    public void setOrderIndex(int orderIndex) {
-        this.orderIndex = orderIndex;
     }
 
     public LocalDateTime getCreateTime() {

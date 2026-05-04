@@ -2,11 +2,14 @@ package com.wanderer.journal.data.save.db.daos;
 
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
+import androidx.room.Insert;
 import androidx.room.Query;
 
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
+
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ParagraphDao {
@@ -27,4 +30,13 @@ public interface ParagraphDao {
      */
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime")
     PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
+
+    /**
+     * 插入一条日记段落
+     *
+     * @param paragraph 日记段落实例
+     * @return 插入的日记段落自动分配的编号
+     */
+    @Insert
+    Single<Long> insertParagraph(ParagraphEntity paragraph);
 }

@@ -1,6 +1,8 @@
 package com.wanderer.journal.data.save.db.daos;
 
 import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
@@ -35,4 +37,21 @@ public interface DiaryDao {
      */
     @Query("SELECT * FROM diaries ORDER BY diaryDate DESC")
     Flowable<List<DiaryEntity>> getAllDiariesFlowable();
+
+    /**
+     * 插入一条日记
+     * @param diary 新日记内容
+     * @return 日记编号
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    Long insertDiary(DiaryEntity diary);
+
+    /**
+     * 查询目标日期的日记编号
+     *
+     * @param date 日记的日期
+     * @return 日记编号，未查询到返回null
+     */
+    @Query("SELECT diaryId FROM diaries WHERE diaryDate == :date")
+    Long getDiaryIdByDate(LocalDate date);
 }

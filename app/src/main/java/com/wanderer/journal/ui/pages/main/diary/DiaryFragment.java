@@ -51,7 +51,6 @@ public class DiaryFragment extends Fragment {
         AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
         AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.addFab);
         binding.addFab.setOnClickListener(view -> {
-            //TODO:这里换成当天日记编辑界面
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
         });
@@ -71,10 +70,6 @@ public class DiaryFragment extends Fragment {
                         e -> {
                             ExceptionHelper.showExceptionDialog(requireContext(), e);
                             Log.e(LogTags.DIARY_FRAGMENT.n(), "日记数据库读取失败");
-                            //TODO:停止刷新
-                        },
-                        () -> {
-                            //TODO:完成回调
                         }
                 )
         );

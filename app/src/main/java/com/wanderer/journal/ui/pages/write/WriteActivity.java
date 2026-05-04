@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.pages.write;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,12 +12,20 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
+import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.read.ParagraphAdapter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -59,6 +69,47 @@ public class WriteActivity extends AppCompatActivity {
     private void initViews() {
         //初始化RecyclerView
         initRecycler();
+
+        //发送按钮
+        binding.sendBtn.setOnClickListener(view -> {
+            //获取输入内容
+            String content = String.valueOf(binding.contentTextInput.getText());
+            if (content.isEmpty()) {
+                return;
+            }
+
+            //执行写入操作
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            ParagraphDao paragraphDao = db.paragraphDao();
+            DiaryDao diaryDao = db.diaryDao();
+            disposable.add(
+                    Observable.fromCallable(() -> {
+                                Long diaryId = diaryDao.getDiaryIdByDate(LocalDate.now());
+                                if (diaryId == null) {
+                                    DiaryEntity newDiary = new DiaryEntity(LocalDate.now());
+                                    diaryId = diaryDao.insertDiary(newDiary);
+                                }
+
+                                if (diaryId == null) {
+                                    Log.e(LogTags.WRITE_ACTIVITY.n(), "无法新建日记");
+                                    return null;
+                                }
+
+                                ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
+                                return paragraphDao.insertParagraph(newParagraph);
+                            })
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(id -> {
+                                if (id != null) {
+                                    Toast.makeText(this, "日记片段写入成功", Toast.LENGTH_SHORT).show();
+                                    binding.contentTextInput.setText(null);
+                                } else {
+                                    Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+            );
+        });
     }
 
     /**

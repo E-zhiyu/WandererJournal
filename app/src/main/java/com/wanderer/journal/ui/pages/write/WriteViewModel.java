@@ -14,11 +14,16 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import java.time.LocalDate;
 
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 
 public class WriteViewModel extends ViewModel {
+    private final ParagraphDao paragraphDao;
     private final Flowable<PagingData<ParagraphEntity>> pagingDataFlow;
+    private final CompositeDisposable disposable = new CompositeDisposable();
 
     public WriteViewModel(@NonNull ParagraphDao dao) {
+        this.paragraphDao = dao;
+
         // 1. 配置分页参数
         PagingConfig pagingConfig = new PagingConfig(
                 20,      // 每页加载数量
@@ -32,7 +37,7 @@ public class WriteViewModel extends ViewModel {
         LocalDate end = start.plusDays(1);
         Pager<Integer, ParagraphEntity> pager = new Pager<>(
                 pagingConfig,
-                () -> dao.getParagraphPagingSourceInRange(start, end)
+                () -> paragraphDao.getParagraphPagingSourceInRange(start, end)
         );
 
         // 3. 将其暴露给 View 层
@@ -44,5 +49,11 @@ public class WriteViewModel extends ViewModel {
 
     public Flowable<PagingData<ParagraphEntity>> getPagingDataFlow() {
         return pagingDataFlow;
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        disposable.clear();
     }
 }
