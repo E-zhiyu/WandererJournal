@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.paragraph.write;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -17,12 +18,15 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
+import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
@@ -30,7 +34,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class WriteActivity extends AppCompatActivity {
-    private ActivityWriteBinding binding;   //绑定的XML布局
+    private ActivityWriteBinding binding;           //绑定的XML布局
+    private LocalDate diaryDate = LocalDate.now();  //父日记的日期
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -52,6 +57,7 @@ public class WriteActivity extends AppCompatActivity {
             return insets;
         });
 
+        receiveIntent();
         initViews();
     }
 
@@ -61,6 +67,27 @@ public class WriteActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
+    }
+
+    /**
+     * 获取由父界面传递的参数
+     */
+    private void receiveIntent() {
+        Intent intent = getIntent();
+        Bundle dataBundle = intent.getExtras();
+        if (dataBundle == null) {
+            return;
+        }
+
+        //初始化日期数据
+        try {
+            String date = dataBundle.getString(KeyStrings.WRITE_DIARY_DATE.getS());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            diaryDate = LocalDate.parse(date, formatter);
+        } catch (DateTimeParseException e) {
+            Log.e(LogTags.WRITE_ACTIVITY.n(), "无法读取传递的日期数据，已默认设置为当前日期");
+            diaryDate = LocalDate.now();
+        }
     }
 
     /**
@@ -84,9 +111,9 @@ public class WriteActivity extends AppCompatActivity {
             DiaryDao diaryDao = db.diaryDao();
             disposable.add(
                     Observable.fromCallable(() -> {
-                                Long diaryId = diaryDao.getDiaryIdByDate(LocalDate.now());
+                                Long diaryId = diaryDao.getDiaryIdByDate(diaryDate);
                                 if (diaryId == null) {
-                                    DiaryEntity newDiary = new DiaryEntity(LocalDate.now());
+                                    DiaryEntity newDiary = new DiaryEntity(diaryDate);
                                     diaryId = diaryDao.insertDiary(newDiary);
                                 }
 
