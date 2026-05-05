@@ -102,7 +102,6 @@ public class WriteActivity extends AppCompatActivity {
                             .subscribeOn(Schedulers.io())
                             .subscribe(id -> {
                                 if (id != null) {
-                                    Toast.makeText(this, "日记片段写入成功", Toast.LENGTH_SHORT).show();
                                     binding.contentTextInput.setText(null);
                                 } else {
                                     Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();

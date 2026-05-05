@@ -9,8 +9,6 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
 
-import io.reactivex.rxjava3.core.Single;
-
 @Dao
 public interface ParagraphDao {
     /**
@@ -38,5 +36,5 @@ public interface ParagraphDao {
      * @return 插入的日记段落自动分配的编号
      */
     @Insert
-    Single<Long> insertParagraph(ParagraphEntity paragraph);
+    Long insertParagraph(ParagraphEntity paragraph);
 }

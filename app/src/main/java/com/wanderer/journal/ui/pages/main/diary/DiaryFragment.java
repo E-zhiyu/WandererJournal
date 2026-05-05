@@ -57,8 +57,8 @@ public class DiaryFragment extends Fragment {
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(diary -> {
-            Intent skip2DiaryContent = new Intent(requireContext(), DiaryReadActivity.class);
-            startActivity(skip2DiaryContent);
+            Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
+            startActivity(skip2Read);
         });
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
