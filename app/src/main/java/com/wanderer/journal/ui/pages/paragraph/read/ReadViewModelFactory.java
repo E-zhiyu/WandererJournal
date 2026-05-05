@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.read;
+package com.wanderer.journal.ui.pages.paragraph.read;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;

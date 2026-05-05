@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.read;
+package com.wanderer.journal.ui.pages.paragraph.read;
 
 import android.os.Bundle;
 
@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
+import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;

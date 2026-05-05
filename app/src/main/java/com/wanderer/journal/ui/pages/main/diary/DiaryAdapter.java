@@ -65,6 +65,9 @@ public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHold
             super(binding.getRoot());
             this.binding = binding;
 
+            //设置触摸监听
+            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener
                     .onClicked(getBindingAdapterPosition())

@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.write;
+package com.wanderer.journal.ui.pages.paragraph.write;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;

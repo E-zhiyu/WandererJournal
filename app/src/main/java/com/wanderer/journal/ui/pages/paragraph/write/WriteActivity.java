@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.write;
+package com.wanderer.journal.ui.pages.paragraph.write;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -19,7 +19,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
-import com.wanderer.journal.ui.pages.read.ParagraphAdapter;
+import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

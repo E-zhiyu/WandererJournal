@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.read;
+package com.wanderer.journal.ui.pages.paragraph;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +38,9 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
+
+            //设置触摸监听
+            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
 
             //设置监听器
             binding.getRoot().setOnClickListener(view -> listener.onClicked());
