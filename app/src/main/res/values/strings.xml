@@ -17,4 +17,5 @@
     <string name="modify_time">修改时间</string>
     <string name="delete_diary">删除日记</string>
     <string name="delete_paragraph">删除段落</string>
+    <string name="write_diary">写日记</string>
 </resources>
