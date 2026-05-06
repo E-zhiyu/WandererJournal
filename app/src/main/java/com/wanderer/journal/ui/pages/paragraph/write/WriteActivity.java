@@ -1,17 +1,24 @@
 package com.wanderer.journal.ui.pages.paragraph.write;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -20,6 +27,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
 
@@ -34,7 +42,9 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class WriteActivity extends AppCompatActivity {
-    private ActivityWriteBinding binding;           //绑定的XML布局
+    private ActivityWriteBinding binding;                       //绑定的XML布局
+    private ParagraphEntity modifyingParagraph = null;        //正在编辑的段落编号
+    private OnBackPressedCallback backPressedCallback;          //返回手势监听
     private LocalDate diaryDate = LocalDate.now();  //父日记的日期
     private final CompositeDisposable disposable = new CompositeDisposable();
 
@@ -59,6 +69,14 @@ public class WriteActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
+
+        backPressedCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                resetContentModifyMode();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     @Override
@@ -105,37 +123,16 @@ public class WriteActivity extends AppCompatActivity {
                 return;
             }
 
-            //执行写入操作
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
-            ParagraphDao paragraphDao = db.paragraphDao();
-            DiaryDao diaryDao = db.diaryDao();
-            disposable.add(
-                    Observable.fromCallable(() -> {
-                                Long diaryId = diaryDao.getDiaryIdByDate(diaryDate);
-                                if (diaryId == null) {
-                                    DiaryEntity newDiary = new DiaryEntity(diaryDate);
-                                    diaryId = diaryDao.insertDiary(newDiary);
-                                }
-
-                                if (diaryId == null) {
-                                    Log.e(LogTags.WRITE_ACTIVITY.n(), "无法新建日记");
-                                    return null;
-                                }
-
-                                ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
-                                return paragraphDao.insertParagraph(newParagraph);
-                            })
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(id -> {
-                                if (id != null) {
-                                    binding.contentTextInput.setText(null);
-                                } else {
-                                    Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-            );
+            if (modifyingParagraph == null) {
+                addParagraph(content);
+            } else {
+                updateParagraphContent(content, modifyingParagraph);
+                resetContentModifyMode();
+            }
         });
+
+        //内容编辑关闭按钮
+        binding.modifyCloseBtn.setOnClickListener(view -> resetContentModifyMode());
     }
 
     /**
@@ -145,7 +142,34 @@ public class WriteActivity extends AppCompatActivity {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
-                    //TODO:显示编辑选项
+                    PopupMenu menu = new PopupMenu(this, view);
+                    menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
+
+                    menu.setOnMenuItemClickListener(item -> {
+                        if (item.getItemId() == R.id.action_modify_content) {
+                            //保存旧段落引用并启用自定义返回手势
+                            modifyingParagraph = paragraph;
+                            backPressedCallback.setEnabled(true);
+
+                            //更新UI到编辑模式
+                            binding.contentEditCard.setVisibility(View.VISIBLE);
+                            binding.contentTextInput.setText(paragraph.getContent());
+                            binding.originText.setText(paragraph.getContent());
+
+                            //TODO:申请焦点
+                            binding.contentTextInput.requestFocus();
+                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.showSoftInput(binding.contentTextInput, InputMethodManager.SHOW_IMPLICIT);
+
+                            return true;
+                        } else if (item.getItemId() == R.id.action_modify_time) {
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    menu.show();
                 }
         );
         binding.contentRecycler.setAdapter(adapter);
@@ -161,5 +185,82 @@ public class WriteActivity extends AppCompatActivity {
                         adapter.submitData(getLifecycle(), pagingData)
                 )
         );
+    }
+
+    /**
+     * 添加新段落
+     *
+     * @param content 新段落的内容
+     */
+    private void addParagraph(String content) {
+        //执行写入操作
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+        DiaryDao diaryDao = db.diaryDao();
+        disposable.add(
+                Observable.fromCallable(() -> {
+                            Long diaryId = diaryDao.getDiaryIdByDate(diaryDate);
+                            if (diaryId == null) {
+                                DiaryEntity newDiary = new DiaryEntity(diaryDate);
+                                diaryId = diaryDao.insertDiary(newDiary);
+                            }
+
+                            if (diaryId == null) {
+                                Log.e(LogTags.WRITE_ACTIVITY.n(), "无法新建日记");
+                                return null;
+                            }
+
+                            ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
+                            return paragraphDao.insertParagraph(newParagraph);
+                        })
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(id -> {
+                            if (id != null) {
+                                binding.contentTextInput.setText(null);
+                            } else {
+                                Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+        );
+    }
+
+    /**
+     * 更新段落内容
+     *
+     * @param newContent      新内容
+     * @param originParagraph 原本的段落实体
+     */
+    private void updateParagraphContent(String newContent, @NonNull ParagraphEntity originParagraph) {
+        ParagraphEntity newParagraph = new ParagraphEntity(
+                originParagraph.getParentDiaryId(),
+                newContent,
+                originParagraph.getCreateTime()
+        );
+        newParagraph.setParagraphId(originParagraph.getParagraphId());
+
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Toast.makeText(this, "段落内容更新成功", Toast.LENGTH_SHORT).show(),
+                        throwable -> {
+                            ExceptionHelper.showExceptionDialog(this, throwable);
+                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落修改失败");
+                        }
+                )
+        );
+    }
+
+    /**
+     * 重置内容编辑模式
+     */
+    private void resetContentModifyMode() {
+        binding.contentEditCard.setVisibility(View.GONE);
+        modifyingParagraph = null;
+        backPressedCallback.setEnabled(false);
+        binding.contentTextInput.setText(null);
     }
 }
