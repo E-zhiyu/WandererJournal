@@ -42,6 +42,35 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.Vie
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
         this.longClickedListener = longClickedListener;
+
+        //注册数据变更监听器，用于自动更新圆角
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                // 如果在顶部插入了数据，通知原先的第一项（现在的第 itemCount 项）更新圆角
+                if (positionStart == 0 && getItemCount() > itemCount) {
+                    notifyItemChanged(itemCount);
+                }
+
+                // 如果在末尾追加了数据，通知原先的最后一项更新圆角
+                if (positionStart > 0) {
+                    notifyItemChanged(positionStart - 1);
+                }
+            }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                // 如果在顶部删除了数据，通知现在的第一项更新圆角
+                if (positionStart == 0 && getItemCount() > itemCount) {
+                    notifyItemChanged(0);
+                }
+
+                // 如果在末尾删除了数据，通知现在的最后一项更新圆角
+                if (positionStart > 0) {
+                    notifyItemChanged(getItemCount() - 1);
+                }
+            }
+        });
     }
 
     public interface OnClickedListener {
