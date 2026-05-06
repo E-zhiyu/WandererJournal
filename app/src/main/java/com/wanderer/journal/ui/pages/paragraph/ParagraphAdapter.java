@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.paragraph;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, ParagraphAdapter.ParagraphViewHolder> {
+    private final OnClickListener listener;
     private final static DiffUtil.ItemCallback<ParagraphEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphEntity oldItem, @NonNull ParagraphEntity newItem) {
@@ -24,16 +26,28 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
 
         @Override
         public boolean areContentsTheSame(@NonNull ParagraphEntity oldItem, @NonNull ParagraphEntity newItem) {
-            return oldItem.getContent().equals(newItem.getContent());
+            return oldItem.getContent().equals(newItem.getContent()) &&
+                    oldItem.getCreateTime().isEqual(newItem.getCreateTime());
         }
     };
 
     public interface ViewHolderListener {
-        void onClicked();
+        void onClicked(ParagraphEntity paragraph, View view);
+    }
+
+    public interface OnClickListener {
+        /**
+         * 段落被点击的回调
+         *
+         * @param paragraph 被点击的段落
+         * @param view      用于显示PopupMenu的视图
+         */
+        void onClicked(ParagraphEntity paragraph, View view);
     }
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
+        ParagraphEntity paragraph = null;   //段落实例
 
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
@@ -43,12 +57,27 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
             AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
 
             //设置监听器
-            binding.getRoot().setOnClickListener(view -> listener.onClicked());
+            binding.getRoot().setOnClickListener(view -> listener.onClicked(paragraph, binding.getRoot()));
+        }
+
+        /**
+         * 将ViewHolder与数据实例绑定
+         *
+         * @param paragraph 段落实例
+         */
+        public void bindItem(ParagraphEntity paragraph) {
+            this.paragraph = paragraph;
         }
     }
 
-    public ParagraphAdapter() {
+    /**
+     * 段落适配器构造方法
+     *
+     * @param listener 段落点击监听器
+     */
+    public ParagraphAdapter(OnClickListener listener) {
         super(ITEM_CALLBACK);
+        this.listener = listener;
     }
 
     @NonNull
@@ -61,9 +90,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
         );
         return new ParagraphViewHolder(
                 binding,
-                () -> {
-                    //TODO:处理回调
-                }
+                listener::onClicked
         );
     }
 
@@ -73,6 +100,8 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
         if (paragraph == null) {
             return;
         }
+
+        holder.bindItem(paragraph);
 
         String content = paragraph.getContent();
         holder.binding.contentText.setText(content);

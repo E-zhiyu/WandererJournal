@@ -1,17 +1,26 @@
 package com.wanderer.journal.ui.pages.paragraph.read;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
+import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.ui.others.bottom.ParagraphContentModifySheet;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -19,7 +28,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class DiaryReadActivity extends AppCompatActivity {
-    private ActivityDiaryReadBinding binding;   //绑定的XML布局
+    private ActivityDiaryReadBinding binding;               //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -72,7 +81,51 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         //设置适配器
-        ParagraphAdapter adapter = new ParagraphAdapter();
+        ParagraphAdapter adapter = new ParagraphAdapter(
+                (paragraph, view) -> {
+                    PopupMenu menu = new PopupMenu(this, view);
+                    menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
+
+                    menu.setOnMenuItemClickListener(item -> {
+                        if (item.getItemId() == R.id.action_modify_content) {
+                            ParagraphContentModifySheet sheet = new ParagraphContentModifySheet(
+                                    newContent -> {
+                                        ParagraphEntity newParagraph = new ParagraphEntity(
+                                                paragraph.getParentDiaryId(),
+                                                newContent,
+                                                paragraph.getCreateTime()
+                                        );
+                                        newParagraph.setParagraphId(paragraph.getParagraphId());
+
+                                        DiaryDatabase db = DiaryDatabase.getInstance(this);
+                                        ParagraphDao paragraphDao = db.paragraphDao();
+                                        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribeOn(Schedulers.io())
+                                                .subscribe(
+                                                        () -> Toast.makeText(this, "段落内容更新成功", Toast.LENGTH_SHORT).show(),
+                                                        throwable -> {
+                                                            ExceptionHelper.showExceptionDialog(this, throwable);
+                                                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落修改失败");
+                                                        }
+                                                )
+                                        );
+                                    },
+                                    paragraph.getContent()
+                            );
+                            sheet.show(getSupportFragmentManager(), TagStrings.PARAGRAPH_CONTENT_MODIFY_SHEET.getTag());
+
+                            return true;
+                        } else if (item.getItemId() == R.id.action_modify_time) {
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    menu.show();
+                }
+        );
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应

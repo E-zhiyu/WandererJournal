@@ -4,10 +4,13 @@ import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
+
+import io.reactivex.rxjava3.core.Completable;
 
 @Dao
 public interface ParagraphDao {
@@ -37,4 +40,13 @@ public interface ParagraphDao {
      */
     @Insert
     Long insertParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 更新段落
+     *
+     * @param paragraph 修改后的段落
+     * @return 是否成功
+     */
+    @Update
+    Completable updateParagraphContent(ParagraphEntity paragraph);
 }

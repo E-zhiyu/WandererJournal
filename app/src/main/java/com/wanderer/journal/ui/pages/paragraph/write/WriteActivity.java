@@ -143,7 +143,11 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initRecycler() {
         //设置适配器
-        ParagraphAdapter adapter = new ParagraphAdapter();
+        ParagraphAdapter adapter = new ParagraphAdapter(
+                (paragraph, view) -> {
+                    //TODO:显示编辑选项
+                }
+        );
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应

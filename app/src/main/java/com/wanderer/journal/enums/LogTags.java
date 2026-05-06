@@ -2,7 +2,8 @@ package com.wanderer.journal.enums;
 
 public enum LogTags {
     DIARY_FRAGMENT("DiaryFragment"),
-    WRITE_ACTIVITY("WriteActivity");
+    WRITE_ACTIVITY("WriteActivity"),
+    DIARY_READ_ACTIVITY("DiaryReadActivity");
     private final String tagName;
 
     LogTags(String tagName) {

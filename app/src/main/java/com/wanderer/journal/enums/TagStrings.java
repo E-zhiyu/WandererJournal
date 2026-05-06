@@ -1,0 +1,14 @@
+package com.wanderer.journal.enums;
+
+public enum TagStrings {
+    PARAGRAPH_CONTENT_MODIFY_SHEET("paragraph_content_modify_sheet");
+    private final String tag;
+
+    TagStrings(String tag) {
+        this.tag = tag;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+}
