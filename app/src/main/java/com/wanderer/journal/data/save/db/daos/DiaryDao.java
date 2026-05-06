@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.daos;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -11,6 +12,7 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 import java.time.LocalDate;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 
 @Dao
@@ -60,4 +62,13 @@ public interface DiaryDao {
      */
     @Query("SELECT diaryId FROM diaries WHERE diaryDate == :date")
     Long getDiaryIdByDate(LocalDate date);
+
+    /**
+     * 删除日记
+     *
+     * @param diary 待删除的日记实例
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteDiary(DiaryEntity diary);
 }

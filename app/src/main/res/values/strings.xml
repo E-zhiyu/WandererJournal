@@ -15,4 +15,5 @@
     <string name="origin_text">原始文本</string>
     <string name="modify_content">编辑内容</string>
     <string name="modify_time">修改时间</string>
+    <string name="delete_diary">删除日记</string>
 </resources>

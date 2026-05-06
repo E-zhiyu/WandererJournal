@@ -4,14 +4,20 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -59,6 +65,20 @@ public class DiaryFragment extends Fragment {
         DiaryAdapter adapter = new DiaryAdapter(diary -> {
             Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
             startActivity(skip2Read);
+        }, (diary, view) -> {
+            PopupMenu popupMenu = new PopupMenu(requireContext(), view);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.action_delete_diary) {
+                    deleteDiary(diary);
+                    return true;
+                }
+
+                return false;
+            });
+
+            popupMenu.show();
         });
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
@@ -73,5 +93,35 @@ public class DiaryFragment extends Fragment {
                         }
                 )
         );
+    }
+
+    /**
+     * 删除日记
+     *
+     * @param diary 待删除的日记实例
+     */
+    private void deleteDiary(DiaryEntity diary) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.delete_diary)
+                .setMessage("此操作将删除该日记的所有内容，确认继续吗？")
+                .setPositiveButton("确定", (dialogInterface, i) -> {
+                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+                    DiaryDao dao = db.diaryDao();
+
+                    disposable.add(dao.deleteDiary(diary)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(() -> {
+                                        Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
+                                        Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
+                                    },
+                                    throwable -> {
+                                        ExceptionHelper.showExceptionDialog(requireContext(), throwable);
+                                        Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
+                                    })
+                    );
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 }
