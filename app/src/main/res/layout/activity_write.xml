@@ -26,7 +26,7 @@
             style="@style/RightAngleCardStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@id/content_input_card">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -41,8 +41,6 @@
                     android:id="@+id/modify_content_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
                     android:text="@string/modify_content"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     app:layout_constraintBottom_toTopOf="@id/origin_text"
@@ -53,7 +51,9 @@
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/origin_text"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="0dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:text="@string/origin_text"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOutline"

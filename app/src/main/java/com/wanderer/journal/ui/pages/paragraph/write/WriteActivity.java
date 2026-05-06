@@ -1,11 +1,9 @@
 package com.wanderer.journal.ui.pages.paragraph.write;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -27,6 +25,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.helpers.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
@@ -156,13 +155,22 @@ public class WriteActivity extends AppCompatActivity {
                             binding.contentTextInput.setText(paragraph.getContent());
                             binding.originText.setText(paragraph.getContent());
 
-                            //TODO:申请焦点
-                            binding.contentTextInput.requestFocus();
-                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.showSoftInput(binding.contentTextInput, InputMethodManager.SHOW_IMPLICIT);
-
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
+                            DateTimePickerHelper.selectDateTime(
+                                    paragraph.getCreateTime(),
+                                    getSupportFragmentManager(),
+                                    timePicker -> {
+                                        int hour = timePicker.getHour();
+                                        int minute = timePicker.getMinute();
+                                        LocalDateTime newDateTime = paragraph.getCreateTime()
+                                                .withHour(hour)
+                                                .withMinute(minute);
+
+                                        updateParagraphCreateTime(newDateTime, paragraph);
+                                    }
+                            );
+
                             return true;
                         }
 
@@ -245,10 +253,39 @@ public class WriteActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> Toast.makeText(this, "段落内容更新成功", Toast.LENGTH_SHORT).show(),
+                        () -> Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show(),
                         throwable -> {
                             ExceptionHelper.showExceptionDialog(this, throwable);
-                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落修改失败");
+                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落内容修改失败");
+                        }
+                )
+        );
+    }
+
+    /**
+     * 更新段落创建日期
+     *
+     * @param newDateTime     新的日期时间
+     * @param originParagraph 原来的段落实例
+     */
+    private void updateParagraphCreateTime(LocalDateTime newDateTime, @NonNull ParagraphEntity originParagraph) {
+        ParagraphEntity newParagraph = new ParagraphEntity(
+                originParagraph.getParentDiaryId(),
+                originParagraph.getContent(),
+                newDateTime
+        );
+        newParagraph.setParagraphId(originParagraph.getParagraphId());
+
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show(),
+                        throwable -> {
+                            ExceptionHelper.showExceptionDialog(this, throwable);
+                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落创建时间修改失败");
                         }
                 )
         );
