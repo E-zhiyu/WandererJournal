@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,29 +18,34 @@ public interface DiaryDao {
     /**
      * 获取日记数量
      *
-     * @return 日记总数
+     * @return 日记总数，支持响应式更新
      */
     @Query("SELECT COUNT(*) FROM diaries")
-    int getDiaryCount();
+    Flowable<Integer> getDiaryCount();
 
     /**
      * 获取最早的日记日期
      *
-     * @return 最早的日记日期
+     * @return 最早的日记日期，支持响应式更新
      */
     @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
-    LocalDate getEarliestDiaryDate();
+    Flowable<LocalDate> getEarliestDiaryDate();
 
     /**
      * 获取所有日记
      *
-     * @return 由所有日记实体类组成的列表，按照日期倒序排序，并支持响应式更新
+     * @return 由{@link DiaryWithSummary}组成的列表，支持响应式更新
      */
-    @Query("SELECT * FROM diaries ORDER BY diaryDate DESC")
-    Flowable<List<DiaryEntity>> getAllDiariesFlowable();
+    @Query("SELECT d.*," +
+            "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
+            "(SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = d.diaryId) as paragraphCount " +
+            "FROM diaries d " +
+            "ORDER BY diaryDate DESC")
+    Flowable<List<DiaryWithSummary>> getAllDiariesFlowable();
 
     /**
      * 插入一条日记
+     *
      * @param diary 新日记内容
      * @return 日记编号
      */

@@ -9,24 +9,25 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHolderDiary> {
+public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.ViewHolderDiary> {
     private final OnClickListener listener;
-    private static final DiffUtil.ItemCallback<DiaryEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+    private static final DiffUtil.ItemCallback<DiaryWithSummary> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+
         @Override
-        public boolean areItemsTheSame(@NonNull DiaryEntity oldItem, @NonNull DiaryEntity newItem) {
-            return oldItem.getDiaryId() == newItem.getDiaryId();
+        public boolean areItemsTheSame(@NonNull DiaryWithSummary oldItem, @NonNull DiaryWithSummary newItem) {
+            return oldItem.getDiary().getDiaryId() == newItem.getDiary().getDiaryId();
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull DiaryEntity oldItem, @NonNull DiaryEntity newItem) {
-            //TODO:完成内容是否改变的判断条件
-            return false;
+        public boolean areContentsTheSame(@NonNull DiaryWithSummary oldItem, @NonNull DiaryWithSummary newItem) {
+            return oldItem.equals(newItem);
         }
     };
 
@@ -86,7 +87,7 @@ public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHold
         return new ViewHolderDiary(
                 binding,
                 position -> {
-                    DiaryEntity diary = getItem(position);
+                    DiaryEntity diary = getItem(position).getDiary();
                     listener.onClicked(diary);
                 }
         );
@@ -94,13 +95,20 @@ public class DiaryAdapter extends ListAdapter<DiaryEntity, DiaryAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolderDiary holder, int position) {
-        DiaryEntity diary = getItem(position);
+        DiaryWithSummary diaryWithSummary = getItem(position);
 
-        LocalDate date = diary.getDiaryDate();
+        //日期
+        LocalDate date = diaryWithSummary.getDiary().getDiaryDate();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         holder.binding.dateText.setText(date.format(formatter));
 
-        //TODO:补上段落预览以及段落数量显示
+        //片段摘要
+        String paragraphFragment = diaryWithSummary.getParagraphFragment();
+        holder.binding.contentPreviewText.setText(paragraphFragment);
+
+        //片段数量
+        int paragraphCount = diaryWithSummary.getParagraphCount();
+        holder.binding.paragraphCountText.setText(String.valueOf(paragraphCount));
 
         //设置圆角
         AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
