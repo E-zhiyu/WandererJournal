@@ -2,6 +2,7 @@ package com.wanderer.journal.data.save.db.daos;
 
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
@@ -49,4 +50,12 @@ public interface ParagraphDao {
      */
     @Update
     Completable updateParagraphContent(ParagraphEntity paragraph);
+
+    /**
+     * 删除段落
+     * @param paragraph 待删除的段落实例
+     * @return 是否成功
+     */
+    @Delete
+    Completable deleteParagraph(ParagraphEntity paragraph);
 }

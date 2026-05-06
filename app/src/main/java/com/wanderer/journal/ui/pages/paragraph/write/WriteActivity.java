@@ -16,6 +16,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -157,20 +158,10 @@ public class WriteActivity extends AppCompatActivity {
 
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
-                            DateTimePickerHelper.selectDateTime(
-                                    paragraph.getCreateTime(),
-                                    getSupportFragmentManager(),
-                                    timePicker -> {
-                                        int hour = timePicker.getHour();
-                                        int minute = timePicker.getMinute();
-                                        LocalDateTime newDateTime = paragraph.getCreateTime()
-                                                .withHour(hour)
-                                                .withMinute(minute);
-
-                                        updateParagraphCreateTime(newDateTime, paragraph);
-                                    }
-                            );
-
+                            updateParagraphCreateTime(paragraph);
+                            return true;
+                        } else if (item.getItemId() == R.id.action_delete_paragraph) {
+                            deleteParagraph(paragraph);
                             return true;
                         }
 
@@ -253,10 +244,13 @@ public class WriteActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show(),
+                        () -> {
+                            Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show();
+                            Log.i(LogTags.WRITE_ACTIVITY.n(), "段落内容修改成功");
+                        },
                         throwable -> {
                             ExceptionHelper.showExceptionDialog(this, throwable);
-                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落内容修改失败");
+                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落内容修改失败");
                         }
                 )
         );
@@ -265,30 +259,73 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 更新段落创建日期
      *
-     * @param newDateTime     新的日期时间
-     * @param originParagraph 原来的段落实例
+     * @param paragraph 原来的段落实例
      */
-    private void updateParagraphCreateTime(LocalDateTime newDateTime, @NonNull ParagraphEntity originParagraph) {
-        ParagraphEntity newParagraph = new ParagraphEntity(
-                originParagraph.getParentDiaryId(),
-                originParagraph.getContent(),
-                newDateTime
-        );
-        newParagraph.setParagraphId(originParagraph.getParagraphId());
+    private void updateParagraphCreateTime(@NonNull ParagraphEntity paragraph) {
+        DateTimePickerHelper.selectDateTime(
+                paragraph.getCreateTime(),
+                getSupportFragmentManager(),
+                timePicker -> {
+                    int hour = timePicker.getHour();
+                    int minute = timePicker.getMinute();
+                    LocalDateTime newDateTime = paragraph.getCreateTime()
+                            .withHour(hour)
+                            .withMinute(minute);
 
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphDao paragraphDao = db.paragraphDao();
-        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        () -> Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show(),
-                        throwable -> {
-                            ExceptionHelper.showExceptionDialog(this, throwable);
-                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落创建时间修改失败");
-                        }
-                )
+                    ParagraphEntity newParagraph = new ParagraphEntity(
+                            paragraph.getParentDiaryId(),
+                            paragraph.getContent(),
+                            newDateTime
+                    );
+                    newParagraph.setParagraphId(paragraph.getParagraphId());
+
+                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    ParagraphDao paragraphDao = db.paragraphDao();
+                    disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> {
+                                        Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
+                                        Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
+                                    },
+                                    throwable -> {
+                                        ExceptionHelper.showExceptionDialog(this, throwable);
+                                        Log.e(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改失败");
+                                    }
+                            )
+                    );
+                }
         );
+    }
+
+    /**
+     * 删除段落
+     *
+     * @param paragraph 待删除的段落实例
+     */
+    private void deleteParagraph(ParagraphEntity paragraph) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.delete_paragraph)
+                .setMessage("此操作将删除该段落，确定继续吗？")
+                .setPositiveButton("确定", (dialogInterface, i) -> {
+                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    ParagraphDao dao = db.paragraphDao();
+
+                    disposable.add(dao.deleteParagraph(paragraph)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(() -> {
+                                Log.i(LogTags.WRITE_ACTIVITY.n(), "段落删除成功");
+                                Toast.makeText(this, "段落删除成功", Toast.LENGTH_SHORT).show();
+                            }, throwable -> {
+                                Log.e(LogTags.WRITE_ACTIVITY.n(), "段落删除失败");
+                                ExceptionHelper.showExceptionDialog(this, throwable);
+                            })
+                    );
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /**
