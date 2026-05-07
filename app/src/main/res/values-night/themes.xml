@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Theme.WandererJournal" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.WandererJournal.Static" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
@@ -52,6 +52,18 @@
         <item name="drawableTint">?attr/colorPrimary</item>
         <item name="colorControlActivated">?attr/colorPrimary</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="Theme.WandererJournal.Dynamic" parent="Theme.Material3.DynamicColors.Dark.NoActionBar">
+        <!-- 自定义颜色和样式 -->
+        <item name="toolbarStyle">@style/ToolBarStyle</item>
+        <item name="drawableTint">?attr/colorPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>

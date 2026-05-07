@@ -18,4 +18,6 @@
     <string name="delete_diary">删除日记</string>
     <string name="delete_paragraph">删除段落</string>
     <string name="write_diary">写日记</string>
+    <string name="theme_mode">主题模式</string>
+    <string name="dynamic_color">动态配色</string>
 </resources>
