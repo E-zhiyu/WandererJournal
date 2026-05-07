@@ -12,9 +12,13 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import java.time.LocalDate;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 
 @Dao
 public interface ParagraphDao {
+    @Query("SELECT COUNT(*) FROM paragraphs")
+    Flowable<Integer> getParagraphCount();
+
     /**
      * 读取所有段落并支持局部加载
      *
@@ -58,4 +62,6 @@ public interface ParagraphDao {
      */
     @Delete
     Completable deleteParagraph(ParagraphEntity paragraph);
+
+
 }
