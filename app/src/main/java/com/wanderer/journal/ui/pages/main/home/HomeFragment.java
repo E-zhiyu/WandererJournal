@@ -130,7 +130,7 @@ public class HomeFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> {
                     String tip = count == 0 ?
-                            "当前还没有任何日记" :
+                            "没有任何日记" :
                             String.format(
                                     Locale.getDefault(),
                                     "累计记日记%d天",
@@ -146,7 +146,7 @@ public class HomeFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> {
                     String tip = count == 0 ?
-                            "当前还没有任何日记段落" :
+                            "没有任何段落" :
                             String.format(
                                     Locale.getDefault(),
                                     "总共写了%d条段落",
