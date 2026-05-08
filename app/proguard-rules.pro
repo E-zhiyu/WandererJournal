@@ -21,3 +21,4 @@
 #-renamesourcefileattribute SourceFile
 
 -keep class com.wanderer.journal.data.save.db.** { *; } # 保护数据库相关的类
+-keep class com.wanderer.journal.data.pojo.** { *; }    # 保护POJO类
