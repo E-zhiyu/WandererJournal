@@ -3,7 +3,10 @@ package com.wanderer.journal.enums;
 public enum LogTags {
     DIARY_FRAGMENT("DiaryFragment"),
     WRITE_ACTIVITY("WriteActivity"),
-    DIARY_READ_ACTIVITY("DiaryReadActivity");
+    DIARY_READ_ACTIVITY("DiaryReadActivity"),
+    SAF_HELPER("SAFHelper"),
+    LIFECYCLE_MANAGER("LifecycleManager"),
+    BIOMETRIC_HELPER("BiometricHelper");
     private final String tagName;
 
     LogTags(String tagName) {

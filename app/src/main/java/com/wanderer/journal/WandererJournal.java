@@ -24,6 +24,9 @@ public class WandererJournal extends Application {
             //初始化主题模式
             int themeMode = AppSettingsPreference.getThemeMode(this);
             ThemeHelper.applyTheme(themeMode);
+
+            //注册Activity生命周期监听器
+            LifecycleManager.init(this);
         }
     }
 }
