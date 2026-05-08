@@ -1,5 +1,8 @@
 package com.wanderer.journal.data.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class DiaryPojo {
     long diaryId;       //日记编号
     long timeMillis;    //时间戳

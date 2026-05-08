@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers;
+package com.wanderer.journal.helpers.file;
 
 import android.content.Intent;
 import android.util.Log;

@@ -70,4 +70,5 @@ dependencies {
     implementation libs.flexbox                     // Web上的Flex布局
     implementation libs.paging.rxjava3              // Paging 3的 RxJava支持
     implementation libs.paging.runtime              // RecyclerView 局部加载
+    implementation libs.jackson.databind            // JSON 解析
 }

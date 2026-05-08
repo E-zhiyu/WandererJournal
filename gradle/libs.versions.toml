@@ -21,6 +21,7 @@ constraintlayout = "2.2.1"
 devicecompat = "2.6"
 biometric = "1.1.0"
 flexbox = "3.0.0"
+jacksonDatabind = "2.21.3"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -47,6 +48,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 devicecompat = { module = "com.github.getActivity:DeviceCompat", version.ref = "devicecompat" }
 biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,5 +1,8 @@
 package com.wanderer.journal.data.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class MediaPojo {
     long mediaId;           //媒体文件ID
     long parentParagraphId; //所属段落ID

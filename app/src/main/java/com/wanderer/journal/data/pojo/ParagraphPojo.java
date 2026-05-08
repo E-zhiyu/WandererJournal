@@ -1,5 +1,8 @@
 package com.wanderer.journal.data.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class ParagraphPojo {
     long paragraphId;   //段落ID
     long parentDiaryId; //父日记ID
