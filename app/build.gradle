@@ -72,5 +72,5 @@ dependencies {
     implementation libs.paging.runtime              // RecyclerView 局部加载
     implementation libs.jackson.databind            // JSON 解析
     implementation libs.mapstruct                   // Pojo 与 Entity 转换
-    annotationProcessor libs.mapstruct.processor    // Pojo 与 Entity 转换
+    annotationProcessor libs.mapstruct.processor    // Mapstruct 注解处理器
 }
