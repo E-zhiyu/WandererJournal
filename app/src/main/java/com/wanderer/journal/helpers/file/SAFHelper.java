@@ -9,12 +9,6 @@ import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.enums.LogTags;
 
 public class SAFHelper {
-    public interface FileReadCallback {
-        void onSuccess();
-
-        void onError(Throwable e);
-    }
-
     /**
      * 通过SAF打开文件
      *

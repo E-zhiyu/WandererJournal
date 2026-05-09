@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.io.pojo;
+package com.wanderer.journal.data.backup.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
