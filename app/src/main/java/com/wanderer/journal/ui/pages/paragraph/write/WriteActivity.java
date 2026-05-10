@@ -210,27 +210,6 @@ public class WriteActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
-
-//        disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
-//                .flatMap(diaryId -> {
-//                    if (diaryId == null) {
-//                        return Maybe.just(diaryDao.insertDiary(new DiaryEntity(diaryDate)));
-//                    } else {
-//                        return Maybe.just(diaryId);
-//                    }
-//                })
-//                .flatMapCompletable(diaryId -> {
-//                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
-//                    paragraphDao.insertParagraph(newParagraph);
-//                    return Completable.complete();
-//                })
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(
-//                        () -> binding.contentTextInput.setText(null),
-//                        e -> ExceptionHelper.showExceptionDialog(this, e)
-//                )
-//        );
     }
 
     /**
