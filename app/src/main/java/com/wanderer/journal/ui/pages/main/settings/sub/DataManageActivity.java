@@ -459,14 +459,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         LocalDate date = time.toLocalDate();
         disposables.add(diaryDao.getDiaryIdByDate(date)
-                .flatMap(diaryId -> {
-                    if (diaryId == null) {
-                        DiaryEntity newDiary = new DiaryEntity(date);
-                        return Single.just(diaryDao.insertDiary(newDiary));
-                    } else {
-                        return Single.just(diaryId);
-                    }
-                })
+                .switchIfEmpty(Single.defer(() -> diaryDao.insertDiary(new DiaryEntity(date))))
                 .flatMapCompletable(diaryId -> {
                     //生成段落实体列表
                     List<ParagraphEntity> paragraphEntityList = new ArrayList<>();
@@ -476,7 +469,6 @@ public class DataManageActivity extends AppCompatActivity {
 
                         paragraphEntityList.add(new ParagraphEntity(diaryId, line.trim(), time));
                     }
-
                     return paragraphDao.insertParagraph(paragraphEntityList);
                 })
                 .subscribeOn(Schedulers.io())

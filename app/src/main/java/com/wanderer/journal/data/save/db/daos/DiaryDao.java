@@ -14,6 +14,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
@@ -53,7 +54,7 @@ public interface DiaryDao {
      * @return 日记编号
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    Long insertDiary(DiaryEntity diary);
+    Single<Long> insertDiary(DiaryEntity diary);
 
     /**
      * 查询目标日期的日记编号
@@ -62,7 +63,7 @@ public interface DiaryDao {
      * @return 日记编号，未查询到返回null
      */
     @Query("SELECT diaryId FROM diaries WHERE diaryDate == :date")
-    Single<Long> getDiaryIdByDate(LocalDate date);
+    Maybe<Long> getDiaryIdByDate(LocalDate date);
 
     /**
      * 删除日记

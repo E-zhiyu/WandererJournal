@@ -198,13 +198,7 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDao diaryDao = db.diaryDao();
 
         disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
-                .flatMap(diaryId -> {
-                    if (diaryId == null) {
-                        return Single.just(diaryDao.insertDiary(new DiaryEntity(diaryDate)));
-                    } else {
-                        return Single.just(diaryId);
-                    }
-                })
+                .switchIfEmpty(Single.defer(() -> diaryDao.insertDiary(new DiaryEntity(diaryDate))))
                 .flatMap(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
                     return paragraphDao.insertParagraph(newParagraph);
@@ -212,16 +206,31 @@ public class WriteActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        paragraphId -> {
-                            if (paragraphId != null) {
-                                binding.contentTextInput.setText(null);
-                            } else {
-                                Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();
-                            }
-                        },
+                        diaryId -> binding.contentTextInput.setText(null),
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+
+//        disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
+//                .flatMap(diaryId -> {
+//                    if (diaryId == null) {
+//                        return Maybe.just(diaryDao.insertDiary(new DiaryEntity(diaryDate)));
+//                    } else {
+//                        return Maybe.just(diaryId);
+//                    }
+//                })
+//                .flatMapCompletable(diaryId -> {
+//                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
+//                    paragraphDao.insertParagraph(newParagraph);
+//                    return Completable.complete();
+//                })
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                        () -> binding.contentTextInput.setText(null),
+//                        e -> ExceptionHelper.showExceptionDialog(this, e)
+//                )
+//        );
     }
 
     /**
