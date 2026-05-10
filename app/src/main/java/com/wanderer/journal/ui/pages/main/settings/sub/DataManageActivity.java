@@ -48,6 +48,7 @@ public class DataManageActivity extends AppCompatActivity {
     private ActivityDataManageBinding binding;  //绑定的XML布局
     private final CompositeDisposable disposables = new CompositeDisposable();      //多线程任务列表
     private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //活动启动器
+    private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    exportData(data.getData());
+                    exportData(data.getData(), exportChoiceStatList);
                 }
         );
 
@@ -120,20 +121,7 @@ public class DataManageActivity extends AppCompatActivity {
                 R.drawable.outline_file_export_24,
                 SettingOptionViewBase.RadiusStyle.TOP
         );
-        exportDataOption.setFunctionListener(v -> {
-            //生成默认文件名
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd(HHmmss)");
-            String fileName = String.format(
-                    Locale.getDefault(),
-                    "WandererJournalBackup_%s.zip",
-                    LocalDateTime.now().format(formatter)
-            );
-            SAFHelper.createDocumentViaSAF(
-                    "application/zip",
-                    fileName,
-                    exportDataLauncher
-            );
-        });
+        exportDataOption.setFunctionListener(v -> showExportChoiceDialog());
 
         //导入数据
         SettingClickableTextView importDataOption = new SettingClickableTextView(
@@ -151,11 +139,59 @@ public class DataManageActivity extends AppCompatActivity {
     }
 
     /**
+     * 显示导出数据时的多选对话框
+     */
+    private void showExportChoiceDialog() {
+        //实例化选项列表
+        List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+                .map(backupDataType ->
+                        new MultiChoiceDialog.ChoiceItem(true, backupDataType.getTitle(), true)
+                )
+                .collect(Collectors.toList());
+
+        //显示多选对话框
+        MultiChoiceDialog dialog = new MultiChoiceDialog(
+                this,
+                "导出数据",
+                itemList,
+                checkedStatList -> {
+                    //判断是否没有选择任何一个选项
+                    if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
+                        Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    //保存选择结果引用
+                    exportChoiceStatList = checkedStatList;
+
+                    //生成默认文件名
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd(HHmmss)");
+                    String fileName = String.format(
+                            Locale.getDefault(),
+                            "WandererJournalBackup_%s.zip",
+                            LocalDateTime.now().format(formatter)
+                    );
+
+                    //打开 SAF 用于创建压缩包文件
+                    SAFHelper.createDocumentViaSAF(
+                            "application/zip",
+                            fileName,
+                            exportDataLauncher
+                    );
+                }
+        );
+        dialog.buildDialog(() -> {
+                }, true
+        );
+        dialog.show();
+    }
+
+    /**
      * 导出数据到文件
      *
      * @param uri 用户通过 SAF 创建的 zip 文件的 Uri
      */
-    private void exportData(Uri uri) {
+    private void exportData(Uri uri, List<Boolean> checkedStats) {
         //显示进度条对话框
         ProgressDialog progressDialog = new ProgressDialog(this, "导出数据", "正在导出数据……");
         progressDialog.buildDialog(
@@ -170,7 +206,7 @@ public class DataManageActivity extends AppCompatActivity {
         //收集用户没有忽略的数据类型
         List<Completable> taskList = new ArrayList<>();
         for (BackupDataType type : BackupDataType.values()) {
-            if (true) { //TODO:完善过滤逻辑
+            if (checkedStats.get(type.ordinal())) {
                 BackupHelperBase<?, ?> backupHelper = type.createBackupHelper(this);
                 taskList.add(backupHelper.exportDataToTempFile(this));
             }
@@ -184,9 +220,11 @@ public class DataManageActivity extends AppCompatActivity {
                 .subscribe(() -> {
                     Toast.makeText(this, "数据导出完毕", Toast.LENGTH_SHORT).show();
                     progressDialog.dismiss();
+                    FileHelper.clearTempDataDir(this);
                 }, e -> {
                     ExceptionHelper.showExceptionDialog(this, e);
                     progressDialog.dismiss();
+                    FileHelper.clearTempDataDir(this);
                 })
         );
     }
@@ -263,14 +301,7 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void importData(Uri uri, @NonNull List<Boolean> checkedStatList) {
         //判断是否选择了数据
-        boolean isAllFalse = true;
-        for (boolean b : checkedStatList) {
-            if (b) {
-                isAllFalse = false;
-                break;
-            }
-        }
-        if (isAllFalse) {
+        if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
             Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
             return;
         }
