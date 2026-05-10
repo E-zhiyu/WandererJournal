@@ -48,6 +48,7 @@ public class DataManageActivity extends AppCompatActivity {
     private final CompositeDisposable disposables = new CompositeDisposable();      //多线程任务列表
     private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //活动启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
+    private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    exportData(data.getData(), exportChoiceStatList);
+                    exportData(data.getData(), exportChoiceStatList, exportIncludeMedia);
                 }
         );
 
@@ -162,6 +163,7 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //保存选择结果引用
                     exportChoiceStatList = checkedStatList;
+                    exportIncludeMedia = checkedStatList.get(0);
 
                     //生成默认文件名
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd(HHmmss)");
@@ -188,9 +190,11 @@ public class DataManageActivity extends AppCompatActivity {
     /**
      * 导出数据到文件
      *
-     * @param uri 用户通过 SAF 创建的 zip 文件的 Uri
+     * @param uri          用户通过 SAF 创建的 zip 文件的 Uri
+     * @param checkedStats 备份数据选项选择情况
+     * @param includeMedia 是否导出媒体文件
      */
-    private void exportData(Uri uri, List<Boolean> checkedStats) {
+    private void exportData(Uri uri, List<Boolean> checkedStats, boolean includeMedia) {
         //显示进度条对话框
         ProgressDialog progressDialog = new ProgressDialog(this, "导出数据", "正在导出数据……");
         progressDialog.buildDialog(
@@ -202,7 +206,7 @@ public class DataManageActivity extends AppCompatActivity {
                 false);
         progressDialog.show();
 
-        //收集用户没有忽略的数据类型
+        //收集用户没有忽略的数据类型，并将这些数据导出为临时文件
         List<Completable> taskList = new ArrayList<>();
         for (BackupDataType type : BackupDataType.values()) {
             if (checkedStats.get(type.ordinal())) {
@@ -213,7 +217,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         //并行执行数据导出逻辑
         disposables.add(Completable.merge(taskList)
-                .andThen(ZipHelper.zipBackupTask(uri, this))
+                .andThen(ZipHelper.createBackupFile(uri, this, includeMedia))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(() -> {

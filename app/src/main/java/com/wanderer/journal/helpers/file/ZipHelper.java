@@ -71,9 +71,15 @@ public class ZipHelper {
      * @param tempDir      临时数据目录
      * @param imageDir     媒体目录，若为 null 则不添加媒体目录
      * @param outputStream 由 SAF Uri 转换而来的输出流
+     * @param includeMedia 是否打包媒体文件
      * @throws IOException 文件写入失败引发的异常
      */
-    public static void createBackupZip(@NonNull File tempDir, @Nullable File imageDir, OutputStream outputStream) throws IOException {
+    public static void createBackupZip(
+            @NonNull File tempDir,
+            @Nullable File imageDir,
+            OutputStream outputStream,
+            boolean includeMedia
+    ) throws IOException {
         // 将 ZipOutputStream 包装在外部传入的流上
         try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
 
@@ -86,20 +92,21 @@ public class ZipHelper {
             }
 
             // 2. 将图片目录整体添加进去
-            if (imageDir != null && imageDir.exists() && imageDir.isDirectory()) {
+            if (includeMedia && imageDir != null && imageDir.exists() && imageDir.isDirectory()) {
                 addToZip(imageDir, imageDir.getName(), zos);
             }
         }
     }
 
     /**
-     * 创建将导出的临时备份文件打包为压缩包的任务
+     * 生成备份文件
      *
-     * @param targetUri 目标压缩包的 Uri
-     * @param context   上下文
+     * @param targetUri    目标压缩包的 Uri
+     * @param context      上下文
+     * @param includeMedia 是否打包临时文件目录
      * @return 是否成功
      */
-    public static Completable zipBackupTask(Uri targetUri, Context context) {
+    public static Completable createBackupFile(Uri targetUri, Context context, boolean includeMedia) {
         File tempDir = DirectoryPaths.DATA_TEMP.getDir(context);
         File mediaDir = DirectoryPaths.MEDIA.getDir(context);
 
@@ -115,9 +122,7 @@ public class ZipHelper {
             }
 
             try {
-                // 2. 调用压缩逻辑
-                // 现在的逻辑是直接流式写入 SAF 指向的文件，不再需要中间的临时 Zip 文件
-                ZipHelper.createBackupZip(tempDir, mediaDir, os);
+                ZipHelper.createBackupZip(tempDir, mediaDir, os, includeMedia);
             } finally {
                 // 3. 无论成功失败，清理临时 JSON 目录
                 FileHelper.clearTempDataDir(context);
