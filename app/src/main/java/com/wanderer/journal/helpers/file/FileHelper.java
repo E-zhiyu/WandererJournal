@@ -77,6 +77,16 @@ public class FileHelper {
     }
 
     /**
+     * 清空媒体文件夹
+     *
+     * @param context 上下文
+     */
+    public static void clearMediaDir(Context context) {
+        File mediaDir = DirectoryPaths.MEDIA.getDir(context);
+        clearDir(mediaDir);
+    }
+
+    /**
      * 清理某个目录
      *
      * @param dir 需要被清理的目录

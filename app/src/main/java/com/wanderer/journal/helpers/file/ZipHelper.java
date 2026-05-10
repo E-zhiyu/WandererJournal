@@ -177,6 +177,12 @@ public class ZipHelper {
             File mediaDir = DirectoryPaths.MEDIA.getDir(context);
             String mediaDirName = DirectoryPaths.MEDIA.getChildDirName() + "/";
 
+            //清空媒体文件目录
+            if (includeMedia) {
+                FileHelper.clearMediaDir(context);
+            }
+
+            //创建共享缓冲区，防止频繁GC
             List<File> extractedJsonFiles = new ArrayList<>();
             byte[] jsonBuffer = new byte[1024 * 8];
             byte[] mediaBuffer = new byte[1024 * 32];
