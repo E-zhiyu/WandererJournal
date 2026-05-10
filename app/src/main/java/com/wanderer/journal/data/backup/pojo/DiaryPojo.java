@@ -1,11 +1,11 @@
-package com.wanderer.journal.data.pojo;
+package com.wanderer.journal.data.backup.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class DiaryPojo {
     long diaryId;       //日记编号
-    long timeMillis;    //时间戳
+    long diaryDate;     //时间戳
 
     public DiaryPojo() {
     }
@@ -18,11 +18,11 @@ public class DiaryPojo {
         this.diaryId = diaryId;
     }
 
-    public long getTimeMillis() {
-        return timeMillis;
+    public long getDiaryDate() {
+        return diaryDate;
     }
 
-    public void setTimeMillis(long timeMillis) {
-        this.timeMillis = timeMillis;
+    public void setDiaryDate(long diaryDate) {
+        this.diaryDate = diaryDate;
     }
 }

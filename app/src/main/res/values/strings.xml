@@ -27,4 +27,9 @@
     <string name="authentication">身份验证</string>
     <string name="hide_recent_task">最近任务隐藏</string>
     <string name="authentication_opportunity">身份验证时机</string>
+    <string name="progressing">正在处理……</string>
+    <string name="progress_0">0/0 (0%)</string>
+    <string name="data_manage">数据管理</string>
+    <string name="export_data">导出数据</string>
+    <string name="import_data">导入数据</string>
 </resources>

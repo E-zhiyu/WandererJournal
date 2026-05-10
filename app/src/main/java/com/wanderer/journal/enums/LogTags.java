@@ -6,7 +6,9 @@ public enum LogTags {
     DIARY_READ_ACTIVITY("DiaryReadActivity"),
     SAF_HELPER("SAFHelper"),
     LIFECYCLE_MANAGER("LifecycleManager"),
-    BIOMETRIC_HELPER("BiometricHelper");
+    BIOMETRIC_HELPER("BiometricHelper"),
+    DATA_IO_HELPER("DataIOHelper"),
+    ZIP_HELPER("ZipHelper");
     private final String tagName;
 
     LogTags(String tagName) {

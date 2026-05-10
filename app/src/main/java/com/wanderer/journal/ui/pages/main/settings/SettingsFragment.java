@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -26,6 +27,7 @@ import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingC
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSpinnerView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
+import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -50,6 +52,20 @@ public class SettingsFragment extends Fragment {
     private void initViews() {
         //初始化软件设置
         initAppSettings();
+
+        //数据管理设置
+        SettingClickableTextView dataManage = new SettingClickableTextView(
+                requireContext(),
+                binding.dataManageOption,
+                R.string.data_manage,
+                "点击跳转数据管理界面",
+                R.drawable.outline_database_24,
+                SettingOptionViewBase.RadiusStyle.SINGLE
+        );
+        dataManage.setFunctionListener(view -> {
+            Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
+            startActivity(skip2DataManage);
+        });
 
         //初始化安全设置
         initSecuritySettings();

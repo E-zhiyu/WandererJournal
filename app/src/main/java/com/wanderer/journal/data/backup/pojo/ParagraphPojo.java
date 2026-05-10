@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.pojo;
+package com.wanderer.journal.data.backup.pojo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class ParagraphPojo {
     long paragraphId;   //段落ID
     long parentDiaryId; //父日记ID
-    long timeMillis;    //时间戳
+    long createTime;    //创建时间戳
     String content;     //内容
 
     public ParagraphPojo() {
@@ -28,12 +28,12 @@ public class ParagraphPojo {
         this.parentDiaryId = parentDiaryId;
     }
 
-    public long getTimeMillis() {
-        return timeMillis;
+    public long getCreateTime() {
+        return createTime;
     }
 
-    public void setTimeMillis(long timeMillis) {
-        this.timeMillis = timeMillis;
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
     }
 
     public String getContent() {

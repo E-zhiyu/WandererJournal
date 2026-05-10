@@ -4,12 +4,14 @@ import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -57,11 +59,32 @@ public interface ParagraphDao {
 
     /**
      * 删除段落
+     *
      * @param paragraph 待删除的段落实例
      * @return 是否成功
      */
     @Delete
     Completable deleteParagraph(ParagraphEntity paragraph);
 
+    /**
+     * 读取所有数据用于导出
+     *
+     * @return 段落实体列表
+     */
+    @Query("SELECT * FROM paragraphs")
+    List<ParagraphEntity> exportData();
 
+    /**
+     * 清空所有数据，准备导入新数据
+     */
+    @Query("DELETE FROM paragraphs")
+    void clear();
+
+    /**
+     * 导入新数据
+     *
+     * @param paragraphEntityList 待导入数据的实体列表
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void importData(List<ParagraphEntity> paragraphEntityList);
 }

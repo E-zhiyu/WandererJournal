@@ -33,6 +33,9 @@
             android:name=".ui.pages.paragraph.read.DiaryReadActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.pages.main.settings.sub.DataManageActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.pages.main.MainActivity"
             android:exported="true">
             <intent-filter>
