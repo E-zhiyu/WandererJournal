@@ -44,7 +44,7 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
         return Completable.defer(() -> {
             try {
                 //读取文件内容
-                String json = FileHelper.readFileContent(file);
+                String json = FileHelper.readContent(file);
 
                 //得到数据字典实例
                 ObjectMapper mapper = new ObjectMapper();

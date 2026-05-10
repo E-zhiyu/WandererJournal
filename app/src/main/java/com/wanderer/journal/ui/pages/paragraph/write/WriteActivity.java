@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -196,31 +196,31 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
         DiaryDao diaryDao = db.diaryDao();
-        disposable.add(
-                Observable.fromCallable(() -> {
-                            Long diaryId = diaryDao.getDiaryIdByDate(diaryDate);
-                            if (diaryId == null) {
-                                DiaryEntity newDiary = new DiaryEntity(diaryDate);
-                                diaryId = diaryDao.insertDiary(newDiary);
-                            }
 
-                            if (diaryId == null) {
-                                Log.e(LogTags.WRITE_ACTIVITY.n(), "无法新建日记");
-                                return null;
-                            }
-
-                            ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
-                            return paragraphDao.insertParagraph(newParagraph);
-                        })
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(id -> {
-                            if (id != null) {
+        disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
+                .flatMap(diaryId -> {
+                    if (diaryId == null) {
+                        return Single.just(diaryDao.insertDiary(new DiaryEntity(diaryDate)));
+                    } else {
+                        return Single.just(diaryId);
+                    }
+                })
+                .flatMap(diaryId -> {
+                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
+                    return paragraphDao.insertParagraph(newParagraph);
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        paragraphId -> {
+                            if (paragraphId != null) {
                                 binding.contentTextInput.setText(null);
                             } else {
                                 Toast.makeText(this, "日记片段写入失败", Toast.LENGTH_SHORT).show();
                             }
-                        })
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
         );
     }
 

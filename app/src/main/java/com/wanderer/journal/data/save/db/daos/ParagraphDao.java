@@ -15,6 +15,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ParagraphDao {
@@ -36,7 +37,7 @@ public interface ParagraphDao {
      * @param end   结束日期（不包含）
      * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
      */
-    @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime")
+    @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
     PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
     /**
@@ -45,8 +46,17 @@ public interface ParagraphDao {
      * @param paragraph 日记段落实例
      * @return 插入的日记段落自动分配的编号
      */
-    @Insert
-    Long insertParagraph(ParagraphEntity paragraph);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    Single<Long> insertParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 批量插入日记段落
+     *
+     * @param paragraphEntityList 段落实体列表
+     * @return 是否完成
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    Completable insertParagraph(List<ParagraphEntity> paragraphEntityList);
 
     /**
      * 更新段落

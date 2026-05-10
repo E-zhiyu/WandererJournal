@@ -32,4 +32,5 @@
     <string name="data_manage">数据管理</string>
     <string name="export_data">导出数据</string>
     <string name="import_data">导入数据</string>
+    <string name="append_paragraph">段落追加</string>
 </resources>
