@@ -1,6 +1,9 @@
 package com.wanderer.journal.helpers.file;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.DocumentsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -15,8 +18,76 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 通过多线程读取文件内容以及最后编辑时间
+     *
+     * @param uri     待读取的文件的 Uri
+     * @param context 上下文
+     * @return 文件数据实例
+     */
+    public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
+        return Single.fromCallable(() -> {
+            String content = readContent(uri, context);
+            long lastModifyTime = getFileLastModifyTime(uri, context);
+            return new TextFileData(content, lastModifyTime);
+        });
+    }
+
+    /**
+     * 获取文件最后的编辑时间
+     *
+     * @param uri     需要获取创建时间的文件的 Uri
+     * @param context 上下文
+     * @return 文件最后编辑时间的时间戳
+     */
+    public static long getFileLastModifyTime(Uri uri, Context context) {
+        long lastModified = 0;
+
+        // 查询系统媒体/文件库
+        try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                // 尝试获取修改时间列的索引
+                int index = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
+                if (index != -1) {
+                    // 该值是毫秒单位的时间戳
+                    lastModified = cursor.getLong(index);
+                }
+            }
+        }
+
+        return lastModified;
+    }
+
+    /**
+     * 通过多线程读取文本文件的内容
+     *
+     * @param uri     待读取的文本文件的 Uri
+     * @param context 上下文
+     * @return 文本文件的内容字符串
+     * @throws IOException 文件内容读取失败引发的异常
+     */
+    @NonNull
+    public static String readContent(Uri uri, Context context) throws IOException {
+        StringBuilder builder = new StringBuilder();
+
+        try (InputStream is = context.getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+                builder.append("\n");
+            }
+        }
+
+        return builder.toString();
+    }
+
     /**
      * 读取文本文件内容
      *
@@ -25,7 +96,7 @@ public class FileHelper {
      * @throws IOException 文件内容读取失败引发的异常
      */
     @NonNull
-    public static String readFileContent(File file) throws IOException {
+    public static String readContent(File file) throws IOException {
         StringBuilder content = new StringBuilder();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {

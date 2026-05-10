@@ -14,6 +14,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface DiaryDao {
@@ -61,7 +62,7 @@ public interface DiaryDao {
      * @return 日记编号，未查询到返回null
      */
     @Query("SELECT diaryId FROM diaries WHERE diaryDate == :date")
-    Long getDiaryIdByDate(LocalDate date);
+    Single<Long> getDiaryIdByDate(LocalDate date);
 
     /**
      * 删除日记

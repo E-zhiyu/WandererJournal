@@ -15,10 +15,18 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.enums.BackupDataType;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.StringHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
@@ -29,6 +37,7 @@ import com.wanderer.journal.ui.others.dialogs.ProgressDialog;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,13 +49,15 @@ import java.util.stream.Collectors;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class DataManageActivity extends AppCompatActivity {
     private ActivityDataManageBinding binding;  //绑定的XML布局
     private final CompositeDisposable disposables = new CompositeDisposable();      //多线程任务列表
-    private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //活动启动器
+    private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //数据导入和导出的启动器
+    private ActivityResultLauncher<Intent> appendFromFileLauncher;                  //从外部文件追加段落的启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
     private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
 
@@ -70,7 +81,7 @@ public class DataManageActivity extends AppCompatActivity {
         });
 
         initActivityLaunchers();
-        initDataManageSettings();
+        initViews();
     }
 
     /**
@@ -104,6 +115,39 @@ public class DataManageActivity extends AppCompatActivity {
                     showImportChoiceDialog(data.getData());
                 }
         );
+
+        appendFromFileLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    int resultCode = result.getResultCode();
+                    Intent data = result.getData();
+                    if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+                        FileHelper.clearTempDataDir(this);
+                        return;
+                    }
+
+                    showFileInfosDialog(data.getData());
+                }
+        );
+    }
+
+    private void initViews() {
+        //初始化数据管理设置
+        initDataManageSettings();
+
+        //从外部文本追加
+        SettingClickableTextView appendFromFileOption = new SettingClickableTextView(
+                this,
+                binding.appendFromFileOption,
+                R.string.append_paragraph,
+                "从外部文件中追加段落",
+                R.drawable.outline_convert_to_text_24,
+                SettingOptionViewBase.RadiusStyle.SINGLE
+        );
+        appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
+                new String[]{"text/plain"},
+                appendFromFileLauncher
+        ));
     }
 
     /**
@@ -354,6 +398,92 @@ public class DataManageActivity extends AppCompatActivity {
                             ExceptionHelper.showExceptionDialog(this, e);
                             progressDialog.dismiss();
                         }
+                )
+        );
+    }
+
+    /**
+     * 从外部文件追加段落
+     *
+     * @param uri 通过 SAF 选择的文件的 Uri
+     */
+    private void showFileInfosDialog(Uri uri) {
+        disposables.add(FileHelper.readContentWithLastModifyTime(uri, this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        data -> {
+                            //获取基本数据
+                            String content = data.getContent();
+                            long lastModifyTime = data.getLastModifyTime();
+                            LocalDateTime time = DateTimeConverter.toLocalDateTime(lastModifyTime);
+                            int lineCount = StringHelper.countLinesSplit(content);
+
+                            //判断删除空白字符后是否为空字符串
+                            if (content.trim().isEmpty()) {
+                                Toast.makeText(this, "所选文件为空", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            //生成提示消息
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                            String message = String.format(
+                                    Locale.getDefault(),
+                                    "所选文件信息如下：\n行数：%d\n最后编辑时间：%s\n确认追加该文件中的所有内容吗？",
+                                    lineCount, time.format(formatter)
+                            );
+
+                            new MaterialAlertDialogBuilder(this)
+                                    .setTitle(R.string.append_paragraph)
+                                    .setMessage(message)
+                                    .setPositiveButton("确认", (dialogInterface, i) ->
+                                            appendParagraphsFromFile(content, time)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                )
+        );
+    }
+
+    /**
+     * 从文件中追加段落
+     *
+     * @param content 文件中的文本内容
+     * @param time    文件最后编辑时间
+     */
+    private void appendParagraphsFromFile(@NonNull String content, @NonNull LocalDateTime time) {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDao diaryDao = db.diaryDao();
+        ParagraphDao paragraphDao = db.paragraphDao();
+
+        LocalDate date = time.toLocalDate();
+        disposables.add(diaryDao.getDiaryIdByDate(date)
+                .flatMap(diaryId -> {
+                    if (diaryId == null) {
+                        DiaryEntity newDiary = new DiaryEntity(date);
+                        return Single.just(diaryDao.insertDiary(newDiary));
+                    } else {
+                        return Single.just(diaryId);
+                    }
+                })
+                .flatMapCompletable(diaryId -> {
+                    //生成段落实体列表
+                    List<ParagraphEntity> paragraphEntityList = new ArrayList<>();
+                    String[] lines = content.split("\n");
+                    for (String line : lines) {
+                        if (line.trim().isEmpty()) continue;
+
+                        paragraphEntityList.add(new ParagraphEntity(diaryId, line.trim(), time));
+                    }
+
+                    return paragraphDao.insertParagraph(paragraphEntityList);
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        () -> Toast.makeText(this, "段落追加完毕", Toast.LENGTH_SHORT).show(),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
     }
