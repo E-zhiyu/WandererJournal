@@ -6,17 +6,18 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.databinding.ViewHolderMultichoiceItemBinding;
+import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDialogAdapter.MultiChoiceItemViewHolder> {
-    private final String[] itemNames;           //多选选项
-    private final boolean[] itemStats;          //选项初始状态
-    private final boolean[] itemEnabled;        //选项是否被禁用
-    private final OnCheckedListener listener;   //选择行为监听器
+    private final List<MultiChoiceDialog.ChoiceItem> itemList;  //选项列表
+    private final List<Boolean> checkedStatList;                //选项选择状态列表，与实际 UI 应保持一致
 
     public static class MultiChoiceItemViewHolder extends RecyclerView.ViewHolder {
         ViewHolderMultichoiceItemBinding binding;
@@ -27,29 +28,16 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
         }
     }
 
-    public interface OnCheckedListener {
-        /**
-         * 复选框状态变化回调
-         *
-         * @param position  复选框的下标
-         * @param isChecked 改变后的状态
-         */
-        void onChecked(int position, boolean isChecked);
-    }
-
     /**
      * 不设置是否启用可选项的构造方法
      *
-     * @param itemEnabled 选项是否启用(为null则不禁用任何选项)
-     * @param itemStats   选项初始状态
-     * @param itemNames   选项名称
-     * @param listener    选项点击监听器
+     * @param itemList 选项列表
      */
-    public MultiChoiceDialogAdapter(@Nullable boolean[] itemEnabled, boolean[] itemStats, String[] itemNames, OnCheckedListener listener) {
-        this.itemEnabled = itemEnabled;
-        this.itemStats = itemStats;
-        this.itemNames = itemNames;
-        this.listener = listener;
+    public MultiChoiceDialogAdapter(@NonNull List<MultiChoiceDialog.ChoiceItem> itemList) {
+        this.itemList = itemList;
+        this.checkedStatList = itemList.stream()
+                .map(MultiChoiceDialog.ChoiceItem::getInitStat)
+                .collect(Collectors.toList());
     }
 
     @NonNull
@@ -65,15 +53,14 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
 
     @Override
     public void onBindViewHolder(@NonNull MultiChoiceItemViewHolder holder, int position) {
-        boolean isEnabled = true;
-        if (itemEnabled != null) {
-            isEnabled = itemEnabled[position];
-        }
-        boolean stat = itemStats[position];
+        MultiChoiceDialog.ChoiceItem item = itemList.get(position);
+        boolean itemEnabled = item.isEnabled();
+        boolean stat = item.getInitStat();
+        String itemTitle = item.getTitle();
 
         //设置选项的可用性
-        holder.binding.checkedText.setText(itemNames[position]);
-        if (!isEnabled) {
+        holder.binding.checkedText.setText(itemTitle);
+        if (!itemEnabled) {
             //禁用选项
             holder.binding.checkedText.setEnabled(false);
             holder.binding.checkedText.setChecked(false);
@@ -87,15 +74,18 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
         //绑定复选框的选择监听器
         holder.binding.checkedText.setOnClickListener(
                 view -> {
-                    holder.binding.checkedText.toggle();
-                    itemStats[position] = !itemStats[position];
-                    listener.onChecked(position, itemStats[position]);
+                    holder.binding.checkedText.toggle();    //更新 UI
+                    checkedStatList.set(position, holder.binding.checkedText.isChecked());  //更新选中状态
                 }
         );
     }
 
     @Override
     public int getItemCount() {
-        return itemNames.length;
+        return itemList.size();
+    }
+
+    public List<Boolean> getCheckedStatList() {
+        return checkedStatList;
     }
 }

@@ -3,17 +3,41 @@ package com.wanderer.journal.helpers.file;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.LogTags;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
 public class FileHelper {
+    /**
+     * 读取文本文件内容
+     *
+     * @param file 待读取的文本文件
+     * @return 文件内容字符串
+     * @throws IOException 文件内容读取失败引发的异常
+     */
+    @NonNull
+    public static String readFileContent(File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        }
+
+        return content.toString();
+    }
+
     /**
      * 将字符串写入到临时数据文件中
      *

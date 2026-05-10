@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanderer.journal.helpers.file.FileHelper;
 
+import java.io.File;
 import java.io.IOException;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -39,25 +40,24 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
 
     protected abstract String getTempDataFileName();    //设置临时数据文件名称
 
-    /**
-     * 将JSON中的数据保存到数据库
-     *
-     * @param json JSON数据字符串
-     * @return 是否导入成功
-     */
-    public final Completable saveJsonDataToDb(String json) {
-        try {
-            //得到数据字典实例
-            ObjectMapper mapper = new ObjectMapper();
-            M dataMap = mapper.readValue(json, mapClass);
+    public Completable importDataFromTempFile(File file) {
+        return Completable.defer(() -> {
+            try {
+                //读取文件内容
+                String json = FileHelper.readFileContent(file);
 
-            //将对应的数据写入数据库
-            saveDataInMapToDb(dataMap);
+                //得到数据字典实例
+                ObjectMapper mapper = new ObjectMapper();
+                M dataMap = mapper.readValue(json, mapClass);
 
-            return Completable.complete();
-        } catch (JsonProcessingException e) {
-            return Completable.error(e);
-        }
+                //将对应的数据写入数据库
+                saveDataInMapToDb(dataMap);
+
+                return Completable.complete();
+            } catch (IOException e) {
+                return Completable.error(e);
+            }
+        });
     }
 
     /**

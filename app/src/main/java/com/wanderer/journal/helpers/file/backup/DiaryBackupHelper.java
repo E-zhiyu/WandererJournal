@@ -13,7 +13,7 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.enums.DataType;
+import com.wanderer.journal.enums.BackupDataType;
 
 import java.util.List;
 
@@ -75,6 +75,6 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
     @Override
     protected String getTempDataFileName() {
-        return DataType.DIARY.getFileName();
+        return BackupDataType.DIARY.getFileName();
     }
 }

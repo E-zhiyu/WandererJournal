@@ -7,7 +7,8 @@ public enum LogTags {
     SAF_HELPER("SAFHelper"),
     LIFECYCLE_MANAGER("LifecycleManager"),
     BIOMETRIC_HELPER("BiometricHelper"),
-    DATA_IO_HELPER("DataIOHelper");
+    DATA_IO_HELPER("DataIOHelper"),
+    ZIP_HELPER("ZipHelper");
     private final String tagName;
 
     LogTags(String tagName) {

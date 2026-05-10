@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,7 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
-import com.wanderer.journal.enums.DataType;
+import com.wanderer.journal.enums.BackupDataType;
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -24,21 +25,22 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
+import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialog;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -98,7 +100,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    importData();
+                    showImportChoiceDialog(data.getData());
                 }
         );
     }
@@ -142,9 +144,10 @@ public class DataManageActivity extends AppCompatActivity {
                 R.drawable.outline_download_24,
                 SettingOptionViewBase.RadiusStyle.BOTTOM
         );
-        importDataOption.setFunctionListener(v -> {
-            //TODO:完成选择文件逻辑
-        });
+        importDataOption.setFunctionListener(v -> SAFHelper.openDocumentViaSAF(
+                new String[]{"application/zip"},
+                importDataLauncher
+        ));
     }
 
     /**
@@ -166,7 +169,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         //收集用户没有忽略的数据类型
         List<Completable> taskList = new ArrayList<>();
-        for (DataType type : DataType.values()) {
+        for (BackupDataType type : BackupDataType.values()) {
             if (true) { //TODO:完善过滤逻辑
                 BackupHelperBase<?, ?> backupHelper = type.createBackupHelper(this);
                 taskList.add(backupHelper.exportDataToTempFile(this));
@@ -175,7 +178,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         //并行执行数据导出逻辑
         disposables.add(Completable.merge(taskList)
-                .andThen(zipBackupTask(uri))
+                .andThen(ZipHelper.zipBackupTask(uri, this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(() -> {
@@ -189,50 +192,134 @@ public class DataManageActivity extends AppCompatActivity {
     }
 
     /**
-     * 从文件导入数据
+     * 扫描备份文件并显示多选对话框
+     *
+     * @param uri SAF 返回的 Uri 实例
      */
-    private void importData() {
-        //显示进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导入数据", "正在扫描备份文件……");
+    private void showImportChoiceDialog(Uri uri) {
+        //显示扫描文件的进度条对话框
+        ProgressDialog progressDialog = new ProgressDialog(this, "扫描文件", "正在扫描备份文件……");
         progressDialog.buildDialog(
                 null,
                 () -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
                 },
-                false);
+                false
+        );
         progressDialog.show();
+
+        //扫描压缩包并显示多选对话框
+        disposables.add(ZipHelper.scanZipFile(uri, this)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(fileNameList -> {
+                    progressDialog.dismiss();
+
+                    //实例化选项列表
+                    List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+                            .map(backupDataType -> {
+                                if (fileNameList.contains(backupDataType.getFileName())) {
+                                    return new MultiChoiceDialog.ChoiceItem(
+                                            true,
+                                            backupDataType.getTitle(),
+                                            true
+                                    );
+                                } else {
+                                    return new MultiChoiceDialog.ChoiceItem(
+                                            false,
+                                            backupDataType.getTitle(),
+                                            false
+                                    );
+                                }
+                            })
+                            .collect(Collectors.toList());
+
+                    //显示多选对话框
+                    MultiChoiceDialog dialog = new MultiChoiceDialog(
+                            this,
+                            "导入数据",
+                            itemList,
+                            checkedStatList -> importData(uri, checkedStatList)
+                    );
+                    dialog.buildDialog(() -> {
+
+                            },
+                            true
+                    );
+                    dialog.show();
+                }, e -> {
+                    progressDialog.dismiss();
+                    ExceptionHelper.showExceptionDialog(this, e);
+                })
+        );
     }
 
     /**
-     * 创建将导出的临时备份文件打包为压缩包的任务
+     * 将用户选择的数据导入到数据库中
      *
-     * @param targetUri 目标压缩包的 Uri
-     * @return 是否成功
+     * @param uri             备份文件的 Uri
+     * @param checkedStatList 用户选择的选项状态，选项的下标与{@link BackupDataType}的枚举序数一一对应
      */
-    public Completable zipBackupTask(Uri targetUri) {
-        File tempDir = DirectoryPaths.DATA_TEMP.getDir(this);
-        File imageDir = DirectoryPaths.MEDIA.getDir(this);
-
-        return Completable.fromAction(() -> {
-            if (tempDir == null) {
-                throw new IOException("无法获取临时数据目录");
+    private void importData(Uri uri, @NonNull List<Boolean> checkedStatList) {
+        //判断是否选择了数据
+        boolean isAllFalse = true;
+        for (boolean b : checkedStatList) {
+            if (b) {
+                isAllFalse = false;
+                break;
             }
+        }
+        if (isAllFalse) {
+            Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            // 1. 获取 SAF 的输出流
-            OutputStream os = getContentResolver().openOutputStream(targetUri);
-            if (os == null) {
-                throw new IOException("无法打开输出流，请检查权限或路径");
-            }
+        //显示扫描文件的进度条对话框
+        ProgressDialog progressDialog = new ProgressDialog(this, "导入数据", "正在导入备份数据……");
+        progressDialog.buildDialog(
+                null,
+                () -> {
+                    disposables.clear();
+                    Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
+                },
+                false
+        );
+        progressDialog.show();
 
-            try {
-                // 2. 调用压缩逻辑
-                // 现在的逻辑是直接流式写入 SAF 指向的文件，不再需要中间的临时 Zip 文件
-                ZipHelper.createBackupZip(tempDir, imageDir, os);
-            } finally {
-                // 3. 无论成功失败，清理临时 JSON 目录
-                FileHelper.clearTempDataDir(this);
-            }
-        });
+        //获取需要解压的文件名列表
+        List<String> allowedFileNameList = Arrays.stream(BackupDataType.values())
+                .filter(backupDataType -> checkedStatList.get(backupDataType.ordinal()))
+                .map(BackupDataType::getFileName)
+                .collect(Collectors.toList());
+
+        //解压文件并导入数据
+        disposables.add(ZipHelper.unpackWithFilter(this, uri, DirectoryPaths.DATA_TEMP.getDir(this), allowedFileNameList)
+                .flatMapObservable(Observable::fromIterable)
+                .flatMapCompletable(file -> {
+                    //根据文件名判断数据类型
+                    BackupDataType type = BackupDataType.fromFileName(file.getName());
+
+                    //使用对应的备份Helper导入数据
+                    if (type != null) {
+                        BackupHelperBase<?, ?> helper = type.createBackupHelper(this);
+                        return helper.importDataFromTempFile(file);
+                    } else {
+                        return Completable.complete();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                            Toast.makeText(this, "数据导入成功", Toast.LENGTH_SHORT).show();
+                            FileHelper.clearTempDataDir(this);
+                            progressDialog.dismiss();
+                        },
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            progressDialog.dismiss();
+                        }
+                )
+        );
     }
 }
