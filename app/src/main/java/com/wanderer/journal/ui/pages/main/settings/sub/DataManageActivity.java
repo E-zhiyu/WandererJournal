@@ -18,7 +18,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.enums.BackupDataType;
-import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -248,7 +247,7 @@ public class DataManageActivity extends AppCompatActivity {
         progressDialog.show();
 
         //扫描压缩包并显示多选对话框
-        disposables.add(ZipHelper.scanZipFile(uri, this)
+        disposables.add(ZipHelper.scanBackupFile(uri, this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(fileNameList -> {
@@ -323,9 +322,10 @@ public class DataManageActivity extends AppCompatActivity {
                 .filter(backupDataType -> checkedStatList.get(backupDataType.ordinal()))
                 .map(BackupDataType::getFileName)
                 .collect(Collectors.toList());
+        boolean includeMedia = checkedStatList.get(0);
 
         //解压文件并导入数据
-        disposables.add(ZipHelper.unpackWithFilter(this, uri, DirectoryPaths.DATA_TEMP.getDir(this), allowedFileNameList)
+        disposables.add(ZipHelper.unpackBackupFileWithFilter(this, uri, allowedFileNameList, includeMedia)
                 .flatMapObservable(Observable::fromIterable)
                 .flatMapCompletable(file -> {
                     //根据文件名判断数据类型

@@ -101,7 +101,7 @@ public class ZipHelper {
      */
     public static Completable zipBackupTask(Uri targetUri, Context context) {
         File tempDir = DirectoryPaths.DATA_TEMP.getDir(context);
-        File imageDir = DirectoryPaths.MEDIA.getDir(context);
+        File mediaDir = DirectoryPaths.MEDIA.getDir(context);
 
         return Completable.fromAction(() -> {
             if (tempDir == null) {
@@ -117,7 +117,7 @@ public class ZipHelper {
             try {
                 // 2. 调用压缩逻辑
                 // 现在的逻辑是直接流式写入 SAF 指向的文件，不再需要中间的临时 Zip 文件
-                ZipHelper.createBackupZip(tempDir, imageDir, os);
+                ZipHelper.createBackupZip(tempDir, mediaDir, os);
             } finally {
                 // 3. 无论成功失败，清理临时 JSON 目录
                 FileHelper.clearTempDataDir(context);
@@ -132,7 +132,7 @@ public class ZipHelper {
      * @param context 上下文
      * @return 可通过 RxJava 观察的文件名字符串列表
      */
-    public static Single<List<String>> scanZipFile(Uri uri, @NonNull Context context) {
+    public static Single<List<String>> scanBackupFile(Uri uri, @NonNull Context context) {
         return Single.fromCallable(() -> {
             List<String> fileNameList = new ArrayList<>();
             try (InputStream is = context.getContentResolver().openInputStream(uri);
@@ -151,11 +151,32 @@ public class ZipHelper {
         });
     }
 
-    public static Single<List<File>> unpackWithFilter(Context context, Uri zipUri, File targetDir, List<String> allowedFiles) {
+    /**
+     * 根据用户选择结果解压备份文件
+     *
+     * @param context      上下文
+     * @param zipUri       压缩包的 Uri
+     * @param allowedFiles 允许解压的文件名称列表
+     * @param includeMedia 是否解压媒体文件
+     * @return 已解压好的JSON文件列表，用于后续读取并导入数据
+     */
+    public static Single<List<File>> unpackBackupFileWithFilter(
+            Context context,
+            Uri zipUri,
+            List<String> allowedFiles,
+            boolean includeMedia
+    ) {
         return Single.fromCallable(() -> {
-            List<File> extractedFiles = new ArrayList<>();
-            byte[] buffer = new byte[1024 * 8];
+            //获取存放解压文件的目标文件夹
+            File tempJsonDir = DirectoryPaths.DATA_TEMP.getDir(context);
+            File mediaDir = DirectoryPaths.MEDIA.getDir(context);
+            String mediaDirName = DirectoryPaths.MEDIA.getChildDirName() + "/";
 
+            List<File> extractedJsonFiles = new ArrayList<>();
+            byte[] jsonBuffer = new byte[1024 * 8];
+            byte[] mediaBuffer = new byte[1024 * 32];
+
+            //开始执行解压逻辑
             try (InputStream is = context.getContentResolver().openInputStream(zipUri);
                  ZipInputStream zis = new ZipInputStream(is)) {
 
@@ -163,27 +184,24 @@ public class ZipHelper {
                 while ((entry = zis.getNextEntry()) != null) {
                     String name = entry.getName();
 
-                    // 1. 检查是否在用户选择的列表中
-                    if (!allowedFiles.contains(name)) {
+                    if (name.startsWith(mediaDirName)
+                            && !name.equals(mediaDirName)
+                            && includeMedia
+                    ) {  //处理媒体文件
+                        File outFile = new File(mediaDir, name.substring(mediaDirName.length()));    //去掉开头的文件夹路径
+                        extractFile(zis, outFile, mediaBuffer);
                         zis.closeEntry();
-                        continue;
+                    } else if (allowedFiles.contains(name)) {   //处理根目录下的 JSON 文件
+                        File outFile = new File(tempJsonDir, name);
+                        extractFile(zis, outFile, jsonBuffer);
+                        extractedJsonFiles.add(outFile);
+                        zis.closeEntry();
+                    } else {    //非媒体文件且非允许的根目录 JSON 文件直接不解压
+                        zis.closeEntry();
                     }
-
-                    // 2. 确定输出位置
-                    File outFile = new File(targetDir, name);
-                    if (entry.isDirectory()) {
-                        if (!outFile.mkdirs()) {
-                            Log.w(LogTags.ZIP_HELPER.n(), "无法创建输出目录");
-                        }
-                    } else {
-                        // 3. 执行解压具体写入操作
-                        extractFile(zis, outFile, buffer);
-                        extractedFiles.add(outFile);
-                    }
-                    zis.closeEntry();
                 }
             }
-            return extractedFiles;
+            return extractedJsonFiles;
         });
     }
 
