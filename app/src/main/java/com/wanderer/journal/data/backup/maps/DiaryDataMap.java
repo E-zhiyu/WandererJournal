@@ -1,11 +1,13 @@
 package com.wanderer.journal.data.backup.maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class DiaryDataMap {
     private List<DiaryPojo> diaryList;          //日记列表
     private List<ParagraphPojo> paragraphList;  //段落列表
