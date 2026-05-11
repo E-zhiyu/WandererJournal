@@ -174,7 +174,8 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.Vie
 
         //片段数量
         int paragraphCount = diaryWithSummary.getParagraphCount();
-        holder.binding.paragraphCountText.setText(String.valueOf(paragraphCount));
+        String tip = "×" + paragraphCount;
+        holder.binding.paragraphCountText.setText(tip);
 
         //设置圆角
         AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
