@@ -90,6 +90,15 @@ public interface ParagraphDao {
     Completable deleteParagraph(ParagraphEntity paragraph);
 
     /**
+     * 删除某个日期段的段落
+     *
+     * @param start 起始日期（包含）
+     * @param end   结束日期（不包含）
+     */
+    @Query("DELETE FROM paragraphs WHERE createTime >= :start AND createTime < :end")
+    void deleteParagraphByDateRange(LocalDate start, LocalDate end);
+
+    /**
      * 读取所有数据用于导出
      *
      * @return 段落实体列表
@@ -118,15 +127,18 @@ public interface ParagraphDao {
 
         if (paragraphList.isEmpty()) return;
 
-        // 1. 获取或创建日记 ID
+        // 获取或创建日记 ID
         Long diaryId = diaryDao.getOrCreateDiaryIdByDate(date);
 
-        // 2. 为所有段落关联最新的 ID（防止解析时 ID 还没生成）
+        // 删除当天的日记内容
+        deleteParagraphByDateRange(date, date.plusDays(1));
+
+        // 为所有段落关联最新的 ID（防止解析时 ID 还没生成）
         for (ParagraphEntity p : paragraphList) {
             p.setParentDiaryId(diaryId);
         }
 
-        // 3. 批量插入段落
+        // 批量插入段落
         insertParagraphWhenImportingDiary(paragraphList);
     }
 }
