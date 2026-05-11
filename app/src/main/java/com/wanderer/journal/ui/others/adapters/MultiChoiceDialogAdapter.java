@@ -10,13 +10,13 @@ import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.databinding.ViewHolderMultichoiceItemBinding;
-import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
+import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDialogAdapter.MultiChoiceItemViewHolder> {
-    private final List<MultiChoiceDialog.ChoiceItem> itemList;  //选项列表
+    private final List<MultiChoiceDialogBuilder.ChoiceItem> itemList;  //选项列表
     private final List<Boolean> checkedStatList;                //选项选择状态列表，与实际 UI 应保持一致
 
     public static class MultiChoiceItemViewHolder extends RecyclerView.ViewHolder {
@@ -33,10 +33,10 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
      *
      * @param itemList 选项列表
      */
-    public MultiChoiceDialogAdapter(@NonNull List<MultiChoiceDialog.ChoiceItem> itemList) {
+    public MultiChoiceDialogAdapter(@NonNull List<MultiChoiceDialogBuilder.ChoiceItem> itemList) {
         this.itemList = itemList;
         this.checkedStatList = itemList.stream()
-                .map(MultiChoiceDialog.ChoiceItem::getInitStat)
+                .map(MultiChoiceDialogBuilder.ChoiceItem::getInitStat)
                 .collect(Collectors.toList());
     }
 
@@ -53,7 +53,7 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
 
     @Override
     public void onBindViewHolder(@NonNull MultiChoiceItemViewHolder holder, int position) {
-        MultiChoiceDialog.ChoiceItem item = itemList.get(position);
+        MultiChoiceDialogBuilder.ChoiceItem item = itemList.get(position);
         boolean itemEnabled = item.isEnabled();
         boolean stat = item.getInitStat();
         String itemTitle = item.getTitle();

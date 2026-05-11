@@ -1,7 +1,7 @@
 package com.wanderer.journal.ui.others.dialogs;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -9,23 +9,18 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textview.MaterialTextView;
-import com.wanderer.journal.R;
+import com.wanderer.journal.databinding.DialogProgressBinding;
 
 import java.util.Locale;
 
-public class ProgressDialog extends CustomDialogBase {
+public class ProgressDialogBuilder
+        extends CustomDialogBuilderBase<DialogInterface.OnClickListener, DialogInterface.OnClickListener> {
     private LinearProgressIndicator progressIndicator;  //进度条
     private MaterialTextView progressText;              //进度文本
     private MaterialTextView subTitleText;              //底部副标题文本
     private final String originSubTitle;                //对话框底部副标题
 
-    /**
-     * 进度条对话框构造方法
-     * @param context 上下文
-     * @param dialogTitle 对话框标题
-     * @param originSubTitle 初始进度条底部副标题(为null则使用XML布局的默认副标题)
-     */
-    public ProgressDialog(Context context, String dialogTitle, @Nullable String originSubTitle) {
+    public ProgressDialogBuilder(Context context, String dialogTitle, @Nullable String originSubTitle) {
         super(context, dialogTitle);
         this.originSubTitle = originSubTitle == null ? "" : originSubTitle;
     }
@@ -33,18 +28,31 @@ public class ProgressDialog extends CustomDialogBase {
     @Override
     protected View getView() {
         //创建自定义布局
-        @SuppressLint("InflateParams") View view = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_progress, null);
+        DialogProgressBinding binding = DialogProgressBinding.inflate(
+                LayoutInflater.from(builder.getContext())
+        );
 
-        progressIndicator = view.findViewById(R.id.progress_indicator);
-        progressText = view.findViewById(R.id.progress_text);
-        subTitleText = view.findViewById(R.id.sub_title_text);
+        progressIndicator = binding.progressIndicator;
+        progressText = binding.progressText;
+        subTitleText = binding.subTitleText;
         subTitleText.setText(originSubTitle);
 
         //默认为不确定进度模式
         setIndeterminate(true);
 
-        return view;
+        return binding.getRoot();
+    }
+
+    @Override
+    public CustomDialogBuilderBase<DialogInterface.OnClickListener, DialogInterface.OnClickListener> setPositiveButton(String btnTitle, DialogInterface.OnClickListener callback) {
+        builder.setPositiveButton(btnTitle, callback);
+        return this;
+    }
+
+    @Override
+    public CustomDialogBuilderBase<DialogInterface.OnClickListener, DialogInterface.OnClickListener> setNegativeButton(String btnTitle, DialogInterface.OnClickListener callback) {
+        builder.setNegativeButton(btnTitle, callback);
+        return this;
     }
 
     /**

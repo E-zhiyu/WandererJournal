@@ -10,6 +10,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -32,8 +33,8 @@ import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
 import com.wanderer.journal.helpers.time.DateParseHelper;
-import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
-import com.wanderer.journal.ui.others.dialogs.ProgressDialog;
+import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
+import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
@@ -229,18 +230,15 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void showExportChoiceDialog() {
         //实例化选项列表
-        List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+        List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                 .map(backupDataType ->
-                        new MultiChoiceDialog.ChoiceItem(true, backupDataType.getTitle(), true)
+                        new MultiChoiceDialogBuilder.ChoiceItem(true, backupDataType.getTitle(), true)
                 )
                 .collect(Collectors.toList());
 
         //显示多选对话框
-        MultiChoiceDialog dialog = new MultiChoiceDialog(
-                this,
-                "导出数据",
-                itemList,
-                checkedStatList -> {
+        new MultiChoiceDialogBuilder(this, "导出数据", itemList)
+                .setPositiveButton("确定", checkedStatList -> {
                     //判断是否没有选择任何一个选项
                     if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
                         Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
@@ -265,12 +263,9 @@ public class DataManageActivity extends AppCompatActivity {
                             fileName,
                             exportDataLauncher
                     );
-                }
-        );
-        dialog.buildDialog(() -> {
-                }, true
-        );
-        dialog.show();
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /**
@@ -282,15 +277,12 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void exportData(Uri uri, List<Boolean> checkedStats, boolean includeMedia) {
         //显示进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导出数据", "正在导出数据……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "导出数据", "正在导出数据……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导出", Toast.LENGTH_SHORT).show();
-                },
-                false);
-        progressDialog.show();
+                })
+                .show();
 
         //收集用户没有忽略的数据类型，并将这些数据导出为临时文件
         List<Completable> taskList = new ArrayList<>();
@@ -325,16 +317,12 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void showImportChoiceDialog(Uri uri) {
         //显示扫描文件的进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "扫描文件", "正在扫描备份文件……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "扫描文件", "正在扫描文件……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
-                },
-                false
-        );
-        progressDialog.show();
+                })
+                .show();
 
         //扫描压缩包并显示多选对话框
         disposables.add(ZipHelper.scanBackupFile(uri, this)
@@ -344,16 +332,16 @@ public class DataManageActivity extends AppCompatActivity {
                     progressDialog.dismiss();
 
                     //实例化选项列表
-                    List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+                    List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                             .map(backupDataType -> {
                                 if (fileNameList.contains(backupDataType.getFileName())) {
-                                    return new MultiChoiceDialog.ChoiceItem(
+                                    return new MultiChoiceDialogBuilder.ChoiceItem(
                                             true,
                                             backupDataType.getTitle(),
                                             true
                                     );
                                 } else {
-                                    return new MultiChoiceDialog.ChoiceItem(
+                                    return new MultiChoiceDialogBuilder.ChoiceItem(
                                             false,
                                             backupDataType.getTitle(),
                                             false
@@ -363,18 +351,10 @@ public class DataManageActivity extends AppCompatActivity {
                             .collect(Collectors.toList());
 
                     //显示多选对话框
-                    MultiChoiceDialog dialog = new MultiChoiceDialog(
-                            this,
-                            "导入数据",
-                            itemList,
-                            checkedStatList -> importData(uri, checkedStatList)
-                    );
-                    dialog.buildDialog(() -> {
-
-                            },
-                            true
-                    );
-                    dialog.show();
+                    new MultiChoiceDialogBuilder(this, "导入数据", itemList)
+                            .setPositiveButton("确认", checkedStatList -> importData(uri, checkedStatList))
+                            .setNegativeButton("取消", null)
+                            .show();
                 }, e -> {
                     progressDialog.dismiss();
                     ExceptionHelper.showExceptionDialog(this, e);
@@ -396,16 +376,12 @@ public class DataManageActivity extends AppCompatActivity {
         }
 
         //显示扫描文件的进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导入数据", "正在导入备份数据……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "导入数据", "正在导入数据……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
-                },
-                false
-        );
-        progressDialog.show();
+                })
+                .show();
 
         //获取需要解压的文件名列表
         List<String> allowedFileNameList = Arrays.stream(BackupDataType.values())
@@ -562,14 +538,13 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void importDiaryFromFile(Uri uri, int lineCount) {
         //显示对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导入日记", "正在导入日记……");
-        progressDialog.buildDialog(() -> {
-                },
-                () -> {
+        ProgressDialogBuilder progressDialogBuilder = new ProgressDialogBuilder(this, "导入日记", "正在导入日记……");
+        AlertDialog progressDialog = progressDialogBuilder
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     Toast.makeText(this, "已取消日记导入", Toast.LENGTH_SHORT).show();
                     disposables.clear();
-                });
-        progressDialog.show();
+                })
+                .show();
 
         //获取数据库实例
         DiaryDatabase db = DiaryDatabase.getInstance(this);
@@ -630,10 +605,10 @@ public class DataManageActivity extends AppCompatActivity {
                 .subscribe(
                         processedLines -> {
                             //切换为确定进度模式
-                            progressDialog.setIndeterminate(false);
+                            progressDialogBuilder.setIndeterminate(false);
 
                             //更新进度条
-                            progressDialog.updateProgress(processedLines, lineCount, "正在解析文本内容……");
+                            progressDialogBuilder.updateProgress(processedLines, lineCount, "正在解析文本内容……");
                         },
                         e -> {
                             ExceptionHelper.showExceptionDialog(this, e);
