@@ -66,7 +66,27 @@ public class FileHelper {
     }
 
     /**
-     * 通过多线程读取文本文件的内容
+     * 获取文本文件的总行数
+     *
+     * @param uri     待获取行数的文件 Uri
+     * @param context 上下文
+     * @return 总行数
+     * @throws IOException 文件读取失败引发的异常
+     */
+    public static int getLines(Uri uri, Context context) throws IOException {
+        int lineCount = 0;
+        try (InputStream is = context.getContentResolver().openInputStream(uri);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            while (reader.readLine() != null) {
+                lineCount++;
+            }
+        }
+
+        return lineCount;
+    }
+
+    /**
+     * 读取文本文件的内容
      *
      * @param uri     待读取的文本文件的 Uri
      * @param context 上下文

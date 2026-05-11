@@ -143,7 +143,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    importDiaryFromFile(data.getData());
+                    showImportDiaryDialog(data.getData());
                 }
         );
     }
@@ -521,28 +521,74 @@ public class DataManageActivity extends AppCompatActivity {
     }
 
     /**
+     * 显示导入日记的确认对话框
+     *
+     * @param uri 待导入的文本文件 Uri
+     */
+    private void showImportDiaryDialog(Uri uri) {
+        disposables.add(Observable.fromCallable(() -> FileHelper.getLines(uri, this))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> {
+                            //构建提示文本
+                            String message = String.format(
+                                    Locale.getDefault(),
+                                    "警告：在导入日记前请备份数据！\n" +
+                                            "该文件共%d行，确认导入其中的日记数据吗？\n" +
+                                            "（仅支持将日期作为单独行并放在日记内容前的格式）",
+                                    count
+                            );
+
+                            //显示对话框
+                            new MaterialAlertDialogBuilder(this)
+                                    .setTitle(R.string.import_diary)
+                                    .setMessage(message)
+                                    .setPositiveButton("确定", (dialogInterface, i) ->
+                                            importDiaryFromFile(uri, count)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                )
+        );
+    }
+
+    /**
      * 通过多线程从外部文本文件中导入日记
      *
-     * @param uri 待读取的文件的 Uri
+     * @param uri       待读取的文件的 Uri
+     * @param lineCount 文本文件总行数
      */
-    private void importDiaryFromFile(Uri uri) {
+    private void importDiaryFromFile(Uri uri, int lineCount) {
+        //显示对话框
+        ProgressDialog progressDialog = new ProgressDialog(this, "导入日记", "正在导入日记……");
+        progressDialog.buildDialog(() -> {
+                },
+                () -> {
+                    Toast.makeText(this, "已取消日记导入", Toast.LENGTH_SHORT).show();
+                    disposables.clear();
+                });
+        progressDialog.show();
+
+        //获取数据库实例
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
 
         //创建导入任务
-        Completable task = Completable.fromAction(() -> {
+        Observable<Integer> task = Observable.create(emitter -> {
             LocalDate currentDate = null;
             List<ParagraphEntity> currentParagraphs = new ArrayList<>();
+            int processedLines = 0;
 
             try (InputStream is = getContentResolver().openInputStream(uri);
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    // 1. 业务逻辑：解析日期与段落
                     LocalDate parsedDate = DateParseHelper.parseFlexible(line);
-
                     if (parsedDate != null) {
-                        // 遇到新日期：提交上一篇日记的所有段落
                         if (currentDate != null && !currentParagraphs.isEmpty()) {
                             paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
                             currentParagraphs.clear();
@@ -550,17 +596,30 @@ public class DataManageActivity extends AppCompatActivity {
                         currentDate = parsedDate;
                     } else if (currentDate != null) {
                         String content = line.trim();
-                        if (content.isEmpty()) continue;
-
-                        // 暂存段落（此时 diaryId 可以先传 0，事务方法内部会重新赋值）
-                        currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                        if (!content.isEmpty()) {
+                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                        }
                     }
+
+                    // 2. 进度计算与发射
+                    processedLines++;
+                    emitter.onNext(processedLines);
+
+
+                    // 3. 检查背压/取消（可选）
+                    if (emitter.isDisposed()) return;
                 }
 
-                // 处理最后残余的一篇日记
+                // 收尾工作
                 if (currentDate != null && !currentParagraphs.isEmpty()) {
                     paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
                 }
+
+                emitter.onNext(100);
+                emitter.onComplete();
+
+            } catch (Exception e) {
+                emitter.onError(e);
             }
         });
 
@@ -569,8 +628,21 @@ public class DataManageActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        () -> Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show(),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                        processedLines -> {
+                            //切换为确定进度模式
+                            progressDialog.setIndeterminate(false);
+
+                            //更新进度条
+                            progressDialog.updateProgress(processedLines, lineCount, "正在解析文本内容……");
+                        },
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            progressDialog.dismiss();
+                        },
+                        () -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show();
+                        }
                 )
         );
     }
