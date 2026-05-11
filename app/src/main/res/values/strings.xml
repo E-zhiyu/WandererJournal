@@ -33,4 +33,5 @@
     <string name="export_data">导出数据</string>
     <string name="import_data">导入数据</string>
     <string name="append_paragraph">段落追加</string>
+    <string name="import_diary">导入日记\n</string>
 </resources>

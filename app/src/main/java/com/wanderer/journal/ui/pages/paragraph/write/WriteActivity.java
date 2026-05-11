@@ -25,7 +25,7 @@ import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.helpers.DateTimePickerHelper;
+import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;

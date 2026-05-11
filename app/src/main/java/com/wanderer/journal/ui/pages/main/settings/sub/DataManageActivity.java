@@ -31,11 +31,15 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
+import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialog;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -56,6 +60,7 @@ public class DataManageActivity extends AppCompatActivity {
     private final CompositeDisposable disposables = new CompositeDisposable();      //多线程任务列表
     private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //数据导入和导出的启动器
     private ActivityResultLauncher<Intent> appendFromFileLauncher;                  //从外部文件追加段落的启动器
+    private ActivityResultLauncher<Intent> importDiaryLauncher;                     //导入日记启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
     private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
 
@@ -127,25 +132,31 @@ public class DataManageActivity extends AppCompatActivity {
                     showFileInfosDialog(data.getData());
                 }
         );
+
+        importDiaryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    int resultCode = result.getResultCode();
+                    Intent data = result.getData();
+                    if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+                        FileHelper.clearTempDataDir(this);
+                        return;
+                    }
+
+                    importDiaryFromFile(data.getData());
+                }
+        );
     }
 
+    /**
+     * 初始化视图
+     */
     private void initViews() {
         //初始化数据管理设置
         initDataManageSettings();
 
-        //从外部文本追加
-        SettingClickableTextView appendFromFileOption = new SettingClickableTextView(
-                this,
-                binding.appendFromFileOption,
-                R.string.append_paragraph,
-                "从外部文件中追加段落",
-                R.drawable.outline_convert_to_text_24,
-                SettingOptionViewBase.RadiusStyle.SINGLE
-        );
-        appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
-                new String[]{"text/plain"},
-                appendFromFileLauncher
-        ));
+        //初始化日记数据设置
+        initDiaryDataSettings();
     }
 
     /**
@@ -177,6 +188,39 @@ public class DataManageActivity extends AppCompatActivity {
         importDataOption.setFunctionListener(v -> SAFHelper.openDocumentViaSAF(
                 new String[]{"application/zip"},
                 importDataLauncher
+        ));
+    }
+
+    /**
+     * 初始化日记数据设置
+     */
+    private void initDiaryDataSettings() {
+        //从外部文本追加
+        SettingClickableTextView appendFromFileOption = new SettingClickableTextView(
+                this,
+                binding.appendFromFileOption,
+                R.string.append_paragraph,
+                "从外部文件中追加段落",
+                R.drawable.outline_convert_to_text_24,
+                SettingOptionViewBase.RadiusStyle.TOP
+        );
+        appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
+                new String[]{"text/plain"},
+                appendFromFileLauncher
+        ));
+
+        //从文本文件导入日记
+        SettingClickableTextView importDiaryOption = new SettingClickableTextView(
+                this,
+                binding.importDiaryOption,
+                R.string.import_diary,
+                "从文本文件中导入日记",
+                R.drawable.outline_note_stack_add_24,
+                SettingOptionViewBase.RadiusStyle.BOTTOM
+        );
+        importDiaryOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
+                new String[]{"text/plain"},
+                importDiaryLauncher
         ));
     }
 
@@ -471,6 +515,61 @@ public class DataManageActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         () -> Toast.makeText(this, "段落追加完毕", Toast.LENGTH_SHORT).show(),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 通过多线程从外部文本文件中导入日记
+     *
+     * @param uri 待读取的文件的 Uri
+     */
+    private void importDiaryFromFile(Uri uri) {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+
+        //创建导入任务
+        Completable task = Completable.fromAction(() -> {
+            LocalDate currentDate = null;
+            List<ParagraphEntity> currentParagraphs = new ArrayList<>();
+
+            try (InputStream is = getContentResolver().openInputStream(uri);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    LocalDate parsedDate = DateParseHelper.parseFlexible(line);
+
+                    if (parsedDate != null) {
+                        // 遇到新日期：提交上一篇日记的所有段落
+                        if (currentDate != null && !currentParagraphs.isEmpty()) {
+                            paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                            currentParagraphs.clear();
+                        }
+                        currentDate = parsedDate;
+                    } else if (currentDate != null) {
+                        String content = line.trim();
+                        if (content.isEmpty()) continue;
+
+                        // 暂存段落（此时 diaryId 可以先传 0，事务方法内部会重新赋值）
+                        currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                    }
+                }
+
+                // 处理最后残余的一篇日记
+                if (currentDate != null && !currentParagraphs.isEmpty()) {
+                    paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                }
+            }
+        });
+
+        //执行任务
+        disposables.add(task
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        () -> Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show(),
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );

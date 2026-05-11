@@ -1,13 +1,18 @@
 package com.wanderer.journal.data.save.db.daos;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
+import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
@@ -59,6 +64,14 @@ public interface ParagraphDao {
     Completable insertParagraph(List<ParagraphEntity> paragraphEntityList);
 
     /**
+     * 在导入日记时插入段落
+     *
+     * @param paragraphEntityList 段落列表
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertParagraphWhenImportingDiary(List<ParagraphEntity> paragraphEntityList);
+
+    /**
      * 更新段落
      *
      * @param paragraph 修改后的段落
@@ -97,4 +110,23 @@ public interface ParagraphDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void importData(List<ParagraphEntity> paragraphEntityList);
+
+    @Transaction
+    default void insertDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
+        DiaryDatabase db = DiaryDatabase.getInstance(context);
+        DiaryDao diaryDao = db.diaryDao();
+
+        if (paragraphList.isEmpty()) return;
+
+        // 1. 获取或创建日记 ID
+        Long diaryId = diaryDao.getOrCreateDiaryIdByDate(date);
+
+        // 2. 为所有段落关联最新的 ID（防止解析时 ID 还没生成）
+        for (ParagraphEntity p : paragraphList) {
+            p.setParentDiaryId(diaryId);
+        }
+
+        // 3. 批量插入段落
+        insertParagraphWhenImportingDiary(paragraphList);
+    }
 }

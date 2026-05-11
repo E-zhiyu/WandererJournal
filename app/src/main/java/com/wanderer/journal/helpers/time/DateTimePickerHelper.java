@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers;
+package com.wanderer.journal.helpers.time;
 
 import android.content.Context;
 import android.util.TypedValue;
