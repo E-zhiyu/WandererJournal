@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers.file;
+package com.wanderer.journal.helpers.classes;
 
 public class TextFileData {
     private final String content;       //文本内容

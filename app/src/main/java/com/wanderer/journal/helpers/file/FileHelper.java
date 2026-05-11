@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.helpers.classes.TextFileData;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
