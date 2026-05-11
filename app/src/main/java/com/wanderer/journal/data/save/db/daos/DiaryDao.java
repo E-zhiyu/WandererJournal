@@ -12,6 +12,7 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -32,7 +33,7 @@ public interface DiaryDao {
      * @return 最早的日记日期，支持响应式更新
      */
     @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
-    Flowable<LocalDate> getEarliestDiaryDate();
+    Flowable<Optional<LocalDate>> getEarliestDiaryDate();
 
     /**
      * 获取所有日记
