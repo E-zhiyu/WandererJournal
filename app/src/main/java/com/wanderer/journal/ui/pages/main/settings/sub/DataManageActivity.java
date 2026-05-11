@@ -580,21 +580,19 @@ public class DataManageActivity extends AppCompatActivity {
                     processedLines++;
                     emitter.onNext(processedLines);
 
-
                     // 3. 检查背压/取消（可选）
                     if (emitter.isDisposed()) return;
                 }
-
+            } catch (Exception e) {
+                emitter.onError(e);
+            } finally {
                 // 收尾工作
                 if (currentDate != null && !currentParagraphs.isEmpty()) {
                     paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
                 }
 
-                emitter.onNext(100);
+                emitter.onNext(processedLines);
                 emitter.onComplete();
-
-            } catch (Exception e) {
-                emitter.onError(e);
             }
         });
 
