@@ -19,10 +19,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
-import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
@@ -37,7 +36,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -195,10 +193,8 @@ public class WriteActivity extends AppCompatActivity {
         //执行写入操作
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
-        DiaryDao diaryDao = db.diaryDao();
 
-        disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
-                .switchIfEmpty(Single.defer(() -> diaryDao.insertDiary(new DiaryEntity(diaryDate))))
+        disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate,this)
                 .flatMap(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
                     return paragraphDao.insertParagraph(newParagraph);
