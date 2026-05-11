@@ -1,11 +1,15 @@
 package com.wanderer.journal.data.save.db.entities;
 
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 import java.time.LocalDate;
 
-@Entity(tableName = "diaries")
+@Entity(
+        tableName = "diaries",
+        indices = {@Index(value = "diaryDate", unique = true)}
+)
 public class DiaryEntity {
     @PrimaryKey(autoGenerate = true)
     private long diaryId;        //自增主键

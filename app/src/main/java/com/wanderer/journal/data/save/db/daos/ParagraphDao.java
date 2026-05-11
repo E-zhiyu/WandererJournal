@@ -1,13 +1,18 @@
 package com.wanderer.journal.data.save.db.daos;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
+import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.time.LocalDate;
@@ -59,6 +64,14 @@ public interface ParagraphDao {
     Completable insertParagraph(List<ParagraphEntity> paragraphEntityList);
 
     /**
+     * 在导入日记时插入段落
+     *
+     * @param paragraphEntityList 段落列表
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertParagraphWhenImportingDiary(List<ParagraphEntity> paragraphEntityList);
+
+    /**
      * 更新段落
      *
      * @param paragraph 修改后的段落
@@ -75,6 +88,15 @@ public interface ParagraphDao {
      */
     @Delete
     Completable deleteParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 删除某个日期段的段落
+     *
+     * @param start 起始日期（包含）
+     * @param end   结束日期（不包含）
+     */
+    @Query("DELETE FROM paragraphs WHERE createTime >= :start AND createTime < :end")
+    void deleteParagraphByDateRange(LocalDate start, LocalDate end);
 
     /**
      * 读取所有数据用于导出
@@ -97,4 +119,26 @@ public interface ParagraphDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void importData(List<ParagraphEntity> paragraphEntityList);
+
+    @Transaction
+    default void insertDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
+        DiaryDatabase db = DiaryDatabase.getInstance(context);
+        DiaryDao diaryDao = db.diaryDao();
+
+        if (paragraphList.isEmpty()) return;
+
+        // 获取或创建日记 ID
+        Long diaryId = diaryDao.getOrCreateDiaryIdByDate(date);
+
+        // 删除当天的日记内容
+        deleteParagraphByDateRange(date, date.plusDays(1));
+
+        // 为所有段落关联最新的 ID（防止解析时 ID 还没生成）
+        for (ParagraphEntity p : paragraphList) {
+            p.setParentDiaryId(diaryId);
+        }
+
+        // 批量插入段落
+        insertParagraphWhenImportingDiary(paragraphList);
+    }
 }

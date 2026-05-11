@@ -86,7 +86,14 @@ public class DiaryFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        adapter::submitList,
+                        diaryList -> {
+                            adapter.submitList(diaryList);
+                            if (diaryList.isEmpty()) {
+                                binding.emptyText.setVisibility(View.VISIBLE);
+                            } else {
+                                binding.emptyText.setVisibility(View.GONE);
+                            }
+                        },
                         e -> {
                             ExceptionHelper.showExceptionDialog(requireContext(), e);
                             Log.e(LogTags.DIARY_FRAGMENT.n(), "日记数据库读取失败");

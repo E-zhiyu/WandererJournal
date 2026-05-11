@@ -15,18 +15,18 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.LoadState;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
-import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.helpers.DateTimePickerHelper;
+import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
@@ -37,9 +37,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import kotlin.Unit;
 
 public class WriteActivity extends AppCompatActivity {
     private ActivityWriteBinding binding;                       //绑定的XML布局
@@ -171,6 +171,21 @@ public class WriteActivity extends AppCompatActivity {
                     menu.show();
                 }
         );
+        adapter.addLoadStateListener(loadStates -> {
+            boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
+            boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
+
+            if (isNotLoading && endOfPaginationReached) {
+                if (adapter.getItemCount() == 0) {
+                    binding.emptyText.setVisibility(View.VISIBLE);
+                } else {
+                    binding.emptyText.setVisibility(View.GONE);
+                }
+            } else {
+                binding.emptyText.setVisibility(View.GONE);
+            }
+            return Unit.INSTANCE;
+        });
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
@@ -181,7 +196,8 @@ public class WriteActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
-                        adapter.submitData(getLifecycle(), pagingData)
+                                adapter.submitData(getLifecycle(), pagingData),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
     }
@@ -195,10 +211,8 @@ public class WriteActivity extends AppCompatActivity {
         //执行写入操作
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
-        DiaryDao diaryDao = db.diaryDao();
 
-        disposable.add(diaryDao.getDiaryIdByDate(diaryDate)
-                .switchIfEmpty(Single.defer(() -> diaryDao.insertDiary(new DiaryEntity(diaryDate))))
+        disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMap(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
                     return paragraphDao.insertParagraph(newParagraph);

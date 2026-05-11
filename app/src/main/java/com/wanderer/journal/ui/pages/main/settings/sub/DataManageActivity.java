@@ -10,6 +10,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -19,10 +20,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
-import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.enums.BackupDataType;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -32,11 +32,15 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
-import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialog;
-import com.wanderer.journal.ui.others.dialogs.ProgressDialog;
+import com.wanderer.journal.helpers.time.DateParseHelper;
+import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
+import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -49,7 +53,6 @@ import java.util.stream.Collectors;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -58,6 +61,7 @@ public class DataManageActivity extends AppCompatActivity {
     private final CompositeDisposable disposables = new CompositeDisposable();      //多线程任务列表
     private ActivityResultLauncher<Intent> importDataLauncher, exportDataLauncher;  //数据导入和导出的启动器
     private ActivityResultLauncher<Intent> appendFromFileLauncher;                  //从外部文件追加段落的启动器
+    private ActivityResultLauncher<Intent> importDiaryLauncher;                     //导入日记启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
     private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
 
@@ -129,25 +133,31 @@ public class DataManageActivity extends AppCompatActivity {
                     showFileInfosDialog(data.getData());
                 }
         );
+
+        importDiaryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    int resultCode = result.getResultCode();
+                    Intent data = result.getData();
+                    if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+                        FileHelper.clearTempDataDir(this);
+                        return;
+                    }
+
+                    showImportDiaryDialog(data.getData());
+                }
+        );
     }
 
+    /**
+     * 初始化视图
+     */
     private void initViews() {
         //初始化数据管理设置
         initDataManageSettings();
 
-        //从外部文本追加
-        SettingClickableTextView appendFromFileOption = new SettingClickableTextView(
-                this,
-                binding.appendFromFileOption,
-                R.string.append_paragraph,
-                "从外部文件中追加段落",
-                R.drawable.outline_convert_to_text_24,
-                SettingOptionViewBase.RadiusStyle.SINGLE
-        );
-        appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
-                new String[]{"text/plain"},
-                appendFromFileLauncher
-        ));
+        //初始化日记数据设置
+        initDiaryDataSettings();
     }
 
     /**
@@ -183,22 +193,52 @@ public class DataManageActivity extends AppCompatActivity {
     }
 
     /**
+     * 初始化日记数据设置
+     */
+    private void initDiaryDataSettings() {
+        //从外部文本追加
+        SettingClickableTextView appendFromFileOption = new SettingClickableTextView(
+                this,
+                binding.appendFromFileOption,
+                R.string.append_paragraph,
+                "从外部文件中追加段落",
+                R.drawable.outline_convert_to_text_24,
+                SettingOptionViewBase.RadiusStyle.TOP
+        );
+        appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
+                new String[]{"text/plain"},
+                appendFromFileLauncher
+        ));
+
+        //从文本文件导入日记
+        SettingClickableTextView importDiaryOption = new SettingClickableTextView(
+                this,
+                binding.importDiaryOption,
+                R.string.import_diary,
+                "从文本文件中导入日记",
+                R.drawable.outline_note_stack_add_24,
+                SettingOptionViewBase.RadiusStyle.BOTTOM
+        );
+        importDiaryOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
+                new String[]{"text/plain"},
+                importDiaryLauncher
+        ));
+    }
+
+    /**
      * 显示导出数据时的多选对话框
      */
     private void showExportChoiceDialog() {
         //实例化选项列表
-        List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+        List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                 .map(backupDataType ->
-                        new MultiChoiceDialog.ChoiceItem(true, backupDataType.getTitle(), true)
+                        new MultiChoiceDialogBuilder.ChoiceItem(true, backupDataType.getTitle(), true)
                 )
                 .collect(Collectors.toList());
 
         //显示多选对话框
-        MultiChoiceDialog dialog = new MultiChoiceDialog(
-                this,
-                "导出数据",
-                itemList,
-                checkedStatList -> {
+        new MultiChoiceDialogBuilder(this, "导出数据", itemList)
+                .setPositiveButton("确定", checkedStatList -> {
                     //判断是否没有选择任何一个选项
                     if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
                         Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
@@ -223,12 +263,9 @@ public class DataManageActivity extends AppCompatActivity {
                             fileName,
                             exportDataLauncher
                     );
-                }
-        );
-        dialog.buildDialog(() -> {
-                }, true
-        );
-        dialog.show();
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /**
@@ -240,15 +277,12 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void exportData(Uri uri, List<Boolean> checkedStats, boolean includeMedia) {
         //显示进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导出数据", "正在导出数据……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "导出数据", "正在导出数据……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导出", Toast.LENGTH_SHORT).show();
-                },
-                false);
-        progressDialog.show();
+                })
+                .show();
 
         //收集用户没有忽略的数据类型，并将这些数据导出为临时文件
         List<Completable> taskList = new ArrayList<>();
@@ -283,16 +317,12 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void showImportChoiceDialog(Uri uri) {
         //显示扫描文件的进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "扫描文件", "正在扫描备份文件……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "扫描文件", "正在扫描文件……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
-                },
-                false
-        );
-        progressDialog.show();
+                })
+                .show();
 
         //扫描压缩包并显示多选对话框
         disposables.add(ZipHelper.scanBackupFile(uri, this)
@@ -302,16 +332,16 @@ public class DataManageActivity extends AppCompatActivity {
                     progressDialog.dismiss();
 
                     //实例化选项列表
-                    List<MultiChoiceDialog.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+                    List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                             .map(backupDataType -> {
                                 if (fileNameList.contains(backupDataType.getFileName())) {
-                                    return new MultiChoiceDialog.ChoiceItem(
+                                    return new MultiChoiceDialogBuilder.ChoiceItem(
                                             true,
                                             backupDataType.getTitle(),
                                             true
                                     );
                                 } else {
-                                    return new MultiChoiceDialog.ChoiceItem(
+                                    return new MultiChoiceDialogBuilder.ChoiceItem(
                                             false,
                                             backupDataType.getTitle(),
                                             false
@@ -321,18 +351,10 @@ public class DataManageActivity extends AppCompatActivity {
                             .collect(Collectors.toList());
 
                     //显示多选对话框
-                    MultiChoiceDialog dialog = new MultiChoiceDialog(
-                            this,
-                            "导入数据",
-                            itemList,
-                            checkedStatList -> importData(uri, checkedStatList)
-                    );
-                    dialog.buildDialog(() -> {
-
-                            },
-                            true
-                    );
-                    dialog.show();
+                    new MultiChoiceDialogBuilder(this, "导入数据", itemList)
+                            .setPositiveButton("确认", checkedStatList -> importData(uri, checkedStatList))
+                            .setNegativeButton("取消", null)
+                            .show();
                 }, e -> {
                     progressDialog.dismiss();
                     ExceptionHelper.showExceptionDialog(this, e);
@@ -354,16 +376,12 @@ public class DataManageActivity extends AppCompatActivity {
         }
 
         //显示扫描文件的进度条对话框
-        ProgressDialog progressDialog = new ProgressDialog(this, "导入数据", "正在导入备份数据……");
-        progressDialog.buildDialog(
-                null,
-                () -> {
+        AlertDialog progressDialog = new ProgressDialogBuilder(this, "导入数据", "正在导入数据……")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposables.clear();
                     Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
-                },
-                false
-        );
-        progressDialog.show();
+                })
+                .show();
 
         //获取需要解压的文件名列表
         List<String> allowedFileNameList = Arrays.stream(BackupDataType.values())
@@ -454,12 +472,10 @@ public class DataManageActivity extends AppCompatActivity {
      */
     private void appendParagraphsFromFile(@NonNull String content, @NonNull LocalDateTime time) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        DiaryDao diaryDao = db.diaryDao();
         ParagraphDao paragraphDao = db.paragraphDao();
 
         LocalDate date = time.toLocalDate();
-        disposables.add(diaryDao.getDiaryIdByDate(date)
-                .switchIfEmpty(Single.defer(() -> diaryDao.insertDiary(new DiaryEntity(date))))
+        disposables.add(DiaryService.getOrCreateDiaryIdByDate(date, this)
                 .flatMapCompletable(diaryId -> {
                     //生成段落实体列表
                     List<ParagraphEntity> paragraphEntityList = new ArrayList<>();
@@ -476,6 +492,132 @@ public class DataManageActivity extends AppCompatActivity {
                 .subscribe(
                         () -> Toast.makeText(this, "段落追加完毕", Toast.LENGTH_SHORT).show(),
                         e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 显示导入日记的确认对话框
+     *
+     * @param uri 待导入的文本文件 Uri
+     */
+    private void showImportDiaryDialog(Uri uri) {
+        disposables.add(Observable.fromCallable(() -> FileHelper.getLines(uri, this))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> {
+                            //构建提示文本
+                            String message = String.format(
+                                    Locale.getDefault(),
+                                    "警告：在导入日记前请备份数据！\n" +
+                                            "该文件共%d行，确认导入其中的日记数据吗？\n" +
+                                            "（仅支持将日期作为单独行并放在日记内容前的格式）",
+                                    count
+                            );
+
+                            //显示对话框
+                            new MaterialAlertDialogBuilder(this)
+                                    .setTitle(R.string.import_diary)
+                                    .setMessage(message)
+                                    .setPositiveButton("确定", (dialogInterface, i) ->
+                                            importDiaryFromFile(uri, count)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                )
+        );
+    }
+
+    /**
+     * 通过多线程从外部文本文件中导入日记
+     *
+     * @param uri       待读取的文件的 Uri
+     * @param lineCount 文本文件总行数
+     */
+    private void importDiaryFromFile(Uri uri, int lineCount) {
+        //显示对话框
+        ProgressDialogBuilder progressDialogBuilder = new ProgressDialogBuilder(this, "导入日记", "正在导入日记……");
+        AlertDialog progressDialog = progressDialogBuilder
+                .setNegativeButton("取消", (dialogInterface, i) -> {
+                    Toast.makeText(this, "已取消日记导入", Toast.LENGTH_SHORT).show();
+                    disposables.clear();
+                })
+                .show();
+
+        //获取数据库实例
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+
+        //创建导入任务
+        Observable<Integer> task = Observable.create(emitter -> {
+            LocalDate currentDate = null;
+            List<ParagraphEntity> currentParagraphs = new ArrayList<>();
+            int processedLines = 0;
+
+            try (InputStream is = getContentResolver().openInputStream(uri);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // 1. 业务逻辑：解析日期与段落
+                    LocalDate parsedDate = DateParseHelper.parseFlexible(line);
+                    if (parsedDate != null) {
+                        if (currentDate != null && !currentParagraphs.isEmpty()) {
+                            paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                            currentParagraphs.clear();
+                        }
+                        currentDate = parsedDate;
+                    } else if (currentDate != null) {
+                        String content = line.trim();
+                        if (!content.isEmpty()) {
+                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                        }
+                    }
+
+                    // 2. 进度计算与发射
+                    processedLines++;
+                    emitter.onNext(processedLines);
+
+
+                    // 3. 检查背压/取消（可选）
+                    if (emitter.isDisposed()) return;
+                }
+
+                // 收尾工作
+                if (currentDate != null && !currentParagraphs.isEmpty()) {
+                    paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                }
+
+                emitter.onNext(100);
+                emitter.onComplete();
+
+            } catch (Exception e) {
+                emitter.onError(e);
+            }
+        });
+
+        //执行任务
+        disposables.add(task
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        processedLines -> {
+                            //切换为确定进度模式
+                            progressDialogBuilder.setIndeterminate(false);
+
+                            //更新进度条
+                            progressDialogBuilder.updateProgress(processedLines, lineCount, "正在解析文本内容……");
+                        },
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            progressDialog.dismiss();
+                        },
+                        () -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show();
+                        }
                 )
         );
     }

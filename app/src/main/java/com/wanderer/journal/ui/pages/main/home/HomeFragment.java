@@ -77,7 +77,8 @@ public class HomeFragment extends Fragment {
         disposable.add(diaryDao.getEarliestDiaryDate()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(date -> {
+                .subscribe(dateOptional -> {
+                    LocalDate date = dateOptional.orElse(null);
                     if (date == null) {
                         binding.startDateText.setText("您还未开始写日记");
                         binding.dateDifferenceText.setVisibility(View.GONE);
@@ -133,7 +134,7 @@ public class HomeFragment extends Fragment {
                             "没有任何日记" :
                             String.format(
                                     Locale.getDefault(),
-                                    "累计记日记%d天",
+                                    "日记天数：%d",
                                     count
                             );
                     binding.diaryCountText.setText(tip);
@@ -149,7 +150,7 @@ public class HomeFragment extends Fragment {
                             "没有任何段落" :
                             String.format(
                                     Locale.getDefault(),
-                                    "总共写了%d条段落",
+                                    "总段落数：%d",
                                     count
                             );
                     binding.paragraphCountText.setText(tip);

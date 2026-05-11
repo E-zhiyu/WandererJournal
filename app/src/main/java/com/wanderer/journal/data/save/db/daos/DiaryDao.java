@@ -5,17 +5,17 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface DiaryDao {
@@ -33,7 +33,7 @@ public interface DiaryDao {
      * @return 最早的日记日期，支持响应式更新
      */
     @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
-    Flowable<LocalDate> getEarliestDiaryDate();
+    Flowable<Optional<LocalDate>> getEarliestDiaryDate();
 
     /**
      * 获取所有日记
@@ -54,7 +54,7 @@ public interface DiaryDao {
      * @return 日记编号
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    Single<Long> insertDiary(DiaryEntity diary);
+    Long insertDiary(DiaryEntity diary);
 
     /**
      * 查询目标日期的日记编号
@@ -63,7 +63,23 @@ public interface DiaryDao {
      * @return 日记编号，未查询到返回null
      */
     @Query("SELECT diaryId FROM diaries WHERE diaryDate == :date")
-    Maybe<Long> getDiaryIdByDate(LocalDate date);
+    Long getDiaryIdByDate(LocalDate date);
+
+    /**
+     * 事务处理：获取日期所对应的日记编号
+     *
+     * @param date 日期
+     * @return 日期所对应的日记编号
+     */
+    @Transaction
+    default Long getOrCreateDiaryIdByDate(LocalDate date) {
+        Long diaryId = getDiaryIdByDate(date);
+        if (diaryId != null) {
+            return diaryId;
+        } else {
+            return insertDiary(new DiaryEntity(date));
+        }
+    }
 
     /**
      * 删除日记
