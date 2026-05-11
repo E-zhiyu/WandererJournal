@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.pages.paragraph.read;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -12,6 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.LoadState;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;               //绑定的XML布局
@@ -45,7 +48,8 @@ public class DiaryReadActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.toolbarContainerLayout, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            binding.contentRecycler.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 
@@ -109,6 +113,21 @@ public class DiaryReadActivity extends AppCompatActivity {
                     menu.show();
                 }
         );
+        adapter.addLoadStateListener(loadStates -> {
+            boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
+            boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
+
+            if (isNotLoading && endOfPaginationReached) {
+                if (adapter.getItemCount() == 0) {
+                    binding.emptyText.setVisibility(View.VISIBLE);
+                } else {
+                    binding.emptyText.setVisibility(View.GONE);
+                }
+            } else {
+                binding.emptyText.setVisibility(View.GONE);
+            }
+            return Unit.INSTANCE;
+        });
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应

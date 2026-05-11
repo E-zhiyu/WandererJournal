@@ -14,6 +14,17 @@
         app:navigationIcon="@null"
         app:title="@string/diary" />
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/empty_text"
+        android:layout_width="wrap_content"
+        android:text="@string/no_diary"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/diary_recycler"
         android:layout_width="match_parent"

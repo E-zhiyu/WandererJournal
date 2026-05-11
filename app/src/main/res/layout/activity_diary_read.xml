@@ -19,7 +19,8 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="10dp">
+                android:paddingBottom="10dp"
+                app:layout_scrollFlags="scroll|enterAlways|snap">
 
                 <com.google.android.material.search.SearchBar
                     android:id="@+id/content_search_bar"
@@ -40,6 +41,17 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/empty_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_paragraph"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.search.SearchView
         android:id="@+id/diary_content_search_view"

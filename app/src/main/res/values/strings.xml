@@ -33,5 +33,7 @@
     <string name="export_data">导出数据</string>
     <string name="import_data">导入数据</string>
     <string name="append_paragraph">段落追加</string>
-    <string name="import_diary">导入日记\n</string>
+    <string name="import_diary">导入日记</string>
+    <string name="no_diary">还没有日记呢</string>
+    <string name="no_paragraph">没有任何段落</string>
 </resources>
