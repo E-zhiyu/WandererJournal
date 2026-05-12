@@ -22,8 +22,8 @@ import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.ui.pages.paragraph.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.paragraph.write.WriteActivity;
+import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.write.WriteActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;

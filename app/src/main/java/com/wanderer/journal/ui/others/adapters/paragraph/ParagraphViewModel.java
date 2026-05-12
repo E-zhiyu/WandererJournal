@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.paragraph;
+package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

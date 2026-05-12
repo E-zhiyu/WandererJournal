@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.paragraph.write;
+package com.wanderer.journal.ui.pages.write;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,9 +29,9 @@ import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
-import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
-import com.wanderer.journal.ui.pages.paragraph.ParagraphViewModel;
-import com.wanderer.journal.ui.pages.paragraph.ParagraphViewModelFactory;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

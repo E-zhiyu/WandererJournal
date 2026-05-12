@@ -30,10 +30,10 @@
             android:name=".ui.pages.main.settings.sub.AboutActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.paragraph.write.WriteActivity"
+            android:name=".ui.pages.write.WriteActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.paragraph.read.DiaryReadActivity"
+            android:name=".ui.pages.read.DiaryReadActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
