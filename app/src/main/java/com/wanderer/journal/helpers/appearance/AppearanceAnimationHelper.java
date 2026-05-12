@@ -12,6 +12,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
+import com.wanderer.journal.enums.RadiusStyle;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
 
@@ -120,6 +121,33 @@ public class AppearanceAnimationHelper {
     }
 
     /**
+     * 快速设置圆角样式
+     *
+     * @param view  需要设置圆角的视图
+     * @param style 圆角种类
+     */
+    public static void setRadiusStyle(
+            @NonNull View view,
+            @NonNull RadiusStyle style
+    ) {
+        Context context = view.getContext();
+        switch (style) {
+            case TOP:
+                setRadius(context, view, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS);
+                break;
+            case MIDDLE:
+                setRadius(context, view, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS);
+                break;
+            case BOTTOM:
+                setRadius(context, view, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS);
+                break;
+            case SINGLE:
+                setRadius(context, view, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS);
+                break;
+        }
+    }
+
+    /**
      * 根据视图所在位置设置四个圆角的大小
      *
      * @param view     实现了{@link Shapeable}的视图
@@ -128,19 +156,18 @@ public class AppearanceAnimationHelper {
      */
     public static void setRecyclerItemRadius(@NonNull View view, int listSize, int position) {
         //列表长度为1或者列表为空则设置为中等圆角
-        Context context = view.getContext();
         if (listSize == 1 || listSize == 0) {
-            setRadius(context, view, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS);
+            setRadiusStyle(view, RadiusStyle.SINGLE);
             return;
         }
 
         //设置新的圆角值
         if (position == 0) {
-            setRadius(context, view, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS);
+            setRadiusStyle(view, RadiusStyle.TOP);
         } else if (position == listSize - 1) {
-            setRadius(context, view, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, MEDIUM_CARD_RADIUS, MEDIUM_CARD_RADIUS);
+            setRadiusStyle(view, RadiusStyle.BOTTOM);
         } else {
-            setRadius(context, view, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS, SMALL_CARD_RADIUS);
+            setRadiusStyle(view, RadiusStyle.MIDDLE);
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
+import com.wanderer.journal.enums.RadiusStyle;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDateTime;
@@ -25,8 +26,12 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).paragraph;
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).paragraph;
                 return oldParagraph.getParagraphId() == newParagraph.getParagraphId();
+            } else if (oldItem instanceof ParagraphUiModel.Separator && newItem instanceof ParagraphUiModel.Separator) {
+                String oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
+                String newDateStr = ((ParagraphUiModel.Separator) newItem).date;
+                return oldDateStr.equals(newDateStr);
             } else {
-                return true;
+                return false;
             }
         }
 
@@ -38,7 +43,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
                         oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime());
             } else {
-                return false;
+                return true;
             }
         }
     };
@@ -113,28 +118,14 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                // 如果在顶部插入了数据，通知原先的第一项（现在的第 itemCount 项）更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(itemCount);
-                }
-
-                // 如果在末尾追加了数据，通知原先的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(positionStart - 1);
-                }
+                notifyItemChanged(positionStart - 1);           //更新前面的
+                notifyItemChanged(positionStart + itemCount);   //更新后面的
             }
 
             @Override
             public void onItemRangeRemoved(int positionStart, int itemCount) {
-                // 如果在顶部删除了数据，通知现在的第一项更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(0);
-                }
-
-                // 如果在末尾删除了数据，通知现在的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(getItemCount() - 1);
-                }
+                notifyItemChanged(positionStart - 1);   //更新前面的
+                notifyItemChanged(positionStart);               //更新后面的
             }
         });
     }
@@ -188,6 +179,9 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             LocalDateTime dateTime = paragraph.getCreateTime();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
+
+            //设置圆角
+            setRadius(itemHolder.binding.getRoot(), position);
         } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
@@ -203,6 +197,30 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
      * @param position 该视图所处的位置
      */
     private void setRadius(View view, int position) {
-        //TODO:完成圆角自动设置的功能
+        if (position == 0) {    //第0个不参与圆角设置，因为它是日期分隔视图
+            return;
+        }
+
+        //不需要考虑当前是分隔视图的情况，因为不是Shapable不会执行任何操作
+        ParagraphUiModel front = getItem(position - 1);
+        if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
+            if (front instanceof ParagraphUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+            } else {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+            }
+        } else {
+            ParagraphUiModel behind = getItem(position + 1);
+
+            if (front instanceof ParagraphUiModel.Separator && behind instanceof ParagraphUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+            } else if (front instanceof ParagraphUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+            } else if (behind instanceof ParagraphUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+            } else {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+            }
+        }
     }
 }

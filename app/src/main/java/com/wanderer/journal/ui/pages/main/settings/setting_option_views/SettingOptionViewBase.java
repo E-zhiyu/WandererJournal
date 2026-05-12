@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
+import com.wanderer.journal.enums.RadiusStyle;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import org.jetbrains.annotations.Contract;
@@ -21,13 +22,6 @@ import org.jetbrains.annotations.Contract;
 abstract public class SettingOptionViewBase<C, L> {
     protected ViewSettingOptionBinding binding;     //绑定的XML视图引用
     protected C functionComponent;                  //功能组件
-
-    public enum RadiusStyle {
-        TOP,    //顶部
-        MIDDLE, //中部
-        BOTTOM, //底部
-        SINGLE, //单独的
-    }
 
     /**
      * 设置项构造方法

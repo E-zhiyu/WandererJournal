@@ -19,12 +19,12 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
+import com.wanderer.journal.enums.RadiusStyle;
 import com.wanderer.journal.enums.options.AuthOpportunity;
 import com.wanderer.journal.enums.options.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSpinnerView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
@@ -61,7 +61,7 @@ public class SettingsFragment extends Fragment {
                 R.string.data_manage,
                 "点击跳转数据管理界面",
                 R.drawable.outline_database_24,
-                SettingOptionViewBase.RadiusStyle.SINGLE
+                RadiusStyle.SINGLE
         );
         dataManage.setFunctionListener(view -> {
             Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
@@ -78,7 +78,7 @@ public class SettingsFragment extends Fragment {
                 R.string.about_software,
                 null,
                 R.drawable.outline_info_24,
-                SettingOptionViewBase.RadiusStyle.SINGLE
+                RadiusStyle.SINGLE
         );
         aboutOption.setFunctionListener(view -> {
             Intent skip2About = new Intent(requireContext(), AboutActivity.class);
@@ -97,7 +97,7 @@ public class SettingsFragment extends Fragment {
                 R.string.theme_mode,
                 "切换深浅色模式",
                 R.drawable.outline_dark_mode_24,
-                SettingOptionViewBase.RadiusStyle.TOP
+                RadiusStyle.TOP
         );
         themeModeOption.setFunctionListener(v -> showThemeModeSelectDialog());
 
@@ -108,7 +108,7 @@ public class SettingsFragment extends Fragment {
                 R.string.dynamic_color,
                 "将壁纸颜色作为APP主题色",
                 R.drawable.outline_colorize_24,
-                SettingOptionViewBase.RadiusStyle.BOTTOM
+                RadiusStyle.BOTTOM
         );
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
@@ -130,7 +130,7 @@ public class SettingsFragment extends Fragment {
                 R.string.authentication,
                 "进入APP时需要进行身份验证",
                 R.drawable.outline_security_24,
-                SettingOptionViewBase.RadiusStyle.TOP
+                RadiusStyle.TOP
         );
         boolean isAuthOpened = SecurityPreference.getAuthSwitchStat(requireContext());
         authenticationSwitch.setChecked(isAuthOpened);
@@ -193,7 +193,7 @@ public class SettingsFragment extends Fragment {
                 R.string.authentication_opportunity,
                 "进行身份验证的时机",
                 R.drawable.outline_safety_check_24,
-                SettingOptionViewBase.RadiusStyle.MIDDLE
+                RadiusStyle.MIDDLE
         );
         int opportunityCode = SecurityPreference.getAuthOpportunity(requireContext());
         authenticationOpportunity.setSpinnerText(AuthOpportunity.values()[opportunityCode].getTitle());
@@ -237,7 +237,7 @@ public class SettingsFragment extends Fragment {
                 R.string.hide_recent_task,
                 "在最近任务列表中隐藏",
                 R.drawable.outline_visibility_off_24,
-                SettingOptionViewBase.RadiusStyle.BOTTOM
+                RadiusStyle.BOTTOM
         );
         boolean isHidden = SecurityPreference.getHideRecentTask(requireContext());
         hideRecentTask.setChecked(isHidden);
