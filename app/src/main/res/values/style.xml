@@ -74,4 +74,10 @@
         <item name="android:padding">10dp</item>
         <item name="android:background">@drawable/ripple_circle</item>
     </style>
+
+    <!-- 圆形图片视图样式 -->
+    <style name="RoundedImageViewStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

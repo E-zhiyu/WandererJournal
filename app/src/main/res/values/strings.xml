@@ -36,4 +36,11 @@
     <string name="import_diary">导入日记</string>
     <string name="no_diary">还没有日记呢</string>
     <string name="no_paragraph">没有任何段落</string>
+    <string name="about_software">关于软件</string>
+    <string name="app_description">这是一款Material You风格的本地日记APP，界面清爽，功能纯粹，让您随时随地都能记录生活中的点滴。</string>
+    <string name="author_name">E_zhiyu</string>
+    <string name="author_of_app">软件创作者</string>
+    <string name="right_arrow_of_tag_card">右侧箭头</string>
+    <string name="project_address">项目地址</string>
+    <string name="click_skip_to_repository">点击跳转至项目仓库</string>
 </resources>
