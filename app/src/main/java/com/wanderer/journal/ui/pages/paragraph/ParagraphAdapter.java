@@ -57,7 +57,13 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphEntity, Paragra
             AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
 
             //设置监听器
-            binding.getRoot().setOnClickListener(view -> listener.onClicked(paragraph, binding.getRoot()));
+            binding.getRoot().setOnClickListener(view -> {
+                if (paragraph == null) {
+                    return;
+                }
+
+                listener.onClicked(paragraph, binding.getRoot());
+            });
         }
 
         /**
