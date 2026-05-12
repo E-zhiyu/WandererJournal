@@ -25,6 +25,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.enums.BackupDataType;
+import com.wanderer.journal.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.StringHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -36,7 +37,6 @@ import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -173,7 +173,7 @@ public class DataManageActivity extends AppCompatActivity {
                 R.string.export_data,
                 "将应用数据以文件形式保存",
                 R.drawable.outline_file_export_24,
-                SettingOptionViewBase.RadiusStyle.TOP
+                RadiusStyle.TOP
         );
         exportDataOption.setFunctionListener(v -> showExportChoiceDialog());
 
@@ -184,7 +184,7 @@ public class DataManageActivity extends AppCompatActivity {
                 R.string.import_data,
                 "从外部文件导入数据",
                 R.drawable.outline_download_24,
-                SettingOptionViewBase.RadiusStyle.BOTTOM
+                RadiusStyle.BOTTOM
         );
         importDataOption.setFunctionListener(v -> SAFHelper.openDocumentViaSAF(
                 new String[]{"application/zip"},
@@ -203,7 +203,7 @@ public class DataManageActivity extends AppCompatActivity {
                 R.string.append_paragraph,
                 "从外部文件中追加段落",
                 R.drawable.outline_convert_to_text_24,
-                SettingOptionViewBase.RadiusStyle.TOP
+                RadiusStyle.TOP
         );
         appendFromFileOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
                 new String[]{"text/plain"},
@@ -217,7 +217,7 @@ public class DataManageActivity extends AppCompatActivity {
                 R.string.import_diary,
                 "从文本文件中导入日记",
                 R.drawable.outline_note_stack_add_24,
-                SettingOptionViewBase.RadiusStyle.BOTTOM
+                RadiusStyle.BOTTOM
         );
         importDiaryOption.setFunctionListener(view -> SAFHelper.openDocumentViaSAF(
                 new String[]{"text/plain"},

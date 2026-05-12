@@ -1,7 +1,9 @@
-package com.wanderer.journal.ui.pages.paragraph.read;
+package com.wanderer.journal.ui.pages.read;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
@@ -14,6 +16,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -21,14 +24,20 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
+import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.enums.TagStrings;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.bottom.ParagraphContentModifySheet;
-import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -37,6 +46,8 @@ import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;               //绑定的XML布局
+    private LocalDate initDiaryDate = LocalDate.now();      //初始页的日期
+    private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -53,6 +64,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             return insets;
         });
 
+        receiveIntent();
         initViews();
     }
 
@@ -62,6 +74,22 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
+    }
+
+    /**
+     * 接收 Intent 中传递的数据
+     */
+    private void receiveIntent() {
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+        if (bundle == null) {
+            return;
+        }
+
+        //起始页日期
+        String initDate = bundle.getString(KeyStrings.INIT_DATE.getS());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        initDiaryDate = LocalDate.parse(initDate, formatter);
     }
 
     /**
@@ -92,7 +120,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
-                    PopupMenu menu = new PopupMenu(this, view);
+                    PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
                     menu.setOnMenuItemClickListener(item -> {
@@ -131,9 +159,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
-        ParagraphDao dao = DiaryDatabase.getInstance(this).paragraphDao();
-        ReadViewModelFactory factory = new ReadViewModelFactory(dao);
-        ReadViewModel viewModel = new ViewModelProvider(this, factory).get(ReadViewModel.class);
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
+        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
         disposable.add(viewModel.getPagingDataFlow()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -141,6 +169,38 @@ public class DiaryReadActivity extends AppCompatActivity {
                         adapter.submitData(getLifecycle(), pagingData)
                 )
         );
+
+        //跳转到指定日期
+        pendingTargetDate = initDiaryDate;
+        viewModel.scrollToDate(initDiaryDate);
+
+        //添加加载监听器用于精细调控加载位置
+        adapter.addLoadStateListener(loadStates -> {
+            // 当刷新完成且数据已提交到 UI
+            if (loadStates.getRefresh() instanceof LoadState.NotLoading && pendingTargetDate != null) {
+                // 遍历当前已加载的列表，找到对应的日期项
+                int position = -1;
+                for (int i = 0; i < adapter.getItemCount(); i++) {
+                    ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
+                    if (item instanceof ParagraphUiModel.Item) {
+                        if (((ParagraphUiModel.Item) item).paragraph.getCreateTime().toLocalDate().equals(pendingTargetDate)) {
+                            position = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (position != -1) {
+                    // 关键：强制滚动到该位置，并将偏移量设为 0 (置顶)
+                    if (binding.contentRecycler.getLayoutManager() != null) {
+                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                                .scrollToPositionWithOffset(position, 0);
+                        pendingTargetDate = null; // 跳转完成，清空标记
+                    }
+                }
+            }
+            return null;
+        });
     }
 
     /**

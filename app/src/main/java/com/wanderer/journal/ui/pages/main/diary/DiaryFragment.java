@@ -8,6 +8,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +20,14 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
+import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.ui.pages.paragraph.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.paragraph.write.WriteActivity;
+import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.write.WriteActivity;
+
+import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -62,24 +66,34 @@ public class DiaryFragment extends Fragment {
         });
 
         //日记列表
-        DiaryAdapter adapter = new DiaryAdapter(diary -> {
-            Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
-            startActivity(skip2Read);
-        }, (diary, view) -> {
-            PopupMenu popupMenu = new PopupMenu(requireContext(), view);
-            popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
+        DiaryAdapter adapter = new DiaryAdapter(
+                diary -> {
+                    Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
+                    Bundle bundle = new Bundle();
 
-            popupMenu.setOnMenuItemClickListener(item -> {
-                if (item.getItemId() == R.id.action_delete_diary) {
-                    deleteDiary(diary);
-                    return true;
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    String date = diary.getDiaryDate().format(formatter);
+                    bundle.putString(KeyStrings.INIT_DATE.getS(), date);
+
+                    skip2Read.putExtras(bundle);
+                    startActivity(skip2Read);
+                },
+                (diary, view) -> {
+                    PopupMenu popupMenu = new PopupMenu(requireContext(), view, Gravity.END);
+                    popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
+
+                    popupMenu.setOnMenuItemClickListener(item -> {
+                        if (item.getItemId() == R.id.action_delete_diary) {
+                            deleteDiary(diary);
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    popupMenu.show();
                 }
-
-                return false;
-            });
-
-            popupMenu.show();
-        });
+        );
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         disposable.add(db.diaryDao().getAllDiariesFlowable()
