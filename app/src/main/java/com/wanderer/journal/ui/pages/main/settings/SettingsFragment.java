@@ -27,6 +27,7 @@ import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingC
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingOptionViewBase;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSpinnerView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
+import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 
 import java.util.Arrays;
@@ -69,6 +70,20 @@ public class SettingsFragment extends Fragment {
 
         //初始化安全设置
         initSecuritySettings();
+
+        //关于软件
+        SettingClickableTextView aboutOption = new SettingClickableTextView(
+                requireContext(),
+                binding.aboutOption,
+                R.string.about_software,
+                null,
+                R.drawable.outline_info_24,
+                SettingOptionViewBase.RadiusStyle.SINGLE
+        );
+        aboutOption.setFunctionListener(view -> {
+            Intent skip2About = new Intent(requireContext(), AboutActivity.class);
+            startActivity(skip2About);
+        });
     }
 
     /**

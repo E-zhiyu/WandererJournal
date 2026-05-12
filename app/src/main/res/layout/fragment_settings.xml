@@ -68,6 +68,16 @@
             <include
                 android:id="@+id/hide_recent_task_option"
                 layout="@layout/view_setting_option" />
+
+            <!-- 关于软件 -->
+            <include
+                android:id="@+id/about_option"
+                layout="@layout/view_setting_option"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
