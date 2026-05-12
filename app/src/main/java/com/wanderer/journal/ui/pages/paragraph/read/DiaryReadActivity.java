@@ -27,6 +27,8 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.bottom.ParagraphContentModifySheet;
 import com.wanderer.journal.ui.pages.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.pages.paragraph.ParagraphViewModel;
+import com.wanderer.journal.ui.pages.paragraph.ParagraphViewModelFactory;
 
 import java.time.LocalDateTime;
 
@@ -132,8 +134,8 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //监听数据库的响应
         ParagraphDao dao = DiaryDatabase.getInstance(this).paragraphDao();
-        ReadViewModelFactory factory = new ReadViewModelFactory(dao);
-        ReadViewModel viewModel = new ViewModelProvider(this, factory).get(ReadViewModel.class);
+        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(dao);
+        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
         disposable.add(viewModel.getPagingDataFlow()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
