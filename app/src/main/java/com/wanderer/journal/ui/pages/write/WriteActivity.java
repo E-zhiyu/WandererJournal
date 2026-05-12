@@ -3,6 +3,7 @@ package com.wanderer.journal.ui.pages.write;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
@@ -144,7 +145,7 @@ public class WriteActivity extends AppCompatActivity {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
-                    PopupMenu menu = new PopupMenu(this, view);
+                    PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
                     menu.setOnMenuItemClickListener(item -> {

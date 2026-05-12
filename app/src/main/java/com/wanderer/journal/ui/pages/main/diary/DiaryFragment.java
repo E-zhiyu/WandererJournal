@@ -8,6 +8,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,24 +63,27 @@ public class DiaryFragment extends Fragment {
         });
 
         //日记列表
-        DiaryAdapter adapter = new DiaryAdapter(diary -> {
-            Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
-            startActivity(skip2Read);
-        }, (diary, view) -> {
-            PopupMenu popupMenu = new PopupMenu(requireContext(), view);
-            popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
+        DiaryAdapter adapter = new DiaryAdapter(
+                diary -> {
+                    Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
+                    startActivity(skip2Read);
+                },
+                (diary, view) -> {
+                    PopupMenu popupMenu = new PopupMenu(requireContext(), view, Gravity.END);
+                    popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
 
-            popupMenu.setOnMenuItemClickListener(item -> {
-                if (item.getItemId() == R.id.action_delete_diary) {
-                    deleteDiary(diary);
-                    return true;
+                    popupMenu.setOnMenuItemClickListener(item -> {
+                        if (item.getItemId() == R.id.action_delete_diary) {
+                            deleteDiary(diary);
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                    popupMenu.show();
                 }
-
-                return false;
-            });
-
-            popupMenu.show();
-        });
+        );
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         disposable.add(db.diaryDao().getAllDiariesFlowable()
