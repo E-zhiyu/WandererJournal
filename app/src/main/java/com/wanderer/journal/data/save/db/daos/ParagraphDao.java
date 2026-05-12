@@ -45,6 +45,9 @@ public interface ParagraphDao {
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
     PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
+    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
+    Single<Integer> getAdjustedPosition(LocalDate date);
+
     /**
      * 插入一条日记段落
      *

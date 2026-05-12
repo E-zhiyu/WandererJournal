@@ -20,11 +20,14 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
+import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.write.WriteActivity;
+
+import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -66,6 +69,13 @@ public class DiaryFragment extends Fragment {
         DiaryAdapter adapter = new DiaryAdapter(
                 diary -> {
                     Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
+                    Bundle bundle = new Bundle();
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    String date = diary.getDiaryDate().format(formatter);
+                    bundle.putString(KeyStrings.INIT_DATE.getS(), date);
+
+                    skip2Read.putExtras(bundle);
                     startActivity(skip2Read);
                 },
                 (diary, view) -> {

@@ -164,6 +164,11 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
+            if (holder instanceof ParagraphViewHolder) {
+                ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+                itemHolder.binding.contentText.setText("正在加载段落内容……");
+                itemHolder.binding.dateTimeText.setText("未知");
+            }
             return;
         }
 

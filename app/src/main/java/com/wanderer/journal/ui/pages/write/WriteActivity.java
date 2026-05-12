@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -31,6 +32,7 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 
@@ -45,10 +47,11 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
 public class WriteActivity extends AppCompatActivity {
-    private ActivityWriteBinding binding;                       //绑定的XML布局
-    private ParagraphEntity modifyingParagraph = null;        //正在编辑的段落编号
-    private OnBackPressedCallback backPressedCallback;          //返回手势监听
-    private LocalDate diaryDate = LocalDate.now();  //父日记的日期
+    private ActivityWriteBinding binding;                   //绑定的XML布局
+    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落编号
+    private OnBackPressedCallback backPressedCallback;      //返回手势监听
+    private LocalDate diaryDate = LocalDate.now();          //父日记的日期
+    private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -192,8 +195,8 @@ public class WriteActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
-        ParagraphDao dao = DiaryDatabase.getInstance(this).paragraphDao();
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(dao, diaryDate, diaryDate.plusDays(1));
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db, diaryDate, diaryDate.plusDays(1));
         ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
         disposable.add(viewModel.getPagingDataFlow()
                 .subscribeOn(Schedulers.io())
@@ -203,6 +206,38 @@ public class WriteActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+
+        //跳转到指定日期
+        pendingTargetDate = diaryDate;
+        viewModel.scrollToDate(diaryDate);
+
+        //添加加载监听器用于精细调控加载位置
+        adapter.addLoadStateListener(loadStates -> {
+            // 当刷新完成且数据已提交到 UI
+            if (loadStates.getRefresh() instanceof LoadState.NotLoading && pendingTargetDate != null) {
+                // 遍历当前已加载的列表，找到对应的日期项
+                int position = -1;
+                for (int i = 0; i < adapter.getItemCount(); i++) {
+                    ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
+                    if (item instanceof ParagraphUiModel.Item) {
+                        if (((ParagraphUiModel.Item) item).paragraph.getCreateTime().toLocalDate().equals(pendingTargetDate)) {
+                            position = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (position != -1) {
+                    // 关键：强制滚动到该位置，并将偏移量设为 0 (置顶)
+                    if (binding.contentRecycler.getLayoutManager() != null) {
+                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                                .scrollToPositionWithOffset(position, 0);
+                        pendingTargetDate = null; // 跳转完成，清空标记
+                    }
+                }
+            }
+            return null;
+        });
     }
 
     /**
