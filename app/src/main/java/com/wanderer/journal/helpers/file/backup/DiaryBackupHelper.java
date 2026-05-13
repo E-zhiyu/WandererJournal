@@ -59,21 +59,27 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
     protected void saveDataInMapToDb(@NonNull DiaryDataMap map) {
         //导入日记数据
         List<DiaryPojo> diaryPojoList = map.getDiaryList();
-        List<DiaryEntity> diaryEntityList = EntityPojoMapper.INSTANCE.toDiaryEntityList(diaryPojoList);
-        db.diaryDao().clear();
-        db.diaryDao().importData(diaryEntityList);
+        if (diaryPojoList != null) {
+            List<DiaryEntity> diaryEntityList = EntityPojoMapper.INSTANCE.toDiaryEntityList(diaryPojoList);
+            db.diaryDao().clear();
+            db.diaryDao().importData(diaryEntityList);
+        }
 
         //导入段落数据
         List<ParagraphPojo> paragraphPojoList = map.getParagraphList();
-        List<ParagraphEntity> paragraphEntityList = EntityPojoMapper.INSTANCE.toParagraphEntityList(paragraphPojoList);
-        db.paragraphDao().clear();
-        db.paragraphDao().importData(paragraphEntityList);
+        if (paragraphPojoList != null) {
+            List<ParagraphEntity> paragraphEntityList = EntityPojoMapper.INSTANCE.toParagraphEntityList(paragraphPojoList);
+            db.paragraphDao().clear();
+            db.paragraphDao().importData(paragraphEntityList);
+        }
 
         //导入媒体数据
         List<MediaPojo> mediaPojoList = map.getMediaList();
-        List<MediaEntity> mediaEntityList = EntityPojoMapper.INSTANCE.toMediaEntityList(mediaPojoList);
-        db.mediaDao().clear();
-        db.mediaDao().importData(mediaEntityList);
+        if (mediaPojoList != null) {
+            List<MediaEntity> mediaEntityList = EntityPojoMapper.INSTANCE.toMediaEntityList(mediaPojoList);
+            db.mediaDao().clear();
+            db.mediaDao().importData(mediaEntityList);
+        }
     }
 
     @Override
