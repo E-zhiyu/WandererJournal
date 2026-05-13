@@ -46,18 +46,27 @@
                         android:padding="10dp">
 
                         <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/start_date_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/start_date"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
+
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/start_date_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/start_date"
-                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                            android:textAppearance="?attr/textAppearanceHeadline5" />
 
                         <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/date_difference_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/difference_of_date"
-                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -76,18 +85,34 @@
                         android:padding="10dp">
 
                         <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/diary_count_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diary_count"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
+
+                        <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/diary_count_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/diary_count"
-                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                            android:textAppearance="?attr/textAppearanceHeadline5" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/paragraph_count_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/paragraph_count"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
 
                         <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/paragraph_count_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/paragraph_count"
-                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+                            android:textAppearance="?attr/textAppearanceHeadline5" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
