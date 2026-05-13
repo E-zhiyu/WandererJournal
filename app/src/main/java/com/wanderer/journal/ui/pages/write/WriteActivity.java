@@ -2,6 +2,10 @@ package com.wanderer.journal.ui.pages.write;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.transition.Fade;
+import android.transition.Slide;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -15,6 +19,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -79,7 +84,7 @@ public class WriteActivity extends AppCompatActivity {
         backPressedCallback = new OnBackPressedCallback(false) {
             @Override
             public void handleOnBackPressed() {
-                resetContentModifyMode();
+                setEditMode(false, null);
             }
         };
         getOnBackPressedDispatcher().addCallback(backPressedCallback);
@@ -136,12 +141,12 @@ public class WriteActivity extends AppCompatActivity {
                 addParagraph(content);
             } else {
                 updateParagraphContent(content, modifyingParagraph);
-                resetContentModifyMode();
+                setEditMode(false, null);
             }
         });
 
         //内容编辑关闭按钮
-        binding.modifyCloseBtn.setOnClickListener(view -> resetContentModifyMode());
+        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null));
     }
 
     /**
@@ -161,9 +166,7 @@ public class WriteActivity extends AppCompatActivity {
                             backPressedCallback.setEnabled(true);
 
                             //更新UI到编辑模式
-                            binding.contentEditCard.setVisibility(View.VISIBLE);
-                            binding.contentTextInput.setText(paragraph.getContent());
-                            binding.originText.setText(paragraph.getContent());
+                            setEditMode(true, paragraph);
 
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
@@ -357,9 +360,10 @@ public class WriteActivity extends AppCompatActivity {
 
                     //判断是否为正在编辑的段落，是则退出编辑
                     if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
-                        resetContentModifyMode();
+                        setEditMode(false, null);
                     }
 
+                    //多线程删除段落
                     disposable.add(dao.deleteParagraph(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
@@ -377,12 +381,33 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 退出内容编辑模式
+     * 设置编辑模式
+     *
+     * @param isEditMode         是否启用编辑模式
+     * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
      */
-    private void resetContentModifyMode() {
-        binding.contentEditCard.setVisibility(View.GONE);
-        modifyingParagraph = null;
-        backPressedCallback.setEnabled(false);
-        binding.contentTextInput.setText(null);
+    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
+        // 定义过渡动画：组合滑入和渐变
+        // Slide(Gravity.BOTTOM) 会让 View 看起来是从底部“抽出来”的
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.BOTTOM))
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250); // Telegram 的动画通常很短促，200-300ms 最合适
+
+        // 关键：通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+
+        // 执行状态改变
+        if (isEditMode) {
+            this.modifyingParagraph = modifyingParagraph;
+            binding.originText.setText(modifyingParagraph.getContent());
+            binding.contentEditCard.setVisibility(View.VISIBLE);
+        } else {
+            this.modifyingParagraph = null;
+            binding.contentEditCard.setVisibility(View.GONE);
+        }
+
+        backPressedCallback.setEnabled(isEditMode);
     }
 }
