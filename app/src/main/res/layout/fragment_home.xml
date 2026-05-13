@@ -25,23 +25,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 app:layout_constraintTop_toTopOf="parent">
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/date_card"
                     style="@style/MediumRadiusCardStyle"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
                     android:layout_marginEnd="1dp"
-                    android:layout_weight="1">
+                    android:layout_marginBottom="0dp"
+                    app:layout_constraintBottom_toBottomOf="@id/count_card"
+                    app:layout_constraintEnd_toStartOf="@id/count_card"
+                    app:layout_constraintHorizontal_weight="1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:orientation="vertical"
                         android:padding="10dp">
 
@@ -74,13 +78,17 @@
                     android:id="@+id/count_card"
                     style="@style/MediumRadiusCardStyle"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_marginStart="1dp"
-                    android:layout_weight="1">
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_weight="1"
+                    app:layout_constraintStart_toEndOf="@id/date_card"
+                    app:layout_constraintTop_toTopOf="parent">
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:orientation="vertical"
                         android:padding="10dp">
 
@@ -115,7 +123,7 @@
                             android:textAppearance="?attr/textAppearanceHeadline5" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

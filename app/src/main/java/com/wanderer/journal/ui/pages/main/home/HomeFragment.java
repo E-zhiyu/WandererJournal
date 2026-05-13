@@ -80,11 +80,11 @@ public class HomeFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(dateOptional -> {
                     LocalDate date = dateOptional.orElse(null);
-                    if (date==null) {
+                    if (date == null) {
                         binding.startDateText.setText(R.string.cant_get);
                         binding.dateDifferenceText.setText(R.string.unknown_difference_of_date);
                     } else {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE");
                         binding.startDateText.setText(date.format(formatter));
 
                         //计算时间差
