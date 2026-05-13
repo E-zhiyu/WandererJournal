@@ -2,18 +2,25 @@ package com.wanderer.journal.ui.pages.read;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.transition.Fade;
+import android.transition.Slide;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -26,18 +33,19 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.helpers.ImmHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
-import com.wanderer.journal.ui.others.bottom.ParagraphContentModifySheet;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -48,6 +56,8 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;               //绑定的XML布局
     private LocalDate initDiaryDate = LocalDate.now();      //初始页的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
+    private OnBackPressedCallback backPressedCallback;      //返回手势监听
+    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -57,15 +67,73 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbarContainerLayout, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
-            binding.contentRecycler.setPadding(0, 0, 0, systemBars.bottom);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            //SearchBar的布局
+            binding.appBarConstraint.setPadding(0, systemBars.top, 0, ViewEdgeHelper.dpToPx(this, 20));
+
+            //段落RecyclerView
+            binding.bottomCard.post(() -> {
+                int cardHeight = binding.bottomCard.getHeight();
+                int bottomPadding = modifyingParagraph != null ? cardHeight + systemBars.bottom : systemBars.bottom;
+                binding.contentRecycler.setPadding(0, 0, 0, bottomPadding);
+            });
+
+            //底部卡片布局
+            binding.bottomCardLayout.setPadding(
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    systemBars.bottom
+            );
             return insets;
+        });
+
+        //设置键盘监听动画
+        ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
+                WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
+        ) {
+
+            @NonNull
+            @Override
+            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+                // 1. 计算纯键盘高度
+                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
+
+                // 2. 底部卡片依然使用 TranslationY，因为它需要“悬浮”在键盘上
+                binding.bottomCard.setTranslationY(-keyboardHeight);
+
+                // 如果你希望 RecyclerView 也跟着键盘动态调整底部（防止内容被挡住）
+                // 这里可以通过 setTranslationY 或者动态调整底部 Padding
+                // 为了性能，建议键盘动画期间使用 TranslationY 偏移 RecyclerView
+                binding.contentRecycler.setTranslationY(-keyboardHeight);
+
+                return insets;
+            }
+
+            @Override
+            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+                super.onEnd(animation);
+                // 动画结束时，如果需要将 Translation 转换为永久的 Padding，可以在这里处理
+            }
         });
 
         receiveIntent();
         initViews();
+
+        //注册返回手势监听
+        backPressedCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                setEditMode(false, null);
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     @Override
@@ -101,15 +169,29 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //日记段落列表
         initRecyclerView();
+
+        //发送按钮
+        binding.sendBtn.setOnClickListener(view -> {
+            //获取输入内容
+            String content = String.valueOf(binding.contentTextInput.getText());
+            if (content.isEmpty()) {
+                return;
+            }
+
+            if (modifyingParagraph != null) {
+                updateParagraphContent(content, modifyingParagraph);
+            }
+            setEditMode(false, null);
+        });
+
+        //内容编辑关闭按钮
+        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null));
     }
 
     /**
      * 初始化搜索组件
      */
     private void initSearchComponents() {
-        //绑定SearchView和SearchBar
-        binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
-
         //TODO:完成剩下的
     }
 
@@ -125,7 +207,13 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     menu.setOnMenuItemClickListener(item -> {
                         if (item.getItemId() == R.id.action_modify_content) {
-                            updateParagraphContent(paragraph);
+                            //保存旧段落引用并启用自定义返回手势
+                            modifyingParagraph = paragraph;
+                            backPressedCallback.setEnabled(true);
+
+                            //更新UI到编辑模式
+                            setEditMode(true, paragraph);
+
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
                             updateParagraphCreateTime(paragraph);
@@ -206,38 +294,33 @@ public class DiaryReadActivity extends AppCompatActivity {
     /**
      * 更新段落内容
      *
-     * @param paragraph 原本的段落实体
+     * @param newContent      新内容
+     * @param originParagraph 原本的段落实体
      */
-    private void updateParagraphContent(@NonNull ParagraphEntity paragraph) {
-        ParagraphContentModifySheet sheet = new ParagraphContentModifySheet(
-                newContent -> {
-                    ParagraphEntity newParagraph = new ParagraphEntity(
-                            paragraph.getParentDiaryId(),
-                            newContent,
-                            paragraph.getCreateTime()
-                    );
-                    newParagraph.setParagraphId(paragraph.getParagraphId());
-
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
-                    ParagraphDao paragraphDao = db.paragraphDao();
-                    disposable.add(paragraphDao.updateParagraphContent(newParagraph)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> {
-                                        Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落内容修改成功");
-                                        Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show();
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(this, throwable);
-                                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落内容修改失败");
-                                    }
-                            )
-                    );
-                },
-                paragraph.getContent()
+    private void updateParagraphContent(String newContent, @NonNull ParagraphEntity originParagraph) {
+        ParagraphEntity newParagraph = new ParagraphEntity(
+                originParagraph.getParentDiaryId(),
+                newContent,
+                originParagraph.getCreateTime()
         );
-        sheet.show(getSupportFragmentManager(), TagStrings.PARAGRAPH_CONTENT_MODIFY_SHEET.getTag());
+        newParagraph.setParagraphId(originParagraph.getParagraphId());
+
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphDao paragraphDao = db.paragraphDao();
+        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> {
+                            Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show();
+                            Log.i(LogTags.WRITE_ACTIVITY.n(), "段落内容修改成功");
+                        },
+                        throwable -> {
+                            ExceptionHelper.showExceptionDialog(this, throwable);
+                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落内容修改失败");
+                        }
+                )
+        );
     }
 
     /**
@@ -296,6 +379,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                     DiaryDatabase db = DiaryDatabase.getInstance(this);
                     ParagraphDao dao = db.paragraphDao();
 
+                    //判断是否为正在编辑的段落，是则退出编辑
+                    if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
+                        setEditMode(false, null);
+                    }
+
                     disposable.add(dao.deleteParagraph(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
@@ -310,5 +398,44 @@ public class DiaryReadActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("取消", null)
                 .show();
+    }
+
+    /**
+     * 设置编辑模式
+     *
+     * @param isEditMode         是否启用编辑模式
+     * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
+     */
+    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
+        // 定义过渡动画：组合滑入和渐变
+        // Slide(Gravity.BOTTOM) 会让 View 看起来是从底部“抽出来”的
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.BOTTOM))
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250); // Telegram 的动画通常很短促，200-300ms 最合适
+
+        // 关键：通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+
+        // 执行状态改变
+        if (isEditMode) {
+            this.modifyingParagraph = modifyingParagraph;
+            binding.originText.setText(modifyingParagraph.getContent());
+            binding.bottomCard.setVisibility(View.VISIBLE);
+
+            //自动弹出输入法
+            ImmHelper.showImm(binding.contentTextInput);
+        } else {
+            this.modifyingParagraph = null;
+            binding.bottomCard.setVisibility(View.GONE);
+            binding.contentTextInput.setText(null);         //清空输入框
+
+            //自动关闭输入法
+            ImmHelper.hideImm(binding.contentTextInput);
+        }
+
+        //启用或禁用返回监听
+        backPressedCallback.setEnabled(isEditMode);
     }
 }

@@ -165,7 +165,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.Vie
 
         //日期
         LocalDate date = diaryWithSummary.getDiary().getDiaryDate();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
         holder.binding.dateText.setText(date.format(formatter));
 
         //片段摘要

@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -80,31 +81,22 @@ public class HomeFragment extends Fragment {
                 .subscribe(dateOptional -> {
                     LocalDate date = dateOptional.orElse(null);
                     if (date == null) {
-                        binding.startDateText.setText("您还未开始写日记");
-                        binding.dateDifferenceText.setVisibility(View.GONE);
+                        binding.startDateText.setText(R.string.cant_get);
+                        binding.dateDifferenceText.setText(R.string.unknown_difference_of_date);
                     } else {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        String tip = String.format(
-                                Locale.getDefault(),
-                                "最早日期：\n%s",
-                                date.format(formatter)
-                        );
-                        binding.startDateText.setText(tip);
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE");
+                        binding.startDateText.setText(date.format(formatter));
 
-                        //计算日期差
-                        LocalDate now = LocalDate.now();
-                        long difference = ChronoUnit.DAYS.between(date, now);
-                        binding.dateDifferenceText.setVisibility(View.VISIBLE);
+                        //计算时间差
+                        long difference = ChronoUnit.DAYS.between(date, LocalDate.now());
                         binding.dateDifferenceText.setText(String.format(
                                 Locale.getDefault(),
-                                "距今已有%d天",
+                                "距今%d天",
                                 difference
                         ));
                     }
                 })
         );
-
-
     }
 
     /**
@@ -129,32 +121,14 @@ public class HomeFragment extends Fragment {
         disposable.add(diaryDao.getDiaryCount()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(count -> {
-                    String tip = count == 0 ?
-                            "没有任何日记" :
-                            String.format(
-                                    Locale.getDefault(),
-                                    "日记天数：%d",
-                                    count
-                            );
-                    binding.diaryCountText.setText(tip);
-                })
+                .subscribe(count -> binding.diaryCountText.setText(String.valueOf(count)))
         );
 
         //段落数量
         disposable.add(paragraphDao.getParagraphCount()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(count -> {
-                    String tip = count == 0 ?
-                            "没有任何段落" :
-                            String.format(
-                                    Locale.getDefault(),
-                                    "总段落数：%d",
-                                    count
-                            );
-                    binding.paragraphCountText.setText(tip);
-                })
+                .subscribe(count -> binding.paragraphCountText.setText(String.valueOf(count)))
         );
     }
 }

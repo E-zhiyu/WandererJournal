@@ -22,8 +22,10 @@
     <string name="dynamic_color">动态配色</string>
     <string name="diary_count">日记数量</string>
     <string name="paragraph_count">段落数量</string>
-    <string name="start_date">开始日期</string>
+    <string name="start_date">日记开始日期</string>
+    <string name="cant_get">无法获取</string>
     <string name="difference_of_date">日期差</string>
+    <string name="unknown_difference_of_date">距今天数未知</string>
     <string name="authentication">身份验证</string>
     <string name="hide_recent_task">最近任务隐藏</string>
     <string name="authentication_opportunity">身份验证时机</string>
@@ -34,8 +36,8 @@
     <string name="import_data">导入数据</string>
     <string name="append_paragraph">段落追加</string>
     <string name="import_diary">导入日记</string>
-    <string name="no_diary">还没有日记呢</string>
-    <string name="no_paragraph">没有任何段落</string>
+    <string name="no_diary">无日记</string>
+    <string name="no_paragraph">无段落</string>
     <string name="about_software">关于软件</string>
     <string name="app_description">这是一款Material You风格的本地日记APP，界面清爽，功能纯粹，让您随时随地都能记录生活中的点滴。</string>
     <string name="author_name">E_zhiyu</string>
