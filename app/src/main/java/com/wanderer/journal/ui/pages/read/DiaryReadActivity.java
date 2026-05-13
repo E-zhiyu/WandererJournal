@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.read;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.transition.Fade;
@@ -9,6 +10,7 @@ import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -33,6 +35,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -422,10 +425,16 @@ public class DiaryReadActivity extends AppCompatActivity {
             this.modifyingParagraph = modifyingParagraph;
             binding.originText.setText(modifyingParagraph.getContent());
             binding.bottomCard.setVisibility(View.VISIBLE);
+
+            //自动弹出输入法
+            ImmHelper.showImm(binding.contentTextInput);
         } else {
             this.modifyingParagraph = null;
             binding.bottomCard.setVisibility(View.GONE);
             binding.contentTextInput.setText(null);         //清空输入框
+
+            //自动关闭输入法
+            ImmHelper.hideImm(binding.contentTextInput);
         }
 
         //启用或禁用返回监听

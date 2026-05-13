@@ -34,6 +34,7 @@ import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -431,6 +432,9 @@ public class WriteActivity extends AppCompatActivity {
             this.modifyingParagraph = modifyingParagraph;
             binding.originText.setText(modifyingParagraph.getContent());
             binding.contentEditCard.setVisibility(View.VISIBLE);
+
+            //自动显示输入法
+            ImmHelper.showImm(binding.contentTextInput);
         } else {
             this.modifyingParagraph = null;
             binding.contentEditCard.setVisibility(View.GONE);
