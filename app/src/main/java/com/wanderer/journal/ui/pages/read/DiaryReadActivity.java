@@ -57,9 +57,9 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbarContainerLayout, (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             binding.contentRecycler.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
@@ -107,9 +107,6 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化搜索组件
      */
     private void initSearchComponents() {
-        //绑定SearchView和SearchBar
-        binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
-
         //TODO:完成剩下的
     }
 
