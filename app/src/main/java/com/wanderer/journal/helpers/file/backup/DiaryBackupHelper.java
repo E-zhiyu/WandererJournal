@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.data.backup.EntityPojoMapper;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -79,6 +80,11 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
             List<MediaEntity> mediaEntityList = EntityPojoMapper.INSTANCE.toMediaEntityList(mediaPojoList);
             db.mediaDao().clear();
             db.mediaDao().importData(mediaEntityList);
+        }
+
+        List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
+        if (emotionTagPojoList!=null) {
+            //TODO:写类型转换逻辑
         }
     }
 
