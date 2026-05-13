@@ -97,7 +97,7 @@ public class ParagraphViewModel extends ViewModel {
      */
     @NonNull
     private String formatDate(@NonNull LocalDateTime datetime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
         return datetime.format(formatter);
     }
 
