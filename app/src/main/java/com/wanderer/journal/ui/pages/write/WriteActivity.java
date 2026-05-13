@@ -118,6 +118,9 @@ public class WriteActivity extends AppCompatActivity {
      * 初始化视图
      */
     private void initViews() {
+        //工具栏
+        binding.toolbar.setNavigationOnClickListener(view -> finish());
+
         //初始化RecyclerView
         initRecycler();
 
