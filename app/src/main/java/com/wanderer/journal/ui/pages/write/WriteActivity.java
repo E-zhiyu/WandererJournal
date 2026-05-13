@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
@@ -45,6 +46,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -53,7 +55,7 @@ import kotlin.Unit;
 
 public class WriteActivity extends AppCompatActivity {
     private ActivityWriteBinding binding;                   //绑定的XML布局
-    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落编号
+    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
     private OnBackPressedCallback backPressedCallback;      //返回手势监听
     private LocalDate diaryDate = LocalDate.now();          //父日记的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
@@ -68,8 +70,7 @@ public class WriteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets imeBars = insets.getInsets(WindowInsetsCompat.Type.ime());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, imeBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             binding.contentInputLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
@@ -78,9 +79,36 @@ public class WriteActivity extends AppCompatActivity {
             return insets;
         });
 
+        //设置键盘动画监听器
+        ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
+                WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
+        ) {
+
+            @NonNull
+            @Override
+            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                // 获取当前帧键盘（IME）和系统栏的高度
+                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+                // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
+                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
+                binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
+
+                return insets;
+            }
+
+            @Override
+            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+                super.onEnd(animation);
+                // 动画结束时，如果需要将 Translation 转换为永久的 Padding，可以在这里处理
+            }
+        });
+
         receiveIntent();
         initViews();
 
+        //注册返回手势监听
         backPressedCallback = new OnBackPressedCallback(false) {
             @Override
             public void handleOnBackPressed() {
