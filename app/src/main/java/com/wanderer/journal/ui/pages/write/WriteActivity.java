@@ -355,6 +355,11 @@ public class WriteActivity extends AppCompatActivity {
                     DiaryDatabase db = DiaryDatabase.getInstance(this);
                     ParagraphDao dao = db.paragraphDao();
 
+                    //判断是否为正在编辑的段落，是则退出编辑
+                    if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
+                        resetContentModifyMode();
+                    }
+
                     disposable.add(dao.deleteParagraph(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
@@ -372,7 +377,7 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 重置内容编辑模式
+     * 退出内容编辑模式
      */
     private void resetContentModifyMode() {
         binding.contentEditCard.setVisibility(View.GONE);
