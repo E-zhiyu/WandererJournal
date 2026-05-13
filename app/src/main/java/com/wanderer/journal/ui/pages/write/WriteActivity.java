@@ -438,6 +438,7 @@ public class WriteActivity extends AppCompatActivity {
         } else {
             this.modifyingParagraph = null;
             binding.contentEditCard.setVisibility(View.GONE);
+            binding.contentTextInput.setText(null);         //清空输入框
         }
 
         backPressedCallback.setEnabled(isEditMode);
