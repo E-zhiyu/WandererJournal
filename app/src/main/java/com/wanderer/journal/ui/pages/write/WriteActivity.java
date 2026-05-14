@@ -72,11 +72,13 @@ public class WriteActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
             binding.contentInputLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     systemBars.bottom);
+
             return insets;
         });
 

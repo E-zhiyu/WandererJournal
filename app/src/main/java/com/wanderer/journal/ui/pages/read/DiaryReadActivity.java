@@ -74,13 +74,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             //SearchBar的布局
             binding.appBarConstraint.setPadding(0, systemBars.top, 0, ViewEdgeHelper.dpToPx(this, 20));
 
-            //段落RecyclerView
-            binding.bottomCard.post(() -> {
-                int cardHeight = binding.bottomCard.getHeight();
-                int bottomPadding = modifyingParagraph != null ? cardHeight + systemBars.bottom : systemBars.bottom;
-                binding.contentRecycler.setPadding(0, 0, 0, bottomPadding);
-            });
-
             //底部卡片布局
             binding.bottomCardLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
@@ -95,24 +88,17 @@ public class DiaryReadActivity extends AppCompatActivity {
         ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
                 WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
         ) {
-
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-                // 1. 计算纯键盘高度
+                //计算纯键盘高度
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
 
-                // 2. 底部卡片依然使用 TranslationY，因为它需要“悬浮”在键盘上
-                binding.bottomCard.setTranslationY(-keyboardHeight);
-
-                // 如果你希望 RecyclerView 也跟着键盘动态调整底部（防止内容被挡住）
-                // 这里可以通过 setTranslationY 或者动态调整底部 Padding
-                // 为了性能，建议键盘动画期间使用 TranslationY 偏移 RecyclerView
-                binding.contentRecycler.setTranslationY(-keyboardHeight);
-
+                //便宜可能被键盘遮挡的组件
+                binding.getRoot().setPadding(systemBars.left, 0, systemBars.right, keyboardHeight);
                 return insets;
             }
 
@@ -193,6 +179,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initSearchComponents() {
         //TODO:完成剩下的
+        binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
     }
 
     /**
