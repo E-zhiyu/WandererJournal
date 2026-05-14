@@ -136,25 +136,53 @@ public class DiaryFragment extends Fragment {
     }
 
     /**
-     * 修改日记的日期
+     * 显示日记日期选择器
      *
      * @param diary 需要修改日期的日记
      */
-    private void modifyDate(@NonNull DiaryEntity diary) {
+    private void showDiaryDatePicker(@NonNull DiaryEntity diary) {
         DateTimePickerHelper.selectDate(
                 diary.getDiaryDate(),
                 getParentFragmentManager(),
                 selection -> {
                     LocalDate targetDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    disposable.add(DiaryService.updateDiaryDate(diary.getDiaryId(), targetDate, requireContext())
+                    DiaryDao diaryDao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    disposable.add(diaryDao.getDiarySingleByDate(targetDate)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> Toast.makeText(requireContext(), "日期更新完毕", Toast.LENGTH_SHORT).show(),
-                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
-                            )
+                            .subscribe(optional -> {
+                                if (optional.isPresent()) {
+                                    new MaterialAlertDialogBuilder(requireContext())
+                                            .setTitle(R.string.modify_date)
+                                            .setMessage("该日期已有日记，是否覆盖该日记？")
+                                            .setPositiveButton("覆盖", (dialogInterface, i) ->
+                                                    modifyDiaryDate(diary, targetDate)
+                                            )
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                } else {
+                                    modifyDiaryDate(diary, targetDate);
+                                }
+                            })
                     );
                 }
+        );
+    }
+
+    /**
+     * 修改日记的日期
+     *
+     * @param diary      待修改日期的日记
+     * @param targetDate 修改后的日期
+     */
+    private void modifyDiaryDate(@NonNull DiaryEntity diary, LocalDate targetDate) {
+        disposable.add(DiaryService.updateDiaryDate(diary.getDiaryId(), targetDate, requireContext())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Toast.makeText(requireContext(), "日期更新完毕", Toast.LENGTH_SHORT).show(),
+                        e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                )
         );
     }
 
@@ -173,7 +201,7 @@ public class DiaryFragment extends Fragment {
                 deleteDiary(diary);
                 return true;
             } else if (item.getItemId() == R.id.action_modify_date) {
-                modifyDate(diary);
+                showDiaryDatePicker(diary);
                 return true;
             }
 

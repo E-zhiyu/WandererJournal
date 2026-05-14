@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface DiaryDao {
@@ -71,6 +73,23 @@ public interface DiaryDao {
     Long getDiaryIdByDate(LocalDate date);
 
     /**
+     * 通过多线程获取指定日期的日记
+     *
+     * @param date 待查询的日期
+     * @return 该日期的日记（无则通过{@link Maybe}返回 null
+     */
+    @Query("SELECT * FROM diaries WHERE diaryDate == :date")
+    Single<Optional<DiaryEntity>> getDiarySingleByDate(LocalDate date);
+
+    /**
+     * 通过日期删除日记
+     *
+     * @param date 待删除日记的日期
+     */
+    @Query("DELETE FROM diaries WHERE diaryDate == :date")
+    void deleteDiaryByDate(LocalDate date);
+
+    /**
      * 事务处理：获取日期所对应的日记编号
      *
      * @param date 日期
@@ -95,6 +114,9 @@ public interface DiaryDao {
      */
     @Transaction
     default void modifyDiaryDate(long diaryId, LocalDate targetDate, @NonNull ParagraphDao paragraphDao) {
+        //先删除目标日期的日记
+        deleteDiaryByDate(targetDate);
+
         //实例化新的日记并写入
         DiaryEntity newDiary = new DiaryEntity(targetDate);
         newDiary.setDiaryId(diaryId);
