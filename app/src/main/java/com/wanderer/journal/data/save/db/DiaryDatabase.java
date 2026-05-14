@@ -10,17 +10,22 @@ import androidx.room.TypeConverters;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.ref.EmotionParagraphCrossRef;
 
 @Database(
         entities = {
                 DiaryEntity.class,
                 ParagraphEntity.class,
-                MediaEntity.class
+                MediaEntity.class,
+                EmotionTagEntity.class,
+                EmotionParagraphCrossRef.class
         },
         version = 1
 )
@@ -57,4 +62,6 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public abstract ParagraphDao paragraphDao();
 
     public abstract MediaDao mediaDao();
+
+    public abstract EmotionTagDao emotionTagDao();
 }

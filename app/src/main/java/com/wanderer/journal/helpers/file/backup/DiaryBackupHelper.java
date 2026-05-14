@@ -14,6 +14,7 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagWithParagraph;
 import com.wanderer.journal.enums.BackupDataType;
 
 import java.util.List;
@@ -47,11 +48,16 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
         List<MediaEntity> mediaEntityList = db.mediaDao().exportData();
         List<MediaPojo> mediaPojoList = EntityPojoMapper.INSTANCE.toMediaPojoList(mediaEntityList);
 
+        //读取情绪标签数据
+        List<EmotionTagWithParagraph> emotionTagWithParagraphList = db.emotionTagDao().exportData();
+        List<EmotionTagPojo> emotionTagPojoList = EntityPojoMapper.INSTANCE.toEmotionTagPojoList(emotionTagWithParagraphList);
+
         //实例化Map类
         DiaryDataMap map = new DiaryDataMap();
         map.setDiaryList(diaryPojoList);
         map.setParagraphList(paragraphPojoList);
         map.setMediaList(mediaPojoList);
+        map.setEmotionTagList(emotionTagPojoList);
 
         return map;
     }
@@ -82,9 +88,13 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
             db.mediaDao().importData(mediaEntityList);
         }
 
+        //导入情绪标签数据
         List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
-        if (emotionTagPojoList!=null) {
-            //TODO:写类型转换逻辑
+        if (emotionTagPojoList != null) {
+            List<EmotionTagWithParagraph> emotionTagWithParagraphList =
+                    EntityPojoMapper.INSTANCE.toEmotionTagWithParagraphList(emotionTagPojoList);
+            db.emotionTagDao().clear();
+            db.emotionTagDao().importData(emotionTagWithParagraphList);
         }
     }
 

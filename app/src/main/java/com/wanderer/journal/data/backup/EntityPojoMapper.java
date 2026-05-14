@@ -3,6 +3,7 @@ package com.wanderer.journal.data.backup;
 import android.net.Uri;
 
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
@@ -10,6 +11,7 @@ import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagWithParagraph;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -83,4 +85,20 @@ public interface EntityPojoMapper {
     default String uriToStr(Uri uri) {
         return UriConverter.fromUri(uri);
     }
+
+    @Mapping(target = "emotionTag.emotionId",source = "emotionId")
+    @Mapping(target = "emotionTag.name",source = "name")
+    @Mapping(target = "emotionTag.description",source = "description")
+    //paragraphIdList类型和名称一致，自动映射
+    EmotionTagWithParagraph toEmotionTagWithParagraph(EmotionTagPojo pojo);
+
+    List<EmotionTagWithParagraph> toEmotionTagWithParagraphList(List<EmotionTagPojo> pojoList);
+
+    @Mapping(target = "emotionId",source = "emotionTag.emotionId")
+    @Mapping(target = "name",source = "emotionTag.name")
+    @Mapping(target = "description",source = "emotionTag.description")
+    //paragraphIdList类型和名称一致，自动映射
+    EmotionTagPojo toEmotionTagPojo(EmotionTagWithParagraph emotionTagWithParagraph);
+
+    List<EmotionTagPojo> toEmotionTagPojoList(List<EmotionTagWithParagraph> emotionTagWithParagraphList);
 }
