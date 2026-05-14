@@ -45,4 +45,5 @@
     <string name="right_arrow_of_tag_card">右侧箭头</string>
     <string name="project_address">项目地址</string>
     <string name="click_skip_to_repository">点击跳转至项目仓库</string>
+    <string name="emotion_tag">情绪标签</string>
 </resources>

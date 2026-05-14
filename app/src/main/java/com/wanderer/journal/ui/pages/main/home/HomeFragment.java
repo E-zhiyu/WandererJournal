@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -54,7 +55,10 @@ public class HomeFragment extends Fragment {
         initDateCard();
 
         //计数卡片
-        initCountCard();
+        initDiaryCountCard();
+
+        //情绪标签卡片
+        initEmotionTagCountCard();
     }
 
     /**
@@ -67,7 +71,7 @@ public class HomeFragment extends Fragment {
                 binding.dateCard,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
 
@@ -102,15 +106,15 @@ public class HomeFragment extends Fragment {
     /**
      * 初始化计数卡片
      */
-    private void initCountCard() {
+    private void initDiaryCountCard() {
         //设置卡片圆角
         AppearanceAnimationHelper.setRadius(
                 requireContext(),
-                binding.countCard,
+                binding.diaryCountCard,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
 
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
@@ -129,6 +133,31 @@ public class HomeFragment extends Fragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> binding.paragraphCountText.setText(String.valueOf(count)))
+        );
+    }
+
+    /**
+     * 初始化情绪标签卡片
+     */
+    private void initEmotionTagCountCard() {
+        //设置卡片圆角
+        AppearanceAnimationHelper.setRadius(
+                requireContext(),
+                binding.emotionTagCountCard,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+        );
+
+        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        EmotionTagDao emotionTagDao = db.emotionTagDao();
+
+        //情绪标签数量
+        disposable.add(emotionTagDao.getEmotionTagCount()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(count -> binding.emotionTagCountText.setText(String.valueOf(count)))
         );
     }
 }
