@@ -1,5 +1,6 @@
 package com.wanderer.journal.data.save.db.daos;
 
+import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -9,11 +10,14 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -83,6 +87,39 @@ public interface DiaryDao {
     }
 
     /**
+     * 更新日记日期
+     *
+     * @param diaryId      原始日记的日记编号
+     * @param targetDate   需要更改到的日期
+     * @param paragraphDao 段落查询接口
+     */
+    @Transaction
+    default void modifyDiaryDate(long diaryId, LocalDate targetDate, @NonNull ParagraphDao paragraphDao) {
+        //实例化新的日记并写入
+        DiaryEntity newDiary = new DiaryEntity(targetDate);
+        newDiary.setDiaryId(diaryId);
+        updateDiary(newDiary);
+
+        //构建新段落列表并写入
+        List<ParagraphEntity> originParagraphList = paragraphDao.getParagraphByDiaryId(diaryId);
+        List<ParagraphEntity> newParagraphList = originParagraphList.stream()
+                .map(paragraph -> {
+                    //计算得到新的时间
+                    LocalDateTime newDateTime = paragraph.getCreateTime()
+                            .withYear(targetDate.getYear())
+                            .withMonth(targetDate.getMonthValue())
+                            .withDayOfMonth(targetDate.getDayOfMonth());
+
+                    //构建并返回新段落实体
+                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, paragraph.getContent(), newDateTime);
+                    newParagraph.setParagraphId(paragraph.getParagraphId());
+                    return newParagraph;
+                })
+                .collect(Collectors.toList());
+        paragraphDao.updateParagraph(newParagraphList);
+    }
+
+    /**
      * 删除日记
      *
      * @param diary 待删除的日记实例
@@ -97,7 +134,7 @@ public interface DiaryDao {
      * @param diary 更新了日期的日记
      */
     @Update
-    void updateDiaryDate(DiaryEntity diary);
+    void updateDiary(DiaryEntity diary);
 
     /**
      * 读取所有数据用于导出

@@ -146,11 +146,11 @@ public class DiaryFragment extends Fragment {
                 getParentFragmentManager(),
                 selection -> {
                     LocalDate targetDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    disposable.add(DiaryService.updateDiaryDate(diary, targetDate, requireContext())
+                    disposable.add(DiaryService.updateDiaryDate(diary.getDiaryId(), targetDate, requireContext())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    count -> Toast.makeText(requireContext(), "日期更新完毕", Toast.LENGTH_SHORT).show(),
+                                    () -> Toast.makeText(requireContext(), "日期更新完毕", Toast.LENGTH_SHORT).show(),
                                     e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                             )
                     );
