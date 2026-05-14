@@ -29,7 +29,12 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.Vie
 
         @Override
         public boolean areContentsTheSame(@NonNull DiaryWithSummary oldItem, @NonNull DiaryWithSummary newItem) {
-            return oldItem.equals(newItem);
+            DiaryEntity oldDiary = oldItem.getDiary();
+            DiaryEntity newDiary = newItem.getDiary();
+
+            return oldDiary.getDiaryDate().isEqual(newDiary.getDiaryDate()) &&
+                    oldItem.getParagraphCount() == newItem.getParagraphCount() &&
+                    oldItem.getParagraphFragment().equals(newItem.getParagraphFragment());
         }
     };
 

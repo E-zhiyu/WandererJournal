@@ -317,7 +317,7 @@ public class WriteActivity extends AppCompatActivity {
 
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
-        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+        disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -358,7 +358,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     DiaryDatabase db = DiaryDatabase.getInstance(this);
                     ParagraphDao paragraphDao = db.paragraphDao();
-                    disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                    disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(

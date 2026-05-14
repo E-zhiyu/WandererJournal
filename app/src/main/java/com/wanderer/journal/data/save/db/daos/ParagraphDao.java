@@ -45,8 +45,23 @@ public interface ParagraphDao {
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
     PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
+    /**
+     * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）
+     *
+     * @param date 日记的日期
+     * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
+     */
     @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
     Single<Integer> getAdjustedPosition(LocalDate date);
+
+    /**
+     * 通过日记 ID 获取段落
+     *
+     * @param diaryId 日记 ID
+     * @return 该日记的段落列表
+     */
+    @Query("SELECT * FROM paragraphs WHERE parentDiaryId = :diaryId")
+    List<ParagraphEntity> getParagraphByDiaryId(long diaryId);
 
     /**
      * 插入一条日记段落
@@ -81,7 +96,15 @@ public interface ParagraphDao {
      * @return 是否成功
      */
     @Update
-    Completable updateParagraphContent(ParagraphEntity paragraph);
+    Completable updateParagraphCompletable(ParagraphEntity paragraph);
+
+    /**
+     * 单线程更新段落
+     *
+     * @param paragraphList 需要更新的段落列表
+     */
+    @Update
+    void updateParagraph(List<ParagraphEntity> paragraphList);
 
     /**
      * 删除段落

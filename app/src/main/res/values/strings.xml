@@ -46,4 +46,5 @@
     <string name="project_address">项目地址</string>
     <string name="click_skip_to_repository">点击跳转至项目仓库</string>
     <string name="emotion_tag">情绪标签</string>
+    <string name="modify_date">修改日期</string>
 </resources>

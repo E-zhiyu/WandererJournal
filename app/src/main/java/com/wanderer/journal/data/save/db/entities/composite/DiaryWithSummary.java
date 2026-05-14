@@ -1,6 +1,5 @@
 package com.wanderer.journal.data.save.db.entities.composite;
 
-import androidx.annotation.Nullable;
 import androidx.room.Embedded;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
@@ -36,21 +35,5 @@ public class DiaryWithSummary {
 
     public void setParagraphCount(int paragraphCount) {
         this.paragraphCount = paragraphCount;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (obj.getClass() != DiaryWithSummary.class) {
-            return false;
-        }
-
-        DiaryWithSummary target = (DiaryWithSummary) obj;
-        return target.getDiary().getDiaryId() == diary.getDiaryId() &&
-                target.getParagraphFragment().equals(paragraphFragment) &&
-                target.getParagraphCount() == paragraphCount;
     }
 }

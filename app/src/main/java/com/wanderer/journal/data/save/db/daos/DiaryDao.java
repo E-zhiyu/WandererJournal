@@ -6,6 +6,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
+import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
@@ -89,6 +90,14 @@ public interface DiaryDao {
      */
     @Delete
     Completable deleteDiary(DiaryEntity diary);
+
+    /**
+     * 更新日记日期
+     *
+     * @param diary 更新了日期的日记
+     */
+    @Update
+    void updateDiaryDate(DiaryEntity diary);
 
     /**
      * 读取所有数据用于导出

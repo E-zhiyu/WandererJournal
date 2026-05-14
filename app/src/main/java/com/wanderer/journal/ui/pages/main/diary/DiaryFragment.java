@@ -19,14 +19,17 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.write.WriteActivity;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -78,21 +81,7 @@ public class DiaryFragment extends Fragment {
                     skip2Read.putExtras(bundle);
                     startActivity(skip2Read);
                 },
-                (diary, view) -> {
-                    PopupMenu popupMenu = new PopupMenu(requireContext(), view, Gravity.END);
-                    popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
-
-                    popupMenu.setOnMenuItemClickListener(item -> {
-                        if (item.getItemId() == R.id.action_delete_diary) {
-                            deleteDiary(diary);
-                            return true;
-                        }
-
-                        return false;
-                    });
-
-                    popupMenu.show();
-                }
+                this::showDiaryPopupMenu
         );
         binding.diaryRecycler.setAdapter(adapter);
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
@@ -144,5 +133,53 @@ public class DiaryFragment extends Fragment {
                 })
                 .setNegativeButton("取消", null)
                 .show();
+    }
+
+    /**
+     * 修改日记的日期
+     *
+     * @param diary 需要修改日期的日记
+     */
+    private void modifyDate(@NonNull DiaryEntity diary) {
+        DateTimePickerHelper.selectDate(
+                diary.getDiaryDate(),
+                getParentFragmentManager(),
+                selection -> {
+                    LocalDate targetDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    disposable.add(DiaryService.updateDiaryDate(diary, targetDate, requireContext())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    count -> Toast.makeText(requireContext(), "日期更新完毕", Toast.LENGTH_SHORT).show(),
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                            )
+                    );
+                }
+        );
+    }
+
+    /**
+     * 显示日记编辑下拉菜单
+     *
+     * @param diary 需要修改的日记
+     * @param view  下拉菜单绑定的视图
+     */
+    private void showDiaryPopupMenu(DiaryEntity diary, View view) {
+        PopupMenu popupMenu = new PopupMenu(requireContext(), view, Gravity.END);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_diary_edit, popupMenu.getMenu());
+
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_delete_diary) {
+                deleteDiary(diary);
+                return true;
+            } else if (item.getItemId() == R.id.action_modify_date) {
+                modifyDate(diary);
+                return true;
+            }
+
+            return false;
+        });
+
+        popupMenu.show();
     }
 }
