@@ -75,7 +75,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
     protected void saveDataInMapToDb(@NonNull DiaryDataMap map) {
         //导入日记数据
         List<DiaryPojo> diaryPojoList = map.getDiaryList();
-        if (diaryPojoList != null) {
+        if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
             List<DiaryEntity> diaryEntityList = EntityPojoMapper.INSTANCE.toDiaryEntityList(diaryPojoList);
             db.diaryDao().clear();
             db.diaryDao().importData(diaryEntityList);
@@ -83,7 +83,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
         //导入段落数据
         List<ParagraphPojo> paragraphPojoList = map.getParagraphList();
-        if (paragraphPojoList != null) {
+        if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
             List<ParagraphEntity> paragraphEntityList = EntityPojoMapper.INSTANCE.toParagraphEntityList(paragraphPojoList);
             db.paragraphDao().clear();
             db.paragraphDao().importData(paragraphEntityList);
@@ -91,7 +91,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
         //导入媒体数据
         List<MediaPojo> mediaPojoList = map.getMediaList();
-        if (mediaPojoList != null) {
+        if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
             List<MediaEntity> mediaEntityList = EntityPojoMapper.INSTANCE.toMediaEntityList(mediaPojoList);
             db.mediaDao().clear();
             db.mediaDao().importData(mediaEntityList);
@@ -99,7 +99,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
         //导入情绪标签数据
         List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
-        if (emotionTagPojoList != null) {
+        if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
             List<EmotionTagEntity> emotionTagWithParagraphList =
                     EntityPojoMapper.INSTANCE.toEmotionTagEntityList(emotionTagPojoList);
             db.emotionTagDao().clearEmotionTag();
@@ -108,7 +108,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
         //导入情绪标签与段落关系数据
         List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = map.getEmotionParagraphRefList();
-        if (emotionParagraphRefPojoList != null) {
+        if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
             List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
                     EntityPojoMapper.INSTANCE.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
             db.emotionTagDao().clearEmotionParagraphRef();
