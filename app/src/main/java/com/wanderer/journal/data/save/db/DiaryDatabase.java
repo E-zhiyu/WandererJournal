@@ -17,7 +17,7 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.ref.EmotionParagraphCrossRef;
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 
 @Database(
         entities = {
@@ -25,7 +25,7 @@ import com.wanderer.journal.data.save.db.ref.EmotionParagraphCrossRef;
                 ParagraphEntity.class,
                 MediaEntity.class,
                 EmotionTagEntity.class,
-                EmotionParagraphCrossRef.class
+                EmotionParagraphRefEntity.class
         },
         version = 1
 )

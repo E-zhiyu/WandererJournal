@@ -1,11 +1,8 @@
-package com.wanderer.journal.data.save.db.ref;
+package com.wanderer.journal.data.save.db.entities;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
-
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 @Entity(
         tableName = "emotionParagraphCrossRef",
@@ -26,16 +23,25 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
         },
         indices = {
                 @Index("paragraphId"),
-                @Index("emotionId")
+                @Index("emotionId"),
+                @Index("degree")
         }
 )
-public class EmotionParagraphCrossRef {
-    long paragraphId;
-    long emotionId;
+public class EmotionParagraphRefEntity {
+    private long paragraphId;   //段落 ID
+    private long emotionId;     //情绪标签 ID
+    private int degree;         //情绪的程度指数
 
-    public EmotionParagraphCrossRef(long emotionId, long paragraphId) {
+    /**
+     * 创建情绪标签与段落关系的构造方法
+     *
+     * @param emotionId   情绪标签 ID
+     * @param paragraphId 段落 ID
+     */
+    public EmotionParagraphRefEntity(long emotionId, long paragraphId) {
         this.emotionId = emotionId;
         this.paragraphId = paragraphId;
+        this.degree = 1;
     }
 
     public long getParagraphId() {
@@ -52,5 +58,13 @@ public class EmotionParagraphCrossRef {
 
     public void setEmotionId(long emotionId) {
         this.emotionId = emotionId;
+    }
+
+    public int getDegree() {
+        return degree;
+    }
+
+    public void setDegree(int degree) {
+        this.degree = degree;
     }
 }

@@ -2,6 +2,7 @@ package com.wanderer.journal.data.backup.maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
@@ -10,10 +11,11 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class DiaryDataMap {
-    private List<DiaryPojo> diaryList;              //日记列表
-    private List<ParagraphPojo> paragraphList;      //段落列表
-    private List<MediaPojo> mediaList;              //媒体文件列表
-    private List<EmotionTagPojo> emotionTagList;    //情绪标签列表
+    private List<DiaryPojo> diaryList;                              //日记列表
+    private List<ParagraphPojo> paragraphList;                      //段落列表
+    private List<MediaPojo> mediaList;                              //媒体文件列表
+    private List<EmotionTagPojo> emotionTagList;                    //情绪标签列表
+    private List<EmotionParagraphRefPojo> emotionParagraphRefList;  //情绪标签与段落关系列表
 
     public DiaryDataMap() {
     }
@@ -48,5 +50,13 @@ public class DiaryDataMap {
 
     public void setEmotionTagList(List<EmotionTagPojo> emotionTagList) {
         this.emotionTagList = emotionTagList;
+    }
+
+    public List<EmotionParagraphRefPojo> getEmotionParagraphRefList() {
+        return emotionParagraphRefList;
+    }
+
+    public void setEmotionParagraphRefList(List<EmotionParagraphRefPojo> emotionParagraphRefList) {
+        this.emotionParagraphRefList = emotionParagraphRefList;
     }
 }

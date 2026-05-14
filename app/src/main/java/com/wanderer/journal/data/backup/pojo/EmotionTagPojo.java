@@ -1,12 +1,12 @@
 package com.wanderer.journal.data.backup.pojo;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class EmotionTagPojo {
     private long emotionId;             //自增主键
     private String name;                //名称
     private String description;         //描述
-    private List<Long> paragraphIdList; //用了该标签的段落编号列表
 
     public EmotionTagPojo() {
     }
@@ -33,13 +33,5 @@ public class EmotionTagPojo {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public List<Long> getParagraphIdList() {
-        return paragraphIdList;
-    }
-
-    public void setParagraphIdList(List<Long> paragraphIdList) {
-        this.paragraphIdList = paragraphIdList;
     }
 }

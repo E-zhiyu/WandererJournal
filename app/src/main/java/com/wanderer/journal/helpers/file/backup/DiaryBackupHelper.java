@@ -7,14 +7,16 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.data.backup.EntityPojoMapper;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagWithParagraph;
 import com.wanderer.journal.enums.BackupDataType;
 
 import java.util.List;
@@ -49,8 +51,14 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
         List<MediaPojo> mediaPojoList = EntityPojoMapper.INSTANCE.toMediaPojoList(mediaEntityList);
 
         //读取情绪标签数据
-        List<EmotionTagWithParagraph> emotionTagWithParagraphList = db.emotionTagDao().exportData();
-        List<EmotionTagPojo> emotionTagPojoList = EntityPojoMapper.INSTANCE.toEmotionTagPojoList(emotionTagWithParagraphList);
+        List<EmotionTagEntity> emotionTagWithParagraphList = db.emotionTagDao().exportEmotionData();
+        List<EmotionTagPojo> emotionTagPojoList =
+                EntityPojoMapper.INSTANCE.toEmotionTagPojoList(emotionTagWithParagraphList);
+
+        //读取情绪标签与段落关系数据
+        List<EmotionParagraphRefEntity> emotionParagraphRefEntityList = db.emotionTagDao().exportEmotionRefData();
+        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList =
+                EntityPojoMapper.INSTANCE.toEmotionParagraphRefPojoList(emotionParagraphRefEntityList);
 
         //实例化Map类
         DiaryDataMap map = new DiaryDataMap();
@@ -58,6 +66,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
         map.setParagraphList(paragraphPojoList);
         map.setMediaList(mediaPojoList);
         map.setEmotionTagList(emotionTagPojoList);
+        map.setEmotionParagraphRefList(emotionParagraphRefPojoList);
 
         return map;
     }
@@ -91,10 +100,19 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
         //导入情绪标签数据
         List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
         if (emotionTagPojoList != null) {
-            List<EmotionTagWithParagraph> emotionTagWithParagraphList =
-                    EntityPojoMapper.INSTANCE.toEmotionTagWithParagraphList(emotionTagPojoList);
-            db.emotionTagDao().clear();
-            db.emotionTagDao().importData(emotionTagWithParagraphList);
+            List<EmotionTagEntity> emotionTagWithParagraphList =
+                    EntityPojoMapper.INSTANCE.toEmotionTagEntityList(emotionTagPojoList);
+            db.emotionTagDao().clearEmotionTag();
+            db.emotionTagDao().importEmotionTagData(emotionTagWithParagraphList);
+        }
+
+        //导入情绪标签与段落关系数据
+        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = map.getEmotionParagraphRefList();
+        if (emotionParagraphRefPojoList != null) {
+            List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
+                    EntityPojoMapper.INSTANCE.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
+            db.emotionTagDao().clearEmotionParagraphRef();
+            db.emotionTagDao().importEmotionParagraphRefData(emotionParagraphRefEntityList);
         }
     }
 
