@@ -17,6 +17,7 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagManageBinding;
+import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -72,7 +73,13 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
                 emotionTag -> {
-                    //TODO:完成回调
+                    Intent skip2EmotionTagModify = new Intent(this, EmotionTagAddModifyActivity.class);
+                    Bundle bundle = new Bundle();
+
+                    long emotionTagId = emotionTag.getEmotionId();
+                    bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTagId); //情绪标签 ID
+
+                    startActivity(skip2EmotionTagModify);
                 },
                 this::showEmotionTagPopupMenu
         );
