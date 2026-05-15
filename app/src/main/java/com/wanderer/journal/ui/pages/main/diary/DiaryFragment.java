@@ -118,7 +118,7 @@ public class DiaryFragment extends Fragment {
                     DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
                     DiaryDao dao = db.diaryDao();
 
-                    disposable.add(dao.deleteDiary(diary)
+                    disposable.add(dao.deleteDiaryCompletable(diary)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(() -> {

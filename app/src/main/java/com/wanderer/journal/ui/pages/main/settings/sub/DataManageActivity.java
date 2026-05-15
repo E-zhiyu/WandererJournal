@@ -488,7 +488,7 @@ public class DataManageActivity extends AppCompatActivity {
 
                         paragraphEntityList.add(new ParagraphEntity(diaryId, line.trim(), time));
                     }
-                    return paragraphDao.insertParagraph(paragraphEntityList);
+                    return paragraphDao.insertParagraphCompletable(paragraphEntityList);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

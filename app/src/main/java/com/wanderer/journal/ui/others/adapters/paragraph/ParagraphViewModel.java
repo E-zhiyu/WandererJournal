@@ -34,7 +34,7 @@ public class ParagraphViewModel extends ViewModel {
                         .distinctUntilChanged() // 防止重复触发
                         .flatMapSingle(date -> {
                             // 1. 异步获取初始位置
-                            return db.paragraphDao().getAdjustedPosition(date)
+                            return db.paragraphDao().getAdjustedPositionSingle(date)
                                     .subscribeOn(Schedulers.io());
                         })
                         .flatMap(initPosition -> {

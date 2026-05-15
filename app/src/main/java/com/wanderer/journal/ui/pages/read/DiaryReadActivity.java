@@ -371,7 +371,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                         setEditMode(false, null);
                     }
 
-                    disposable.add(dao.deleteParagraph(paragraph)
+                    disposable.add(dao.deleteParagraphCompletable(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(() -> {

@@ -79,7 +79,7 @@ public class HomeFragment extends Fragment {
         DiaryDao diaryDao = db.diaryDao();
 
         //日记开始日期
-        disposable.add(diaryDao.getEarliestDiaryDate()
+        disposable.add(diaryDao.getEarliestDiaryDateFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(dateOptional -> {
@@ -122,14 +122,14 @@ public class HomeFragment extends Fragment {
         ParagraphDao paragraphDao = db.paragraphDao();
 
         //日记数量
-        disposable.add(diaryDao.getDiaryCount()
+        disposable.add(diaryDao.getDiaryCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> binding.diaryCountText.setText(String.valueOf(count)))
         );
 
         //段落数量
-        disposable.add(paragraphDao.getParagraphCount()
+        disposable.add(paragraphDao.getParagraphCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> binding.paragraphCountText.setText(String.valueOf(count)))

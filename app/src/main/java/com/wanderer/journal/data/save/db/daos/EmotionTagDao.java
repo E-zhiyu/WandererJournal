@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.daos;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -10,6 +11,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 
 @Dao
@@ -45,6 +47,14 @@ public interface EmotionTagDao {
      */
     @Query("SELECT * FROM emotionParagraphCrossRef")
     List<EmotionParagraphRefEntity> exportEmotionRefData();
+
+    /**
+     * 删除单个情绪标签
+     * @param emotionTag 需要被删除的情绪标签
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteEmotionTagCompletable(EmotionTagEntity emotionTag);
 
     /**
      * 清空情绪标签表

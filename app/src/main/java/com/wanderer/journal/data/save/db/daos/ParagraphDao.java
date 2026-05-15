@@ -25,7 +25,7 @@ import io.reactivex.rxjava3.core.Single;
 @Dao
 public interface ParagraphDao {
     @Query("SELECT COUNT(*) FROM paragraphs")
-    Flowable<Integer> getParagraphCount();
+    Flowable<Integer> getParagraphCountFlowable();
 
     /**
      * 读取所有段落并支持局部加载
@@ -52,7 +52,7 @@ public interface ParagraphDao {
      * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
      */
     @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
-    Single<Integer> getAdjustedPosition(LocalDate date);
+    Single<Integer> getAdjustedPositionSingle(LocalDate date);
 
     /**
      * 通过日记 ID 获取段落
@@ -70,7 +70,7 @@ public interface ParagraphDao {
      * @return 插入的日记段落自动分配的编号
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Single<Long> insertParagraph(ParagraphEntity paragraph);
+    Single<Long> insertParagraphSingle(ParagraphEntity paragraph);
 
     /**
      * 批量插入日记段落
@@ -79,7 +79,7 @@ public interface ParagraphDao {
      * @return 是否完成
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertParagraph(List<ParagraphEntity> paragraphEntityList);
+    Completable insertParagraphCompletable(List<ParagraphEntity> paragraphEntityList);
 
     /**
      * 在导入日记时插入段落
@@ -113,7 +113,7 @@ public interface ParagraphDao {
      * @return 是否成功
      */
     @Delete
-    Completable deleteParagraph(ParagraphEntity paragraph);
+    Completable deleteParagraphCompletable(ParagraphEntity paragraph);
 
     /**
      * 删除某个日期段的段落

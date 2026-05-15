@@ -32,7 +32,7 @@ public interface DiaryDao {
      * @return 日记总数，支持响应式更新
      */
     @Query("SELECT COUNT(*) FROM diaries")
-    Flowable<Integer> getDiaryCount();
+    Flowable<Integer> getDiaryCountFlowable();
 
     /**
      * 获取最早的日记日期
@@ -40,7 +40,7 @@ public interface DiaryDao {
      * @return 最早的日记日期，支持响应式更新
      */
     @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
-    Flowable<Optional<LocalDate>> getEarliestDiaryDate();
+    Flowable<Optional<LocalDate>> getEarliestDiaryDateFlowable();
 
     /**
      * 获取所有日记
@@ -148,7 +148,7 @@ public interface DiaryDao {
      * @return 是否完成
      */
     @Delete
-    Completable deleteDiary(DiaryEntity diary);
+    Completable deleteDiaryCompletable(DiaryEntity diary);
 
     /**
      * 更新日记日期

@@ -290,7 +290,7 @@ public class WriteActivity extends AppCompatActivity {
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMap(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
-                    return paragraphDao.insertParagraph(newParagraph);
+                    return paragraphDao.insertParagraphSingle(newParagraph);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -395,7 +395,7 @@ public class WriteActivity extends AppCompatActivity {
                     }
 
                     //多线程删除段落
-                    disposable.add(dao.deleteParagraph(paragraph)
+                    disposable.add(dao.deleteParagraphCompletable(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(() -> {
