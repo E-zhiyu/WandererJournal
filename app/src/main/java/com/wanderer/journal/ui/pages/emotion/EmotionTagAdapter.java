@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.emotion;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -13,7 +14,8 @@ import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagAdapter.EmotionTagViewHolder> {
-    private final OnClickedListener listener;   //点击监听器
+    private final OnClickedListener clickedListener;            //点击监听器
+    private final OnLongClickedListener longClickedListener;    //长按监听器
     private static final DiffUtil.ItemCallback<EmotionTagEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
@@ -39,6 +41,12 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
+
+            //设置长按监听
+            binding.getRoot().setOnLongClickListener(view -> {
+                listener.onLongClicked(getBindingAdapterPosition(), view);
+                return true;
+            });
         }
     }
 
@@ -51,23 +59,31 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
         void onClicked(EmotionTagEntity emotionTag);
     }
 
-    public interface ViewHolderListener {
+    public interface OnLongClickedListener {
         /**
-         * 点击监听
+         * 长按监听
          *
-         * @param position 点击的ViewHolder所在的位置
+         * @param emotionTag 长按的情绪标签
+         * @param view       PopupMenu绑定的视图
          */
+        void onLongClicked(EmotionTagEntity emotionTag, View view);
+    }
+
+    public interface ViewHolderListener {
         void onClicked(int position);
+
+        void onLongClicked(int position, View view);
     }
 
     /**
      * 情绪标签列表适配器构造方法
      *
-     * @param listener 点击监听器
+     * @param clickedListener 点击监听器
      */
-    public EmotionTagAdapter(OnClickedListener listener) {
+    public EmotionTagAdapter(OnClickedListener clickedListener, OnLongClickedListener longClickedListener) {
         super(ITEM_CALLBACK);
-        this.listener = listener;
+        this.clickedListener = clickedListener;
+        this.longClickedListener = longClickedListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -109,9 +125,18 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
         );
         return new EmotionTagViewHolder(
                 binding,
-                position -> {
-                    EmotionTagEntity emotionTag = getItem(position);
-                    listener.onClicked(emotionTag);
+                new ViewHolderListener() {
+                    @Override
+                    public void onClicked(int position) {
+                        EmotionTagEntity emotionTag = getItem(position);
+                        clickedListener.onClicked(emotionTag);
+                    }
+
+                    @Override
+                    public void onLongClicked(int position, View view) {
+                        EmotionTagEntity emotionTag = getItem(position);
+                        longClickedListener.onLongClicked(emotionTag, view);
+                    }
                 }
         );
     }

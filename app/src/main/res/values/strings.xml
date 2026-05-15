@@ -50,4 +50,5 @@
     <string name="emotion_tag_name">情绪标签名称</string>
     <string name="emotion_tag_description">情绪标签描述</string>
     <string name="no_emotion_tag">无情绪标签</string>
+    <string name="delete_emotion_tag">删除情绪标签</string>
 </resources>

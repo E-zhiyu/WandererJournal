@@ -2,16 +2,21 @@ package com.wanderer.journal.ui.pages.emotion;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagManageBinding;
+import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -64,7 +69,8 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         EmotionTagAdapter adapter = new EmotionTagAdapter(
                 emotionTag -> {
                     //TODO:完成回调
-                }
+                },
+                this::showEmotionTagPopupMenu
         );
         binding.recycler.setAdapter(adapter);
         EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
@@ -83,5 +89,44 @@ public class EmotionTagManageActivity extends AppCompatActivity {
                         }
                 )
         );
+    }
+
+    /**
+     * 删除情绪标签
+     *
+     * @param emotionTag 待删除的情绪标签
+     */
+    private void deleteEmotionTag(EmotionTagEntity emotionTag) {
+        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
+        disposable.add(emotionTagDao.deleteEmotionTagCompletable(emotionTag)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        () -> Toast.makeText(this, "情绪标签删除成功", Toast.LENGTH_SHORT).show(),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 显示PopupMenu
+     *
+     * @param emotionTag 需要被操作的情绪标签
+     * @param view       PopupMenu绑定的视图
+     */
+    private void showEmotionTagPopupMenu(EmotionTagEntity emotionTag, View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_emotion_tag_edit, popupMenu.getMenu());
+
+        //设置监听
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_delete_emotion_tag) {
+                deleteEmotionTag(emotionTag);
+                return true;
+            }
+            return false;
+        });
+
+        popupMenu.show();
     }
 }
