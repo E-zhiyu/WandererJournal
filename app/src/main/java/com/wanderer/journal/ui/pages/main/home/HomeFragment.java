@@ -154,7 +154,7 @@ public class HomeFragment extends Fragment {
         EmotionTagDao emotionTagDao = db.emotionTagDao();
 
         //情绪标签数量
-        disposable.add(emotionTagDao.getEmotionTagCount()
+        disposable.add(emotionTagDao.getEmotionTagCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> binding.emotionTagCountText.setText(String.valueOf(count)))

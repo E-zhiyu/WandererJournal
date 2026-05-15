@@ -20,7 +20,15 @@ public interface EmotionTagDao {
      * @return 情绪标签的数量
      */
     @Query("SELECT COUNT(*) FROM emotionTags")
-    Flowable<Integer> getEmotionTagCount();
+    Flowable<Integer> getEmotionTagCountFlowable();
+
+    /**
+     * 获取所有情绪标签并支持响应式更新
+     *
+     * @return 所有情绪标签组成的列表
+     */
+    @Query("SELECT * FROM emotionTags")
+    Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
 
     /**
      * 导出情绪标签数据
