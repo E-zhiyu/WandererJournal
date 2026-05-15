@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -149,6 +151,13 @@ public class HomeFragment extends Fragment {
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
         );
+        AppearanceAnimationHelper.attachMorphAnimation(binding.emotionTagCountCard);
+
+        //设置情绪标签管理入口
+        binding.emotionTagCountCard.setOnClickListener(view -> {
+            Intent skip2EmotionTagManage = new Intent(requireContext(), EmotionTagManageActivity.class);
+            startActivity(skip2EmotionTagManage);
+        });
 
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         EmotionTagDao emotionTagDao = db.emotionTagDao();

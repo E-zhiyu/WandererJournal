@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.emotion;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagManageBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -61,9 +63,11 @@ public class EmotionTagManageActivity extends AppCompatActivity {
 
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
-            //TODO:跳转到添加界面
+            Intent skip2EmotionTagAdd = new Intent(this, EmotionTagAddModifyActivity.class);
+            startActivity(skip2EmotionTagAdd);
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
+        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
