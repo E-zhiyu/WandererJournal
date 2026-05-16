@@ -59,4 +59,5 @@
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
     <string name="modify_emotion_tag">修改情绪标签</string>
+    <string name="delete">删除</string>
 </resources>
