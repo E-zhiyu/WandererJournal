@@ -5,6 +5,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -16,6 +17,24 @@ import io.reactivex.rxjava3.core.Flowable;
 
 @Dao
 public interface EmotionTagDao {
+    /**
+     * 插入新情绪标签
+     *
+     * @param emotionTag 新情绪标签实例
+     * @return 是否完成
+     */
+    @Insert
+    Completable insertEmotionTagCompletable(EmotionTagEntity emotionTag);
+
+    /**
+     * 修改情绪标签
+     *
+     * @param emotionTag 修改后的情绪标签
+     * @return 是否完成
+     */
+    @Update
+    Completable updateEmotionTagCompletable(EmotionTagEntity emotionTag);
+
     /**
      * 获取情绪标签数量，支持响应式更新
      *
@@ -50,6 +69,7 @@ public interface EmotionTagDao {
 
     /**
      * 删除单个情绪标签
+     *
      * @param emotionTag 需要被删除的情绪标签
      * @return 是否完成
      */

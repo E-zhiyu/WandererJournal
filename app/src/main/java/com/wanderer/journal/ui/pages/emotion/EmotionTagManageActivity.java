@@ -78,7 +78,12 @@ public class EmotionTagManageActivity extends AppCompatActivity {
 
                     long emotionTagId = emotionTag.getEmotionId();
                     bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTagId); //情绪标签 ID
+                    String name = emotionTag.getName();
+                    bundle.putString(KeyStrings.EMOTION_TAG_NAME.getS(), name);     //情绪标签名称
+                    String description = emotionTag.getDescription();
+                    bundle.putString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS(), description);   //情绪标签描述
 
+                    skip2EmotionTagModify.putExtras(bundle);
                     startActivity(skip2EmotionTagModify);
                 },
                 this::showEmotionTagPopupMenu

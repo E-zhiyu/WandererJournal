@@ -2,9 +2,11 @@ package com.wanderer.journal.ui.pages.emotion;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -12,15 +14,25 @@ import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagAddModifyBinding;
 import com.wanderer.journal.enums.KeyStrings;
+import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 public class EmotionTagAddModifyActivity extends AppCompatActivity {
     private ActivityEmotionTagAddModifyBinding binding; //绑定的XML布局
-    private boolean isModifyMode;                       //是否为编辑模式
-    private long emotionTagId;                          //正在编辑的情绪标签的 ID
+    private boolean isModifyMode = false;               //是否为编辑模式
+    private long emotionTagId = 0;                      //正在编辑的情绪标签的 ID
+    private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +75,14 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         initViews();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        binding = null;
+        disposable.dispose();
+    }
+
     /**
      * 接收父界面传递的数据
      */
@@ -77,16 +97,100 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         binding.toolbar.setTitle(R.string.modify_emotion_tag);
         isModifyMode = true;
 
-        //情绪标签 ID
-        emotionTagId = bundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
+        emotionTagId = bundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());    //情绪标签 ID
+        String name = bundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
+        binding.nameInput.setText(name);                                    //名称
+        String description = bundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
+        binding.descriptionInput.setText(description);                      //描述
     }
 
     /**
      * 初始化视图
      */
     private void initViews() {
-        //TODO:完成初始化方法和布局
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
+
+        //名称
+        binding.nameInput.setOnFocusChangeListener((view, b) -> {
+            if (b) {
+                binding.nameLayout.setError(null);
+            } else {
+                String input = String.valueOf(binding.nameInput.getText());
+                if (input.isEmpty()) {
+                    binding.nameLayout.setError("名称不能为空");
+                }
+            }
+        });
+        binding.nameInput.setOnClickListener(view -> binding.nameLayout.setError(null));
+
+        //确认按钮
+        binding.confirmButton.setOnClickListener(view -> {
+            String err = verifyInput();
+            if (err != null) {
+                Toast.makeText(this, err, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            onConfirm();
+            finish();
+        });
+        AppearanceAnimationHelper.attachMorphAnimation(binding.confirmButton);
+
+        //取消按钮
+        binding.cancelButton.setOnClickListener(view -> finish());
+        AppearanceAnimationHelper.attachMorphAnimation(binding.cancelButton);
+    }
+
+    /**
+     * 校验输入的内容
+     *
+     * @return 错误提示，无错误则返回 null
+     */
+    @Nullable
+    private String verifyInput() {
+        String err = null;
+
+        if (String.valueOf(binding.nameInput.getText()).isEmpty()) {
+            err = "名称不能为空";
+            binding.nameLayout.setError(err);
+        }
+
+        return err;
+    }
+
+    /**
+     * 确认按钮回调
+     */
+    private void onConfirm() {
+        //获取输入内容
+        String name = String.valueOf(binding.nameInput.getText());
+        String description = String.valueOf(binding.descriptionInput.getText());
+
+        //实例化情绪标签并获取Dao接口
+        EmotionTagEntity emotionTag = new EmotionTagEntity(name, description);
+        EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+
+        //保存到数据库
+        if (isModifyMode) {
+            emotionTag.setEmotionId(emotionTagId);
+            disposable.add(dao.updateEmotionTagCompletable(emotionTag)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> Toast.makeText(this, "情绪标签修改成功", Toast.LENGTH_SHORT).show(),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        } else {
+            disposable.add(dao.insertEmotionTagCompletable(emotionTag)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> Toast.makeText(this, "成功添加情绪标签", Toast.LENGTH_SHORT).show(),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
     }
 }
