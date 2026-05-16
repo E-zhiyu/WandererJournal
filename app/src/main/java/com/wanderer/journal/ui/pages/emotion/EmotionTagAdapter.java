@@ -149,7 +149,8 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
         holder.binding.nameText.setText(emotionTag.getName());
 
         //标签描述
-        holder.binding.descriptionText.setText(emotionTag.getDescription());
+        String description = emotionTag.getDescription();
+        holder.binding.descriptionText.setText(description.isEmpty() ? "<无描述>" : description);
 
         //设置圆角
         AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);

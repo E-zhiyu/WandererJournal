@@ -12,6 +12,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
@@ -21,6 +22,8 @@ import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+
+import java.util.Locale;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -137,7 +140,42 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         //设置监听
         popupMenu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_delete_emotion_tag) {
-                deleteEmotionTag(emotionTag);
+                //获取段落数量
+                EmotionTagDao dao = DiaryDatabase
+                        .getInstance(EmotionTagManageActivity.this)
+                        .emotionTagDao();
+                disposable.add(dao.getParagraphCountSingleByEmotionTagId(emotionTag.getEmotionId())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                count -> {
+                                    //生成对话框消息
+                                    String message;
+                                    if (count == 0) {
+                                        message = "该标签没有被使用，确认删除它吗？";
+                                    } else {
+                                        message = String.format(
+                                                Locale.getDefault(),
+                                                "该标签被%d条段落使用，确认删除它吗？",
+                                                count
+                                        );
+                                    }
+
+                                    //显示对话框
+                                    new MaterialAlertDialogBuilder(EmotionTagManageActivity.this)
+                                            .setTitle(R.string.delete_emotion_tag)
+                                            .setMessage(message)
+                                            .setPositiveButton(
+                                                    "确定",
+                                                    (dialogInterface, i) ->
+                                                            deleteEmotionTag(emotionTag)
+                                            )
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                }
+                        )
+                );
+
                 return true;
             }
             return false;

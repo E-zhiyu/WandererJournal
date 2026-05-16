@@ -14,6 +14,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface EmotionTagDao {
@@ -58,6 +59,15 @@ public interface EmotionTagDao {
      */
     @Query("SELECT * FROM emotionTags")
     List<EmotionTagEntity> exportEmotionData();
+
+    /**
+     * 查询某个情绪标签绑定的段落数量
+     *
+     * @param emotionTagId 情绪标签的 ID
+     * @return 包含绑定段落数量的{@link Single}对象
+     */
+    @Query("SELECT COUNT(*) FROM emotionParagraphCrossRef WHERE emotionId == :emotionTagId")
+    Single<Integer> getParagraphCountSingleByEmotionTagId(long emotionTagId);
 
     /**
      * 导出情绪标签与段落对应关系数据
