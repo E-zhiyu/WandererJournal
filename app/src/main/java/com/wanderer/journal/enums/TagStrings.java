@@ -2,6 +2,7 @@ package com.wanderer.journal.enums;
 
 public enum TagStrings {
     PARAGRAPH_CONTENT_MODIFY_SHEET("paragraph_content_modify_sheet"),
+    EMOTION_TAG_SELECT_BOTTOM_SHEET("emotion_tag_select_bottom_sheet"),
     DATE_PICKER("date_picker"),
     TIME_PICKER("time_picker");
     private final String tag;

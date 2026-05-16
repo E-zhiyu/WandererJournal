@@ -11,7 +11,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,14 +45,14 @@ public interface DiaryDao {
     /**
      * 获取所有日记
      *
-     * @return 由{@link DiaryWithSummary}组成的列表，支持响应式更新
+     * @return 由{@link DiaryWithSummaryUiModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
             "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
             "(SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = d.diaryId) as paragraphCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
-    Flowable<List<DiaryWithSummary>> getAllDiariesFlowable();
+    Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
 
     /**
      * 插入一条日记

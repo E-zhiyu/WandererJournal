@@ -10,25 +10,25 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummary;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.ViewHolderDiary> {
+public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdapter.ViewHolderDiary> {
     private final OnClickedListener clickListener;              //点击监听
     private final OnLongClickedListener longClickedListener;    //长按监听
-    private static final DiffUtil.ItemCallback<DiaryWithSummary> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+    private static final DiffUtil.ItemCallback<DiaryWithSummaryUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
 
         @Override
-        public boolean areItemsTheSame(@NonNull DiaryWithSummary oldItem, @NonNull DiaryWithSummary newItem) {
+        public boolean areItemsTheSame(@NonNull DiaryWithSummaryUiModel oldItem, @NonNull DiaryWithSummaryUiModel newItem) {
             return oldItem.getDiary().getDiaryId() == newItem.getDiary().getDiaryId();
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull DiaryWithSummary oldItem, @NonNull DiaryWithSummary newItem) {
+        public boolean areContentsTheSame(@NonNull DiaryWithSummaryUiModel oldItem, @NonNull DiaryWithSummaryUiModel newItem) {
             DiaryEntity oldDiary = oldItem.getDiary();
             DiaryEntity newDiary = newItem.getDiary();
 
@@ -166,19 +166,19 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummary, DiaryAdapter.Vie
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolderDiary holder, int position) {
-        DiaryWithSummary diaryWithSummary = getItem(position);
+        DiaryWithSummaryUiModel diaryWithSummaryUiModel = getItem(position);
 
         //日期
-        LocalDate date = diaryWithSummary.getDiary().getDiaryDate();
+        LocalDate date = diaryWithSummaryUiModel.getDiary().getDiaryDate();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
         holder.binding.dateText.setText(date.format(formatter));
 
         //片段摘要
-        String paragraphFragment = diaryWithSummary.getParagraphFragment();
+        String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();
         holder.binding.contentPreviewText.setText(paragraphFragment);
 
         //片段数量
-        int paragraphCount = diaryWithSummary.getParagraphCount();
+        int paragraphCount = diaryWithSummaryUiModel.getParagraphCount();
         String tip = "×" + paragraphCount;
         holder.binding.paragraphCountText.setText(tip);
 

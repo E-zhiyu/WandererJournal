@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/MediumRadiusCardStyle"
+    android:layout_width="200dp"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/slide_to_change_degree_of_emotion"
+            android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/popup_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
+            android:stepSize="1"
+            android:value="1.0"
+            android:valueFrom="1"
+            android:valueTo="5"
+            app:labelBehavior="floating" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -9,6 +9,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
 
 import java.util.List;
 
@@ -51,6 +52,26 @@ public interface EmotionTagDao {
      */
     @Query("SELECT * FROM emotionTags")
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
+
+    /**
+     * 获取可以选择的情绪标签数据，并按照使用量降序排序
+     *
+     * @param paragraphId 正在编辑情绪标签的段落 ID
+     * @return 可供选择的情绪标签 Item 列表
+     */
+    @Query("SELECT " +
+            "    e.*, " +
+            "    (r.paragraphId IS NOT NULL) AS isChecked, " +
+            "    COALESCE(r.degree, 1) AS degree " +
+            "FROM emotionTags e " +
+            "LEFT JOIN emotionParagraphCrossRef r " +
+            "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId " +
+            "ORDER BY (" +
+            "    SELECT COUNT(*) " +
+            "    FROM emotionParagraphCrossRef total " +
+            "    WHERE total.emotionId = e.emotionId" +
+            ") DESC")
+    Single<List<EmotionTagUiModel>> getSelectableEmotionTagSingle(long paragraphId);
 
     /**
      * 导出情绪标签数据

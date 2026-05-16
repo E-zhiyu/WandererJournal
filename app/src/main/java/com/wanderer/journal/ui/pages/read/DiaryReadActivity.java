@@ -33,6 +33,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.enums.TagStrings;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
@@ -41,6 +42,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -206,6 +208,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                             updateParagraphCreateTime(paragraph);
 
                             return true;
+                        } else if (item.getItemId() == R.id.action_modify_emotion) {
+                            modifyEmotion(paragraph);
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                         }
@@ -351,6 +355,24 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
                 }
         );
+    }
+
+    /**
+     * 修改情绪标签
+     *
+     * @param paragraph 需要修改情绪标签的段落
+     */
+    private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
+        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
+                paragraph.getParagraphId(),
+                (emotionTagId, checked) -> {
+                    //TODO:完成该回调
+                },
+                (emotionTag, value) -> {
+                    //TODO:完成该回调
+                }
+        );
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
     }
 
     /**
