@@ -29,7 +29,7 @@
 
     <!-- 卡片样式基类 -->
     <style name="CardStyleBase" parent="Widget.Material3.CardView.Filled">
-        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHighest</item>
     </style>
 
     <!-- 中等圆角卡片容器 -->
