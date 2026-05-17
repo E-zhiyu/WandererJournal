@@ -14,6 +14,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,18 +33,20 @@ public interface ParagraphDao {
      *
      * @return 可局部加载的日记段落列表
      */
+    @Transaction
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntity> getAllParagraphPagingSource();
+    PagingSource<Integer, ParagraphWithEmotion> getAllParagraphPagingSource();
 
     /**
-     * 查询某个日期范围内的
+     * 查询某个日期范围内的段落
      *
      * @param start 起始日期
      * @param end   结束日期（不包含）
      * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
      */
+    @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphWithEmotion> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
     /**
      * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）

@@ -263,7 +263,7 @@ public class WriteActivity extends AppCompatActivity {
                 for (int i = 0; i < adapter.getItemCount(); i++) {
                     ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
                     if (item instanceof ParagraphUiModel.Item) {
-                        if (((ParagraphUiModel.Item) item).paragraph.getCreateTime().toLocalDate().equals(pendingTargetDate)) {
+                        if (((ParagraphUiModel.Item) item).model.getParagraph().getCreateTime().toLocalDate().equals(pendingTargetDate)) {
                             position = i;
                             break;
                         }

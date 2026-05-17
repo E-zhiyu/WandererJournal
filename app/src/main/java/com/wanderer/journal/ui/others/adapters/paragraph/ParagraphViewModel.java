@@ -11,7 +11,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +47,7 @@ public class ParagraphViewModel extends ViewModel {
                                     60
                             );
 
-                            Pager<Integer, ParagraphEntity> pager = new Pager<>(
+                            Pager<Integer, ParagraphWithEmotion> pager = new Pager<>(
                                     pagingConfig,
                                     initPosition, // 动态传入计算出的下标
                                     () -> (start != null && end != null)
@@ -69,7 +69,7 @@ public class ParagraphViewModel extends ViewModel {
 
     // 将复杂的转换逻辑提取出来
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntity> pagingData) {
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphWithEmotion> pagingData) {
         Executor executor = Runnable::run; // 转换通常在主线程或 Paging 内部线程同步执行
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
@@ -78,8 +78,8 @@ public class ParagraphViewModel extends ViewModel {
         return PagingDataTransforms.insertSeparators(
                 itemPagingData, executor, (before, after) -> {
                     if (after == null) return null;
-                    if (before == null || !isSameDay(before.paragraph.getCreateTime(), after.paragraph.getCreateTime())) {
-                        return new ParagraphUiModel.Separator(formatDate(after.paragraph.getCreateTime()));
+                    if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
+                        return new ParagraphUiModel.Separator(formatDate(after.model.getParagraph().getCreateTime()));
                     }
                     return null;
                 });
