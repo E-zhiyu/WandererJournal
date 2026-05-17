@@ -61,5 +61,5 @@
     <string name="modify_emotion_tag">修改情绪标签</string>
     <string name="delete">删除</string>
     <string name="select_emotion_tag">选择情绪标签</string>
-    <string name="slide_to_change_degree_of_emotion">滑动以编辑情绪强烈程度</string>
+    <string name="slide_to_change_degree_of_emotion">滑动调整强烈程度</string>
 </resources>

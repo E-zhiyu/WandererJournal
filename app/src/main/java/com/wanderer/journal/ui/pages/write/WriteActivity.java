@@ -390,21 +390,22 @@ public class WriteActivity extends AppCompatActivity {
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
         EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
                 paragraph.getParagraphId(),
-                (emotionTagId, checked) -> {
+                (model, isChecked) -> {
                     EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            emotionTagId,
+                            model.getEmotionTag().getEmotionId(),
                             paragraph.getParagraphId()
                     );
                     EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
 
-                    if (checked) {
+                    if (isChecked) {
                         disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                                 .subscribe(
                                         () -> Log.i(
                                                 LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，添加情绪标签：" + emotionTagId
+                                                "段落编号：" + paragraph.getParagraphId() + "，添加情绪标签：" +
+                                                        model.getEmotionTag().getEmotionId()
                                         ),
                                         e -> ExceptionHelper.showExceptionDialog(this, e)
                                 )
@@ -416,7 +417,8 @@ public class WriteActivity extends AppCompatActivity {
                                 .subscribe(
                                         () -> Log.i(
                                                 LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" + emotionTagId
+                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" +
+                                                        model.getEmotionTag().getEmotionId()
                                         ),
                                         e -> {
                                             Log.e(LogTags.WRITE_ACTIVITY.n(), "段落的情绪标签移除失败");
@@ -426,9 +428,9 @@ public class WriteActivity extends AppCompatActivity {
                         );
                     }
                 },
-                (emotionTagId, value) -> {
+                (model, value) -> {
                     EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            emotionTagId,
+                            model.getEmotionTag().getEmotionId(),
                             paragraph.getParagraphId()
                     );
                     ref.setDegree(value);
@@ -441,14 +443,16 @@ public class WriteActivity extends AppCompatActivity {
                                     () -> Log.i(
                                             LogTags.WRITE_ACTIVITY.n(),
                                             "段落编号：" + paragraph.getParagraphId() +
-                                                    "，情绪标签：" + emotionTagId +
+                                                    "，情绪标签：" + model.getEmotionTag().getEmotionId() +
                                                     "，更新情绪强烈程度为" + value
                                     ),
                                     e -> {
                                         ExceptionHelper.showExceptionDialog(this, e);
-                                        Log.e(LogTags.WRITE_ACTIVITY.n(), "段落编号：" + paragraph.getParagraphId() +
-                                                "，情绪标签：" + emotionTagId +
-                                                "情绪强烈程度更新失败"
+                                        Log.e(
+                                                LogTags.WRITE_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() +
+                                                        "，情绪标签：" + model.getEmotionTag().getEmotionId() +
+                                                        "情绪强烈程度更新失败"
                                         );
                                     }
                             )

@@ -37,20 +37,20 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         /**
          * 标签选中状态变更回调
          *
-         * @param emotionTagId 情绪标签的 ID
-         * @param checked      情绪标签是否被选中
+         * @param model     数据原型
+         * @param isChecked 是否被选中
          */
-        void onCheckChanged(long emotionTagId, boolean checked);
+        void onCheckChanged(EmotionTagUiModel model, boolean isChecked);
     }
 
     public interface OnSlidedListener {
         /**
          * 滑块滑动回调
          *
-         * @param emotionTagId 程度改变的情绪标签 ID
-         * @param value        改变后的程度
+         * @param model 数据原型
+         * @param value 改变后的程度
          */
-        void onSlided(long emotionTagId, int value);
+        void onSlided(EmotionTagUiModel model, int value);
     }
 
     @Nullable
@@ -93,16 +93,27 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private void initViews() {
         //情绪标签列表
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
-                (model, checked, view) -> {
-                    checkedChangedListener.onCheckChanged(model.getEmotionTag().getEmotionId(), checked);
-                    if (checked) {
-                        showSuspendedSlider(model, view);
+                (model, view) -> {
+                    //仅当没有选中时才触发上级监听
+                    if (!model.isChecked()) {
+                        checkedChangedListener.onCheckChanged(model, true);
                     }
+
+                    //显示悬浮滑块
+                    showSuspendedSlider(model, view);
+                },
+                model -> {
+                    //目标状态与当前状态相同则不触发监听
+                    if (!model.isChecked()) {
+                        return;
+                    }
+
+                    checkedChangedListener.onCheckChanged(model, false);
                 }
         );
         binding.recycler.setAdapter(adapter);
         EmotionTagDao dao = DiaryDatabase.getInstance(requireContext()).emotionTagDao();
-        disposable.add(dao.getSelectableEmotionTagSingle(paragraphId)
+        disposable.add(dao.getSelectableEmotionTagFlowable(paragraphId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -148,7 +159,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 int degree = (int) slider.getValue();
-                slidedListener.onSlided(model.getEmotionTag().getEmotionId(), degree);
+                slidedListener.onSlided(model, degree);
             }
         });
 

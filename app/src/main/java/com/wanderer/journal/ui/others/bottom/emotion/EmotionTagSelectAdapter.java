@@ -13,7 +13,8 @@ import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagSelectBinding;
 
 public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, EmotionTagSelectAdapter.EmotionTagSelectViewHolder> {
-    private final OnCheckedChangedListener checkedChangedListener;
+    private final OnClickedListener onClickedListener;  //点击监听
+    private final OnCloseListener onCloseListener;      //关闭图标点击监听
     private final static DiffUtil.ItemCallback<EmotionTagUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
@@ -22,46 +23,65 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
 
         @Override
         public boolean areContentsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
-            return oldItem.getEmotionTag().getName().equals(newItem.getEmotionTag().getName()) &&
-                    oldItem.isChecked() == newItem.isChecked();
+            return oldItem.getEmotionTag().getName().equals(newItem.getEmotionTag().getName());
         }
     };
 
-    public interface OnCheckedChangedListener {
+    public interface OnClickedListener {
         /**
-         * 标签选中状态变更回调
+         * 标签点击回调
          *
-         * @param model   情绪标签显示模型
-         * @param checked 情绪标签是否被选中
-         * @param anchor  浮动滑块绑定的视图
+         * @param model  情绪标签显示模型
+         * @param anchor 浮动滑块绑定的视图
          */
-        void onCheckChanged(EmotionTagUiModel model, boolean checked, View anchor);
+        void onClicked(EmotionTagUiModel model, View anchor);
+    }
+
+    public interface OnCloseListener {
+        /**
+         * Chip 的 closeIcon 点击回调
+         *
+         * @param model 数据原型
+         */
+        void onClosed(EmotionTagUiModel model);
     }
 
     public interface ViewHolderListener {
-        void onCheckedChanged(int position, boolean isChecked, View view);
+        void onClicked(int position, View view);
+
+        void onClosed(int position);
     }
 
-    public EmotionTagSelectAdapter(OnCheckedChangedListener checkedChangedListener) {
+    /**
+     * 情绪标签选择适配器构造方法
+     *
+     * @param onClickedListener 点击监听
+     * @param onCloseListener   关闭按钮点击监听
+     */
+    public EmotionTagSelectAdapter(OnClickedListener onClickedListener, OnCloseListener onCloseListener) {
         super(ITEM_CALLBACK);
-        this.checkedChangedListener = checkedChangedListener;
+        this.onClickedListener = onClickedListener;
+        this.onCloseListener = onCloseListener;
     }
 
     public static class EmotionTagSelectViewHolder extends RecyclerView.ViewHolder {
-        boolean isBlocked = false;                  //监听器是否被屏蔽
         ViewHolderEmotionTagSelectBinding binding;
 
         public EmotionTagSelectViewHolder(@NonNull ViewHolderEmotionTagSelectBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.getRoot().setOnCheckedChangeListener((compoundButton, b) ->
-                    {
-                        if (isBlocked) return;
+            //设置点击监听
+            binding.chip.setOnClickListener(view -> {
+                listener.onClicked(getBindingAdapterPosition(), binding.chip);
+                binding.chip.setChecked(true);
+            });
 
-                        listener.onCheckedChanged(getBindingAdapterPosition(), b, binding.getRoot());
-                    }
-            );
+            //设置关闭图标监听
+            binding.chip.setOnCloseIconClickListener(view -> {
+                listener.onClosed(getBindingAdapterPosition());
+                binding.chip.setChecked(false);
+            });
         }
     }
 
@@ -75,9 +95,18 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
         );
         return new EmotionTagSelectViewHolder(
                 binding,
-                (position, isChecked, view) -> {
-                    EmotionTagUiModel model = getItem(position);
-                    checkedChangedListener.onCheckChanged(model, isChecked, binding.getRoot());
+                new ViewHolderListener() {
+                    @Override
+                    public void onClicked(int position, View view) {
+                        EmotionTagUiModel model = getItem(position);
+                        onClickedListener.onClicked(model, view);
+                    }
+
+                    @Override
+                    public void onClosed(int position) {
+                        EmotionTagUiModel model = getItem(position);
+                        onCloseListener.onClosed(model);
+                    }
                 }
         );
     }
@@ -85,14 +114,11 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
     @Override
     public void onBindViewHolder(@NonNull EmotionTagSelectViewHolder holder, int position) {
         EmotionTagUiModel item = getItem(position);
-        holder.isBlocked = true;    //临时屏蔽监听器
 
         //设置选中状态
-        holder.binding.getRoot().setChecked(item.isChecked());
+        holder.binding.chip.setChecked(item.isChecked());
 
         //设置名称
-        holder.binding.getRoot().setText(item.getEmotionTag().getName());
-
-        holder.isBlocked = false;   //接触监听器的屏蔽
+        holder.binding.chip.setText(item.getEmotionTag().getName());
     }
 }

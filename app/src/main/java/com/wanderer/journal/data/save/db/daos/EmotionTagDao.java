@@ -83,13 +83,9 @@ public interface EmotionTagDao {
             "    COALESCE(r.degree, 1) AS degree " +
             "FROM emotionTags e " +
             "LEFT JOIN emotionParagraphCrossRef r " +
-            "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId " +
-            "ORDER BY (" +
-            "    SELECT COUNT(*) " +
-            "    FROM emotionParagraphCrossRef total " +
-            "    WHERE total.emotionId = e.emotionId" +
-            ") DESC")
-    Single<List<EmotionTagUiModel>> getSelectableEmotionTagSingle(long paragraphId);
+            "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId "
+    )
+    Flowable<List<EmotionTagUiModel>> getSelectableEmotionTagFlowable(long paragraphId);
 
     /**
      * 导出情绪标签数据
