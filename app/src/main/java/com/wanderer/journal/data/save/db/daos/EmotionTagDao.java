@@ -25,8 +25,17 @@ public interface EmotionTagDao {
      * @param emotionTag 新情绪标签实例
      * @return 是否完成
      */
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     Completable insertEmotionTagCompletable(EmotionTagEntity emotionTag);
+
+    /**
+     * 插入与段落的关系
+     *
+     * @param ref 关系实体
+     * @return 是否完成
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    Completable insertEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
      * 修改情绪标签
@@ -36,6 +45,15 @@ public interface EmotionTagDao {
      */
     @Update
     Completable updateEmotionTagCompletable(EmotionTagEntity emotionTag);
+
+    /**
+     * 更新情绪标签与段落的关系
+     *
+     * @param ref 更新后的关系
+     * @return 是否完成
+     */
+    @Update
+    Completable updateEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
      * 获取情绪标签数量，支持响应式更新
@@ -106,6 +124,15 @@ public interface EmotionTagDao {
      */
     @Delete
     Completable deleteEmotionTagCompletable(EmotionTagEntity emotionTag);
+
+    /**
+     * 删除情绪标签与段落的关系
+     *
+     * @param ref 关系实体
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
      * 清空情绪标签表

@@ -48,15 +48,19 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
     }
 
     public static class EmotionTagSelectViewHolder extends RecyclerView.ViewHolder {
+        boolean isBlocked = false;                  //监听器是否被屏蔽
         ViewHolderEmotionTagSelectBinding binding;
 
         public EmotionTagSelectViewHolder(@NonNull ViewHolderEmotionTagSelectBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.getRoot().setOnCheckedChangeListener(
-                    (compoundButton, b) ->
-                            listener.onCheckedChanged(getBindingAdapterPosition(), b, binding.getRoot())
+            binding.getRoot().setOnCheckedChangeListener((compoundButton, b) ->
+                    {
+                        if (isBlocked) return;
+
+                        listener.onCheckedChanged(getBindingAdapterPosition(), b, binding.getRoot());
+                    }
             );
         }
     }
@@ -81,11 +85,14 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
     @Override
     public void onBindViewHolder(@NonNull EmotionTagSelectViewHolder holder, int position) {
         EmotionTagUiModel item = getItem(position);
+        holder.isBlocked = true;    //临时屏蔽监听器
 
         //设置选中状态
         holder.binding.getRoot().setChecked(item.isChecked());
 
         //设置名称
         holder.binding.getRoot().setText(item.getEmotionTag().getName());
+
+        holder.isBlocked = false;   //接触监听器的屏蔽
     }
 }

@@ -28,7 +28,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
@@ -389,10 +391,68 @@ public class WriteActivity extends AppCompatActivity {
         EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
                 paragraph.getParagraphId(),
                 (emotionTagId, checked) -> {
-                    //TODO:完成该回调
+                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
+                            emotionTagId,
+                            paragraph.getParagraphId()
+                    );
+                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+
+                    if (checked) {
+                        disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Log.i(
+                                                LogTags.WRITE_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() + "，添加情绪标签：" + emotionTagId
+                                        ),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    } else {
+                        disposable.add(dao.deleteEmotionParagraphRefCompletable(ref)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Log.i(
+                                                LogTags.WRITE_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" + emotionTagId
+                                        ),
+                                        e -> {
+                                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落的情绪标签移除失败");
+                                            ExceptionHelper.showExceptionDialog(this, e);
+                                        }
+                                )
+                        );
+                    }
                 },
-                (emotionTag, value) -> {
-                    //TODO:完成该回调
+                (emotionTagId, value) -> {
+                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
+                            emotionTagId,
+                            paragraph.getParagraphId()
+                    );
+                    ref.setDegree(value);
+                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+
+                    disposable.add(dao.updateEmotionParagraphRefCompletable(ref)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> Log.i(
+                                            LogTags.WRITE_ACTIVITY.n(),
+                                            "段落编号：" + paragraph.getParagraphId() +
+                                                    "，情绪标签：" + emotionTagId +
+                                                    "，更新情绪强烈程度为" + value
+                                    ),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(this, e);
+                                        Log.e(LogTags.WRITE_ACTIVITY.n(), "段落编号：" + paragraph.getParagraphId() +
+                                                "，情绪标签：" + emotionTagId +
+                                                "情绪强烈程度更新失败"
+                                        );
+                                    }
+                            )
+                    );
                 }
         );
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
