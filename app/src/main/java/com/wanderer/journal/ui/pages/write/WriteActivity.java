@@ -64,7 +64,8 @@ public class WriteActivity extends AppCompatActivity {
     private OnBackPressedCallback backPressedCallback;      //返回手势监听
     private LocalDate diaryDate = LocalDate.now();          //父日记的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
-    private final CompositeDisposable disposable = new CompositeDisposable();
+    private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
+    private boolean needScrollToBottom = false;             //是否需要在刷新的时候滚动到底部
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -227,6 +228,16 @@ public class WriteActivity extends AppCompatActivity {
             boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
             boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
 
+            //滚动到底部
+            if (isNotLoading && needScrollToBottom) {
+                needScrollToBottom = false;
+
+                int itemCount = adapter.getItemCount();
+                if (itemCount > 0) {
+                    binding.contentRecycler.smoothScrollToPosition(itemCount - 1);
+                }
+            }
+
             if (isNotLoading && endOfPaginationReached) {
                 if (adapter.getItemCount() == 0) {
                     binding.emptyText.setVisibility(View.VISIBLE);
@@ -304,7 +315,12 @@ public class WriteActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        diaryId -> binding.contentTextInput.setText(null),
+                        diaryId -> {
+                            binding.contentTextInput.setText(null);
+
+                            //将滚动到底部标识改为true
+                            needScrollToBottom = true;
+                        },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
