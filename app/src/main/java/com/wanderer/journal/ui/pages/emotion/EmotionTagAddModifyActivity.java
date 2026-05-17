@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagAddModifyBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
-                int keyboardHeight = Math.max(0, imeInsets.bottom);
+                int keyboardHeight = Math.max(systemBars.bottom, imeInsets.bottom);
                 binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
 
                 return insets;
@@ -123,6 +124,7 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
             }
         });
         binding.nameInput.setOnClickListener(view -> binding.nameLayout.setError(null));
+        ImmHelper.showImm(binding.nameInput);   //弹出输入法
 
         //确认按钮
         binding.confirmButton.setOnClickListener(view -> {
