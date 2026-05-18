@@ -1,12 +1,12 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
 
 public abstract class ParagraphUiModel {
     // 段落项
     public static final class Item extends ParagraphUiModel {
-        public final ParagraphEntity paragraph;
-        public Item(ParagraphEntity p) { this.paragraph = p; }
+        public final ParagraphWithEmotion model;
+        public Item(ParagraphWithEmotion p) { this.model = p; }
     }
     // 日期分隔项
     public static final class Separator extends ParagraphUiModel {

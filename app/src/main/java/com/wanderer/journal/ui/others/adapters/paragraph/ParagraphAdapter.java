@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,22 +10,27 @@ import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
-                ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).paragraph;
-                ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).paragraph;
+                ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
+                ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
                 return oldParagraph.getParagraphId() == newParagraph.getParagraphId();
             } else if (oldItem instanceof ParagraphUiModel.Separator && newItem instanceof ParagraphUiModel.Separator) {
                 String oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
@@ -38,10 +44,13 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         @Override
         public boolean areContentsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
-                ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).paragraph;
-                ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).paragraph;
+                ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
+                ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
+                List<CrossRefWithEmotion> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
+                List<CrossRefWithEmotion> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
-                        oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime());
+                        oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime()) &&
+                        oldEmotionList.equals(newEmotionList);
             } else {
                 return true;
             }
@@ -173,14 +182,47 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         }
 
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).paragraph;
+            ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
             ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
 
+            //绑定数据原型
             itemHolder.bindItem(paragraph);
 
+            //内容文本
             String content = paragraph.getContent();
             itemHolder.binding.contentText.setText(content);
 
+            //情绪标签
+            List<CrossRefWithEmotion> emotionList = ((ParagraphUiModel.Item) uiModel).model.getEmotionList();
+            itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
+            Context context = itemHolder.binding.getRoot().getContext();
+            for (CrossRefWithEmotion emotion : emotionList) {
+                String name = emotion.emotionTag.getName();
+                int degree = emotion.crossRef.getDegree();
+                String title = String.format(
+                        Locale.getDefault(),
+                        "%s %s",
+                        name, RomanNumberHelper.toRoman(degree)
+                );
+
+                Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
+                emotionChip.setCheckable(false);
+                emotionChip.setFocusable(false);
+
+                //设置显示文本
+                emotionChip.setText(title);
+                emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
+
+                //添加到视图中
+                itemHolder.binding.emotionChipGroup.addView(emotionChip);
+            }
+            if (emotionList.isEmpty()) {
+                itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
+            } else {
+                itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
+            }
+
+            //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));

@@ -3,11 +3,15 @@ package com.wanderer.journal.data.backup;
 import android.net.Uri;
 
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
+import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
@@ -83,4 +87,13 @@ public interface EntityPojoMapper {
     default String uriToStr(Uri uri) {
         return UriConverter.fromUri(uri);
     }
+
+    EmotionTagEntity toEmotionTagEntity(EmotionTagPojo pojo);
+    List<EmotionTagEntity> toEmotionTagEntityList(List<EmotionTagPojo> pojoList);
+    EmotionTagPojo toEmotionTagPojo(EmotionTagEntity entity);
+    List<EmotionTagPojo> toEmotionTagPojoList(List<EmotionTagEntity> entityList);
+    EmotionParagraphRefEntity toEmotionParagraphRefEntity(EmotionParagraphRefPojo pojo);
+    List<EmotionParagraphRefEntity> toEmotionParagraphRefEntityList(List<EmotionParagraphRefPojo> pojoList);
+    EmotionParagraphRefPojo toEmotionParagraphRefPojo(EmotionParagraphRefEntity entity);
+    List<EmotionParagraphRefPojo> toEmotionParagraphRefPojoList(List<EmotionParagraphRefEntity> entityList);
 }

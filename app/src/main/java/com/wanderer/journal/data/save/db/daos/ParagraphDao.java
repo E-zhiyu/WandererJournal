@@ -14,6 +14,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,28 +26,45 @@ import io.reactivex.rxjava3.core.Single;
 @Dao
 public interface ParagraphDao {
     @Query("SELECT COUNT(*) FROM paragraphs")
-    Flowable<Integer> getParagraphCount();
+    Flowable<Integer> getParagraphCountFlowable();
 
     /**
      * 读取所有段落并支持局部加载
      *
      * @return 可局部加载的日记段落列表
      */
+    @Transaction
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntity> getAllParagraphPagingSource();
+    PagingSource<Integer, ParagraphWithEmotion> getAllParagraphPagingSource();
 
     /**
-     * 查询某个日期范围内的
+     * 查询某个日期范围内的段落
      *
      * @param start 起始日期
      * @param end   结束日期（不包含）
      * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
      */
+    @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntity> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphWithEmotion> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
+    /**
+     * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）
+     *
+     * @param date 日记的日期
+     * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
+     */
     @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
-    Single<Integer> getAdjustedPosition(LocalDate date);
+    Single<Integer> getAdjustedPositionSingle(LocalDate date);
+
+    /**
+     * 通过日记 ID 获取段落
+     *
+     * @param diaryId 日记 ID
+     * @return 该日记的段落列表
+     */
+    @Query("SELECT * FROM paragraphs WHERE parentDiaryId = :diaryId")
+    List<ParagraphEntity> getParagraphByDiaryId(long diaryId);
 
     /**
      * 插入一条日记段落
@@ -55,7 +73,7 @@ public interface ParagraphDao {
      * @return 插入的日记段落自动分配的编号
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Single<Long> insertParagraph(ParagraphEntity paragraph);
+    Single<Long> insertParagraphSingle(ParagraphEntity paragraph);
 
     /**
      * 批量插入日记段落
@@ -64,7 +82,7 @@ public interface ParagraphDao {
      * @return 是否完成
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Completable insertParagraph(List<ParagraphEntity> paragraphEntityList);
+    Completable insertParagraphCompletable(List<ParagraphEntity> paragraphEntityList);
 
     /**
      * 在导入日记时插入段落
@@ -81,7 +99,15 @@ public interface ParagraphDao {
      * @return 是否成功
      */
     @Update
-    Completable updateParagraphContent(ParagraphEntity paragraph);
+    Completable updateParagraphCompletable(ParagraphEntity paragraph);
+
+    /**
+     * 单线程更新段落
+     *
+     * @param paragraphList 需要更新的段落列表
+     */
+    @Update
+    void updateParagraph(List<ParagraphEntity> paragraphList);
 
     /**
      * 删除段落
@@ -90,7 +116,7 @@ public interface ParagraphDao {
      * @return 是否成功
      */
     @Delete
-    Completable deleteParagraph(ParagraphEntity paragraph);
+    Completable deleteParagraphCompletable(ParagraphEntity paragraph);
 
     /**
      * 删除某个日期段的段落

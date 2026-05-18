@@ -18,7 +18,10 @@ import java.time.LocalDateTime;
                 childColumns = "parentDiaryId",
                 onDelete = ForeignKey.CASCADE
         ),
-        indices = {@Index("parentDiaryId")}
+        indices = {
+                @Index("parentDiaryId"),
+                @Index("createTime")
+        }
 )
 @TypeConverters({DateTimeConverter.class})
 public class ParagraphEntity {

@@ -27,6 +27,15 @@
         android:theme="@style/Theme.WandererJournal.Static"
         tools:targetApi="33">
         <activity
+            android:name=".ui.pages.statistics.StatisticsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pages.emotion.EmotionTagManageActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.pages.main.settings.sub.AboutActivity"
             android:exported="false" />
         <activity

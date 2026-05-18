@@ -1,17 +1,16 @@
 package com.wanderer.journal.data.save.db.entities.composite;
 
-import androidx.annotation.Nullable;
 import androidx.room.Embedded;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 
-public class DiaryWithSummary {
+public class DiaryWithSummaryUiModel {
     @Embedded
     private DiaryEntity diary;          //日记实体
     private String paragraphFragment;   //首段摘要
     private int paragraphCount;         //段落数量
 
-    public DiaryWithSummary() {
+    public DiaryWithSummaryUiModel() {
     }
 
     public DiaryEntity getDiary() {
@@ -36,21 +35,5 @@ public class DiaryWithSummary {
 
     public void setParagraphCount(int paragraphCount) {
         this.paragraphCount = paragraphCount;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (obj.getClass() != DiaryWithSummary.class) {
-            return false;
-        }
-
-        DiaryWithSummary target = (DiaryWithSummary) obj;
-        return target.getDiary().getDiaryId() == diary.getDiaryId() &&
-                target.getParagraphFragment().equals(paragraphFragment) &&
-                target.getParagraphCount() == paragraphCount;
     }
 }

@@ -25,7 +25,7 @@ public class ImmHelper {
             view.postDelayed(() -> {
                 view.requestFocus();
                 imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-            }, 200); // 稍微长一点的延迟，确保布局彻底稳定
+            }, 300); // 稍微长一点的延迟，确保布局彻底稳定
         }
     }
 

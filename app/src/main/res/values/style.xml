@@ -29,7 +29,7 @@
 
     <!-- 卡片样式基类 -->
     <style name="CardStyleBase" parent="Widget.Material3.CardView.Filled">
-        <item name="cardBackgroundColor">@color/card_background_color</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHighest</item>
     </style>
 
     <!-- 中等圆角卡片容器 -->
@@ -75,9 +75,49 @@
         <item name="android:background">@drawable/ripple_circle</item>
     </style>
 
+    <!-- 普通按钮样式 -->
+    <style name="CommonBtnStyle" parent="Widget.Material3.Button">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="layout_goneMarginStart">5dp</item>
+        <item name="layout_goneMarginEnd">5dp</item>
+        <item name="layout_goneMarginTop">5dp</item>
+        <item name="layout_goneMarginBottom">5dp</item>
+        <item name="iconGravity">textStart</item>
+    </style>
+
+    <!-- 透明背景按钮样式 -->
+    <style name="TextBtnStyle" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="iconPadding">2dp</item>
+    </style>
+
+    <!-- 仅保留边框的按钮样式 -->
+    <style name="OutlinedBtnStyle" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:layout_marginStart">10dp</item>
+        <item name="android:layout_marginEnd">10dp</item>
+    </style>
+
     <!-- 圆形图片视图样式 -->
     <style name="RoundedImageViewStyle">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- 普通文本框布局样式 -->
+    <style name="CommonTextInputLayoutStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="endIconDrawable">@drawable/baseline_clear_24</item>
+        <item name="endIconMode">clear_text</item>
+    </style>
+
+    <!-- 需要用户输入文本的文本框样式 -->
+    <style name="UserInputEditTextStyle" parent="Widget.Material3.TextInputEditText.OutlinedBox.Dense">
+        <item name="android:inputType">text</item>
+        <item name="android:textColorHighlight">?attr/colorSurfaceVariant</item>
     </style>
 </resources>

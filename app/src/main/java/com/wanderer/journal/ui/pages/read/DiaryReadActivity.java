@@ -28,11 +28,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.enums.TagStrings;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
@@ -41,6 +44,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -74,13 +78,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             //SearchBar的布局
             binding.appBarConstraint.setPadding(0, systemBars.top, 0, ViewEdgeHelper.dpToPx(this, 20));
 
-            //段落RecyclerView
-            binding.bottomCard.post(() -> {
-                int cardHeight = binding.bottomCard.getHeight();
-                int bottomPadding = modifyingParagraph != null ? cardHeight + systemBars.bottom : systemBars.bottom;
-                binding.contentRecycler.setPadding(0, 0, 0, bottomPadding);
-            });
-
             //底部卡片布局
             binding.bottomCardLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
@@ -95,24 +92,17 @@ public class DiaryReadActivity extends AppCompatActivity {
         ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
                 WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
         ) {
-
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-                // 1. 计算纯键盘高度
+                //计算纯键盘高度
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
 
-                // 2. 底部卡片依然使用 TranslationY，因为它需要“悬浮”在键盘上
-                binding.bottomCard.setTranslationY(-keyboardHeight);
-
-                // 如果你希望 RecyclerView 也跟着键盘动态调整底部（防止内容被挡住）
-                // 这里可以通过 setTranslationY 或者动态调整底部 Padding
-                // 为了性能，建议键盘动画期间使用 TranslationY 偏移 RecyclerView
-                binding.contentRecycler.setTranslationY(-keyboardHeight);
-
+                //便宜可能被键盘遮挡的组件
+                binding.getRoot().setPadding(systemBars.left, 0, systemBars.right, keyboardHeight);
                 return insets;
             }
 
@@ -193,6 +183,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initSearchComponents() {
         //TODO:完成剩下的
+        binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
     }
 
     /**
@@ -202,6 +193,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
+                    //先收起输入法
+                    ImmHelper.hideImm(binding.contentTextInput);
+
                     PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
@@ -219,6 +213,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                             updateParagraphCreateTime(paragraph);
 
                             return true;
+                        } else if (item.getItemId() == R.id.action_modify_emotion) {
+                            modifyEmotion(paragraph);
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                         }
@@ -271,7 +267,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 for (int i = 0; i < adapter.getItemCount(); i++) {
                     ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
                     if (item instanceof ParagraphUiModel.Item) {
-                        if (((ParagraphUiModel.Item) item).paragraph.getCreateTime().toLocalDate().equals(pendingTargetDate)) {
+                        if (((ParagraphUiModel.Item) item).model.getParagraph().getCreateTime().toLocalDate().equals(pendingTargetDate)) {
                             position = i;
                             break;
                         }
@@ -307,7 +303,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
-        disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+        disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -348,7 +344,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     DiaryDatabase db = DiaryDatabase.getInstance(this);
                     ParagraphDao paragraphDao = db.paragraphDao();
-                    disposable.add(paragraphDao.updateParagraphContent(newParagraph)
+                    disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
@@ -364,6 +360,87 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
                 }
         );
+    }
+
+    /**
+     * 修改情绪标签
+     *
+     * @param paragraph 需要修改情绪标签的段落
+     */
+    private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
+        //实例化底部对话框并显示
+        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
+                paragraph.getParagraphId(),
+                (model, isChecked) -> {
+                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
+                            model.getEmotionTag().getEmotionId(),
+                            paragraph.getParagraphId()
+                    );
+                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+
+                    if (isChecked) {
+                        disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Log.i(
+                                                LogTags.DIARY_READ_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() +
+                                                        "，添加情绪标签：" + model.getEmotionTag().getEmotionId()
+                                        ),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    } else {
+                        disposable.add(dao.deleteEmotionParagraphRefCompletable(ref)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Log.i(
+                                                LogTags.DIARY_READ_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" +
+                                                        model.getEmotionTag().getEmotionId()
+                                        ),
+                                        e -> {
+                                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落的情绪标签移除失败");
+                                            ExceptionHelper.showExceptionDialog(this, e);
+                                        }
+                                )
+                        );
+                    }
+                },
+                (model, value) -> {
+                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
+                            model.getEmotionTag().getEmotionId(),
+                            paragraph.getParagraphId()
+                    );
+                    ref.setDegree(value);
+                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+
+                    disposable.add(dao.updateEmotionParagraphRefCompletable(ref)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> Log.i(
+                                            LogTags.DIARY_READ_ACTIVITY.n(),
+                                            "段落编号：" + paragraph.getParagraphId() +
+                                                    "，情绪标签：" + model.getEmotionTag().getEmotionId() +
+                                                    "，更新情绪强烈程度为" + value
+                                    ),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(this, e);
+                                        Log.e(
+                                                LogTags.DIARY_READ_ACTIVITY.n(),
+                                                "段落编号：" + paragraph.getParagraphId() +
+                                                        "，情绪标签：" + model.getEmotionTag().getEmotionId() +
+                                                        "情绪强烈程度更新失败"
+                                        );
+                                    }
+                            )
+                    );
+                }
+        );
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
     }
 
     /**
@@ -384,7 +461,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                         setEditMode(false, null);
                     }
 
-                    disposable.add(dao.deleteParagraph(paragraph)
+                    disposable.add(dao.deleteParagraphCompletable(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(() -> {

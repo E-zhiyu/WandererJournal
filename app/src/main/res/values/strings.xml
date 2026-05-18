@@ -13,7 +13,7 @@
     <string name="send_btn">发送按钮</string>
     <string name="close_btn">关闭按钮</string>
     <string name="origin_text">原始文本</string>
-    <string name="modify_content">编辑内容</string>
+    <string name="modify_content">修改内容</string>
     <string name="modify_time">修改时间</string>
     <string name="delete_diary">删除日记</string>
     <string name="delete_paragraph">删除段落</string>
@@ -25,7 +25,7 @@
     <string name="start_date">日记开始日期</string>
     <string name="cant_get">无法获取</string>
     <string name="difference_of_date">日期差</string>
-    <string name="unknown_difference_of_date">距今天数未知</string>
+    <string name="unknown">未知</string>
     <string name="authentication">身份验证</string>
     <string name="hide_recent_task">最近任务隐藏</string>
     <string name="authentication_opportunity">身份验证时机</string>
@@ -45,4 +45,24 @@
     <string name="right_arrow_of_tag_card">右侧箭头</string>
     <string name="project_address">项目地址</string>
     <string name="click_skip_to_repository">点击跳转至项目仓库</string>
+    <string name="emotion_tag">情绪标签</string>
+    <string name="modify_date">修改日期</string>
+    <string name="emotion_tag_name">情绪标签名称</string>
+    <string name="name">名称</string>
+    <string name="emotion_tag_description">情绪标签描述</string>
+    <string name="description">描述</string>
+    <string name="no_emotion_tag">无情绪标签</string>
+    <string name="delete_emotion_tag">删除情绪标签</string>
+    <string name="add_emotion_tag">新建情绪标签</string>
+    <string name="emotion_tag_name_helper">情绪标签的名称</string>
+    <string name="emotion_tag_description_helper">对该情绪做一个简要的描述</string>
+    <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
+    <string name="modify_emotion_tag">修改情绪标签</string>
+    <string name="delete">删除</string>
+    <string name="select_emotion_tag">选择情绪标签</string>
+    <string name="slide_to_change_degree_of_emotion">滑动调整强烈程度</string>
+    <string name="diary_statistics">日记统计</string>
+    <string name="diary_continuous_count">连续记日记天数</string>
+    <string name="max_diary_continuous">最大连续天数</string>
 </resources>
