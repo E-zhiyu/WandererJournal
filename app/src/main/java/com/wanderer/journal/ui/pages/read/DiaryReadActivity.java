@@ -76,13 +76,26 @@ public class DiaryReadActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //SearchBar的布局
-            binding.appBarConstraint.setPadding(0, systemBars.top, 0, ViewEdgeHelper.dpToPx(this, 20));
+            binding.appBarConstraint.setPadding(
+                    0,
+                    systemBars.top,
+                    0,
+                    ViewEdgeHelper.dpToPx(this, 20)
+            );
 
             //底部卡片布局
             binding.bottomCardLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
+                    systemBars.bottom
+            );
+
+            //列表视图
+            binding.contentRecycler.setPadding(
+                    systemBars.left,
+                    0,
+                    systemBars.right,
                     systemBars.bottom
             );
             return insets;
