@@ -22,47 +22,75 @@
 
         <!-- 日期统计卡片 -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/date_card"
+            android:id="@+id/diary_date_card"
             style="@style/MediumRadiusCardStyle"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="0dp"
-            android:layout_marginEnd="1dp"
-            android:layout_marginBottom="0dp"
-            app:layout_constraintBottom_toBottomOf="@id/diary_count_card"
-            app:layout_constraintEnd_toStartOf="@id/diary_count_card"
+            android:layout_marginBottom="2dp"
+            app:layout_constraintBottom_toTopOf="@id/diary_count_card"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/diary_count_card">
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="10dp">
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
+                <!-- 开始日期内容文本 -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/start_date_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/start_date"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    app:layout_constraintBottom_toTopOf="@id/start_date_title"
+                    app:layout_constraintEnd_toEndOf="@id/start_date_title"
+                    app:layout_constraintStart_toStartOf="@id/start_date_title"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- 开始日期标题 -->
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/start_date_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/start_date"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOutline" />
+                    android:textColor="?attr/colorOutline"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/date_difference_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/start_date_text" />
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/start_date_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/start_date"
-                    android:textAppearance="?attr/textAppearanceHeadline5" />
-
+                <!-- 日期差文本 -->
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/date_difference_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/difference_of_date"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    app:layout_constraintBottom_toTopOf="@id/date_difference_title"
+                    app:layout_constraintEnd_toEndOf="@id/date_difference_title"
+                    app:layout_constraintStart_toStartOf="@id/date_difference_title"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <!-- 日期差标题 -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/date_difference_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/difference_of_date"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOutline" />
-            </LinearLayout>
+                    android:textColor="?attr/colorOutline"
+                    app:layout_constraintBottom_toBottomOf="@id/start_date_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/start_date_title"
+                    app:layout_constraintTop_toBottomOf="@id/date_difference_text"
+                    app:layout_constraintTop_toTopOf="@id/start_date_title" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 日记计数卡片 -->
@@ -71,19 +99,29 @@
             style="@style/MediumRadiusCardStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="1dp"
             android:layout_marginTop="0dp"
             android:layout_marginBottom="0dp"
-            app:layout_constraintBottom_toTopOf="@id/emotion_tag_count_card"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/date_card"
-            app:layout_constraintTop_toBottomOf="@id/toolbar">
+            android:layout_marginEnd="2dp"
+            app:layout_constraintBottom_toBottomOf="@id/paragraph_count_card"
+            app:layout_constraintEnd_toStartOf="@id/paragraph_count_card"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/diary_date_card">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
                 android:padding="10dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/diary_count_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/diary_count"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    app:layout_constraintBottom_toTopOf="@id/diary_count_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/diary_count_title"
@@ -91,14 +129,44 @@
                     android:layout_height="wrap_content"
                     android:text="@string/diary_count"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOutline" />
+                    android:textColor="?attr/colorOutline"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/diary_count_text" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 段落计数卡片 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/paragraph_count_card"
+            style="@style/MediumRadiusCardStyle"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginBottom="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/diary_count_card"
+            app:layout_constraintEnd_toEndOf="@id/emotion_tag_count_card"
+            app:layout_constraintStart_toEndOf="@id/diary_count_card"
+            app:layout_constraintTop_toTopOf="@id/diary_count_card">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:padding="10dp"
+                android:layout_height="match_parent">
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/diary_count_text"
+                    android:id="@+id/paragraph_count_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/diary_count"
-                    android:textAppearance="?attr/textAppearanceHeadline5" />
+                    android:text="@string/paragraph_count"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    app:layout_constraintBottom_toTopOf="@id/paragraph_count_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/paragraph_count_title"
@@ -106,15 +174,12 @@
                     android:layout_height="wrap_content"
                     android:text="@string/paragraph_count"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOutline" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/paragraph_count_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/paragraph_count"
-                    android:textAppearance="?attr/textAppearanceHeadline5" />
-            </LinearLayout>
+                    android:textColor="?attr/colorOutline"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/paragraph_count_text" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <!-- 情绪标签计数卡片 -->
@@ -122,34 +187,43 @@
             android:id="@+id/emotion_tag_count_card"
             style="@style/MediumRadiusCardStyle"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/diary_count_card"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/date_card">
+            app:layout_constraintStart_toEndOf="@id/paragraph_count_card"
+            app:layout_constraintTop_toTopOf="@id/diary_count_card">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:padding="10dp">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/emotion_tag_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/emotion_tag"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOutline" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/emotion_tag_count_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/emotion_tag"
-                    android:textAppearance="?attr/textAppearanceHeadline5" />
-            </LinearLayout>
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    app:layout_constraintBottom_toTopOf="@id/emotion_tag_count_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/emotion_tag_count_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/emotion_tag"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOutline"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/emotion_tag_count_text" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -25,7 +25,7 @@
     <string name="start_date">日记开始日期</string>
     <string name="cant_get">无法获取</string>
     <string name="difference_of_date">日期差</string>
-    <string name="unknown_difference_of_date">距今天数未知</string>
+    <string name="unknown">未知</string>
     <string name="authentication">身份验证</string>
     <string name="hide_recent_task">最近任务隐藏</string>
     <string name="authentication_opportunity">身份验证时机</string>
