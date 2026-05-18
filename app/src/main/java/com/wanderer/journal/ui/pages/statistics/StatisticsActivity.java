@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -116,5 +117,21 @@ public class StatisticsActivity extends AppCompatActivity {
         //更新连续天数文本
         binding.continuousCountText.setText(String.valueOf(currentContinuous));
         binding.maxContinuousText.setText(String.valueOf(maxContinuous));
+    }
+
+    /**
+     * 初始化记忆像素列表
+     */
+    private void initMemeryPixelRecycler() {
+        //实例化一个7行的网格布局并应用于Recycler
+        GridLayoutManager layoutManager = new GridLayoutManager(
+                this,
+                7, // 7行，代表周一到周日
+                GridLayoutManager.HORIZONTAL, // 横向滚动，这样左边是旧日期，右边是新日期
+                false
+        );
+        binding.memeryPixelRecycler.setLayoutManager(layoutManager);
+
+        //TODO:添加适配器
     }
 }
