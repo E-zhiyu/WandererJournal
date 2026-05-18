@@ -21,6 +21,7 @@ import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -145,7 +146,8 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.diaryCountCard.setOnClickListener(view -> {
-            //TODO:跳转到日记界面
+            Intent skip2DiaryStatistics = new Intent(requireContext(), StatisticsActivity.class);
+            startActivity(skip2DiaryStatistics);
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.diaryCountCard);
 

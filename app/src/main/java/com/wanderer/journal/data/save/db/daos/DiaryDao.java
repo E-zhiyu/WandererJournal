@@ -55,6 +55,15 @@ public interface DiaryDao {
     Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
 
     /**
+     * 查询指定日期之前（包括该日期）的所有日记的日期
+     *
+     * @param end 截止日期
+     * @return 日期列表
+     */
+    @Query("SELECT diaryDate FROM diaries WHERE diaryDate <= :end ORDER BY diaryDate")
+    Single<List<LocalDate>> getDiaryDateSingle(LocalDate end);
+
+    /**
      * 插入一条日记
      *
      * @param diary 新日记内容

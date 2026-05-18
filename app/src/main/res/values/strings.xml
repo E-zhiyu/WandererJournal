@@ -62,4 +62,7 @@
     <string name="delete">删除</string>
     <string name="select_emotion_tag">选择情绪标签</string>
     <string name="slide_to_change_degree_of_emotion">滑动调整强烈程度</string>
+    <string name="diary_statistics">日记统计</string>
+    <string name="diary_continuous_count">连续记日记天数</string>
+    <string name="max_diary_continuous">最大连续天数</string>
 </resources>
