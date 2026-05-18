@@ -58,7 +58,7 @@ import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;               //绑定的XML布局
-    private LocalDate initDiaryDate = LocalDate.now();      //初始页的日期
+    private LocalDate initDiaryDate = null;                 //初始页的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private OnBackPressedCallback backPressedCallback;      //返回手势监听
     private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
@@ -73,15 +73,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, 0, systemBars.right, 0);
-
-            //SearchBar的布局
-            binding.appBarConstraint.setPadding(
-                    0,
-                    systemBars.top,
-                    0,
-                    ViewEdgeHelper.dpToPx(this, 20)
-            );
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
 
             //底部卡片布局
             binding.bottomCardLayout.setPadding(
@@ -203,6 +195,8 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化RecyclerView
      */
     private void initRecyclerView() {
+        pendingTargetDate = initDiaryDate;
+
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
@@ -251,30 +245,9 @@ public class DiaryReadActivity extends AppCompatActivity {
             } else {
                 binding.emptyText.setVisibility(View.GONE);
             }
-            return Unit.INSTANCE;
-        });
-        binding.contentRecycler.setAdapter(adapter);
 
-        //监听数据库的响应
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(pagingData ->
-                        adapter.submitData(getLifecycle(), pagingData)
-                )
-        );
-
-        //跳转到指定日期
-        pendingTargetDate = initDiaryDate;
-        viewModel.scrollToDate(initDiaryDate);
-
-        //添加加载监听器用于精细调控加载位置
-        adapter.addLoadStateListener(loadStates -> {
             // 当刷新完成且数据已提交到 UI
-            if (loadStates.getRefresh() instanceof LoadState.NotLoading && pendingTargetDate != null) {
+            if (isNotLoading && pendingTargetDate != null) {
                 // 遍历当前已加载的列表，找到对应的日期项
                 int position = -1;
                 for (int i = 0; i < adapter.getItemCount(); i++) {
@@ -296,8 +269,21 @@ public class DiaryReadActivity extends AppCompatActivity {
                     }
                 }
             }
-            return null;
+            return Unit.INSTANCE;
         });
+        binding.contentRecycler.setAdapter(adapter);
+
+        //监听数据库的响应
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
+        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
+        disposable.add(viewModel.getPagingDataFlow(initDiaryDate)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(pagingData ->
+                        adapter.submitData(getLifecycle(), pagingData)
+                )
+        );
     }
 
     /**

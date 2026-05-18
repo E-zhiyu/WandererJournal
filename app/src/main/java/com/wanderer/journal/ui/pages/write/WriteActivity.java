@@ -253,9 +253,9 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db, diaryDate, diaryDate.plusDays(1));
+        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
         ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow()
+        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), diaryDate)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
@@ -266,7 +266,6 @@ public class WriteActivity extends AppCompatActivity {
 
         //跳转到指定日期
         pendingTargetDate = diaryDate;
-        viewModel.scrollToDate(diaryDate);
 
         //添加加载监听器用于精细调控加载位置
         adapter.addLoadStateListener(loadStates -> {

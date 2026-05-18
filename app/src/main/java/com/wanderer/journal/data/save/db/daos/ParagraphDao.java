@@ -55,7 +55,7 @@ public interface ParagraphDao {
      * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
      */
     @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
-    Single<Integer> getAdjustedPositionSingle(LocalDate date);
+    int getAdjustedPositionSingle(LocalDate date);
 
     /**
      * 通过日记 ID 获取段落
