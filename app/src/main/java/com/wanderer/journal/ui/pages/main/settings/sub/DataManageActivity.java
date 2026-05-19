@@ -19,7 +19,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
@@ -436,8 +435,7 @@ public class DataManageActivity extends AppCompatActivity {
                         data -> {
                             //获取基本数据
                             String content = data.getContent();
-                            long lastModifyTime = data.getLastModifyTime();
-                            LocalDateTime time = DateTimeConverter.toLocalDateTime(lastModifyTime);
+                            LocalDateTime lastModifyTime = data.getLastModifyTime();
                             int lineCount = StringHelper.countLinesSplit(content);
 
                             //判断删除空白字符后是否为空字符串
@@ -451,14 +449,14 @@ public class DataManageActivity extends AppCompatActivity {
                             String message = String.format(
                                     Locale.getDefault(),
                                     "所选文件信息如下：\n行数：%d\n最后编辑时间：%s\n确认追加该文件中的所有内容吗？",
-                                    lineCount, time.format(formatter)
+                                    lineCount, lastModifyTime.format(formatter)
                             );
 
                             new MaterialAlertDialogBuilder(this)
                                     .setTitle(R.string.append_paragraph)
                                     .setMessage(message)
                                     .setPositiveButton("确认", (dialogInterface, i) ->
-                                            appendParagraphsFromFile(content, time)
+                                            appendParagraphsFromFile(content, lastModifyTime)
                                     )
                                     .setNegativeButton("取消", null)
                                     .show();

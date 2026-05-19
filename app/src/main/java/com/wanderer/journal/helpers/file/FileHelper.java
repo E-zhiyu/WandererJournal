@@ -1,13 +1,12 @@
 package com.wanderer.journal.helpers.file;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.DocumentsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.LogTags;
@@ -21,6 +20,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import io.reactivex.rxjava3.core.Single;
 
@@ -35,7 +37,7 @@ public class FileHelper {
     public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
         return Single.fromCallable(() -> {
             String content = readContent(uri, context);
-            long lastModifyTime = getFileLastModifyTime(uri, context);
+            LocalDateTime lastModifyTime = getFileLastModifyTime(uri, context);
             return new TextFileData(content, lastModifyTime);
         });
     }
@@ -47,22 +49,15 @@ public class FileHelper {
      * @param context 上下文
      * @return 文件最后编辑时间的时间戳
      */
-    public static long getFileLastModifyTime(Uri uri, Context context) {
+    public static LocalDateTime getFileLastModifyTime(Uri uri, Context context) {
         long lastModified = 0;
 
-        // 查询系统媒体/文件库
-        try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                // 尝试获取修改时间列的索引
-                int index = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
-                if (index != -1) {
-                    // 该值是毫秒单位的时间戳
-                    lastModified = cursor.getLong(index);
-                }
-            }
+        DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
+        if (documentFile.exists()) {
+            lastModified = documentFile.lastModified();
         }
 
-        return lastModified;
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneId.systemDefault());
     }
 
     /**
