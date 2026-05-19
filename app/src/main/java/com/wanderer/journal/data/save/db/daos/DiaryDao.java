@@ -69,7 +69,7 @@ public interface DiaryDao {
      * @param start 起始日期（不包含该日期）
      * @return 日记数量
      */
-    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start ORDER BY diaryDate DESC")
+    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start")
     Single<Integer> getDiaryCountSingle(LocalDate start);
 
     /**
