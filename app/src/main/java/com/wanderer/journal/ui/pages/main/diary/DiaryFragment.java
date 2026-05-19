@@ -21,6 +21,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.enums.KeyStrings;
@@ -126,7 +127,7 @@ public class DiaryFragment extends Fragment {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    this::scrollToTargetPosition,
+                                    count -> scrollToTargetPosition(count, selectedDate),
                                     e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                             )
                     );
@@ -138,13 +139,23 @@ public class DiaryFragment extends Fragment {
      * 跳转到指定位置
      *
      * @param targetPosition 目标下标
+     * @param targetDate     希望跳转到的日期
      */
-    private void scrollToTargetPosition(int targetPosition) {
+    private void scrollToTargetPosition(int targetPosition, LocalDate targetDate) {
         //判断位置是否在有效范围内
         RecyclerView.Adapter<?> adapter = binding.diaryRecycler.getAdapter();
         if (adapter == null || targetPosition >= adapter.getItemCount()) {
             Toast.makeText(requireContext(), "所选日期已超过最早的日期", Toast.LENGTH_SHORT).show();
             return;
+        } else {
+            //判断跳转到的位置是否是目标日期
+            if (adapter instanceof DiaryAdapter) {
+                DiaryWithSummaryUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
+                LocalDate exactDate = diaryModel.getDiary().getDiaryDate();
+                if (!exactDate.isEqual(targetDate)) {
+                    Toast.makeText(requireContext(), "目标日期没有日记，已跳转至相邻日记", Toast.LENGTH_SHORT).show();
+                }
+            }
         }
 
         //获取布局管理器
