@@ -1,13 +1,12 @@
 package com.wanderer.journal.helpers.file;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.DocumentsContract;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.documentfile.provider.DocumentFile;
 
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.LogTags;
@@ -53,16 +52,9 @@ public class FileHelper {
     public static LocalDateTime getFileLastModifyTime(Uri uri, Context context) {
         long lastModified = 0;
 
-        // 查询系统媒体/文件库
-        try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                // 尝试获取修改时间列的索引
-                int index = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
-                if (index != -1) {
-                    // 该值是毫秒单位的时间戳
-                    lastModified = cursor.getLong(index);
-                }
-            }
+        DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
+        if (documentFile.exists()) {
+            lastModified = documentFile.lastModified();
         }
 
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneId.systemDefault());
