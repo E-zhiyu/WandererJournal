@@ -114,9 +114,20 @@
         <item name="endIconMode">clear_text</item>
     </style>
 
+    <!-- 下拉菜单式文本框布局样式 -->
+    <style name="DropdownMenuTextInputLayoutStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+
     <!-- 需要用户输入文本的文本框样式 -->
     <style name="UserInputEditTextStyle" parent="Widget.Material3.TextInputEditText.OutlinedBox.Dense">
         <item name="android:inputType">text</item>
-        <item name="android:textColorHighlight">?attr/colorSurfaceVariant</item>
+    </style>
+
+    <!-- 自动填充文本框样式 -->
+    <style name="UneditableAutoCompleteTextViewStyle" parent="Widget.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+        <item name="android:inputType">none</item>
+        <item name="maxLines">1</item>
     </style>
 </resources>

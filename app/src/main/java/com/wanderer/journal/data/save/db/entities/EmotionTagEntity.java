@@ -13,10 +13,12 @@ public class EmotionTagEntity {
     private long emotionId;     //自增主键
     private String name;        //名称
     private String description; //描述
+    private int type = 1;       //情绪类型
 
-    public EmotionTagEntity(String name, String description) {
+    public EmotionTagEntity(String name, String description, int type) {
         this.name = name;
         this.description = description;
+        this.type = type;
     }
 
     public long getEmotionId() {
@@ -41,5 +43,13 @@ public class EmotionTagEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

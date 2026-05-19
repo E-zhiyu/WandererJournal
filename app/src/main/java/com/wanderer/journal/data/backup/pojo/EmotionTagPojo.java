@@ -7,6 +7,7 @@ public class EmotionTagPojo {
     private long emotionId;             //自增主键
     private String name;                //名称
     private String description;         //描述
+    private int type;                   //情绪种类
 
     public EmotionTagPojo() {
     }
@@ -33,5 +34,13 @@ public class EmotionTagPojo {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

@@ -66,4 +66,6 @@
     <string name="diary_continuous_count">连续记日记天数</string>
     <string name="max_diary_continuous">最大连续天数</string>
     <string name="date_skip_btn">日期跳转按钮</string>
+    <string name="emotion_type">情绪类型</string>
+    <string name="emotion_type_helper">该情绪的大致类别</string>
 </resources>

@@ -27,9 +27,12 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
                 EmotionTagEntity.class,
                 EmotionParagraphRefEntity.class
         },
-        version = 1
+        version = 2
 )
-@TypeConverters({DateTimeConverter.class, UriConverter.class})
+@TypeConverters({
+        DateTimeConverter.class,
+        UriConverter.class
+})
 public abstract class DiaryDatabase extends RoomDatabase {
     private static volatile DiaryDatabase INSTANCE; //单例实例
 
@@ -48,7 +51,7 @@ public abstract class DiaryDatabase extends RoomDatabase {
                                     DiaryDatabase.class,
                                     "diary_database"
                             )
-                            .addMigrations()
+                            .addMigrations(DatabaseMigrations.MIGRATION_1_2)
                             .build();
                 }
             }

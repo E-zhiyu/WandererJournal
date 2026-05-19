@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
@@ -78,15 +79,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         EmotionTagAdapter adapter = new EmotionTagAdapter(
                 emotionTag -> {
                     Intent skip2EmotionTagModify = new Intent(this, EmotionTagAddModifyActivity.class);
-                    Bundle bundle = new Bundle();
-
-                    long emotionTagId = emotionTag.getEmotionId();
-                    bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTagId); //情绪标签 ID
-                    String name = emotionTag.getName();
-                    bundle.putString(KeyStrings.EMOTION_TAG_NAME.getS(), name);     //情绪标签名称
-                    String description = emotionTag.getDescription();
-                    bundle.putString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS(), description);   //情绪标签描述
-
+                    Bundle bundle = getEmotionTagModifyBundle(emotionTag);
                     skip2EmotionTagModify.putExtras(bundle);
                     startActivity(skip2EmotionTagModify);
                 },
@@ -109,6 +102,27 @@ public class EmotionTagManageActivity extends AppCompatActivity {
                         }
                 )
         );
+    }
+
+    /**
+     * 将情绪标签实体的属性放到{@link Bundle}中，以便传递给编辑界面
+     *
+     * @param emotionTag 被传递的情绪标签
+     * @return 装有情绪标签数据的{@link Bundle}
+     */
+    @NonNull
+    private static Bundle getEmotionTagModifyBundle(@NonNull EmotionTagEntity emotionTag) {
+        Bundle bundle = new Bundle();
+
+        long emotionTagId = emotionTag.getEmotionId();
+        bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTagId); //情绪标签 ID
+        String name = emotionTag.getName();
+        bundle.putString(KeyStrings.EMOTION_TAG_NAME.getS(), name);     //情绪标签名称
+        String description = emotionTag.getDescription();
+        bundle.putString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS(), description);   //情绪标签描述
+        int emotionTypeOrdinal = emotionTag.getType();
+        bundle.putInt(KeyStrings.EMOTION_TAG_TYPE.getS(), emotionTypeOrdinal);  //情绪标签种类
+        return bundle;
     }
 
     /**
