@@ -185,15 +185,28 @@ public class DiaryFragment extends Fragment {
         int distance = Math.abs(targetPosition - firstVisiblePos);
         final int DISTANCE_THRESHOLD = 20;
         if (distance > DISTANCE_THRESHOLD) {
-            //瞬间滚动
-            layoutManager.scrollToPositionWithOffset(targetPosition, 0);
+            //瞬间滚动到附近
+            int momentPosition = targetPosition > firstVisiblePos ? targetPosition - DISTANCE_THRESHOLD : targetPosition + DISTANCE_THRESHOLD;
+            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
 
-            //播放闪烁动画
+            //然后再平滑滚动
             binding.diaryRecycler.post(() -> {
-                RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
-                if (viewHolder != null) {
-                    AppearanceAnimationHelper.blink(viewHolder.itemView);
-                }
+                //添加滚动监听器并平滑滚动
+                binding.diaryRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        // 当滚动完全停止 (IDLE) 时再闪烁
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+                            if (viewHolder != null) {
+                                AppearanceAnimationHelper.blink(viewHolder.itemView);
+                            }
+                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                        }
+                    }
+                });
+                binding.diaryRecycler.smoothScrollToPosition(targetPosition);
             });
         } else {
             //添加滚动监听器并平滑滚动
