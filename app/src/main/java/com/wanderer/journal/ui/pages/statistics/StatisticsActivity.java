@@ -103,13 +103,23 @@ public class StatisticsActivity extends AppCompatActivity {
             LocalDate current = existedDateList.get(i);
             LocalDate next = existedDateList.get(i + 1);
 
+            //判断是否到了末尾，防止一直不写日记仍然有连续计数的情况
+            if (i == existedDateList.size() - 2) {
+                LocalDate now = LocalDate.now();
+                long differenceToNow = ChronoUnit.DAYS.between(next, now);
+                if (differenceToNow > 1) {
+                    currentContinuous = 0;  //归零
+                    continue;
+                }
+            }
+
             //计算两个日期间隔天数
             long difference = ChronoUnit.DAYS.between(current, next);
             if (difference == 1) {          //日期连续
-                currentContinuous++;
+                currentContinuous = currentContinuous == 0 ? 2 : currentContinuous + 1;
                 maxContinuous = Math.max(maxContinuous, currentContinuous); //如果有更大值则更新
             } else if (difference > 1) {    //日期不连续
-                currentContinuous = 0;
+                currentContinuous = 0;      //归零当前连续值
             }
         }
 
