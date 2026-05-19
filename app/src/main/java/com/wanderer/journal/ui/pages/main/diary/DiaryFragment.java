@@ -138,15 +138,17 @@ public class DiaryFragment extends Fragment {
     /**
      * 跳转到指定位置
      *
-     * @param targetPosition 目标下标
+     * @param targetPosition 目标下标，实际为大于目标日期的日记数量
      * @param targetDate     希望跳转到的日期
      */
     private void scrollToTargetPosition(int targetPosition, LocalDate targetDate) {
         //判断位置是否在有效范围内
         RecyclerView.Adapter<?> adapter = binding.diaryRecycler.getAdapter();
         if (adapter == null || targetPosition >= adapter.getItemCount()) {
-            Toast.makeText(requireContext(), "所选日期已超过最早的日期", Toast.LENGTH_SHORT).show();
-            return;
+            targetPosition -= 1;    //防止超出范围
+            Toast.makeText(requireContext(), "已跳转至最早的日记", Toast.LENGTH_SHORT).show();
+        } else if (targetPosition == 0) {
+            Toast.makeText(requireContext(), "已跳转至最晚的日记", Toast.LENGTH_SHORT).show();
         } else {
             //判断跳转到的位置是否是目标日期
             if (adapter instanceof DiaryAdapter) {
@@ -183,6 +185,7 @@ public class DiaryFragment extends Fragment {
 
         //根据距离远近采用不同的滚动方式
         int distance = Math.abs(targetPosition - firstVisiblePos);
+        int finalTargetPosition = targetPosition;
         final int DISTANCE_THRESHOLD = 20;
         if (distance > DISTANCE_THRESHOLD) {
             //瞬间滚动到附近
@@ -198,7 +201,7 @@ public class DiaryFragment extends Fragment {
                         super.onScrollStateChanged(recyclerView, newState);
                         // 当滚动完全停止 (IDLE) 时再闪烁
                         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(finalTargetPosition);
                             if (viewHolder != null) {
                                 AppearanceAnimationHelper.blink(viewHolder.itemView);
                             }
@@ -206,7 +209,7 @@ public class DiaryFragment extends Fragment {
                         }
                     }
                 });
-                binding.diaryRecycler.smoothScrollToPosition(targetPosition);
+                binding.diaryRecycler.smoothScrollToPosition(finalTargetPosition);
             });
         } else {
             //添加滚动监听器并平滑滚动
@@ -216,7 +219,7 @@ public class DiaryFragment extends Fragment {
                     super.onScrollStateChanged(recyclerView, newState);
                     // 当滚动完全停止 (IDLE) 时再闪烁
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+                        RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(finalTargetPosition);
                         if (viewHolder != null) {
                             AppearanceAnimationHelper.blink(viewHolder.itemView);
                         }
