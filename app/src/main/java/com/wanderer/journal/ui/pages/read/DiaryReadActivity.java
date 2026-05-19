@@ -74,8 +74,14 @@ public class DiaryReadActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
+            //计算纯键盘高度
+            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
+
+            //增加界面下边距
+            binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
 
             //底部卡片布局
             binding.bottomCardLayout.setPadding(
@@ -108,8 +114,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                 //计算纯键盘高度
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
 
-                //便宜可能被键盘遮挡的组件
-                binding.getRoot().setPadding(systemBars.left, 0, systemBars.right, keyboardHeight);
+                //增加界面下边距
+                binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
                 return insets;
             }
 

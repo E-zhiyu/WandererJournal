@@ -77,14 +77,21 @@ public class WriteActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
+            //计算纯键盘高度
+            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
+
+            //增加界面下边距
+            binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
 
             binding.contentInputLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
-                    systemBars.bottom);
+                    systemBars.bottom
+            );
 
             return insets;
         });
