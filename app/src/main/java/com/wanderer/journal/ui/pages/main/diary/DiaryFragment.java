@@ -170,6 +170,7 @@ public class DiaryFragment extends Fragment {
         int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
         if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
             //处理没有可见视图的情况
+            Toast.makeText(requireContext(), "没有可见的日记视图", Toast.LENGTH_SHORT).show();
             return;
         } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
             //处理不需要滚动的情况
