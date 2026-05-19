@@ -540,7 +540,8 @@ public class WriteActivity extends AppCompatActivity {
         // 执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());
+            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本
+            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
