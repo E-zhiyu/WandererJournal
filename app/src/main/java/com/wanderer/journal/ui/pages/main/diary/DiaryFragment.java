@@ -1,12 +1,14 @@
 package com.wanderer.journal.ui.pages.main.diary;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.Gravity;
@@ -15,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -72,26 +75,7 @@ public class DiaryFragment extends Fragment {
         //日期跳转FAB
         AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);
         AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.dateSkipFab);
-        binding.dateSkipFab.setOnClickListener(view -> DateTimePickerHelper.selectDate(
-                null,
-                getParentFragmentManager(),
-                selection -> {
-                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
-                    disposable.add(dao.getDiaryCountSingle(selectedDate)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    count -> {
-                                        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
-                                        if (layoutManager != null) {
-                                            layoutManager.scrollToPositionWithOffset(count, 0);
-                                        }
-                                    }
-                            )
-                    );
-                }
-        ));
+        binding.dateSkipFab.setOnClickListener(view -> scrollToTargetDiaryDate());
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
@@ -127,6 +111,52 @@ public class DiaryFragment extends Fragment {
                             Log.e(LogTags.DIARY_FRAGMENT.n(), "日记数据库读取失败");
                         }
                 )
+        );
+    }
+
+    /**
+     * 跳转到指定日期的日记
+     */
+    private void scrollToTargetDiaryDate() {
+        DateTimePickerHelper.selectDate(
+                null,
+                getParentFragmentManager(),
+                selection -> {
+                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    disposable.add(dao.getDiaryCountSingle(selectedDate)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    count -> {
+                                        //执行滚动操作
+                                        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
+                                        if (layoutManager != null) {
+                                            layoutManager.scrollToPositionWithOffset(count, 0);
+                                        }
+
+                                        //播放闪烁动画
+                                        binding.diaryRecycler.post(() -> {
+                                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(count);
+                                            if (viewHolder != null) {
+                                                View targetView = viewHolder.itemView;
+                                                int colorFrom = MaterialColors.getColor(
+                                                        requireContext(),
+                                                        com.google.android.material.R.attr.colorSurfaceContainerHighest,
+                                                        Color.BLACK
+                                                );
+                                                int colorTo = MaterialColors.getColor(
+                                                        requireContext(),
+                                                        com.google.android.material.R.attr.colorSecondaryContainer,
+                                                        Color.BLACK
+                                                );
+                                                AppearanceAnimationHelper.blink(targetView, colorFrom, colorTo);
+                                            }
+                                        });
+                                    }
+                            )
+                    );
+                }
         );
     }
 

@@ -1,5 +1,7 @@
 package com.wanderer.journal.helpers.appearance;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.os.Vibrator;
 import android.view.View;
@@ -169,5 +171,26 @@ public class AppearanceAnimationHelper {
         } else {
             setRadiusStyle(view, RadiusStyle.MIDDLE);
         }
+    }
+
+    /**
+     * 播放闪烁动画
+     *
+     * @param view 需要闪烁的视图
+     */
+    public static void blink(View view, int colorFrom, int colorTo) {
+        // 使用 ObjectAnimator 改变 view 的 backgroundColor 属性
+        ObjectAnimator animator = ObjectAnimator.ofObject(
+                view,
+                "backgroundColor",
+                new ArgbEvaluator(),
+                colorFrom,
+                colorTo
+        );
+
+        animator.setDuration(600); // 动画持续 600 毫秒
+        animator.setRepeatCount(1); // 重复 1 次（总共闪烁 2 下）
+        animator.setRepeatMode(ObjectAnimator.REVERSE); // 倒序回弹，形成呼吸闪烁感
+        animator.start();
     }
 }
