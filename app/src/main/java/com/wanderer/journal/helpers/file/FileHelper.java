@@ -21,6 +21,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import io.reactivex.rxjava3.core.Single;
 
@@ -35,7 +38,7 @@ public class FileHelper {
     public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
         return Single.fromCallable(() -> {
             String content = readContent(uri, context);
-            long lastModifyTime = getFileLastModifyTime(uri, context);
+            LocalDateTime lastModifyTime = getFileLastModifyTime(uri, context);
             return new TextFileData(content, lastModifyTime);
         });
     }
@@ -47,7 +50,7 @@ public class FileHelper {
      * @param context 上下文
      * @return 文件最后编辑时间的时间戳
      */
-    public static long getFileLastModifyTime(Uri uri, Context context) {
+    public static LocalDateTime getFileLastModifyTime(Uri uri, Context context) {
         long lastModified = 0;
 
         // 查询系统媒体/文件库
@@ -62,7 +65,7 @@ public class FileHelper {
             }
         }
 
-        return lastModified;
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneId.systemDefault());
     }
 
     /**
