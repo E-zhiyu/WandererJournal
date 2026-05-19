@@ -1,16 +1,19 @@
 package com.wanderer.journal.helpers.appearance;
 
-import android.animation.ArgbEvaluator;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.RectF;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Vibrator;
 import android.view.View;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
@@ -43,22 +46,6 @@ public class AppearanceAnimationHelper {
                 btn.show();
             }
         });
-    }
-
-    /**
-     * 将根布局内的所有MaterialButton和FAB组件添加点击时的圆角变化动画
-     *
-     * @param root 根布局
-     */
-    public static void setupAllChildMorphAnimation(@NonNull ViewGroup root) {
-        for (int index = 0; index < root.getChildCount(); index++) {
-            View child = root.getChildAt(index);
-            if (child instanceof MaterialButton || child instanceof FloatingActionButton) {
-                attachMorphAnimation(child);
-            } else if (child instanceof ViewGroup) {
-                setupAllChildMorphAnimation((ViewGroup) child);
-            }
-        }
     }
 
     /**
@@ -178,19 +165,77 @@ public class AppearanceAnimationHelper {
      *
      * @param view 需要闪烁的视图
      */
-    public static void blink(View view, int colorFrom, int colorTo) {
-        // 使用 ObjectAnimator 改变 view 的 backgroundColor 属性
-        ObjectAnimator animator = ObjectAnimator.ofObject(
-                view,
-                "backgroundColor",
-                new ArgbEvaluator(),
-                colorFrom,
-                colorTo
+    public static void blinkComplexRounding(View view) {
+        if (view == null) return;
+
+        // 动态创建一个 GradientDrawable 作为闪烁层
+        GradientDrawable blinkDrawable = new GradientDrawable();
+        blinkDrawable.setShape(GradientDrawable.RECTANGLE);
+
+        // 设置闪烁的高亮颜色
+        int highlightColor = MaterialColors.getColor(view, com.google.android.material.R.attr.colorSecondaryContainer);
+        blinkDrawable.setColor(highlightColor);
+
+        // 同步复杂的圆角值
+        if (view instanceof MaterialCardView) {
+            // 如果是 MaterialCardView，它拥有完美的 ShapeAppearanceModel
+            MaterialCardView cardView = (MaterialCardView) view;
+            ShapeAppearanceModel shapeModel = cardView.getShapeAppearanceModel();
+
+            // 此时，我们需要将 ShapeModel 中的四个角（TopLeft, TopRight, BottomRight, BottomLeft）
+            // 转换为 GradientDrawable 需要的 float[] 数组。
+            // GradientDrawable.setCornerRadii 需要一个包含 8 个 float 值的数组，
+            // 分别对应 [TLx, TLy, TRx, TRy, BRx, BRy, BLx, BLy]
+
+            RectF rect = new RectF(0, 0, view.getWidth(), view.getHeight());
+            float topLeft = shapeModel.getTopLeftCornerSize().getCornerSize(rect);
+            float topRight = shapeModel.getTopRightCornerSize().getCornerSize(rect);
+            float bottomRight = shapeModel.getBottomRightCornerSize().getCornerSize(rect);
+            float bottomLeft = shapeModel.getBottomLeftCornerSize().getCornerSize(rect);
+
+            float[] radii = new float[]{
+                    topLeft, topLeft,      // Top Left: x, y
+                    topRight, topRight,    // Top Right: x, y
+                    bottomRight, bottomRight, // Bottom Right: x, y
+                    bottomLeft, bottomLeft   // Bottom Left: x, y
+            };
+            blinkDrawable.setCornerRadii(radii);
+
+        } else {
+            // 兜底方案：如果 View 不是 MaterialCardView，尝试获取 View 本身的 Outline
+            blinkDrawable.setCornerRadius(0); // 暂时设为 0，防止未知形状
+        }
+
+        // 将 Drawable 添加到 Overlay
+        blinkDrawable.setAlpha(0); // 初始全透明
+        view.getOverlay().add(blinkDrawable);
+
+        // 设置 Bounds (必须，否则不显示)
+        // 考虑到 RecyclerView 滚动，最好用 post 确保 View 测量完成
+        view.post(() -> blinkDrawable.setBounds(0, 0, view.getWidth(), view.getHeight()));
+
+        // 播放 Alpha 属性动画
+        ObjectAnimator animator = ObjectAnimator.ofInt(
+                blinkDrawable,
+                "alpha",
+                0,   // 全透明
+                100         //不设置为255，为了避免完全遮罩内容
         );
 
-        animator.setDuration(600); // 动画持续 600 毫秒
-        animator.setRepeatCount(1); // 重复 1 次（总共闪烁 2 下）
-        animator.setRepeatMode(ObjectAnimator.REVERSE); // 倒序回弹，形成呼吸闪烁感
+        animator.setDuration(400); // 闪亮过程
+        animator.setRepeatCount(1); // 呼吸 1 次
+        animator.setRepeatMode(ObjectAnimator.REVERSE); // 倒序回弹
+
+        // 清理工作
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                // 必须移除，防止叠加和内存泄漏
+                view.getOverlay().remove(blinkDrawable);
+            }
+        });
+
         animator.start();
     }
 }

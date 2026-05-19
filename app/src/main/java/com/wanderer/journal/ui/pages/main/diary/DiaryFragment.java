@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages.main.diary;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -17,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -139,18 +137,7 @@ public class DiaryFragment extends Fragment {
                                         binding.diaryRecycler.post(() -> {
                                             RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(count);
                                             if (viewHolder != null) {
-                                                View targetView = viewHolder.itemView;
-                                                int colorFrom = MaterialColors.getColor(
-                                                        requireContext(),
-                                                        com.google.android.material.R.attr.colorSurfaceContainerHighest,
-                                                        Color.BLACK
-                                                );
-                                                int colorTo = MaterialColors.getColor(
-                                                        requireContext(),
-                                                        com.google.android.material.R.attr.colorSecondaryContainer,
-                                                        Color.BLACK
-                                                );
-                                                AppearanceAnimationHelper.blink(targetView, colorFrom, colorTo);
+                                                AppearanceAnimationHelper.blinkComplexRounding(viewHolder.itemView);
                                             }
                                         });
                                     }
