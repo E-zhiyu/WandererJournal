@@ -82,20 +82,20 @@ public class DateTimePickerHelper {
     /**
      * 选择日期
      *
-     * @param date            初始化时选中的日期
+     * @param initDate        初始化时选中的日期
      * @param fragmentManager 显示对话框的FragmentManager
      * @param listener        确定监听器
      */
     public static void selectDate(
-            LocalDate date,
+            LocalDate initDate,
             FragmentManager fragmentManager,
             MaterialPickerOnPositiveButtonClickListener<Long> listener
     ) {
         //创建日期选择对话框构建器
         MaterialDatePicker.Builder<Long> dateBuilder = MaterialDatePicker.Builder.datePicker();
         dateBuilder.setTitleText("选择日期");
-        if (date != null) {
-            long dateSelection = date.atStartOfDay()
+        if (initDate != null) {
+            long dateSelection = initDate.atStartOfDay()
                     .toInstant(ZoneOffset.UTC)
                     .toEpochMilli();
             dateBuilder.setSelection(dateSelection);

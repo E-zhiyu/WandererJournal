@@ -58,10 +58,19 @@ public interface DiaryDao {
      * 查询指定日期之前（包括该日期）的所有日记的日期
      *
      * @param end 截止日期
-     * @return 日期列表
+     * @return 日期列表，升序排序
      */
     @Query("SELECT diaryDate FROM diaries WHERE diaryDate <= :end ORDER BY diaryDate")
     Single<List<LocalDate>> getDiaryDateSingle(LocalDate end);
+
+    /**
+     * 获取某个日期之后（不包括该日期）的日记数量
+     *
+     * @param start 起始日期（不包含该日期）
+     * @return 日记数量
+     */
+    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start ORDER BY diaryDate DESC")
+    Single<Integer> getDiaryCountSingle(LocalDate start);
 
     /**
      * 插入一条日记

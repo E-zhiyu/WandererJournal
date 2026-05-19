@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.util.Log;
 import android.view.Gravity;
@@ -67,6 +68,30 @@ public class DiaryFragment extends Fragment {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
         });
+
+        //日期跳转FAB
+        AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);
+        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.dateSkipFab);
+        binding.dateSkipFab.setOnClickListener(view -> DateTimePickerHelper.selectDate(
+                null,
+                getParentFragmentManager(),
+                selection -> {
+                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    disposable.add(dao.getDiaryCountSingle(selectedDate)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    count -> {
+                                        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
+                                        if (layoutManager != null) {
+                                            layoutManager.scrollToPositionWithOffset(count, 0);
+                                        }
+                                    }
+                            )
+                    );
+                }
+        ));
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(

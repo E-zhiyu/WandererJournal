@@ -65,4 +65,5 @@
     <string name="diary_statistics">日记统计</string>
     <string name="diary_continuous_count">连续记日记天数</string>
     <string name="max_diary_continuous">最大连续天数</string>
+    <string name="date_skip_btn">日期跳转按钮</string>
 </resources>
