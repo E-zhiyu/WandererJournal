@@ -73,7 +73,7 @@ public class DiaryFragment extends Fragment {
         //日期跳转FAB
         AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);
         AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.dateSkipFab);
-        binding.dateSkipFab.setOnClickListener(view -> scrollToTargetDiaryDate());
+        binding.dateSkipFab.setOnClickListener(view -> showDateScrollDatePicker());
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
@@ -115,7 +115,7 @@ public class DiaryFragment extends Fragment {
     /**
      * 跳转到指定日期的日记
      */
-    private void scrollToTargetDiaryDate() {
+    private void showDateScrollDatePicker() {
         DateTimePickerHelper.selectDate(
                 null,
                 getParentFragmentManager(),
@@ -126,25 +126,81 @@ public class DiaryFragment extends Fragment {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    count -> {
-                                        //执行滚动操作
-                                        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
-                                        if (layoutManager != null) {
-                                            layoutManager.scrollToPositionWithOffset(count, 0);
-                                        }
-
-                                        //播放闪烁动画
-                                        binding.diaryRecycler.post(() -> {
-                                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(count);
-                                            if (viewHolder != null) {
-                                                AppearanceAnimationHelper.blinkComplexRounding(viewHolder.itemView);
-                                            }
-                                        });
-                                    }
+                                    this::scrollToTargetPosition,
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                             )
                     );
                 }
         );
+    }
+
+    /**
+     * 跳转到指定位置
+     *
+     * @param targetPosition 目标下标
+     */
+    private void scrollToTargetPosition(int targetPosition) {
+        //判断位置是否在有效范围内
+        RecyclerView.Adapter<?> adapter = binding.diaryRecycler.getAdapter();
+        if (adapter == null || targetPosition >= adapter.getItemCount()) {
+            Toast.makeText(requireContext(), "所选日期已超过最早的日期", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        //获取布局管理器
+        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
+        if (layoutManager == null) {
+            Toast.makeText(requireContext(), "无法获取布局管理器", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 获取当前屏幕上第一个完全可见的条目位置
+        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
+        if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
+            //处理没有可见视图的情况
+            return;
+        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
+            //处理不需要滚动的情况
+            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+            if (viewHolder != null) {
+                AppearanceAnimationHelper.blink(viewHolder.itemView);
+            }
+            return;
+        }
+
+        //根据距离远近采用不同的滚动方式
+        int distance = Math.abs(targetPosition - firstVisiblePos);
+        final int DISTANCE_THRESHOLD = 20;
+        if (distance > DISTANCE_THRESHOLD) {
+            //瞬间滚动
+            layoutManager.scrollToPositionWithOffset(targetPosition, 0);
+
+            //播放闪烁动画
+            binding.diaryRecycler.post(() -> {
+                RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+                if (viewHolder != null) {
+                    AppearanceAnimationHelper.blink(viewHolder.itemView);
+                }
+            });
+        } else {
+            //添加滚动监听器并平滑滚动
+            binding.diaryRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    // 当滚动完全停止 (IDLE) 时再闪烁
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+                        if (viewHolder != null) {
+                            AppearanceAnimationHelper.blink(viewHolder.itemView);
+                        }
+                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                    }
+                }
+            });
+            binding.diaryRecycler.smoothScrollToPosition(targetPosition);
+        }
     }
 
     /**

@@ -165,7 +165,7 @@ public class AppearanceAnimationHelper {
      *
      * @param view 需要闪烁的视图
      */
-    public static void blinkComplexRounding(View view) {
+    public static void blink(View view) {
         if (view == null) return;
 
         // 动态创建一个 GradientDrawable 作为闪烁层
