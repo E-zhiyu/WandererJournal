@@ -2,6 +2,8 @@ package com.wanderer.journal.ui.pages.write;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.transition.Fade;
 import android.transition.Slide;
 import android.transition.TransitionManager;
@@ -178,6 +180,39 @@ public class WriteActivity extends AppCompatActivity {
             } else {
                 updateParagraphContent(content, modifyingParagraph);
                 setEditMode(false, null);
+            }
+        });
+
+        //文本输入框
+        binding.contentTextInput.addTextChangedListener(new TextWatcher() {
+            private boolean isChanging = false; // 防止死循环
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isChanging) return;
+
+                if (s != null && s.toString().contains("\n")) {
+                    isChanging = true;
+
+                    //将所有换行符替换为空字符串
+                    String cleanString = s.toString().replace("\n", "");
+
+                    //重新设置文本并移动光标
+                    binding.contentTextInput.setText(cleanString);
+                    binding.contentTextInput.setSelection(cleanString.length());
+
+                    isChanging = false;
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
             }
         });
 

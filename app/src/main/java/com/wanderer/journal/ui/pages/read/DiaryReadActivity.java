@@ -2,6 +2,8 @@ package com.wanderer.journal.ui.pages.read;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.transition.Fade;
 import android.transition.Slide;
 import android.transition.TransitionManager;
@@ -166,17 +168,39 @@ public class DiaryReadActivity extends AppCompatActivity {
         initRecyclerView();
 
         //发送按钮
-        binding.sendBtn.setOnClickListener(view -> {
-            //获取输入内容
-            String content = String.valueOf(binding.contentTextInput.getText());
-            if (content.isEmpty()) {
-                return;
+        binding.sendBtn.setOnClickListener(view -> performSend());
+
+        //文本输入框
+        binding.contentTextInput.addTextChangedListener(new TextWatcher() {
+            private boolean isChanging = false; // 防止死循环
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isChanging) return;
+
+                if (s != null && s.toString().contains("\n")) {
+                    isChanging = true;
+
+                    //将所有换行符替换为空字符串
+                    String cleanString = s.toString().replace("\n", "");
+
+                    //重新设置文本并移动光标
+                    binding.contentTextInput.setText(cleanString);
+                    binding.contentTextInput.setSelection(cleanString.length());
+
+                    isChanging = false;
+                }
             }
 
-            if (modifyingParagraph != null) {
-                updateParagraphContent(content, modifyingParagraph);
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
             }
-            setEditMode(false, null);
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
         });
 
         //内容编辑关闭按钮
@@ -284,6 +308,22 @@ public class DiaryReadActivity extends AppCompatActivity {
                         adapter.submitData(getLifecycle(), pagingData)
                 )
         );
+    }
+
+    /**
+     * 发送段落逻辑
+     */
+    private void performSend() {
+        //获取输入内容并去除换行符
+        String content = String.valueOf(binding.contentTextInput.getText()).replace("\n", "");
+        if (content.isEmpty()) {
+            return;
+        }
+
+        if (modifyingParagraph != null) {
+            updateParagraphContent(content, modifyingParagraph);
+        }
+        setEditMode(false, null);
     }
 
     /**
