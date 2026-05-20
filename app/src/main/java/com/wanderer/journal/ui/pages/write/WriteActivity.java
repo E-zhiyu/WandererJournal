@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.transition.Fade;
@@ -33,6 +35,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
+import androidx.recyclerview.selection.SelectionPredicates;
+import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.selection.StableIdKeyProvider;
+import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -63,6 +69,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFacto
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
+import com.wanderer.journal.ui.others.lookups.MediaLookup;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +99,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
     private Uri tempPictureUri = null;                      //相机拍照得到的临时图片 Uri
     private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
+    private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,7 +227,7 @@ public class WriteActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
         //初始化RecyclerView
-        initRecycler();
+        initParagraphRecycler();
 
         //媒体添加按钮
         binding.mediaAddBtn.setOnClickListener(view -> {
@@ -243,8 +251,7 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         //媒体Recycler
-        mediaAdapter = new MediaAdapter(this);
-        binding.mediaRecycler.setAdapter(mediaAdapter);
+        initMediaRecycler();
 
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
@@ -302,7 +309,7 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 初始化RecyclerView
      */
-    private void initRecycler() {
+    private void initParagraphRecycler() {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
@@ -339,6 +346,8 @@ public class WriteActivity extends AppCompatActivity {
                     menu.show();
                 }
         );
+
+        //适配器添加加载状态监听器
         adapter.addLoadStateListener(loadStates -> {
             boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
             boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
@@ -411,6 +420,48 @@ public class WriteActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * 初始化媒体文件列表
+     */
+    private void initMediaRecycler() {
+        //实例化媒体适配器并分配给 RecyclerView
+        mediaAdapter = new MediaAdapter(this);
+        binding.mediaRecycler.setAdapter(mediaAdapter);
+
+        //构建选择追踪器
+        selectionTracker = new SelectionTracker.Builder<>(
+                TagStrings.MEDIA_SELECTION.getTag(),
+                binding.mediaRecycler,
+                new StableIdKeyProvider(binding.mediaRecycler),
+                new MediaLookup(binding.mediaRecycler),
+                StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(
+                SelectionPredicates.createSelectAnything() // 允许多选
+        ).build();
+        mediaAdapter.setSelectionTracker(selectionTracker);
+
+        //追踪选择状态
+        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<>() {
+            @Override
+            public void onSelectionChanged() {
+                super.onSelectionChanged();
+                if (selectionTracker.hasSelection()) {
+                    new Handler(Looper.getMainLooper()).post(
+                            () -> mediaAdapter.setSelectMode(true)
+                    );
+
+                    int size = selectionTracker.getSelection().size();
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
+                } else {
+                    new Handler(Looper.getMainLooper()).post(
+                            () -> mediaAdapter.setSelectMode(false)
+                            //TODO:控制删除按钮是否显示
+                    );
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
+                }
+            }
+        });
+    }
 
     /**
      * 初始化启动器
