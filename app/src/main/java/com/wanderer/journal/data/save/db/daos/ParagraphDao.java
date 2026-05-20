@@ -18,6 +18,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -65,6 +66,15 @@ public interface ParagraphDao {
      */
     @Query("SELECT * FROM paragraphs WHERE parentDiaryId = :diaryId")
     List<ParagraphEntity> getParagraphByDiaryId(long diaryId);
+
+    /**
+     * 通过段落 ID 获取段落实体
+     *
+     * @param paragraphId 段落 ID
+     * @return 包裹段落实体的{@link Optional}对象
+     */
+    @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
+    Single<Optional<ParagraphEntity>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 插入一条日记段落

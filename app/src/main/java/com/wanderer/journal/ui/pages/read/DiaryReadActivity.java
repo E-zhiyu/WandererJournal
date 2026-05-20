@@ -47,6 +47,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.pages.write.WriteActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -238,13 +239,16 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     menu.setOnMenuItemClickListener(item -> {
                         if (item.getItemId() == R.id.action_modify_content) {
-                            //保存旧段落引用并启用自定义返回手势
-                            modifyingParagraph = paragraph;
-                            backPressedCallback.setEnabled(true);
+                            Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
+                            Bundle bundle = new Bundle();
 
-                            //更新UI到编辑模式
-                            setEditMode(true, paragraph);
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                            String date = paragraph.getCreateTime().format(formatter);
+                            bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), date); //段落所在的日期
+                            bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS(), paragraph.getParagraphId());    //段落 ID
 
+                            skip2Write.putExtras(bundle);
+                            startActivity(skip2Write);
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
                             updateParagraphCreateTime(paragraph);

@@ -148,20 +148,39 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void receiveIntent() {
         Intent intent = getIntent();
-        Bundle dataBundle = intent.getExtras();
-        if (dataBundle == null) {
+        Bundle bundle = intent.getExtras();
+        if (bundle == null) {
             return;
         }
 
         //初始化日期数据
         try {
-            String date = dataBundle.getString(KeyStrings.WRITE_DIARY_DATE.getS());
+            String date = bundle.getString(KeyStrings.WRITE_DIARY_DATE.getS());
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             diaryDate = LocalDate.parse(date, formatter);
         } catch (DateTimeParseException e) {
             Log.e(LogTags.WRITE_ACTIVITY.n(), "无法读取传递的日期数据，已默认设置为当前日期");
             diaryDate = LocalDate.now();
         }
+
+        //待编辑的
+        long modifyParagraphId = bundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
+        ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
+        disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        paragraphOptional -> {
+                            if (paragraphOptional.isEmpty()) {
+                                return;
+                            }
+
+                            //启用编辑模式
+                            ParagraphEntity paragraph = paragraphOptional.get();
+                            setEditMode(true, paragraph);
+                        }
+                )
+        );
     }
 
     /**
