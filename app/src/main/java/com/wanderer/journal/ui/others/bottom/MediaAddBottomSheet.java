@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.databinding.BottomSheetPictureAddOptionBinding;
 
-public class AddPictureOptionBottomSheet extends BaseBottomSheetDialogFragment {
+public class MediaAddBottomSheet extends BaseBottomSheetDialogFragment {
     private final TakePictureListener takePictureListener;
     private final OpenAlbumListener openAlbumListener;
 
@@ -22,7 +22,7 @@ public class AddPictureOptionBottomSheet extends BaseBottomSheetDialogFragment {
         void openAlbum();
     }
 
-    public AddPictureOptionBottomSheet(
+    public MediaAddBottomSheet(
             TakePictureListener takePictureListener,
             OpenAlbumListener openAlbumListener
     ) {

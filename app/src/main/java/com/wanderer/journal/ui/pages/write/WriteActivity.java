@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.pages.write;
 
+import android.Manifest;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,9 +17,14 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsAnimationCompat;
@@ -36,10 +43,12 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
+import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.enums.TagStrings;
 import com.wanderer.journal.helpers.ImmHelper;
+import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -47,8 +56,11 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
+import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,6 +80,10 @@ public class WriteActivity extends AppCompatActivity {
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private boolean needScrollToBottom = false;             //是否需要在刷新的时候滚动到底部
+    private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
+    private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
+    private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
+    private Uri tempPictureUri = null;                      //相机拍照得到的临时图片 Uri
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +140,7 @@ public class WriteActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
+        initLaunchers();
 
         //注册返回手势监听
         backPressedCallback = new OnBackPressedCallback(false) {
@@ -195,7 +212,23 @@ public class WriteActivity extends AppCompatActivity {
 
         //媒体添加按钮
         binding.mediaAddBtn.setOnClickListener(view -> {
-            //TODO:完成媒体添加回调
+            MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet(
+                    () -> {
+                        if (PermissionHelper.isRuntimePermissionGranted(
+                                Manifest.permission.CAMERA,
+                                this
+                        )) {
+                            launchSystemCamera();
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.CAMERA);
+                        }
+                    },
+                    () -> albumLauncher.launch(new PickVisualMediaRequest.Builder()
+                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                            .build()
+                    )
+            );
+            bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
         });
 
         //发送按钮
@@ -361,6 +394,100 @@ public class WriteActivity extends AppCompatActivity {
             }
             return null;
         });
+    }
+
+
+    /**
+     * 初始化启动器
+     */
+    private void initLaunchers() {
+        //从相册选择图片启动器
+        albumLauncher = registerForActivityResult(
+                new ActivityResultContracts.PickMultipleVisualMedia(),
+                this::onAlbumPictureUrisReceived
+        );
+
+        //系统相机拍照启动器
+        takePictureLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                result -> {
+                    if (result) {
+                        onCameraPictureUriReceived(tempPictureUri);
+                    } else {
+                        Toast.makeText(this, "拍照已取消", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        //权限申请启动器
+        permissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                result -> {
+                    if (result) {
+                        launchSystemCamera();
+                    } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                        //弹出解释对话框
+                        new MaterialAlertDialogBuilder(this)
+                                .setTitle("申请权限")
+                                .setMessage("使用相机拍照需要先授予摄像头权限")
+                                .setNegativeButton("取消", null)
+                                .setPositiveButton(
+                                        "确定",
+                                        (dialogInterface, i) ->
+                                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                                )
+                                .show();
+                    } else {
+                        Toast.makeText(this, "请授予相机权限后再拍照", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+    }
+
+    /**
+     * 相机拍照成功的回调
+     *
+     * @param tempPictureUri 系统相机拍照后的临时图片 Uri
+     */
+    private void onCameraPictureUriReceived(Uri tempPictureUri) {
+        //TODO:完成该回调
+    }
+
+    /**
+     * 启动系统相机进行拍照
+     */
+    private void launchSystemCamera() {
+        try {
+            //在缓存目录下创建一个临时文件
+            File photoFile = File.createTempFile(
+                    "IMG_",
+                    ".jpg",
+                    DirectoryPaths.MEDIA_TEMP.getDir(this)
+            );
+
+            //通过 FileProvider 获取 Content URI
+            tempPictureUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    photoFile
+            );
+
+            //启动相机
+            takePictureLauncher.launch(tempPictureUri);
+        } catch (IOException e) {
+            Toast.makeText(this, "无法创建相片文件", Toast.LENGTH_SHORT).show();
+        } catch (SecurityException e) {
+            Toast.makeText(this, "请授予相机权限后再拍照", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 相册图片的 Uri 接收回调
+     *
+     * @param uriList 用户选择的相册图片 Uri
+     */
+    private void onAlbumPictureUrisReceived(List<Uri> uriList) {
+        //TODO:完成该回调
     }
 
     /**

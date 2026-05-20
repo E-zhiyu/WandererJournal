@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 下载目录，用于下载安装包 -->
+    <external-path
+        name="download"
+        path="Download/" />
+
+    <!-- 媒体文件目录 -->
+    <external-files-path
+        name="medias"
+        path="medias" />
+
+    <!-- 临时媒体文件目录 -->
+    <external-cache-path
+        name="media_temp"
+        path="media_temp" />
+</paths>

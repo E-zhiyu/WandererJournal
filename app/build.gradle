@@ -74,4 +74,5 @@ dependencies {
     implementation libs.mapstruct                   // Pojo 与 Entity 转换
     annotationProcessor libs.mapstruct.processor    // Mapstruct 注解处理器
     implementation libs.documentfile                // 用于解析SAF 返回的指向本地文件的 Uri
+    implementation libs.core
 }

@@ -4,6 +4,7 @@ public enum TagStrings {
     PARAGRAPH_CONTENT_MODIFY_SHEET("paragraph_content_modify_sheet"),
     EMOTION_TAG_SELECT_BOTTOM_SHEET("emotion_tag_select_bottom_sheet"),
     DATE_PICKER("date_picker"),
+    MEDIA_ADD_BOTTOM_SHEET("media_add_bottom_sheet"),
     TIME_PICKER("time_picker");
     private final String tag;
 
