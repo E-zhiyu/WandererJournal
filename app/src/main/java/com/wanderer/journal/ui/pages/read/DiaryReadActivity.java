@@ -2,19 +2,12 @@ package com.wanderer.journal.ui.pages.read;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.transition.Fade;
-import android.transition.Slide;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
@@ -22,7 +15,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -63,8 +55,6 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;               //绑定的XML布局
     private LocalDate initDiaryDate = null;                 //初始页的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
-    private OnBackPressedCallback backPressedCallback;      //返回手势监听
-    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -129,15 +119,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
-
-        //注册返回手势监听
-        backPressedCallback = new OnBackPressedCallback(false) {
-            @Override
-            public void handleOnBackPressed() {
-                setEditMode(false, null);
-            }
-        };
-        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     @Override
@@ -173,45 +154,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //日记段落列表
         initRecyclerView();
-
-        //发送按钮
-        binding.sendBtn.setOnClickListener(view -> performSend());
-
-        //文本输入框
-        binding.contentTextInput.addTextChangedListener(new TextWatcher() {
-            private boolean isChanging = false; // 防止死循环
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (isChanging) return;
-
-                if (s != null && s.toString().contains("\n")) {
-                    isChanging = true;
-
-                    //将所有换行符替换为空字符串
-                    String cleanString = s.toString().replace("\n", "");
-
-                    //重新设置文本并移动光标
-                    binding.contentTextInput.setText(cleanString);
-                    binding.contentTextInput.setSelection(cleanString.length());
-
-                    isChanging = false;
-                }
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-        });
-
-        //内容编辑关闭按钮
-        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null));
     }
 
     /**
@@ -318,22 +260,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                         adapter.submitData(getLifecycle(), pagingData)
                 )
         );
-    }
-
-    /**
-     * 发送段落逻辑
-     */
-    private void performSend() {
-        //获取输入内容并去除换行符
-        String content = String.valueOf(binding.contentTextInput.getText()).replace("\n", "");
-        if (content.isEmpty()) {
-            return;
-        }
-
-        if (modifyingParagraph != null) {
-            updateParagraphContent(content, modifyingParagraph);
-        }
-        setEditMode(false, null);
     }
 
     /**
@@ -505,11 +431,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                     DiaryDatabase db = DiaryDatabase.getInstance(this);
                     ParagraphDao dao = db.paragraphDao();
 
-                    //判断是否为正在编辑的段落，是则退出编辑
-                    if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
-                        setEditMode(false, null);
-                    }
-
                     disposable.add(dao.deleteParagraphCompletable(paragraph)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
@@ -524,45 +445,5 @@ public class DiaryReadActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("取消", null)
                 .show();
-    }
-
-    /**
-     * 设置编辑模式
-     *
-     * @param isEditMode         是否启用编辑模式
-     * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
-     */
-    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
-        // 定义过渡动画：组合滑入和渐变
-        // Slide(Gravity.BOTTOM) 会让 View 看起来是从底部“抽出来”的
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.BOTTOM))
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250); // Telegram 的动画通常很短促，200-300ms 最合适
-
-        // 关键：通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
-        // 执行状态改变
-        if (isEditMode) {
-            this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本
-            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-            binding.bottomCard.setVisibility(View.VISIBLE);
-
-            //自动弹出输入法
-            ImmHelper.showImm(binding.contentTextInput);
-        } else {
-            this.modifyingParagraph = null;
-            binding.bottomCard.setVisibility(View.GONE);
-            binding.contentTextInput.setText(null);         //清空输入框
-
-            //自动关闭输入法
-            ImmHelper.hideImm(binding.contentTextInput);
-        }
-
-        //启用或禁用返回监听
-        backPressedCallback.setEnabled(isEditMode);
     }
 }
