@@ -573,7 +573,7 @@ public class DataManageActivity extends AppCompatActivity {
                     } else if (currentDate != null) {
                         String content = line.trim();
                         if (!content.isEmpty()) {
-                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atStartOfDay()));
                         }
                     }
 
