@@ -15,11 +15,13 @@ import com.wanderer.journal.helpers.classes.TextFileData;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -27,6 +29,57 @@ import java.time.ZoneId;
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 复制文件
+     *
+     * @param context   上下文
+     * @param uri       待复制的文件的Uri
+     * @param targetDir 存放复制的文件的目录
+     * @param buffer    缓冲区，用于复制多个文件时共享，减小内存压力
+     * @return 复制成功则返回复制成功的文件，失败则返回 null
+     * @throws IOException 文件复制失败引发的异常
+     */
+    @Nullable
+    public static File copyFile(Context context, Uri uri, File targetDir, @Nullable byte[] buffer) throws IOException {
+        //判断目标目录是否存在
+        if (targetDir == null || !targetDir.exists()) {
+            Log.e(LogTags.FILE_HELPER.n(), "目标文件夹不存在");
+            return null;
+        }
+
+        //获取或生成文件名
+        String fileName = null;
+        DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
+        if (documentFile.exists()) {
+            fileName = documentFile.getName();
+        }
+        if (fileName == null) {
+            fileName = "copied_media_" + System.currentTimeMillis() + ".jpg";
+        }
+
+        //创建文件对象
+        File targetFile = new File(targetDir, fileName);
+
+        //复制文件
+        try (InputStream inputStream = context.getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(targetFile)) {
+
+            if (inputStream == null) return null;
+
+            if (buffer == null) {
+                buffer = new byte[1024 * 32];
+            }
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            outputStream.flush();
+        }
+
+        return targetFile;
+    }
+
     /**
      * 通过多线程读取文件内容以及最后编辑时间
      *

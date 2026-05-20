@@ -21,6 +21,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
@@ -61,6 +62,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,6 +74,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
@@ -83,7 +86,7 @@ public class WriteActivity extends AppCompatActivity {
     private LocalDate diaryDate = LocalDate.now();          //父日记的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
-    private boolean needScrollToBottom = false;             //是否需要在刷新的时候滚动到底部
+    private boolean needScrollToBottom = false;             //是否需要在段落刷新的时候滚动到底部
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
@@ -465,10 +468,8 @@ public class WriteActivity extends AppCompatActivity {
         //获取现有的列表
         List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
 
-        //根据情况展开视图
-        if (mediaList.isEmpty()) {
-            setTempMediaRecyclerVisibility(true);
-        }
+        //展开图片列表视图
+        setTempMediaRecyclerVisibility(true);
 
         //更新列表
         long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
@@ -510,7 +511,70 @@ public class WriteActivity extends AppCompatActivity {
      * @param uriList 用户选择的相册图片 Uri
      */
     private void onAlbumPictureUrisReceived(List<Uri> uriList) {
-        //TODO:完成该回调
+        //显示进度条对话框
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "导入媒体", "正在复制媒体文件");
+        AlertDialog progressDialog = builder.
+                setNegativeButton("取消", (dialogInterface, i) -> {
+                    Toast.makeText(this, "已取消媒体导入", Toast.LENGTH_SHORT).show();
+                    disposable.clear();
+                })
+                .show();
+
+        //创建复制任务
+        List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+        Observable<Integer> task = Observable.create(emitter -> {
+            File tempMediaDir = DirectoryPaths.MEDIA_TEMP.getDir(this);
+            byte[] sharedBuffer = new byte[1024 * 32];  //共享32KB缓存
+
+            //复制文件并保存引用
+            for (Uri uri : uriList) {
+                File resultFile = null;
+                try {
+                    resultFile = FileHelper.copyFile(this, uri, tempMediaDir, sharedBuffer);
+                } catch (IOException e) {
+                    emitter.onError(e);
+                }
+                if (resultFile == null) {
+                    continue;
+                }
+
+                //保存到列表中
+                Uri successfulUri = Uri.fromFile(resultFile);
+                long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+                MediaEntity media = new MediaEntity(paragraphId, successfulUri);
+                mediaList.add(media);
+
+                //更新进度
+                emitter.onNext(mediaList.size());
+            }
+
+            //完成任务
+            emitter.onComplete();
+        });
+
+        //执行复制操作
+        disposable.add(task
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        progress -> {
+                            builder.setIndeterminate(false);
+                            builder.updateProgress(progress, uriList.size(), "正在导入媒体……");
+                        },
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            progressDialog.dismiss();
+                        },
+                        () -> {
+                            //媒体文件显示在列表中
+                            mediaAdapter.submitList(mediaList);
+                            setTempMediaRecyclerVisibility(true);
+
+                            progressDialog.dismiss();
+                            Toast.makeText(this, "媒体导入完毕", Toast.LENGTH_SHORT).show();
+                        }
+                )
+        );
     }
 
     /**
@@ -777,6 +841,11 @@ public class WriteActivity extends AppCompatActivity {
      * @param isVisible 是否可见
      */
     private void setTempMediaRecyclerVisibility(boolean isVisible) {
+        if (isVisible && binding.mediaCard.getVisibility() == View.VISIBLE ||
+                !isVisible && binding.mediaCard.getVisibility() == View.GONE) {
+            return;
+        }
+
         //定义过渡动画：组合滑入和渐变
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.BOTTOM))
