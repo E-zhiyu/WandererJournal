@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
@@ -30,8 +29,6 @@ import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.enums.TagStrings;
-import com.wanderer.journal.helpers.ImmHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
@@ -44,7 +41,6 @@ import com.wanderer.journal.ui.pages.write.WriteActivity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -65,23 +61,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
-            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            //计算纯键盘高度
-            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-
-            //增加界面下边距
-            binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
-
-            //底部卡片布局
-            binding.bottomCardLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    systemBars.bottom
-            );
-
             //列表视图
             binding.contentRecycler.setPadding(
                     systemBars.left,
@@ -90,31 +70,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                     systemBars.bottom
             );
             return insets;
-        });
-
-        //设置键盘监听动画
-        ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
-                WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
-        ) {
-            @NonNull
-            @Override
-            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                //计算纯键盘高度
-                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-
-                //增加界面下边距
-                binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
-                return insets;
-            }
-
-            @Override
-            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-                super.onEnd(animation);
-                // 动画结束时，如果需要将 Translation 转换为永久的 Padding，可以在这里处理
-            }
         });
 
         receiveIntent();
@@ -173,9 +128,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
                 (paragraph, view) -> {
-                    //先收起输入法
-                    ImmHelper.hideImm(binding.contentTextInput);
-
                     PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
@@ -258,38 +210,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
                         adapter.submitData(getLifecycle(), pagingData)
-                )
-        );
-    }
-
-    /**
-     * 更新段落内容
-     *
-     * @param newContent      新内容
-     * @param originParagraph 原本的段落实体
-     */
-    private void updateParagraphContent(String newContent, @NonNull ParagraphEntity originParagraph) {
-        ParagraphEntity newParagraph = new ParagraphEntity(
-                originParagraph.getParentDiaryId(),
-                newContent,
-                originParagraph.getCreateTime()
-        );
-        newParagraph.setParagraphId(originParagraph.getParagraphId());
-
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphDao paragraphDao = db.paragraphDao();
-        disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        () -> {
-                            Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show();
-                            Log.i(LogTags.WRITE_ACTIVITY.n(), "段落内容修改成功");
-                        },
-                        throwable -> {
-                            ExceptionHelper.showExceptionDialog(this, throwable);
-                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落内容修改失败");
-                        }
                 )
         );
     }
