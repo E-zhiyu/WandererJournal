@@ -62,6 +62,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            binding.coordinatorLayout.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
             //列表视图
             binding.contentRecycler.setPadding(
                     systemBars.left,
@@ -115,6 +118,9 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化搜索组件
      */
     private void initSearchComponents() {
+        //先隐藏搜索框
+        binding.appBarLayout.setExpanded(false, false);
+
         //TODO:完成剩下的
         binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
     }
