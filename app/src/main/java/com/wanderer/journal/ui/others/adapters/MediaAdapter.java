@@ -66,7 +66,6 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         Glide.with(holder.itemView.getContext())
                 .load(media.getFileUri())
                 .apply(glideOptions)
-                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .into(holder.binding.imageView);
     }
 
