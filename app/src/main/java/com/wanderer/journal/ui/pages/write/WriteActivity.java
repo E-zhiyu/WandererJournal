@@ -193,6 +193,11 @@ public class WriteActivity extends AppCompatActivity {
         //初始化RecyclerView
         initRecycler();
 
+        //媒体添加按钮
+        binding.mediaAddBtn.setOnClickListener(view -> {
+            //TODO:完成媒体添加回调
+        });
+
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
             //获取输入内容

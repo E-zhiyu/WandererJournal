@@ -59,7 +59,7 @@ dependencies {
     implementation libs.rxandroid                   //线程切换
     implementation libs.viewpager2
     implementation libs.swiperefreshlayout
-    implementation libs.glide
+    implementation libs.glide                       //图片显示
     implementation libs.photoview
     implementation libs.devicecompat                //系统名称判断
     implementation libs.biometric                   //生物验证依赖
