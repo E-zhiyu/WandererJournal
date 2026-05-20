@@ -68,4 +68,7 @@
     <string name="date_skip_btn">日期跳转按钮</string>
     <string name="emotion_type">情绪类型</string>
     <string name="emotion_type_helper">该情绪的大致类别</string>
+    <string name="add_media_files">添加媒体文件</string>
+    <string name="add_picture_via_camera">使用相机拍照</string>
+    <string name="add_picture_via_album">从相册中添加</string>
 </resources>

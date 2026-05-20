@@ -274,12 +274,13 @@ public class WriteActivity extends AppCompatActivity {
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
+                            return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                             return true;
+                        } else {
+                            return false;
                         }
-
-                        return false;
                     });
 
                     menu.show();

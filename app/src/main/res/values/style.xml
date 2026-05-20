@@ -130,4 +130,14 @@
         <item name="android:inputType">none</item>
         <item name="maxLines">1</item>
     </style>
+
+    <!-- 可点击的文本框样式 -->
+    <style name="ClickableTextViewStyle">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:paddingTop">15dp</item>
+        <item name="android:paddingBottom">15dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:drawablePadding">15dp</item>
+        <item name="android:paddingStart">20dp</item>
+    </style>
 </resources>
