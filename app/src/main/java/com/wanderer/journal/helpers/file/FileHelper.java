@@ -164,6 +164,16 @@ public class FileHelper {
     }
 
     /**
+     * 清空临时媒体文件目录
+     *
+     * @param context 上下文
+     */
+    public static void clearTempMediaDir(Context context) {
+        File tempMediaDir = DirectoryPaths.MEDIA_TEMP.getDir(context);
+        clearDir(tempMediaDir);
+    }
+
+    /**
      * 清空媒体文件夹
      *
      * @param context 上下文
@@ -180,7 +190,7 @@ public class FileHelper {
      */
     public static void clearDir(@Nullable File dir) {
         //判断目录是否可用
-        Log.i(LogTags.DATA_IO_HELPER.n(), "开始清除临时文件……");
+        Log.i(LogTags.DATA_IO_HELPER.n(), "开始清除文件……");
         if (dir == null || !dir.isDirectory() || !dir.exists()) {
             Log.e(LogTags.DATA_IO_HELPER.n(), "非目录对象或目录不存在");
             return;

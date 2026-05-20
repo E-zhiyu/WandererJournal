@@ -40,6 +40,7 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
@@ -49,9 +50,11 @@ import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.enums.TagStrings;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
@@ -65,6 +68,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -84,6 +88,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
     private Uri tempPictureUri = null;                      //相机拍照得到的临时图片 Uri
+    private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,7 +108,7 @@ public class WriteActivity extends AppCompatActivity {
             binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
 
             binding.contentInputLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 20),
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     systemBars.bottom
@@ -158,6 +163,9 @@ public class WriteActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
+
+        //清理临时媒体文件目录
+        FileHelper.clearTempMediaDir(this);
     }
 
     /**
@@ -230,6 +238,10 @@ public class WriteActivity extends AppCompatActivity {
             );
             bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
         });
+
+        //媒体Recycler
+        mediaAdapter = new MediaAdapter(this);
+        binding.mediaRecycler.setAdapter(mediaAdapter);
 
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
@@ -450,7 +462,18 @@ public class WriteActivity extends AppCompatActivity {
      * @param tempPictureUri 系统相机拍照后的临时图片 Uri
      */
     private void onCameraPictureUriReceived(Uri tempPictureUri) {
-        //TODO:完成该回调
+        //获取现有的列表
+        List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+
+        //根据情况展开视图
+        if (mediaList.isEmpty()) {
+            setTempMediaRecyclerVisibility(true);
+        }
+
+        //更新列表
+        long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+        mediaList.add(new MediaEntity(paragraphId, tempPictureUri));
+        mediaAdapter.submitList(mediaList);
     }
 
     /**
@@ -720,18 +743,17 @@ public class WriteActivity extends AppCompatActivity {
      * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
      */
     private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
-        // 定义过渡动画：组合滑入和渐变
-        // Slide(Gravity.BOTTOM) 会让 View 看起来是从底部“抽出来”的
+        //定义过渡动画：组合滑入和渐变
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.BOTTOM))
                 .addTransition(new Fade())
                 .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250); // Telegram 的动画通常很短促，200-300ms 最合适
+                .setDuration(250);
 
-        // 关键：通知布局即将发生变化
+        //通知布局即将发生变化
         TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
-        // 执行状态改变
+        //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
             binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本
@@ -747,5 +769,29 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         backPressedCallback.setEnabled(isEditMode);
+    }
+
+    /**
+     * 设置临时媒体列表可见性
+     *
+     * @param isVisible 是否可见
+     */
+    private void setTempMediaRecyclerVisibility(boolean isVisible) {
+        //定义过渡动画：组合滑入和渐变
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.BOTTOM))
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250);
+
+        //通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+
+        //切换视图可见性
+        if (isVisible) {
+            binding.mediaCard.setVisibility(View.VISIBLE);
+        } else {
+            binding.mediaCard.setVisibility(View.GONE);
+        }
     }
 }
