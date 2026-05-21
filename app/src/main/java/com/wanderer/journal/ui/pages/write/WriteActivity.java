@@ -135,7 +135,15 @@ public class WriteActivity extends AppCompatActivity {
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.getRoot().setPadding(systemBars.left, systemBars.top, systemBars.right, keyboardHeight);
+                binding.contentInputCard.setTranslationY(-keyboardHeight);
+
+                //内容 RecyclerView 额外增加5dp的底部内边距
+                binding.contentRecycler.setPadding(
+                        systemBars.left,
+                        0,
+                        systemBars.right,
+                        keyboardHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                );
 
                 return insets;
             }
