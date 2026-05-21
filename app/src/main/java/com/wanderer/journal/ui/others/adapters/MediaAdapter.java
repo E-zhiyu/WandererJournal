@@ -117,8 +117,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                     int pos = getBindingAdapterPosition();
                     // 必须严格过滤 NO_POSITION
                     return (pos != RecyclerView.NO_POSITION && pos < getItemCount()) ?
-                            (long) media.getFileUri().hashCode() :
-                            null;
+                            media.getItemId() : null;
                 }
             };
         }
@@ -165,7 +164,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
 
     @Override
     public long getItemId(int position) {
-        return getItem(position).getFileUri().hashCode();
+        return getItem(position).getItemId();
     }
 
     @NonNull
@@ -184,7 +183,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         MediaEntity media = getItem(position);
 
         //设置缩放
-        boolean isChecked = selectionTracker.isSelected((long) media.getFileUri().hashCode());
+        boolean isChecked = selectionTracker.isSelected(media.getItemId());
         holder.setChecked(isChecked);
 
         //通过 Glide 显示图片
@@ -211,7 +210,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
     @Nullable
     public MediaEntity getItemById(long id) {
         for (MediaEntity media : getCurrentList()) {
-            if (media.getFileUri().hashCode() == id) {
+            if (media.getItemId() == id) {
                 return media;
             }
         }

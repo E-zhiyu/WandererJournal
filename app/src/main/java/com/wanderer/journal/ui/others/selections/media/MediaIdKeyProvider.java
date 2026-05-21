@@ -26,7 +26,7 @@ public class MediaIdKeyProvider extends ItemKeyProvider<Long> {
     @Override
     public int getPosition(@NonNull Long key) {
         for (int i = 0; i < adapter.getCurrentList().size(); i++) {
-            if (adapter.getCurrentList().get(i).getFileUri().hashCode() == key) {
+            if (adapter.getCurrentList().get(i).getItemId() == key) {
                 return i;
             }
         }
