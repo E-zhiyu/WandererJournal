@@ -132,7 +132,6 @@ public class WriteActivity extends AppCompatActivity {
         ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
                 WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
         ) {
-
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
@@ -157,12 +156,31 @@ public class WriteActivity extends AppCompatActivity {
         receiveIntent();
         initViews();
         initLaunchers();
+        FileHelper.clearTempMediaDir(this); //清空临时媒体目录
 
         //注册返回手势监听
         backPressedCallback = new OnBackPressedCallback(false) {
             @Override
             public void handleOnBackPressed() {
-                setEditMode(false, null);
+                if (selectionTracker.hasSelection()) {  //清空多选
+                    selectionTracker.clearSelection();
+                } else if (!mediaAdapter.getCurrentList().isEmpty()) {  //清空媒体
+                    new MaterialAlertDialogBuilder(WriteActivity.this)
+                            .setTitle("清除媒体")
+                            .setMessage("确认要清空所有媒体文件吗？")
+                            .setPositiveButton("确认", (dialogInterface, i) -> {
+                                selectionTracker.clearSelection();          //清除选择
+                                mediaAdapter.submitList(new ArrayList<>()); //清空适配器中的 UI
+                                setMediaRecyclerVisibility(false);          //隐藏图片列表
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                } else if (modifyingParagraph != null) {    //退出编辑模式
+                    setEditMode(false, null);   //退出内容编辑模式
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
             }
         };
         getOnBackPressedDispatcher().addCallback(backPressedCallback);
@@ -349,9 +367,8 @@ public class WriteActivity extends AppCompatActivity {
 
                     menu.setOnMenuItemClickListener(item -> {
                         if (item.getItemId() == R.id.action_modify_content) {
-                            //保存旧段落引用并启用自定义返回手势
+                            //保存旧段落引用
                             modifyingParagraph = paragraph;
-                            backPressedCallback.setEnabled(true);
 
                             //更新UI到编辑模式
                             setEditMode(true, paragraph);
@@ -538,24 +555,6 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 相机拍照成功的回调
-     *
-     * @param tempPictureUri 系统相机拍照后的临时图片 Uri
-     */
-    private void onCameraPictureUriReceived(Uri tempPictureUri) {
-        //获取现有的列表
-        List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-
-        //展开图片列表视图
-        setMediaRecyclerVisibility(true);
-
-        //更新列表
-        long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
-        mediaList.add(new MediaEntity(paragraphId, tempPictureUri));
-        mediaAdapter.submitList(mediaList);
-    }
-
-    /**
      * 启动系统相机进行拍照
      */
     private void launchSystemCamera() {
@@ -584,11 +583,35 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
+     * 相机拍照成功的回调
+     *
+     * @param tempPictureUri 系统相机拍照后的临时图片 Uri
+     */
+    private void onCameraPictureUriReceived(Uri tempPictureUri) {
+        //获取现有的列表
+        List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+
+        //展开图片列表视图
+        setMediaRecyclerVisibility(true);
+
+        //更新列表
+        long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+        mediaList.add(new MediaEntity(paragraphId, tempPictureUri));
+        mediaAdapter.submitList(mediaList);
+    }
+
+    /**
      * 相册图片的 Uri 接收回调
      *
      * @param uriList 用户选择的相册图片 Uri
      */
-    private void onAlbumPictureUrisReceived(List<Uri> uriList) {
+    private void onAlbumPictureUrisReceived(@NonNull List<Uri> uriList) {
+        //判断是否为空
+        if (uriList.isEmpty()) {
+            Toast.makeText(this, "未选择媒体文件", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         //显示进度条对话框
         ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "导入媒体", "正在复制媒体文件");
         AlertDialog progressDialog = builder.
@@ -646,10 +669,10 @@ public class WriteActivity extends AppCompatActivity {
                         () -> {
                             //媒体文件显示在列表中
                             mediaAdapter.submitList(mediaList);
-                            setMediaRecyclerVisibility(true);
+                            setMediaRecyclerVisibility(true);   //展开媒体列表
 
                             progressDialog.dismiss();
-                            Toast.makeText(this, "媒体导入完毕", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "已导入" + mediaList.size() + "个媒体文件", Toast.LENGTH_SHORT).show();
                         }
                 )
         );
@@ -885,6 +908,11 @@ public class WriteActivity extends AppCompatActivity {
      * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
      */
     private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
+        //如果启用编辑模式，则启用返回监听
+        if (isEditMode) {
+            backPressedCallback.setEnabled(true);
+        }
+
         //定义过渡动画：组合滑入和渐变
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.BOTTOM))
@@ -909,8 +937,6 @@ public class WriteActivity extends AppCompatActivity {
             binding.contentEditCard.setVisibility(View.GONE);
             binding.contentTextInput.setText(null);         //清空输入框
         }
-
-        backPressedCallback.setEnabled(isEditMode);
     }
 
     /**
@@ -922,6 +948,11 @@ public class WriteActivity extends AppCompatActivity {
         if (isVisible && binding.mediaCard.getVisibility() == View.VISIBLE ||
                 !isVisible && binding.mediaCard.getVisibility() == View.GONE) {
             return;
+        }
+
+        //如果显示媒体列表，则启用返回监听
+        if (isVisible) {
+            backPressedCallback.setEnabled(true);
         }
 
         //定义过渡动画：组合滑入和渐变

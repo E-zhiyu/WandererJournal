@@ -48,7 +48,7 @@
         style="@style/RightAngleCardStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/content_edit_card">
 
         <androidx.recyclerview.widget.RecyclerView
