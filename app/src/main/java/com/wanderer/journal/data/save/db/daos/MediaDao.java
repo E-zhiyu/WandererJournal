@@ -12,6 +12,14 @@ import java.util.List;
 @Dao
 public interface MediaDao {
     /**
+     * 插入媒体
+     *
+     * @param mediaEntityList 新媒体实例列表
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insertMedia(List<MediaEntity> mediaEntityList);
+
+    /**
      * 读取所有数据用于导出
      *
      * @return 媒体实体列表

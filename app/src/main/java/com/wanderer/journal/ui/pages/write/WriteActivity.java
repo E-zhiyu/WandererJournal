@@ -49,6 +49,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.KeyStrings;
@@ -80,6 +81,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
@@ -251,32 +254,39 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         //媒体删除按钮
-        binding.mediaDeleteBtn.setOnClickListener(view -> {
-            //获取需要删除的媒体实体
-            List<MediaEntity> mediaToBeDeleted = new ArrayList<>();
-            for (long id : selectionTracker.getSelection()) {
-                MediaEntity media = mediaAdapter.getItemById(id);
-                if (media != null) {
-                    mediaToBeDeleted.add(media);
+        binding.mediaDeleteBtn.setOnClickListener(view -> new MaterialAlertDialogBuilder(this)
+                .setTitle("删除媒体")
+                .setMessage("此操作将永久删除媒体且无法恢复，确认删除吗？")
+                .setPositiveButton("确定", (dialogInterface, i) -> {
+                    //获取需要删除的媒体实体
+                    List<MediaEntity> mediaToBeDeleted = new ArrayList<>();
+                    for (long id : selectionTracker.getSelection()) {
+                        MediaEntity media = mediaAdapter.getItemById(id);
+                        if (media != null) {
+                            mediaToBeDeleted.add(media);
 
-                    //本地删除文件
-                    FileHelper.deleteFile(media.getFileUri(), this);
-                }
-            }
+                            //本地删除文件
+                            FileHelper.deleteFile(media.getFileUri(), this);
+                            //TODO:数据库中删除文件，建议放到事务中
+                        }
+                    }
 
-            //退出多选模式
-            selectionTracker.clearSelection();
+                    //退出多选模式
+                    selectionTracker.clearSelection();
 
-            //从列表中删除并提交给适配器
-            List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-            currentMediaList.removeAll(mediaToBeDeleted);
-            mediaAdapter.submitList(currentMediaList);
+                    //从列表中删除并提交给适配器
+                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+                    currentMediaList.removeAll(mediaToBeDeleted);
+                    mediaAdapter.submitList(currentMediaList);
 
-            //如果没有媒体则隐藏
-            if (currentMediaList.isEmpty()) {
-                setMediaRecyclerVisibility(false);
-            }
-        });
+                    //如果没有媒体则隐藏
+                    if (currentMediaList.isEmpty()) {
+                        setMediaRecyclerVisibility(false);
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show()
+        );
 
         //媒体Recycler
         initMediaRecycler();
@@ -289,10 +299,29 @@ public class WriteActivity extends AppCompatActivity {
                 return;
             }
 
+            //将这些文件全部移动至永久目录并获取文件引用
+            File mediaDir = DirectoryPaths.MEDIA.getDir(this);
+            File tempDir = DirectoryPaths.MEDIA_TEMP.getDir(this);
+            List<Uri> copiedUriList = mediaAdapter.getCurrentList().stream()
+                    .map(MediaEntity::getFileUri)
+                    .map(Uri::getPath)
+                    .map(pathname -> pathname != null ? new File(pathname) : null)
+                    .map(file -> {
+                        try {
+                            return FileHelper.moveFile(file, tempDir, mediaDir);
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .map(Uri::fromFile)
+                    .collect(Collectors.toList());
+
+            //调用添加段落/更新段落方法
             if (modifyingParagraph == null) {
-                addParagraph(content);
+                addParagraph(content, copiedUriList);
             } else {
-                updateParagraphContent(content, modifyingParagraph);
+                updateParagraphContent(content, modifyingParagraph, copiedUriList);
                 setEditMode(false, null);
             }
         });
@@ -735,22 +764,21 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 添加新段落
      *
-     * @param content 新段落的内容
+     * @param content      新段落的内容
+     * @param newMediaList 新添加到段落的媒体文件列表
      */
-    private void addParagraph(String content) {
+    private void addParagraph(String content, List<Uri> newMediaList) {
         //执行写入操作
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphDao paragraphDao = db.paragraphDao();
-
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
-                .flatMap(diaryId -> {
+                .flatMapCompletable(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
-                    return paragraphDao.insertParagraphSingle(newParagraph);
+                    return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        diaryId -> {
+                        () -> {
                             binding.contentTextInput.setText(null);
 
                             //将滚动到底部标识改为true
@@ -766,8 +794,14 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param newContent      新内容
      * @param originParagraph 原本的段落实体
+     * @param newMediaList    新添加到段落的文件
      */
-    private void updateParagraphContent(String newContent, @NonNull ParagraphEntity originParagraph) {
+    private void updateParagraphContent(
+            String newContent,
+            @NonNull ParagraphEntity originParagraph,
+            List<Uri> newMediaList
+    ) {
+        //生成更新后的段落实例
         ParagraphEntity newParagraph = new ParagraphEntity(
                 originParagraph.getParentDiaryId(),
                 newContent,
@@ -775,9 +809,9 @@ public class WriteActivity extends AppCompatActivity {
         );
         newParagraph.setParagraphId(originParagraph.getParagraphId());
 
+        //更新段落
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphDao paragraphDao = db.paragraphDao();
-        disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
+        disposable.add(ParagraphService.updateParagraphWithMedia(newParagraph, newMediaList, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(

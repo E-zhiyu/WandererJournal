@@ -32,6 +32,7 @@ public class MediaEntity {
     public MediaEntity(long parentParagraphId, Uri fileUri) {
         this.parentParagraphId = parentParagraphId;
         this.fileUri = fileUri;
+        this.mediaId = 0;   //分配为0，便于数据库自动分配
     }
 
     public long getMediaId() {

@@ -23,14 +23,39 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Locale;
 import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 获取可用的文件名，当文件名被占用时自动添加编号以防文件名冲突
+     *
+     * @param targetDir  可能存在文件名占用情况的目录
+     * @param originName 原始文件名
+     * @return 没有被占用的文件名
+     */
+    private static String getAvailableFilename(File targetDir, String originName) {
+        File targetFile = new File(targetDir, originName);
+        String availableName = originName;
+
+        //循环生成可用文件名
+        int i = 0;
+        while (targetFile.exists()) {
+            i++;
+            availableName = String.format(Locale.getDefault(), "%s (%d)", availableName, i);
+            targetFile = new File(targetDir, availableName);
+        }
+
+        return availableName;
+    }
+
     /**
      * 删除文件
      *
@@ -50,6 +75,56 @@ public class FileHelper {
             context.getContentResolver().delete(uri, null, null);
             Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
         }
+    }
+
+    /**
+     * 移动文件
+     *
+     * @param originFile 待移动的文件的 Uri
+     * @param sourceDir  若传递该参数，则只移动在该目录下的文件，并直接返回 null
+     * @param targetDir  存放移动后目标文件的目录
+     * @return 移动完成后的文件对象，若限制了原始目录并且该文件不在原始目录内，则返回 null
+     * @throws IOException 文件移动失败引发的异常
+     */
+    @Nullable
+    public static File moveFile(@Nullable File originFile, @Nullable File sourceDir, File targetDir) throws IOException {
+        if (sourceDir != null && !sourceDir.isDirectory() || !targetDir.isDirectory()) {
+            throw new IllegalArgumentException("参数错误，sourceDir或targetDir不是目录对象");
+        }
+
+        //判断文件是否存在
+        if (originFile == null || !originFile.exists()) {
+            Log.w(LogTags.FILE_HELPER.n(), "待移动的文件不存在");
+            return null;
+        }
+
+        //判断文件是否在指定的父目录中
+        File parentDir = originFile.getParentFile();
+        if (parentDir == null) {
+            Log.w(LogTags.FILE_HELPER.n(), "无法获取父目录");
+            return null;
+        }
+        Path parentPath = parentDir.toPath();
+        if (sourceDir != null) {
+            Path sourceDirPath = sourceDir.toPath();
+            if (!Files.isSameFile(parentPath, sourceDirPath)) {
+                Log.w(LogTags.FILE_HELPER.n(), "待移动的文件不在指定的目录中");
+                return null;
+            }
+        }
+
+        //获取 Path 对象
+        Path originFilePath = originFile.toPath();
+        File targetFile = new File(targetDir, getAvailableFilename(targetDir, originFile.getName()));
+        Path targetPath = targetFile.toPath();
+
+        //移动文件
+        Path movedPath = Files.move(
+                originFilePath,
+                targetPath
+        );
+        Log.i(LogTags.FILE_HELPER.n(), "文件移动成功");
+        return movedPath.toFile();
     }
 
     /**

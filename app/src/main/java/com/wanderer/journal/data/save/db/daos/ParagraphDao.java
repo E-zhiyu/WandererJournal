@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.daos;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.paging.PagingSource;
@@ -13,12 +14,14 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -83,7 +86,31 @@ public interface ParagraphDao {
      * @return 插入的日记段落自动分配的编号
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Single<Long> insertParagraphSingle(ParagraphEntity paragraph);
+    long insertParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 插入段落的事务
+     *
+     * @param paragraph       新段落实例
+     * @param newMediaUriList 该段落新添加的媒体 Uri 列表
+     * @param db              数据库实例
+     */
+    @Transaction
+    default void insertParagraph(
+            ParagraphEntity paragraph,
+            @NonNull List<Uri> newMediaUriList,
+            @NonNull DiaryDatabase db
+    ) {
+        //插入段落
+        long paragraphId = insertParagraph(paragraph);
+
+        //插入新媒体
+        List<MediaEntity> mediaEntityList = newMediaUriList.stream()
+                .map(uri -> new MediaEntity(paragraphId, uri))
+                .collect(Collectors.toList());
+        MediaDao mediaDao = db.mediaDao();
+        mediaDao.insertMedia(mediaEntityList);
+    }
 
     /**
      * 批量插入日记段落
@@ -114,10 +141,42 @@ public interface ParagraphDao {
     /**
      * 单线程更新段落
      *
-     * @param paragraphList 需要更新的段落列表
+     * @param paragraphList 更新后的段落列表
      */
     @Update
     void updateParagraph(List<ParagraphEntity> paragraphList);
+
+    /**
+     * 单线程更新段落
+     *
+     * @param paragraph 更新后的段落实体
+     */
+    @Update
+    void updateParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 段落更新事务
+     *
+     * @param paragraph       更新后的段落实体
+     * @param newMediaUriList 新添加的媒体文件的 Uri 列表
+     * @param db              数据库实例
+     */
+    @Transaction
+    default void updateParagraph(
+            ParagraphEntity paragraph,
+            @NonNull List<Uri> newMediaUriList,
+            @NonNull DiaryDatabase db
+    ) {
+        //更新段落
+        updateParagraph(paragraph);
+
+        //插入新媒体
+        List<MediaEntity> newMediaList = newMediaUriList.stream()
+                .map(uri -> new MediaEntity(paragraph.getParagraphId(), uri))
+                .collect(Collectors.toList());
+        MediaDao mediaDao = db.mediaDao();
+        mediaDao.insertMedia(newMediaList);
+    }
 
     /**
      * 删除段落
