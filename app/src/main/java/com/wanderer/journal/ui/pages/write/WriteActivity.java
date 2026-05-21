@@ -250,6 +250,34 @@ public class WriteActivity extends AppCompatActivity {
             bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
         });
 
+        //媒体删除按钮
+        binding.mediaDeleteBtn.setOnClickListener(view -> {
+            //获取需要删除的媒体实体
+            List<MediaEntity> mediaToBeDeleted = new ArrayList<>();
+            for (long id : selectionTracker.getSelection()) {
+                MediaEntity media = mediaAdapter.getItemById(id);
+                if (media != null) {
+                    mediaToBeDeleted.add(media);
+
+                    //本地删除文件
+                    FileHelper.deleteFile(media.getFileUri(), this);
+                }
+            }
+
+            //退出多选模式
+            mediaAdapter.setSelectMode(false);
+
+            //从列表中删除并提交给适配器
+            List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+            currentMediaList.removeAll(mediaToBeDeleted);
+            mediaAdapter.submitList(currentMediaList);
+
+            //如果没有媒体则隐藏
+            if (currentMediaList.isEmpty()) {
+                setMediaRecyclerVisibility(false);
+            }
+        });
+
         //媒体Recycler
         initMediaRecycler();
 
@@ -447,15 +475,21 @@ public class WriteActivity extends AppCompatActivity {
                 super.onSelectionChanged();
                 if (selectionTracker.hasSelection()) {
                     new Handler(Looper.getMainLooper()).post(
-                            () -> mediaAdapter.setSelectMode(true)
+                            () -> {
+                                mediaAdapter.setSelectMode(true);
+                                setMediaDeleteBtnVisibility(true);
+                            }
                     );
 
                     int size = selectionTracker.getSelection().size();
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
                 } else {
                     new Handler(Looper.getMainLooper()).post(
-                            () -> mediaAdapter.setSelectMode(false)
-                            //TODO:控制删除按钮是否显示
+                            () -> {
+                                //TODO:处理删除后选择删除位置的图片会抛出IllegalArgumentException的BUG
+                                mediaAdapter.setSelectMode(false);
+                                setMediaDeleteBtnVisibility(false);
+                            }
                     );
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
                 }
@@ -520,7 +554,7 @@ public class WriteActivity extends AppCompatActivity {
         List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
 
         //展开图片列表视图
-        setTempMediaRecyclerVisibility(true);
+        setMediaRecyclerVisibility(true);
 
         //更新列表
         long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
@@ -619,7 +653,7 @@ public class WriteActivity extends AppCompatActivity {
                         () -> {
                             //媒体文件显示在列表中
                             mediaAdapter.submitList(mediaList);
-                            setTempMediaRecyclerVisibility(true);
+                            setMediaRecyclerVisibility(true);
 
                             progressDialog.dismiss();
                             Toast.makeText(this, "媒体导入完毕", Toast.LENGTH_SHORT).show();
@@ -891,7 +925,7 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param isVisible 是否可见
      */
-    private void setTempMediaRecyclerVisibility(boolean isVisible) {
+    private void setMediaRecyclerVisibility(boolean isVisible) {
         if (isVisible && binding.mediaCard.getVisibility() == View.VISIBLE ||
                 !isVisible && binding.mediaCard.getVisibility() == View.GONE) {
             return;
@@ -912,6 +946,37 @@ public class WriteActivity extends AppCompatActivity {
             binding.mediaCard.setVisibility(View.VISIBLE);
         } else {
             binding.mediaCard.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 设置媒体删除按钮的可见性
+     *
+     * @param isVisible 是否可见
+     */
+    private void setMediaDeleteBtnVisibility(boolean isVisible) {
+        if (isVisible && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||
+                !isVisible && binding.mediaDeleteBtn.getVisibility() == View.GONE) {
+            return;
+        }
+
+        //定义过渡动画：组合滑入和渐变
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250);
+
+        //通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.contentInputCard, set);
+        TransitionManager.beginDelayedTransition(binding.mediaRecycler, set);   //通知媒体RecyclerView，让复选框也有动画
+
+        //切换视图可见性
+        if (isVisible) {
+            binding.mediaDeleteBtn.setVisibility(View.VISIBLE);
+            binding.mediaAddBtn.setVisibility(View.GONE);
+        } else {
+            binding.mediaDeleteBtn.setVisibility(View.GONE);
+            binding.mediaAddBtn.setVisibility(View.VISIBLE);
         }
     }
 }

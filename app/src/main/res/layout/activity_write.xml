@@ -55,7 +55,6 @@
             android:id="@+id/media_recycler"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
             android:clipToPadding="false"
             android:orientation="horizontal"
             android:paddingStart="20dp"
@@ -145,7 +144,7 @@
                 app:boxCornerRadiusTopEnd="20dp"
                 app:boxCornerRadiusTopStart="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/media_add_btn"
+                app:layout_constraintEnd_toStartOf="@id/media_btn_barrier"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -179,6 +178,25 @@
                 app:layout_constraintBottom_toBottomOf="@id/send_btn"
                 app:layout_constraintEnd_toStartOf="@id/send_btn"
                 app:layout_constraintTop_toTopOf="@id/send_btn" />
+
+            <ImageButton
+                android:id="@+id/media_delete_btn"
+                style="@style/ImageButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/btn_of_delete_media"
+                android:src="@drawable/outline_delete_24"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@id/send_btn"
+                app:layout_constraintEnd_toStartOf="@id/send_btn"
+                app:layout_constraintTop_toTopOf="@id/send_btn" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/media_btn_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="start"
+                app:constraint_referenced_ids="media_add_btn,media_delete_btn" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,6 @@
 package com.wanderer.journal.helpers.file;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
@@ -25,10 +26,32 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 删除文件
+     *
+     * @param uri     待删除文件的 Uri
+     * @param context 上下文
+     */
+    public static void deleteFile(@NonNull Uri uri, Context context) {
+        if (ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
+            // 如果是绝对路径的 file:// 协议临时文件
+            File file = new File(Objects.requireNonNull(uri.getPath()));
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                Log.d(LogTags.FILE_HELPER.n(), "File delete: " + deleted + " -> " + file.getAbsolutePath());
+            }
+        } else if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            // 如果是通过 FileProvider 生成的 content:// 协议临时文件
+            context.getContentResolver().delete(uri, null, null);
+            Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+        }
+    }
+
     /**
      * 复制文件
      *

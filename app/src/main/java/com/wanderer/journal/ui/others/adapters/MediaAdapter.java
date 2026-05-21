@@ -40,7 +40,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         }
     };
 
-    public static class MediaViewHolder extends RecyclerView.ViewHolder {
+    public class MediaViewHolder extends RecyclerView.ViewHolder {
         ViewHolderMediaBinding binding;
         private final SpringAnimation scaleXAnim;           //X轴缩放动画
         private final SpringAnimation scaleYAnim;           //Y轴缩放动画
@@ -114,7 +114,11 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                 @Nullable
                 @Override
                 public Long getSelectionKey() {
-                    return media != null ? (long) media.getFileUri().hashCode() : null;
+                    int pos = getBindingAdapterPosition();
+                    // 必须严格过滤 NO_POSITION
+                    return (pos != RecyclerView.NO_POSITION && pos < getItemCount()) ?
+                            (long) media.getFileUri().hashCode() :
+                            null;
                 }
             };
         }
@@ -156,6 +160,9 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         if (isSelectMode == selectMode) return;
 
         isSelectMode = selectMode;
+        if (!selectMode) {
+            selectionTracker.clearSelection();  //退出选择模式时清空选择
+        }
         notifyDataSetChanged();
     }
 
@@ -196,5 +203,21 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         } else {
             holder.binding.checkedText.setVisibility(View.GONE);
         }
+    }
+
+    /**
+     * 通过{@link Long}类型的 ID 查找 Item
+     *
+     * @param id 通过{@link #getItemId(int)}返回的 ID
+     * @return 若找到则返回 Item 实例，否则返回 null
+     */
+    @Nullable
+    public MediaEntity getItemById(long id) {
+        for (MediaEntity media : getCurrentList()) {
+            if (media.getFileUri().hashCode() == id) {
+                return media;
+            }
+        }
+        return null;
     }
 }

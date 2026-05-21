@@ -73,4 +73,5 @@
     <string name="add_picture_via_album">从相册中添加</string>
     <string name="btn_of_adding_media_files">添加媒体文件的按钮</string>
     <string name="preview_of_media_file">媒体文件预览</string>
+    <string name="btn_of_delete_media">删除媒体按钮</string>
 </resources>
