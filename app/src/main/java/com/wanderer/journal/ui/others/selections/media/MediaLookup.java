@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.lookups;
+package com.wanderer.journal.ui.others.selections.media;
 
 import android.view.MotionEvent;
 import android.view.View;

@@ -1,0 +1,35 @@
+package com.wanderer.journal.ui.others.selections.media;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.selection.ItemKeyProvider;
+
+import com.wanderer.journal.ui.others.adapters.MediaAdapter;
+
+public class MediaIdKeyProvider extends ItemKeyProvider<Long> {
+    private final MediaAdapter adapter;
+
+    public MediaIdKeyProvider(MediaAdapter adapter) {
+        super(SCOPE_MAPPED);
+        this.adapter = adapter;
+    }
+
+    @Nullable
+    @Override
+    public Long getKey(int position) {
+        if (position >= 0 && position < adapter.getItemCount()) {
+            return adapter.getItemId(position);
+        }
+        return null;
+    }
+
+    @Override
+    public int getPosition(@NonNull Long key) {
+        for (int i = 0; i < adapter.getCurrentList().size(); i++) {
+            if (adapter.getCurrentList().get(i).getFileUri().hashCode() == key) {
+                return i;
+            }
+        }
+        return androidx.recyclerview.widget.RecyclerView.NO_POSITION;
+    }
+}

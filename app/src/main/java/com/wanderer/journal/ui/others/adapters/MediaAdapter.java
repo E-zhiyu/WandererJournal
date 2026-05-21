@@ -160,9 +160,6 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         if (isSelectMode == selectMode) return;
 
         isSelectMode = selectMode;
-        if (!selectMode) {
-            selectionTracker.clearSelection();  //退出选择模式时清空选择
-        }
         notifyDataSetChanged();
     }
 

@@ -37,7 +37,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
-import androidx.recyclerview.selection.StableIdKeyProvider;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -69,7 +68,8 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFacto
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
-import com.wanderer.journal.ui.others.lookups.MediaLookup;
+import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
+import com.wanderer.journal.ui.others.selections.media.MediaLookup;
 
 import java.io.File;
 import java.io.IOException;
@@ -265,7 +265,7 @@ public class WriteActivity extends AppCompatActivity {
             }
 
             //退出多选模式
-            mediaAdapter.setSelectMode(false);
+            selectionTracker.clearSelection();
 
             //从列表中删除并提交给适配器
             List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
@@ -460,7 +460,7 @@ public class WriteActivity extends AppCompatActivity {
         selectionTracker = new SelectionTracker.Builder<>(
                 TagStrings.MEDIA_SELECTION.getTag(),
                 binding.mediaRecycler,
-                new StableIdKeyProvider(binding.mediaRecycler),
+                new MediaIdKeyProvider(mediaAdapter),
                 new MediaLookup(binding.mediaRecycler),
                 StorageStrategy.createLongStorage()
         ).withSelectionPredicate(
@@ -474,22 +474,15 @@ public class WriteActivity extends AppCompatActivity {
             public void onSelectionChanged() {
                 super.onSelectionChanged();
                 if (selectionTracker.hasSelection()) {
-                    new Handler(Looper.getMainLooper()).post(
-                            () -> {
-                                mediaAdapter.setSelectMode(true);
-                                setMediaDeleteBtnVisibility(true);
-                            }
+                    new Handler(Looper.getMainLooper()).post(   //必须主线程更新 UI
+                            () -> setSelectionMode(true)
                     );
 
                     int size = selectionTracker.getSelection().size();
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
                 } else {
-                    new Handler(Looper.getMainLooper()).post(
-                            () -> {
-                                //TODO:处理删除后选择删除位置的图片会抛出IllegalArgumentException的BUG
-                                mediaAdapter.setSelectMode(false);
-                                setMediaDeleteBtnVisibility(false);
-                            }
+                    new Handler(Looper.getMainLooper()).post(   //必须主线程更新 UI
+                            () -> setSelectionMode(false)
                     );
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
                 }
@@ -954,7 +947,7 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param isVisible 是否可见
      */
-    private void setMediaDeleteBtnVisibility(boolean isVisible) {
+    private void setSelectionMode(boolean isVisible) {
         if (isVisible && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||
                 !isVisible && binding.mediaDeleteBtn.getVisibility() == View.GONE) {
             return;
@@ -978,5 +971,7 @@ public class WriteActivity extends AppCompatActivity {
             binding.mediaDeleteBtn.setVisibility(View.GONE);
             binding.mediaAddBtn.setVisibility(View.VISIBLE);
         }
+
+        mediaAdapter.setSelectMode(isVisible);  //切换适配器选择模式
     }
 }
