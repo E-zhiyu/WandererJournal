@@ -54,6 +54,7 @@ import com.wanderer.journal.enums.DirectoryPaths;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
 import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -89,7 +90,10 @@ import kotlin.Unit;
 public class WriteActivity extends AppCompatActivity {
     private ActivityWriteBinding binding;                   //绑定的XML布局
     private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
-    private OnBackPressedCallback backPressedCallback;      //返回手势监听
+    private BackPressedCallbackHelper backHelper;           //返回逻辑管理器
+    private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
+    private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
+    private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
     private LocalDate diaryDate = LocalDate.now();          //父日记的日期
     private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
@@ -160,34 +164,8 @@ public class WriteActivity extends AppCompatActivity {
         receiveIntent();
         initViews();
         initLaunchers();
+        initOnBackPressedHandlers();
         FileHelper.clearTempMediaDir(this); //清空临时媒体目录
-
-        //注册返回手势监听
-        backPressedCallback = new OnBackPressedCallback(false) {
-            @Override
-            public void handleOnBackPressed() {
-                if (selectionTracker.hasSelection()) {  //清空多选
-                    selectionTracker.clearSelection();
-                } else if (!mediaAdapter.getCurrentList().isEmpty()) {  //清空媒体
-                    new MaterialAlertDialogBuilder(WriteActivity.this)
-                            .setTitle("清除媒体")
-                            .setMessage("确认要清空所有媒体文件吗？")
-                            .setPositiveButton("确认", (dialogInterface, i) -> {
-                                selectionTracker.clearSelection();          //清除选择
-                                mediaAdapter.submitList(new ArrayList<>()); //清空适配器中的 UI
-                                setMediaRecyclerVisibility(false);          //隐藏图片列表
-                            })
-                            .setNegativeButton("取消", null)
-                            .show();
-                } else if (modifyingParagraph != null) {    //退出编辑模式
-                    setEditMode(false, null);   //退出内容编辑模式
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
-                }
-            }
-        };
-        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     @Override
@@ -496,14 +474,14 @@ public class WriteActivity extends AppCompatActivity {
                 super.onSelectionChanged();
                 if (selectionTracker.hasSelection()) {
                     new Handler(Looper.getMainLooper()).post(   //必须主线程更新 UI
-                            () -> setSelectionMode(true)
+                            () -> setSelectMode(true)
                     );
 
                     int size = selectionTracker.getSelection().size();
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
                 } else {
                     new Handler(Looper.getMainLooper()).post(   //必须主线程更新 UI
-                            () -> setSelectionMode(false)
+                            () -> setSelectMode(false)
                     );
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
                 }
@@ -556,6 +534,78 @@ public class WriteActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    /**
+     * 初始化返回拦截逻辑
+     */
+    private void initOnBackPressedHandlers() {
+        OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                backHelper.dispatchBackPressed();
+            }
+        };
+        backHelper = new BackPressedCallbackHelper(backPressedCallback);
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
+
+        //媒体多选处理器
+        selectionBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                selectionTracker.clearSelection();
+
+                backHelper.unregisterHandler(this);
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 3;
+            }
+        };
+
+        //媒体显示处理器
+        mediaBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                new MaterialAlertDialogBuilder(WriteActivity.this)
+                        .setTitle("清除媒体")
+                        .setMessage("确认要清空所有媒体文件吗？")
+                        .setPositiveButton("确认", (dialogInterface, i) -> {
+                            selectionTracker.clearSelection();          //清除选择
+                            mediaAdapter.submitList(new ArrayList<>()); //清空适配器中的 UI
+                            setMediaRecyclerVisibility(false);          //隐藏图片列表
+
+                            backHelper.unregisterHandler(this);
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 2;
+            }
+        };
+
+        //内容编辑模式处理器
+        editBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                setEditMode(false, null);
+                backHelper.unregisterHandler(this);
+
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 1;
+            }
+        };
     }
 
     /**
@@ -912,9 +962,9 @@ public class WriteActivity extends AppCompatActivity {
      * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
      */
     private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
-        //如果启用编辑模式，则启用返回监听
+        //如果启用则注册返回处理器
         if (isEditMode) {
-            backPressedCallback.setEnabled(true);
+            backHelper.registerHandler(editBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变
@@ -954,9 +1004,9 @@ public class WriteActivity extends AppCompatActivity {
             return;
         }
 
-        //如果显示媒体列表，则启用返回监听
+        //如果显示则注册返回处理器
         if (isVisible) {
-            backPressedCallback.setEnabled(true);
+            backHelper.registerHandler(mediaBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变
@@ -980,12 +1030,17 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 设置媒体删除按钮的可见性
      *
-     * @param isVisible 是否可见
+     * @param isSelectMode 是否可见
      */
-    private void setSelectionMode(boolean isVisible) {
-        if (isVisible && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||
-                !isVisible && binding.mediaDeleteBtn.getVisibility() == View.GONE) {
+    private void setSelectMode(boolean isSelectMode) {
+        if (isSelectMode && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||
+                !isSelectMode && binding.mediaDeleteBtn.getVisibility() == View.GONE) {
             return;
+        }
+
+        //如果启用则注册返回处理器
+        if (isSelectMode) {
+            backHelper.registerHandler(selectionBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变
@@ -999,7 +1054,7 @@ public class WriteActivity extends AppCompatActivity {
         TransitionManager.beginDelayedTransition(binding.mediaRecycler, set);   //通知媒体RecyclerView，让复选框也有动画
 
         //切换视图可见性
-        if (isVisible) {
+        if (isSelectMode) {
             binding.mediaDeleteBtn.setVisibility(View.VISIBLE);
             binding.mediaAddBtn.setVisibility(View.GONE);
         } else {
@@ -1007,6 +1062,6 @@ public class WriteActivity extends AppCompatActivity {
             binding.mediaAddBtn.setVisibility(View.VISIBLE);
         }
 
-        mediaAdapter.setSelectMode(isVisible);  //切换适配器选择模式
+        mediaAdapter.setSelectMode(isSelectMode);  //切换适配器选择模式
     }
 }
