@@ -81,7 +81,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -104,7 +103,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private Uri tempPictureUri = null;                      //相机拍照得到的临时图片 Uri
+    private Uri cameraUri = null;                           //相机拍照得到的临时图片 Uri
     private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
 
@@ -168,7 +167,6 @@ public class WriteActivity extends AppCompatActivity {
         initViews();
         initLaunchers();
         initOnBackPressedHandlers();
-        FileHelper.clearTempMediaDir(this); //清空临时媒体目录
     }
 
     @Override
@@ -177,9 +175,6 @@ public class WriteActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
-
-        //清理临时媒体文件目录
-        FileHelper.clearTempMediaDir(this);
     }
 
     /**
@@ -300,21 +295,9 @@ public class WriteActivity extends AppCompatActivity {
             }
 
             //将这些文件全部移动至永久目录并获取文件引用
-            File mediaDir = DirectoryPaths.MEDIA.getDir(this);
-            File tempDir = DirectoryPaths.MEDIA_TEMP.getDir(this);
             List<Uri> copiedUriList = mediaAdapter.getCurrentList().stream()
+                    .filter(media -> media.getMediaId() == 0)   //只需要新添加的
                     .map(MediaEntity::getFileUri)
-                    .map(Uri::getPath)
-                    .map(pathname -> pathname != null ? new File(pathname) : null)
-                    .map(file -> {
-                        try {
-                            return FileHelper.moveFile(file, tempDir, mediaDir);
-                        } catch (IOException e) {
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .map(Uri::fromFile)
                     .collect(Collectors.toList());
 
             //调用添加段落/更新段落方法
@@ -533,9 +516,12 @@ public class WriteActivity extends AppCompatActivity {
                 new ActivityResultContracts.TakePicture(),
                 result -> {
                     if (result) {
-                        onCameraPictureUriReceived(tempPictureUri);
+                        onCameraPictureUriReceived(cameraUri);
                     } else {
                         Toast.makeText(this, "拍照已取消", Toast.LENGTH_SHORT).show();
+
+                        //删除刚刚创建的照片文件
+                        FileHelper.deleteFile(cameraUri, this);
                     }
                 }
         );
@@ -646,18 +632,18 @@ public class WriteActivity extends AppCompatActivity {
             File photoFile = File.createTempFile(
                     "IMG_",
                     ".jpg",
-                    DirectoryPaths.MEDIA_TEMP.getDir(this)
+                    DirectoryPaths.MEDIA.getDir(this)
             );
 
             //通过 FileProvider 获取 Content URI
-            tempPictureUri = FileProvider.getUriForFile(
+            cameraUri = FileProvider.getUriForFile(
                     this,
                     getPackageName() + ".fileprovider",
                     photoFile
             );
 
             //启动相机
-            takePictureLauncher.launch(tempPictureUri);
+            takePictureLauncher.launch(cameraUri);
         } catch (IOException e) {
             Toast.makeText(this, "无法创建相片文件", Toast.LENGTH_SHORT).show();
         } catch (SecurityException e) {
@@ -707,14 +693,14 @@ public class WriteActivity extends AppCompatActivity {
         //创建复制任务
         List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
         Observable<Integer> task = Observable.create(emitter -> {
-            File tempMediaDir = DirectoryPaths.MEDIA_TEMP.getDir(this);
+            File mediaDir = DirectoryPaths.MEDIA.getDir(this);
             byte[] sharedBuffer = new byte[1024 * 32];  //共享32KB缓存
 
             //复制文件并保存引用
             for (Uri uri : uriList) {
                 File resultFile = null;
                 try {
-                    resultFile = FileHelper.copyFile(this, uri, tempMediaDir, sharedBuffer);
+                    resultFile = FileHelper.copyFile(this, uri, mediaDir, sharedBuffer);
                 } catch (IOException e) {
                     emitter.onError(e);
                 }

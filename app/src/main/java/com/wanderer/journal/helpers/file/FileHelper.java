@@ -315,16 +315,6 @@ public class FileHelper {
     }
 
     /**
-     * 清空临时媒体文件目录
-     *
-     * @param context 上下文
-     */
-    public static void clearTempMediaDir(Context context) {
-        File tempMediaDir = DirectoryPaths.MEDIA_TEMP.getDir(context);
-        clearDir(tempMediaDir);
-    }
-
-    /**
      * 清空媒体文件夹
      *
      * @param context 上下文

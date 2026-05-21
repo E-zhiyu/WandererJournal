@@ -9,9 +9,4 @@
     <external-files-path
         name="medias"
         path="medias" />
-
-    <!-- 临时媒体文件目录 -->
-    <external-cache-path
-        name="media_temp"
-        path="media_temp" />
 </paths>
