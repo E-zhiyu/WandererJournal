@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -14,10 +13,9 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
-import com.wanderer.journal.databinding.ViewHolderMediaBinding;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
 
-public class ParagraphMediaAdapter extends ListAdapter<MediaEntity, ParagraphMediaAdapter.MediaViewHolder> {
+public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, ParagraphInnerMediaAdapter.MediaViewHolder> {
     private final RequestOptions glideOptions;          //图片显示设置
     private final static DiffUtil.ItemCallback<MediaEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -31,12 +29,21 @@ public class ParagraphMediaAdapter extends ListAdapter<MediaEntity, ParagraphMed
         }
     };
 
+    public static class MediaViewHolder extends RecyclerView.ViewHolder {
+        ViewHolderInnerMediaBinding binding;
+
+        public MediaViewHolder(@NonNull ViewHolderInnerMediaBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+    }
+
     /**
      * 段落内部媒体列表构造方法
      *
-     * @param context 上下文
+     * @param size 显示图片大小
      */
-    protected ParagraphMediaAdapter(Context context) {
+    protected ParagraphInnerMediaAdapter(int size) {
         super(ITEM_CALLBACK);
 
         //初始化Glide设置
@@ -44,25 +51,22 @@ public class ParagraphMediaAdapter extends ListAdapter<MediaEntity, ParagraphMed
                 .centerCrop()
                 .error(R.drawable.outline_error_24)             //错误图
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) //缓存策略
-                .override(
-                        ViewEdgeHelper.dpToPx(context, 200),
-                        ViewEdgeHelper.dpToPx(context, 200)
-                );                                              //图片尺寸
+                .override(size, size);                          //图片尺寸
     }
 
     @NonNull
     @Override
-    public ParagraphMediaAdapter.MediaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderMediaBinding binding = ViewHolderMediaBinding.inflate(
+    public ParagraphInnerMediaAdapter.MediaViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ViewHolderInnerMediaBinding binding = ViewHolderInnerMediaBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false
         );
-        return new ParagraphMediaAdapter.MediaViewHolder(binding);
+        return new ParagraphInnerMediaAdapter.MediaViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ParagraphMediaAdapter.MediaViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ParagraphInnerMediaAdapter.MediaViewHolder holder, int position) {
         MediaEntity media = getItem(position);
 
         //通过 Glide 显示图片
@@ -70,14 +74,5 @@ public class ParagraphMediaAdapter extends ListAdapter<MediaEntity, ParagraphMed
                 .load(media.getFileUri())
                 .apply(glideOptions)
                 .into(holder.binding.imageView);
-    }
-
-    public static class MediaViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderMediaBinding binding;
-
-        public MediaViewHolder(@NonNull ViewHolderMediaBinding binding) {
-            super(binding.getRoot());
-            this.binding = binding;
-        }
     }
 }

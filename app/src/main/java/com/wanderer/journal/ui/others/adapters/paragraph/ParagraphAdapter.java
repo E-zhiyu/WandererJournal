@@ -196,11 +196,12 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             if (mediaList != null && !mediaList.isEmpty()) {
                 //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
                 int spanCount = Math.min(mediaList.size(), 3);
+                int size = itemHolder.binding.getRoot().getWidth() / spanCount;
                 GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount);
                 itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
 
                 //绑定数据
-                ParagraphMediaAdapter mediaAdapter = new ParagraphMediaAdapter(context);
+                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(size);
                 itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
                 mediaAdapter.submitList(mediaList);
 
