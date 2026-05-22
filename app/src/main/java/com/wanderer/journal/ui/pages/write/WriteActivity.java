@@ -373,11 +373,16 @@ public class WriteActivity extends AppCompatActivity {
                             () -> {
                                 dialog.dismiss();
 
-                                //调用添加段落/更新段落方法
+                                //排除移动失败的文件
+                                List<Uri> succeedFileUriList = resultList.stream()
+                                        .filter(Objects::nonNull)
+                                        .collect(Collectors.toList());
+
+                                //调用数据写入方法
                                 if (modifyingParagraph == null) {
-                                    addParagraph(content, newMediaUriList);
+                                    addParagraph(content, succeedFileUriList);
                                 } else {
-                                    updateParagraphContent(content, modifyingParagraph, newMediaUriList);
+                                    updateParagraphContent(content, modifyingParagraph, succeedFileUriList);
                                     setEditMode(false, null);
                                 }
                             }
