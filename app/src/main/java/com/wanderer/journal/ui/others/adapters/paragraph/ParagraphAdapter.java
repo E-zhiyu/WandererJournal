@@ -8,9 +8,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
@@ -184,9 +186,29 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
             ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
             ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+            Context context = itemHolder.binding.getRoot().getContext();
 
             //绑定数据原型
             itemHolder.bindItem(paragraph);
+
+            //媒体列表
+            List<MediaEntity> mediaList = ((ParagraphUiModel.Item) uiModel).model.getMediaList();
+            if (mediaList != null && !mediaList.isEmpty()) {
+                //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
+                int spanCount = Math.min(mediaList.size(), 3);
+                GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount);
+                itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
+
+                //绑定数据
+                ParagraphMediaAdapter mediaAdapter = new ParagraphMediaAdapter(context);
+                itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
+                mediaAdapter.submitList(mediaList);
+
+                //显示列表
+                itemHolder.binding.mediaRecycler.setVisibility(View.VISIBLE);
+            } else {
+                itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
+            }
 
             //内容文本
             String content = paragraph.getContent();
@@ -194,31 +216,31 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = ((ParagraphUiModel.Item) uiModel).model.getEmotionList();
-            itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-            Context context = itemHolder.binding.getRoot().getContext();
-            for (CrossRefWithEmotion emotion : emotionList) {
-                String name = emotion.emotionTag.getName();
-                int degree = emotion.crossRef.getDegree();
-                String title = String.format(
-                        Locale.getDefault(),
-                        "%s %s",
-                        name, RomanNumberHelper.toRoman(degree)
-                );
-
-                Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
-                emotionChip.setCheckable(false);
-                emotionChip.setFocusable(false);
-
-                //设置显示文本
-                emotionChip.setText(title);
-                emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
-
-                //添加到视图中
-                itemHolder.binding.emotionChipGroup.addView(emotionChip);
-            }
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {
+                itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
+                for (CrossRefWithEmotion emotion : emotionList) {
+                    String name = emotion.emotionTag.getName();
+                    int degree = emotion.crossRef.getDegree();
+                    String title = String.format(
+                            Locale.getDefault(),
+                            "%s %s",
+                            name, RomanNumberHelper.toRoman(degree)
+                    );
+
+                    Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
+                    emotionChip.setCheckable(false);
+                    emotionChip.setFocusable(false);
+
+                    //设置显示文本
+                    emotionChip.setText(title);
+                    emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
+
+                    //添加到视图中
+                    itemHolder.binding.emotionChipGroup.addView(emotionChip);
+                }
+
                 itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
             }
 

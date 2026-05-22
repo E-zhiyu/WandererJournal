@@ -12,6 +12,19 @@
         android:layout_height="wrap_content"
         android:padding="15dp">
 
+        <!-- 媒体列表 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/media_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
+            app:layout_constraintBottom_toTopOf="@id/content_text"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
         <!-- 内容文本 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/content_text"
@@ -24,7 +37,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/media_recycler"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <!-- 情绪标签布局 -->

@@ -4,20 +4,26 @@ import androidx.room.Embedded;
 import androidx.room.Relation;
 
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.util.List;
 
-public class ParagraphWithEmotion {
+public class ParagraphEntityModel {
     @Embedded
     private ParagraphEntity paragraph;                  // 段落实体
-
     @Relation(
-            parentColumn = "paragraphId",               // 段落表主键
-            entityColumn = "paragraphId",               // 中间表里的段落 ID
-            entity = EmotionParagraphRefEntity.class    // 告诉 Room 核心去查中间表
+            parentColumn = "paragraphId",
+            entityColumn = "paragraphId",
+            entity = EmotionParagraphRefEntity.class
     )
     private List<CrossRefWithEmotion> emotionList;      // 情绪标签（带情绪程度）列表
+    @Relation(
+            parentColumn = "paragraphId",
+            entityColumn = "parentParagraphId",
+            entity = MediaEntity.class
+    )
+    private List<MediaEntity> mediaList;                //媒体列表
 
     public ParagraphEntity getParagraph() {
         return paragraph;
@@ -33,5 +39,13 @@ public class ParagraphWithEmotion {
 
     public void setEmotionList(List<CrossRefWithEmotion> emotionList) {
         this.emotionList = emotionList;
+    }
+
+    public List<MediaEntity> getMediaList() {
+        return mediaList;
+    }
+
+    public void setMediaList(List<MediaEntity> mediaList) {
+        this.mediaList = mediaList;
     }
 }
