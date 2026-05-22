@@ -23,14 +23,44 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Locale;
 import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 获取可用的文件名，当文件名被占用时自动添加编号以防文件名冲突
+     *
+     * @param targetDir  可能存在文件名占用情况的目录
+     * @param originName 原始文件名
+     * @return 没有被占用的文件名
+     */
+    @NonNull
+    private static String getAvailableFilename(File targetDir, @NonNull String originName) {
+        String[] namePart = originName.split("\\.", 2);
+        String suffix = namePart[1];            //后缀名（不包含.）
+        String originFileName = namePart[0];    //不包含后缀名的文件名
+
+        String availableName = originName;
+        File targetFile = new File(targetDir, availableName);
+
+        //循环生成可用文件名
+        int i = 0;
+        while (targetFile.exists()) {
+            i++;
+            availableName = String.format(Locale.getDefault(), "%s (%d).%s", originFileName, i, suffix);
+            targetFile = new File(targetDir, availableName);
+        }
+
+        return availableName;
+    }
+
     /**
      * 删除文件
      *
@@ -49,6 +79,45 @@ public class FileHelper {
             // 如果是通过 FileProvider 生成的 content:// 协议临时文件
             context.getContentResolver().delete(uri, null, null);
             Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+        }
+    }
+
+    /**
+     * 移动文件
+     *
+     * @param originFile 待移动的文件的 Uri
+     * @param targetDir  存放移动后目标文件的目录
+     * @return 移动完成后的文件对象，移动失败则返回 null
+     */
+    @Nullable
+    public static File moveFile(File originFile, File targetDir) {
+        if (targetDir == null || !targetDir.isDirectory()) {
+            throw new IllegalArgumentException("参数错误，targetDir不是目录对象");
+        }
+
+        //判断文件是否存在
+        if (originFile == null || !originFile.exists()) {
+            Log.w(LogTags.FILE_HELPER.n(), "待移动的文件不存在");
+            return null;
+        }
+
+        //获取 Path 对象
+        Path originFilePath = originFile.toPath();
+        File targetFile = new File(targetDir, getAvailableFilename(targetDir, originFile.getName()));
+        Path targetPath = targetFile.toPath();
+
+        //移动文件
+        try {
+            Path movedPath = Files.move(
+                    originFilePath,
+                    targetPath
+            );
+
+            Log.i(LogTags.FILE_HELPER.n(), "文件移动成功");
+            return movedPath.toFile();
+        } catch (IOException e) {
+            Log.e(LogTags.FILE_HELPER.n(), "文件移动失败");
+            return null;
         }
     }
 
@@ -247,6 +316,16 @@ public class FileHelper {
     public static void clearMediaDir(Context context) {
         File mediaDir = DirectoryPaths.MEDIA.getDir(context);
         clearDir(mediaDir);
+    }
+
+    /**
+     * 清空临时媒体目录
+     *
+     * @param context 上下文
+     */
+    public static void clearMediaTempDir(Context context) {
+        File mediaTempDir = DirectoryPaths.MEDIA_TEMP.getDir(context);
+        clearDir(mediaTempDir);
     }
 
     /**

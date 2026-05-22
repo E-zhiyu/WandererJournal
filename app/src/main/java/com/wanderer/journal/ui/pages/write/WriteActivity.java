@@ -49,6 +49,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.enums.DirectoryPaths;
@@ -81,6 +82,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -103,7 +106,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private Uri cameraUri = null;                           //相机拍照得到的临时图片 Uri
+    private Uri cameraFileUri = null;                       //相机拍照得到的临时图片 File 类型的 Uri
     private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
 
@@ -175,6 +178,9 @@ public class WriteActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
+
+        //清空临时媒体目录
+        FileHelper.clearMediaTempDir(this);
     }
 
     /**
@@ -249,38 +255,60 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         //媒体删除按钮
-        binding.mediaDeleteBtn.setOnClickListener(view -> new MaterialAlertDialogBuilder(this)
-                .setTitle("删除媒体")
-                .setMessage("此操作将永久删除媒体且无法恢复，确认删除吗？")
-                .setPositiveButton("确定", (dialogInterface, i) -> {
-                    //获取需要删除的媒体实体
-                    List<MediaEntity> mediaToBeDeleted = new ArrayList<>();
+        binding.mediaDeleteBtn.setOnClickListener(view -> {
+                    //获取需要删除的媒体
+                    List<MediaEntity> mediaListToBeDeleted = new ArrayList<>();
                     for (long id : selectionTracker.getSelection()) {
                         MediaEntity media = mediaAdapter.getItemById(id);
                         if (media != null) {
-                            mediaToBeDeleted.add(media);
-
-                            //本地删除文件
-                            FileHelper.deleteFile(media.getFileUri(), this);
-                            //TODO:数据库中删除文件，建议放到事务中
+                            mediaListToBeDeleted.add(media);
                         }
                     }
 
-                    //退出多选模式
-                    selectionTracker.clearSelection();
+                    //显示对话框
+                    String message = String.format(
+                            Locale.getDefault(),
+                            "即将删除%d个媒体文件，此操作无法撤销，确认继续吗？",
+                            mediaListToBeDeleted.size()
+                    );
+                    new MaterialAlertDialogBuilder(this)
+                            .setTitle("删除媒体")
+                            .setMessage(message)
+                            .setPositiveButton("确定", (dialogInterface, i) -> {
+                                //多线程删除媒体
+                                disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(
+                                                () -> {
+                                                    //显示提示
+                                                    String tip = String.format(
+                                                            Locale.getDefault(),
+                                                            "删除了%d个媒体",
+                                                            mediaListToBeDeleted.size()
+                                                    );
+                                                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
 
-                    //从列表中删除并提交给适配器
-                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-                    currentMediaList.removeAll(mediaToBeDeleted);
-                    mediaAdapter.submitList(currentMediaList);
+                                                    //更新适配器列表
+                                                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+                                                    currentMediaList.removeAll(mediaListToBeDeleted);
+                                                    mediaAdapter.submitList(currentMediaList);
 
-                    //如果没有媒体则隐藏
-                    if (currentMediaList.isEmpty()) {
-                        setMediaRecyclerVisibility(false);
-                    }
-                })
-                .setNegativeButton("取消", null)
-                .show()
+                                                    //退出多选
+                                                    selectionTracker.clearSelection();
+
+                                                    //没有媒体时隐藏
+                                                    if (currentMediaList.isEmpty()) {
+                                                        setMediaRecyclerVisible(false);
+                                                    }
+                                                },
+                                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                                        )
+                                );
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                }
         );
 
         //媒体Recycler
@@ -288,25 +316,75 @@ public class WriteActivity extends AppCompatActivity {
 
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
+            ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
+                    this,
+                    "保存媒体文件",
+                    "正在移动媒体文件……"
+            );
+            AlertDialog dialog = dialogBuilder
+                    .setNegativeButton("取消", (dialogInterface, i) -> {
+                        disposable.clear();
+                        Toast.makeText(this, "已取消媒体文件保存", Toast.LENGTH_SHORT).show();
+                    })
+                    .show();
+
             //获取输入内容
             String content = String.valueOf(binding.contentTextInput.getText());
             if (content.isEmpty()) {
                 return;
             }
 
-            //将这些文件全部移动至永久目录并获取文件引用
-            List<Uri> copiedUriList = mediaAdapter.getCurrentList().stream()
+            //获取新添加的媒体的 Uri
+            List<Uri> newMediaUriList = mediaAdapter.getCurrentList().stream()
                     .filter(media -> media.getMediaId() == 0)   //只需要新添加的
                     .map(MediaEntity::getFileUri)
                     .collect(Collectors.toList());
 
-            //调用添加段落/更新段落方法
-            if (modifyingParagraph == null) {
-                addParagraph(content, copiedUriList);
-            } else {
-                updateParagraphContent(content, modifyingParagraph, copiedUriList);
-                setEditMode(false, null);
-            }
+            //创建移动任务，并逐个返回移动成功的 File 型 Uri
+            Observable<Uri> moveTask = Observable.create(emitter -> {
+                File targetDir = DirectoryPaths.MEDIA.getDir(this);
+
+                for (Uri originUri : newMediaUriList) {
+                    File originFile = new File(Objects.requireNonNull(originUri.getPath()));
+                    File movedFile = FileHelper.moveFile(originFile, targetDir);
+                    emitter.onNext(Uri.fromFile(movedFile));    //不论是否成功都返回
+                }
+
+                emitter.onComplete();
+            });
+
+            //多线程执行任务并调用段落添加/更新方法
+            List<Uri> resultList = new ArrayList<>();   //移动结果列表（可能包含 null）
+            disposable.add(moveTask
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            uri -> {
+                                resultList.add(uri);
+                                dialogBuilder.updateProgress(resultList.size(), newMediaUriList.size(), "正在移动媒体文件……");
+                            },
+                            e -> {
+                                ExceptionHelper.showExceptionDialog(this, e);
+                                dialog.dismiss();
+                            },
+                            () -> {
+                                dialog.dismiss();
+
+                                //调用添加段落/更新段落方法
+                                if (modifyingParagraph == null) {
+                                    addParagraph(content, newMediaUriList);
+                                } else {
+                                    updateParagraphContent(content, modifyingParagraph, newMediaUriList);
+                                    setEditMode(false, null);
+                                }
+                            }
+                    )
+            );
+
+            //清理图片列表并隐藏
+            mediaAdapter.submitList(new ArrayList<>());
+            setMediaRecyclerVisible(false);
+            backHelper.unregisterHandler(mediaBackHandler);
         });
 
         //文本输入框
@@ -516,12 +594,12 @@ public class WriteActivity extends AppCompatActivity {
                 new ActivityResultContracts.TakePicture(),
                 result -> {
                     if (result) {
-                        onCameraPictureUriReceived(cameraUri);
+                        onCameraPictureUriReceived(cameraFileUri);
                     } else {
                         Toast.makeText(this, "拍照已取消", Toast.LENGTH_SHORT).show();
 
                         //删除刚刚创建的照片文件
-                        FileHelper.deleteFile(cameraUri, this);
+                        FileHelper.deleteFile(cameraFileUri, this);
                     }
                 }
         );
@@ -586,11 +664,11 @@ public class WriteActivity extends AppCompatActivity {
             public boolean handleBack() {
                 new MaterialAlertDialogBuilder(WriteActivity.this)
                         .setTitle("清除媒体")
-                        .setMessage("确认要清空所有媒体文件吗？")
+                        .setMessage("确认要舍弃所有未保存的媒体文件吗？")
                         .setPositiveButton("确认", (dialogInterface, i) -> {
                             selectionTracker.clearSelection();          //清除选择
                             mediaAdapter.submitList(new ArrayList<>()); //清空适配器中的 UI
-                            setMediaRecyclerVisibility(false);          //隐藏图片列表
+                            setMediaRecyclerVisible(false);          //隐藏图片列表
 
                             backHelper.unregisterHandler(this);
                         })
@@ -602,7 +680,7 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public int getPriority() {
-                return 2;
+                return 1;
             }
         };
 
@@ -613,12 +691,18 @@ public class WriteActivity extends AppCompatActivity {
                 setEditMode(false, null);
                 backHelper.unregisterHandler(this);
 
+                //一并清除媒体列表
+                selectionTracker.clearSelection();          //清除选择
+                mediaAdapter.submitList(new ArrayList<>()); //清空适配器中的 UI
+                setMediaRecyclerVisible(false);          //隐藏图片列表
+                backHelper.unregisterHandler(mediaBackHandler);
+
                 return true;
             }
 
             @Override
             public int getPriority() {
-                return 1;
+                return 2;
             }
         };
     }
@@ -632,18 +716,19 @@ public class WriteActivity extends AppCompatActivity {
             File photoFile = File.createTempFile(
                     "IMG_",
                     ".jpg",
-                    DirectoryPaths.MEDIA.getDir(this)
+                    DirectoryPaths.MEDIA_TEMP.getDir(this)
             );
+            cameraFileUri = Uri.fromFile(photoFile);    //保存 File 类型的 Uri
 
             //通过 FileProvider 获取 Content URI
-            cameraUri = FileProvider.getUriForFile(
+            Uri contentUri = FileProvider.getUriForFile(
                     this,
                     getPackageName() + ".fileprovider",
                     photoFile
             );
 
             //启动相机
-            takePictureLauncher.launch(cameraUri);
+            takePictureLauncher.launch(contentUri);
         } catch (IOException e) {
             Toast.makeText(this, "无法创建相片文件", Toast.LENGTH_SHORT).show();
         } catch (SecurityException e) {
@@ -661,7 +746,7 @@ public class WriteActivity extends AppCompatActivity {
         List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
 
         //展开图片列表视图
-        setMediaRecyclerVisibility(true);
+        setMediaRecyclerVisible(true);
 
         //更新列表
         long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
@@ -693,7 +778,7 @@ public class WriteActivity extends AppCompatActivity {
         //创建复制任务
         List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
         Observable<Integer> task = Observable.create(emitter -> {
-            File mediaDir = DirectoryPaths.MEDIA.getDir(this);
+            File mediaDir = DirectoryPaths.MEDIA_TEMP.getDir(this);
             byte[] sharedBuffer = new byte[1024 * 32];  //共享32KB缓存
 
             //复制文件并保存引用
@@ -738,7 +823,7 @@ public class WriteActivity extends AppCompatActivity {
                         () -> {
                             //媒体文件显示在列表中
                             mediaAdapter.submitList(mediaList);
-                            setMediaRecyclerVisibility(true);   //展开媒体列表
+                            setMediaRecyclerVisible(true);   //展开媒体列表
 
                             progressDialog.dismiss();
                             Toast.makeText(this, "已导入" + mediaList.size() + "个媒体文件", Toast.LENGTH_SHORT).show();
@@ -985,6 +1070,8 @@ public class WriteActivity extends AppCompatActivity {
         //如果启用则注册返回处理器
         if (isEditMode) {
             backHelper.registerHandler(editBackHandler);
+        } else {
+            backHelper.unregisterHandler(editBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变
@@ -1018,7 +1105,7 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param isVisible 是否可见
      */
-    private void setMediaRecyclerVisibility(boolean isVisible) {
+    private void setMediaRecyclerVisible(boolean isVisible) {
         if (isVisible && binding.mediaCard.getVisibility() == View.VISIBLE ||
                 !isVisible && binding.mediaCard.getVisibility() == View.GONE) {
             return;
@@ -1027,6 +1114,8 @@ public class WriteActivity extends AppCompatActivity {
         //如果显示则注册返回处理器
         if (isVisible) {
             backHelper.registerHandler(mediaBackHandler);
+        } else {
+            backHelper.unregisterHandler(mediaBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变
@@ -1058,9 +1147,10 @@ public class WriteActivity extends AppCompatActivity {
             return;
         }
 
-        //如果启用则注册返回处理器
         if (isSelectMode) {
             backHelper.registerHandler(selectionBackHandler);
+        } else {
+            backHelper.unregisterHandler(selectionBackHandler);
         }
 
         //定义过渡动画：组合滑入和渐变

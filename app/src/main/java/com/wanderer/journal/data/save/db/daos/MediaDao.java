@@ -1,11 +1,17 @@
 package com.wanderer.journal.data.save.db.daos;
 
+import android.content.Context;
+import android.net.Uri;
+
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
+import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.util.List;
 
@@ -18,6 +24,31 @@ public interface MediaDao {
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMedia(List<MediaEntity> mediaEntityList);
+
+    /**
+     * 删除媒体记录
+     *
+     * @param mediaEntityList 需要删除的媒体记录列表
+     */
+    @Delete
+    void deleteMedia(List<MediaEntity> mediaEntityList);
+
+    /**
+     * 媒体删除事务，同时删除数据库中的记录和文件系统中的文件
+     *
+     * @param mediaEntityList 需要删除的媒体列表
+     * @param context         上下文
+     */
+    @Transaction
+    default void deleteMediasAndFiles(List<MediaEntity> mediaEntityList, Context context) {
+        deleteMedia(mediaEntityList);
+
+        //删除文件
+        for (MediaEntity media : mediaEntityList) {
+            Uri mediaUri = media.getFileUri();
+            FileHelper.deleteFile(mediaUri, context);
+        }
+    }
 
     /**
      * 读取所有数据用于导出
