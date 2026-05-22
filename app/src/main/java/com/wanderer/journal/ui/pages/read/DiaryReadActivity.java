@@ -133,7 +133,9 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
-                (paragraph, view) -> {
+                (model, view) -> {
+                    ParagraphEntity paragraph = model.getParagraph();
+
                     PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 

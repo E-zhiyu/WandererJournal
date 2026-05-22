@@ -76,8 +76,9 @@ public interface ParagraphDao {
      * @param paragraphId 段落 ID
      * @return 包裹段落实体的{@link Optional}对象
      */
+    @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
-    Single<Optional<ParagraphEntity>> getParagraphOptionalSingleById(long paragraphId);
+    Single<Optional<ParagraphEntityModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 插入一条日记段落

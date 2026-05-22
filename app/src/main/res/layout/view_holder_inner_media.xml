@@ -9,7 +9,7 @@
         android:id="@+id/image_view_container"
         style="@style/CardStyleBase"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 

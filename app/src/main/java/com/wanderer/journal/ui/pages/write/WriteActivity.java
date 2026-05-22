@@ -48,6 +48,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -216,8 +217,10 @@ public class WriteActivity extends AppCompatActivity {
                             }
 
                             //启用编辑模式
-                            ParagraphEntity paragraph = paragraphOptional.get();
-                            setEditMode(true, paragraph);
+                            ParagraphEntityModel model = paragraphOptional.get();
+                            ParagraphEntity paragraph = model.getParagraph();
+                            List<MediaEntity> mediaList = model.getMediaList();
+                            setEditMode(true, paragraph, mediaList);
                         }
                 )
         );
@@ -383,7 +386,7 @@ public class WriteActivity extends AppCompatActivity {
                                     addParagraph(content, succeedFileUriList);
                                 } else {
                                     updateParagraphContent(content, modifyingParagraph, succeedFileUriList);
-                                    setEditMode(false, null);
+                                    setEditMode(false, null, null);
                                 }
                             }
                     )
@@ -429,7 +432,7 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         //内容编辑关闭按钮
-        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null));
+        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null, null));
     }
 
     /**
@@ -438,7 +441,9 @@ public class WriteActivity extends AppCompatActivity {
     private void initParagraphRecycler() {
         //设置适配器
         ParagraphAdapter adapter = new ParagraphAdapter(
-                (paragraph, view) -> {
+                (dataModel, view) -> {
+                    ParagraphEntity paragraph = dataModel.getParagraph();
+
                     //先收起输入法
                     ImmHelper.hideImm(binding.contentTextInput);
 
@@ -447,11 +452,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     menu.setOnMenuItemClickListener(item -> {
                         if (item.getItemId() == R.id.action_modify_content) {
-                            //保存旧段落引用
-                            modifyingParagraph = paragraph;
-
-                            //更新UI到编辑模式
-                            setEditMode(true, paragraph);
+                            setEditMode(true, paragraph, dataModel.getMediaList());
 
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
@@ -696,7 +697,7 @@ public class WriteActivity extends AppCompatActivity {
         editBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setEditMode(false, null);
+                setEditMode(false, null, null);
                 backHelper.unregisterHandler(this);
 
                 //一并清除媒体列表
@@ -1048,7 +1049,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     //判断是否为正在编辑的段落，是则退出编辑
                     if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
-                        setEditMode(false, null);
+                        setEditMode(false, null, null);
                     }
 
                     //多线程删除段落
@@ -1073,8 +1074,9 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param isEditMode         是否启用编辑模式
      * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
+     * @param mediaList          正在编辑的段落的媒体列表
      */
-    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph) {
+    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph, List<MediaEntity> mediaList) {
         //如果启用则注册返回处理器
         if (isEditMode) {
             backHelper.registerHandler(editBackHandler);
@@ -1105,6 +1107,15 @@ public class WriteActivity extends AppCompatActivity {
             this.modifyingParagraph = null;
             binding.contentEditCard.setVisibility(View.GONE);
             binding.contentTextInput.setText(null);         //清空输入框
+        }
+
+        //如果带有媒体，则显示媒体列表，否则关闭
+        if (mediaList != null && !mediaList.isEmpty()) {
+            mediaAdapter.submitList(new ArrayList<>(mediaList));
+            setMediaRecyclerVisible(true);
+        } else {
+            mediaAdapter.submitList(new ArrayList<>());
+            setMediaRecyclerVisible(false);
         }
     }
 

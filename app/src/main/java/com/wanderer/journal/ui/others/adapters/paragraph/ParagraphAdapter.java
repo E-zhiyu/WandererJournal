@@ -15,6 +15,7 @@ import com.google.android.material.chip.Chip;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.enums.RadiusStyle;
@@ -50,9 +51,12 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
                 List<CrossRefWithEmotion> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
                 List<CrossRefWithEmotion> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
+                List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
                         oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime()) &&
-                        oldEmotionList.equals(newEmotionList);
+                        oldEmotionList.equals(newEmotionList) &&
+                        oldMediaList.equals(newMediaList);
             } else {
                 return true;
             }
@@ -63,17 +67,17 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     private final OnClickListener listener;
 
     public interface ViewHolderListener {
-        void onClicked(ParagraphEntity paragraph, View view);
+        void onClicked(ParagraphEntityModel dataModel, View view);
     }
 
     public interface OnClickListener {
         /**
          * 段落被点击的回调
          *
-         * @param paragraph 被点击的段落
+         * @param dataModel 点击的段落的数据实例
          * @param view      用于显示PopupMenu的视图
          */
-        void onClicked(ParagraphEntity paragraph, View view);
+        void onClicked(ParagraphEntityModel dataModel, View view);
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
@@ -87,7 +91,8 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
-        ParagraphEntity paragraph = null;   //段落实例
+        private ParagraphEntityModel data = null;   //数据实例
+
 
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
@@ -98,21 +103,21 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //设置监听器
             binding.getRoot().setOnClickListener(view -> {
-                if (paragraph == null) {
+                if (data == null) {
                     return;
                 }
 
-                listener.onClicked(paragraph, binding.getRoot());
+                listener.onClicked(data, binding.getRoot());
             });
         }
 
         /**
          * 将ViewHolder与数据实例绑定
          *
-         * @param paragraph 段落实例
+         * @param data 数据实例
          */
-        public void bindItem(ParagraphEntity paragraph) {
-            this.paragraph = paragraph;
+        public void bindItem(ParagraphEntityModel data) {
+            this.data = data;
         }
     }
 
@@ -184,15 +189,16 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         }
 
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+            ParagraphEntityModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
+            ParagraphEntity paragraph = dataModel.getParagraph();
             ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();
 
             //绑定数据原型
-            itemHolder.bindItem(paragraph);
+            itemHolder.bindItem(dataModel);
 
             //媒体列表
-            List<MediaEntity> mediaList = ((ParagraphUiModel.Item) uiModel).model.getMediaList();
+            List<MediaEntity> mediaList = dataModel.getMediaList();
             if (mediaList != null && !mediaList.isEmpty()) {
                 //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
                 int spanCount = Math.min(mediaList.size(), 3);
@@ -216,7 +222,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             itemHolder.binding.contentText.setText(content);
 
             //情绪标签
-            List<CrossRefWithEmotion> emotionList = ((ParagraphUiModel.Item) uiModel).model.getEmotionList();
+            List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {
