@@ -275,6 +275,9 @@ public class WriteActivity extends AppCompatActivity {
                             .setTitle("删除媒体")
                             .setMessage(message)
                             .setPositiveButton("确定", (dialogInterface, i) -> {
+                                //退出多选
+                                selectionTracker.clearSelection();
+
                                 //多线程删除媒体
                                 disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
                                         .observeOn(AndroidSchedulers.mainThread())
@@ -294,12 +297,12 @@ public class WriteActivity extends AppCompatActivity {
                                                     currentMediaList.removeAll(mediaListToBeDeleted);
                                                     mediaAdapter.submitList(currentMediaList);
 
-                                                    //退出多选
-                                                    selectionTracker.clearSelection();
-
-                                                    //没有媒体时隐藏
+                                                    //没有媒体时隐藏（延迟270ms）防止因动画竞争导致删除按钮和媒体添加重叠
                                                     if (currentMediaList.isEmpty()) {
-                                                        setMediaRecyclerVisible(false);
+                                                        new Handler(Looper.getMainLooper()).postDelayed(
+                                                                () -> setMediaRecyclerVisible(false),
+                                                                270
+                                                        );
                                                     }
                                                 },
                                                 e -> ExceptionHelper.showExceptionDialog(this, e)
