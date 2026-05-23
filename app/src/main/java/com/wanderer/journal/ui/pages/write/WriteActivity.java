@@ -1044,16 +1044,13 @@ public class WriteActivity extends AppCompatActivity {
                 .setTitle(R.string.delete_paragraph)
                 .setMessage("此操作将删除该段落，确定继续吗？")
                 .setPositiveButton("确定", (dialogInterface, i) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
-                    ParagraphDao dao = db.paragraphDao();
-
                     //判断是否为正在编辑的段落，是则退出编辑
                     if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
                         setEditMode(false, null, null);
                     }
 
                     //多线程删除段落
-                    disposable.add(dao.deleteParagraphCompletable(paragraph)
+                    disposable.add(ParagraphService.deleteParagraphAndMedia(paragraph, this)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(() -> {

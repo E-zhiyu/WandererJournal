@@ -25,6 +25,7 @@ import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.enums.KeyStrings;
 import com.wanderer.journal.enums.LogTags;
@@ -356,22 +357,17 @@ public class DiaryReadActivity extends AppCompatActivity {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.delete_paragraph)
                 .setMessage("此操作将删除该段落，确定继续吗？")
-                .setPositiveButton("确定", (dialogInterface, i) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
-                    ParagraphDao dao = db.paragraphDao();
-
-                    disposable.add(dao.deleteParagraphCompletable(paragraph)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(() -> {
-                                Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落删除成功");
-                                Toast.makeText(this, "段落删除成功", Toast.LENGTH_SHORT).show();
-                            }, throwable -> {
-                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落删除失败");
-                                ExceptionHelper.showExceptionDialog(this, throwable);
-                            })
-                    );
-                })
+                .setPositiveButton("确定", (dialogInterface, i) -> disposable.add(ParagraphService.deleteParagraphAndMedia(paragraph, this)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(() -> {
+                            Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落删除成功");
+                            Toast.makeText(this, "段落删除成功", Toast.LENGTH_SHORT).show();
+                        }, throwable -> {
+                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落删除失败");
+                            ExceptionHelper.showExceptionDialog(this, throwable);
+                        })
+                ))
                 .setNegativeButton("取消", null)
                 .show();
     }

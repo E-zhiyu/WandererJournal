@@ -183,10 +183,9 @@ public interface ParagraphDao {
      * 删除段落
      *
      * @param paragraph 待删除的段落实例
-     * @return 是否成功
      */
     @Delete
-    Completable deleteParagraphCompletable(ParagraphEntity paragraph);
+    void deleteParagraph(ParagraphEntity paragraph);
 
     /**
      * 删除某个日期段的段落

@@ -51,6 +51,15 @@ public interface MediaDao {
     }
 
     /**
+     * 通过段落 ID 获取其绑定的媒体数据
+     *
+     * @param paragraphId 段落 ID
+     * @return 媒体实体列表
+     */
+    @Query("SELECT * FROM medias WHERE parentParagraphId = :paragraphId")
+    List<MediaEntity> getMediaByParagraphId(long paragraphId);
+
+    /**
      * 读取所有数据用于导出
      *
      * @return 媒体实体列表
