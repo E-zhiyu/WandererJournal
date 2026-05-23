@@ -15,7 +15,10 @@ import androidx.room.PrimaryKey;
                 childColumns = "parentParagraphId", //子列名
                 onDelete = ForeignKey.CASCADE
         ),
-        indices = {@Index("parentParagraphId")}     //索引
+        indices = {
+                @Index("parentParagraphId"),
+                @Index("mediaId")
+        }
 )
 public class MediaEntity {
     @PrimaryKey(autoGenerate = true)

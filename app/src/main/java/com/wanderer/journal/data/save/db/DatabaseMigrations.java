@@ -20,4 +20,12 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_paragraphs_paragraphId` ON `paragraphs` (`paragraphId`)");
         }
     };
+
+    //媒体表添加媒体 ID 的索引
+    public static final Migration MIGRATION_3_4 = new Migration(3,4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_medias_mediaId` ON `medias` (`mediaId`)");
+        }
+    };
 }

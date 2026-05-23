@@ -27,7 +27,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
                 EmotionTagEntity.class,
                 EmotionParagraphRefEntity.class
         },
-        version = 3
+        version = 4
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -53,7 +53,8 @@ public abstract class DiaryDatabase extends RoomDatabase {
                             )
                             .addMigrations(
                                     DatabaseMigrations.MIGRATION_1_2,
-                                    DatabaseMigrations.MIGRATION_2_3
+                                    DatabaseMigrations.MIGRATION_2_3,
+                                    DatabaseMigrations.MIGRATION_3_4
                             )
                             .build();
                 }
