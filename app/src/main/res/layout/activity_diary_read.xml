@@ -18,13 +18,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.google.android.material.search.SearchBar
-                android:id="@+id/content_search_bar"
-                style="@style/Widget.Material3Expressive.SearchBar"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/search_for_diary_content"
-                app:layout_scrollFlags="scroll|enterAlways|snap" />
+                android:background="?attr/colorSurface"
+                app:layout_scrollFlags="scroll|enterAlways|snap">
+
+                <com.google.android.material.search.SearchBar
+                    android:id="@+id/content_search_bar"
+                    style="@style/Widget.Material3Expressive.SearchBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/search_for_diary_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
         <!-- 段落列表 -->
