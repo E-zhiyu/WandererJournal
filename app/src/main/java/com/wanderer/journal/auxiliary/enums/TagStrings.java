@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums;
+package com.wanderer.journal.auxiliary.enums;
 
 public enum TagStrings {
     PARAGRAPH_CONTENT_MODIFY_SHEET("paragraph_content_modify_sheet"),

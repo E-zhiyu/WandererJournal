@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.statistics;
+package com.wanderer.journal.ui.pages;
 
 import android.os.Bundle;
 

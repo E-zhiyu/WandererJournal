@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.read;
+package com.wanderer.journal.ui.pages;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,9 +27,9 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
-import com.wanderer.journal.enums.KeyStrings;
-import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
@@ -37,7 +37,6 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
-import com.wanderer.journal.ui.pages.write.WriteActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

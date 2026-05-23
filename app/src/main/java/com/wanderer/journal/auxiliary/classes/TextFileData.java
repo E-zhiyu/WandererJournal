@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers.classes;
+package com.wanderer.journal.auxiliary.classes;
 
 import java.time.LocalDateTime;
 

@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import org.jetbrains.annotations.Contract;

@@ -12,7 +12,7 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 
 
 import java.time.Instant;

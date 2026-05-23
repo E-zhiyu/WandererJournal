@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums;
+package com.wanderer.journal.auxiliary.enums;
 
 public enum RadiusStyle {
     TOP,    //顶部

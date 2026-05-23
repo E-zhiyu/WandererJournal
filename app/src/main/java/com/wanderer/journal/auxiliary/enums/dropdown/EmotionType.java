@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums.dropdown;
+package com.wanderer.journal.auxiliary.enums.dropdown;
 
 public enum EmotionType {
     POSITIVE("积极的"),

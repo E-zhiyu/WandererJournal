@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums;
+package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
     EMOTION_TAG_ID("emotion_tag_id"),                   //情绪标签的 ID

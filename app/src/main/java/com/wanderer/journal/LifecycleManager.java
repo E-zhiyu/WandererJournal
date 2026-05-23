@@ -17,8 +17,8 @@ import androidx.biometric.BiometricManager;
 import androidx.fragment.app.FragmentActivity;
 
 import com.wanderer.journal.data.save.preference.SecurityPreference;
-import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.enums.options.AuthOpportunity;
+import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.options.AuthOpportunity;
 import com.wanderer.journal.helpers.BiometricHelper;
 
 import java.util.List;

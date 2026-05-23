@@ -29,7 +29,7 @@ import com.google.android.material.textview.MaterialTextView;
 import com.hjq.device.compat.DeviceOs;
 import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.R;
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 
 import java.util.ArrayList;
 import java.util.HashMap;

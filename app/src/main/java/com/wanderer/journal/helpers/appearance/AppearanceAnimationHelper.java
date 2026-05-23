@@ -17,7 +17,7 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
 

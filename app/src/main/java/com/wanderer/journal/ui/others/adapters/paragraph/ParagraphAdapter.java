@@ -18,7 +18,7 @@ import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 

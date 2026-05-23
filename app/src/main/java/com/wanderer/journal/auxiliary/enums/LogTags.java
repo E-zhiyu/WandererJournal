@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums;
+package com.wanderer.journal.auxiliary.enums;
 
 public enum LogTags {
     DIARY_FRAGMENT("DiaryFragment"),

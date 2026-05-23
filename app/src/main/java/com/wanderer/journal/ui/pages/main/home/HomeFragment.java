@@ -18,8 +18,8 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
-import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
+import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.StatisticsActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

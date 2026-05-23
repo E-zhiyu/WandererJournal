@@ -10,7 +10,7 @@ import androidx.annotation.StringRes;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 
 public class SettingSwitchView extends SettingOptionViewBase<MaterialSwitch, CompoundButton.OnCheckedChangeListener> {
     /**

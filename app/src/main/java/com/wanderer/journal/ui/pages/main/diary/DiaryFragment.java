@@ -24,13 +24,13 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
-import com.wanderer.journal.enums.KeyStrings;
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
-import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.write.WriteActivity;
+import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

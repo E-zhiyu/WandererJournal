@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.write;
+package com.wanderer.journal.ui.pages;
 
 import android.Manifest;
 import android.content.Intent;
@@ -53,10 +53,10 @@ import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
-import com.wanderer.journal.enums.DirectoryPaths;
-import com.wanderer.journal.enums.KeyStrings;
-import com.wanderer.journal.enums.LogTags;
-import com.wanderer.journal.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;

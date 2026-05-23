@@ -17,7 +17,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.enums.BackupDataType;
+import com.wanderer.journal.auxiliary.enums.BackupDataType;
 
 import java.util.List;
 

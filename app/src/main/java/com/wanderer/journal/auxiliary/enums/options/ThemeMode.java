@@ -1,4 +1,4 @@
-package com.wanderer.journal.enums.options;
+package com.wanderer.journal.auxiliary.enums.options;
 
 import androidx.appcompat.app.AppCompatDelegate;
 
