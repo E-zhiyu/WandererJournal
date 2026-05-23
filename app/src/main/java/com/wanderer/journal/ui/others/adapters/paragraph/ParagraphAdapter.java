@@ -207,7 +207,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
 
                 //绑定数据
-                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(size);
+                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(size, spanCount);
                 itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
                 mediaAdapter.submitList(mediaList);
 
