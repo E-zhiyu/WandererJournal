@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -21,6 +24,7 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -207,7 +211,23 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
 
                 //绑定数据
-                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(size, spanCount);
+                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
+                        size,
+                        spanCount,
+                        (mediaPosition, view) -> {
+                            String[] uriStrArray = mediaList.stream()
+                                    .map(MediaEntity::getFileUri)
+                                    .map(Uri::toString)
+                                    .toArray(String[]::new);
+
+                            //实例化 Intent 并放入数据
+                            Intent skip2FullScreen = new Intent(context, FullScreenMediaActivity.class);
+                            skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                            skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), mediaPosition);
+
+                            context.startActivity(skip2FullScreen);
+                        }
+                );
                 itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
                 mediaAdapter.submitList(mediaList);
 

@@ -22,8 +22,9 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 
 public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, ParagraphInnerMediaAdapter.MediaViewHolder> {
-    private final int spanCount;                //媒体列数
-    private final RequestOptions glideOptions;  //图片显示设置
+    private final int spanCount;                        //媒体列数
+    private final RequestOptions glideOptions;          //图片显示设置
+    private final OnClickedListener clickedListener;    //点击监听器
     private final static DiffUtil.ItemCallback<MediaEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull MediaEntity oldItem, @NonNull MediaEntity newItem) {
@@ -39,10 +40,21 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         ViewHolderInnerMediaBinding binding;
 
-        public MediaViewHolder(@NonNull ViewHolderInnerMediaBinding binding) {
+        public MediaViewHolder(@NonNull ViewHolderInnerMediaBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
+
+            //设置点击监听器
+            binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition(), view));
         }
+    }
+
+    public interface ViewHolderListener {
+        void onClicked(int position, View view);
+    }
+
+    public interface OnClickedListener {
+        void onClicked(int position, View view);
     }
 
     /**
@@ -51,9 +63,10 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
      * @param size      显示图片大小
      * @param spanCount 媒体列数
      */
-    protected ParagraphInnerMediaAdapter(int size, int spanCount) {
+    protected ParagraphInnerMediaAdapter(int size, int spanCount, OnClickedListener clickedListener) {
         super(ITEM_CALLBACK);
         this.spanCount = spanCount;
+        this.clickedListener = clickedListener;
 
         //初始化Glide设置
         glideOptions = new RequestOptions()
@@ -71,7 +84,10 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
                 parent,
                 false
         );
-        return new ParagraphInnerMediaAdapter.MediaViewHolder(binding);
+        return new ParagraphInnerMediaAdapter.MediaViewHolder(
+                binding,
+                clickedListener::onClicked
+        );
     }
 
     @Override
