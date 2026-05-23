@@ -7,6 +7,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -46,6 +47,15 @@ public class FullScreenMediaActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
+
+        //设置返回监听
+        OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                supportFinishAfterTransition();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
     /**

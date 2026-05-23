@@ -27,6 +27,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -42,6 +43,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -74,6 +76,7 @@ import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
+import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -470,6 +473,25 @@ public class WriteActivity extends AppCompatActivity {
                     });
 
                     menu.show();
+                },
+                (position, mediaView, mediaList) -> {
+                    String[] uriStrArray = mediaList.stream()
+                            .map(MediaEntity::getFileUri)
+                            .map(Uri::toString)
+                            .toArray(String[]::new);
+
+                    //实例化 Intent 并放入数据
+                    Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
+                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            this,
+                            mediaView,
+                            TransitionName.PARAGRAPH_MEDIA.getS()
+                    );
+
+                    startActivity(skip2FullScreen, options.toBundle());
                 }
         );
 

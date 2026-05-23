@@ -44,6 +44,9 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             super(binding.getRoot());
             this.binding = binding;
 
+            //设置触摸监听
+            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+
             //设置点击监听器
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition(), view));
         }

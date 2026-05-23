@@ -1,8 +1,6 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +12,6 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -24,7 +21,6 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,13 +64,14 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final OnClickListener listener;
+    private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
+    private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
 
     public interface ViewHolderListener {
         void onClicked(ParagraphEntityModel dataModel, View view);
     }
 
-    public interface OnClickListener {
+    public interface OnParagraphClickListener {
         /**
          * 段落被点击的回调
          *
@@ -82,6 +79,17 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
          * @param view      用于显示PopupMenu的视图
          */
         void onClicked(ParagraphEntityModel dataModel, View view);
+    }
+
+    public interface OnMediaClickedListener {
+        /**
+         * 媒体视图点击监听
+         *
+         * @param position  被点击的媒体所在的位置
+         * @param mediaView 被点击的媒体视图
+         * @param mediaList 同一个段落的媒体列表
+         */
+        void onClicked(int position, View mediaView, List<MediaEntity> mediaList);
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
@@ -128,11 +136,15 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     /**
      * 段落适配器构造方法
      *
-     * @param listener 段落点击监听器
+     * @param paragraphClickListener 段落点击监听器
      */
-    public ParagraphAdapter(OnClickListener listener) {
+    public ParagraphAdapter(
+            OnParagraphClickListener paragraphClickListener,
+            OnMediaClickedListener mediaClickedListener
+    ) {
         super(ITEM_CALLBACK);
-        this.listener = listener;
+        this.paragraphClickListener = paragraphClickListener;
+        this.mediaClickedListener = mediaClickedListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -168,7 +180,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             );
             return new ParagraphViewHolder(
                     binding,
-                    listener::onClicked
+                    paragraphClickListener::onClicked
             );
         } else {
             ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
@@ -214,19 +226,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
                         size,
                         spanCount,
-                        (mediaPosition, view) -> {
-                            String[] uriStrArray = mediaList.stream()
-                                    .map(MediaEntity::getFileUri)
-                                    .map(Uri::toString)
-                                    .toArray(String[]::new);
-
-                            //实例化 Intent 并放入数据
-                            Intent skip2FullScreen = new Intent(context, FullScreenMediaActivity.class);
-                            skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                            skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), mediaPosition);
-
-                            context.startActivity(skip2FullScreen);
-                        }
+                        (mediaPosition, view) -> mediaClickedListener.onClicked(mediaPosition, view, mediaList)
                 );
                 itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
                 mediaAdapter.submitList(mediaList);

@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -11,6 +12,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -20,10 +22,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
@@ -37,6 +41,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -167,6 +172,25 @@ public class DiaryReadActivity extends AppCompatActivity {
                     });
 
                     menu.show();
+                },
+                (position, mediaView, mediaList) -> {
+                    String[] uriStrArray = mediaList.stream()
+                            .map(MediaEntity::getFileUri)
+                            .map(Uri::toString)
+                            .toArray(String[]::new);
+
+                    //实例化 Intent 并放入数据
+                    Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
+                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            this,
+                            mediaView,
+                            TransitionName.PARAGRAPH_MEDIA.getS()
+                    );
+
+                    startActivity(skip2FullScreen, options.toBundle());
                 }
         );
         adapter.addLoadStateListener(loadStates -> {

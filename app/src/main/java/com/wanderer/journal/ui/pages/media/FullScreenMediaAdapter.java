@@ -23,23 +23,15 @@ public class FullScreenMediaAdapter
             super(binding.getRoot());
             this.binding = binding;
         }
-
-        /**
-         * 通过Uri设置图片资源
-         *
-         * @param context 上下文
-         * @param uri     图片Uri
-         */
-        public void setPicture(Context context, Uri uri) {
-            Glide.with(context)
-                    .load(uri)
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .into(binding.photoView);
-        }
     }
 
-    public FullScreenMediaAdapter(String[] pictureUris) {
-        this.pictureUris = pictureUris;
+    /**
+     * 全屏媒体适配器构造方法
+     *
+     * @param mediaUris 媒体 Uri 字符串数组
+     */
+    public FullScreenMediaAdapter(String[] mediaUris) {
+        this.pictureUris = mediaUris;
     }
 
     @NonNull
@@ -55,8 +47,12 @@ public class FullScreenMediaAdapter
 
     @Override
     public void onBindViewHolder(@NonNull FullScreenPictureViewHolder holder, int position) {
-        Uri pictureUri = Uri.parse(pictureUris[position]);
-        holder.setPicture(holder.itemView.getContext(), pictureUri);
+        Uri mediaUri = Uri.parse(pictureUris[position]);
+        Context context = holder.itemView.getContext();
+        Glide.with(context)
+                .load(mediaUri)
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .into(holder.binding.photoView);
     }
 
     @Override
