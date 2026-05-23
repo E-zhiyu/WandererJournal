@@ -240,23 +240,18 @@ public class DiaryFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete_diary)
                 .setMessage("此操作将删除该日记的所有内容，确认继续吗？")
-                .setPositiveButton("确定", (dialogInterface, i) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-                    DiaryDao dao = db.diaryDao();
-
-                    disposable.add(dao.deleteDiaryCompletable(diary)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(() -> {
-                                        Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
-                                        Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(requireContext(), throwable);
-                                        Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
-                                    })
-                    );
-                })
+                .setPositiveButton("确定", (dialogInterface, i) -> disposable.add(DiaryService.deleteDiaryAndParagraphMedias(diary, requireContext())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(() -> {
+                                    Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
+                                    Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
+                                },
+                                throwable -> {
+                                    ExceptionHelper.showExceptionDialog(requireContext(), throwable);
+                                    Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
+                                })
+                ))
                 .setNegativeButton("取消", null)
                 .show();
     }
