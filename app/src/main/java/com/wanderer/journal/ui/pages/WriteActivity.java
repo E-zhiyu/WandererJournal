@@ -325,6 +325,13 @@ public class WriteActivity extends AppCompatActivity {
 
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
+            //获取输入内容
+            String content = String.valueOf(binding.contentTextInput.getText());
+            if (content.trim().isEmpty()) {
+                return;
+            }
+
+            //显示进度条对话框
             ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
                     this,
                     "保存媒体文件",
@@ -335,19 +342,18 @@ public class WriteActivity extends AppCompatActivity {
                         disposable.clear();
                         Toast.makeText(this, "已取消媒体文件保存", Toast.LENGTH_SHORT).show();
                     })
-                    .show();
-
-            //获取输入内容
-            String content = String.valueOf(binding.contentTextInput.getText());
-            if (content.isEmpty()) {
-                return;
-            }
+                    .create();
 
             //获取新添加的媒体的 Uri
             List<Uri> newMediaUriList = mediaAdapter.getCurrentList().stream()
                     .filter(media -> media.getMediaId() == 0)   //只需要新添加的
                     .map(MediaEntity::getFileUri)
                     .collect(Collectors.toList());
+
+            //如果有新媒体，则显示对话框
+            if (!newMediaUriList.isEmpty()) {
+                dialog.show();
+            }
 
             //创建移动任务，并逐个返回移动成功的 File 型 Uri
             Observable<Uri> moveTask = Observable.create(emitter -> {
@@ -874,7 +880,7 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMapCompletable(diaryId -> {
-                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content, LocalDateTime.now());
+                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content.trim(), LocalDateTime.now());
                     return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())

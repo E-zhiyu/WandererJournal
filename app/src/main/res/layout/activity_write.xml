@@ -49,13 +49,14 @@
         style="@style/RightAngleCardStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/content_edit_card">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/media_recycler"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:clipToPadding="false"
             android:orientation="horizontal"
             android:paddingStart="20dp"

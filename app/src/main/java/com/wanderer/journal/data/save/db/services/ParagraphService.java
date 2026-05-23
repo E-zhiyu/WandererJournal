@@ -26,13 +26,16 @@ public class ParagraphService {
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
     public static Completable insertParagraphWithMedia(
-            ParagraphEntity paragraph,
+            @NonNull ParagraphEntity paragraph,
             List<Uri> newMediaList,
             @NonNull DiaryDatabase db
     ) {
+        paragraph.setContent(paragraph.getContent().trim());
         return Completable.fromAction(() -> {
-            ParagraphDao paragraphDao = db.paragraphDao();
-            paragraphDao.insertParagraph(paragraph, newMediaList, db);
+            if (!paragraph.getContent().isEmpty()) {
+                ParagraphDao paragraphDao = db.paragraphDao();
+                paragraphDao.insertParagraph(paragraph, newMediaList, db);
+            }
         });
     }
 
