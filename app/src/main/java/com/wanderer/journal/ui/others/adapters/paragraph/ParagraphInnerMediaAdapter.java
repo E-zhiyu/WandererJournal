@@ -69,10 +69,25 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
     public void onBindViewHolder(@NonNull ParagraphInnerMediaAdapter.MediaViewHolder holder, int position) {
         MediaEntity media = getItem(position);
 
-        //通过 Glide 显示图片
-        Glide.with(holder.itemView.getContext())
-                .load(media.getFileUri())
-                .apply(glideOptions)
-                .into(holder.binding.imageView);
+        //停止旧图片加载（适配RecyclerView的复用逻辑）
+        Glide.with(holder.itemView.getContext()).clear(holder.binding.imageView);
+
+        //等待布局完成后指定高度
+        holder.binding.imageView.post(() -> {
+            int w = holder.binding.imageView.getWidth();
+
+            //确保拿到了有效宽度，并且当前高度还不等于宽度（避免重复设置触发死循环）
+            if (w > 0 && holder.binding.imageView.getLayoutParams().height != w) {
+                ViewGroup.LayoutParams params = holder.binding.imageView.getLayoutParams();
+                params.height = w;  //强制将高度设为与宽度一致，形成正方形
+                holder.binding.imageView.setLayoutParams(params);
+            }
+
+            //通过 Glide 显示图片
+            Glide.with(holder.itemView.getContext())
+                    .load(media.getFileUri())
+                    .apply(glideOptions)
+                    .into(holder.binding.imageView);
+        });
     }
 }
