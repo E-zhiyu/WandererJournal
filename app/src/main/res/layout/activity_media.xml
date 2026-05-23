@@ -12,6 +12,7 @@
         android:transitionName="paragraph_media" />
 
     <com.google.android.material.button.MaterialButtonGroup
+        android:id="@+id/btn_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="20dp"

@@ -1,8 +1,16 @@
 package com.wanderer.journal.ui.pages.media;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.transition.Transition;
+import android.transition.TransitionListenerAdapter;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
@@ -11,12 +19,14 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.databinding.ActivityMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.io.File;
@@ -41,12 +51,19 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             return insets;
         });
 
         receiveIntent();
         initViews();
+        getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                //动画播放完毕后隐藏状态栏
+                setFullScreen();
+            }
+        });
 
         //设置返回监听
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
@@ -84,6 +101,44 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         //分享媒体
         binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
         AppearanceAnimationHelper.attachMorphAnimation(binding.shareMediaBtn);
+
+        //按钮分组设置到底部的边距
+        ViewEdgeHelper.setMarginToNavigation(binding.btnGroup, 30, this);
+    }
+
+    /**
+     * 设置全屏，隐藏状态栏和导航栏
+     */
+    private void setFullScreen() {
+        Window window = getWindow();
+
+        //设置导航栏和状态栏为透明
+        window.setStatusBarColor(Color.TRANSPARENT);
+        window.setNavigationBarColor(Color.TRANSPARENT);
+
+        // 确保当前 Window 铺满全屏
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        //根据不同 API 使用不同的方法
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            //Android 11 (API 30) 及以上的全新标准写法
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                //隐藏状态栏
+                controller.hide(WindowInsets.Type.statusBars());
+
+                //设置状态栏行为：用户从边缘滑动手势时，临时半透明拉出系统栏，不影响应用本身的布局
+                controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            //针对 Android 10 及以下老系统的兼容写法
+            View decorView = getWindow().getDecorView();
+            int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN // 隐藏状态栏
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY; // 粘性沉浸
+            decorView.setSystemUiVisibility(uiOptions);
+        }
     }
 
     /**
