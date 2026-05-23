@@ -21,6 +21,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.databinding.ActivityMediaBinding;
@@ -111,6 +112,11 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void setFullScreen() {
         Window window = getWindow();
+
+        // 强制让临时滑出的系统栏图标和文字变成白色，确保在黑底大图上清晰可见
+        WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(window, window.getDecorView());
+        insetsController.setAppearanceLightStatusBars(false);
+        insetsController.setAppearanceLightNavigationBars(false);
 
         //设置导航栏和状态栏为透明
         window.setStatusBarColor(Color.TRANSPARENT);
