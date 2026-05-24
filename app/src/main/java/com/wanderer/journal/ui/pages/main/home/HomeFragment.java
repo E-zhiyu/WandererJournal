@@ -170,8 +170,8 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.paragraphCountCard.setOnClickListener(view -> {
-            Intent skip2DiaryRead = new Intent(requireContext(), DiaryReadActivity.class);
-            startActivity(skip2DiaryRead);
+            Intent skip2DiaryStatistics = new Intent(requireContext(), StatisticsActivity.class);
+            startActivity(skip2DiaryStatistics);
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.paragraphCountCard);
 
