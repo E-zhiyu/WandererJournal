@@ -155,32 +155,32 @@
                     android:text="@string/less" />
 
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginEnd="2dp"
                     android:background="@drawable/bg_pixel_empty" />
 
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginEnd="2dp"
                     android:background="@drawable/bg_pixel_few" />
 
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginEnd="2dp"
                     android:background="@drawable/bg_pixel_moderate" />
 
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginEnd="2dp"
                     android:background="@drawable/bg_pixel_many" />
 
                 <View
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:layout_marginEnd="5dp"
                     android:background="@drawable/bg_pixel_numerous" />
 

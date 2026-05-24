@@ -28,6 +28,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class StatisticsActivity extends AppCompatActivity {
     private ActivityStatisticsBinding binding;  //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //订阅列表
+    private MonthHeaderDecoration headerDecoration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,7 +158,15 @@ public class StatisticsActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        adapter::submitList,
+                        modelList -> {
+                            adapter.submitList(modelList);
+
+                            if (headerDecoration != null) {
+                                binding.memeryPixelRecycler.removeItemDecoration(headerDecoration);
+                            }
+                            headerDecoration = new MonthHeaderDecoration(modelList, this);
+                            binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
+                        },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
