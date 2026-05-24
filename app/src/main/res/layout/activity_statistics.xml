@@ -126,15 +126,100 @@
                 app:barrierDirection="bottom"
                 app:constraint_referenced_ids="continuous_count_card,max_continuous_card" />
 
+            <!-- 左侧固定星期（不跟随滚动） -->
+            <!-- layout_marginTop="16dp" 用于错开顶部月份占用的 16dp 高度 -->
+            <LinearLayout
+                android:id="@+id/week_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="6dp"
+                android:gravity="end|center_vertical"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="@id/memery_pixel_recycler"
+                app:layout_constraintEnd_toStartOf="@id/memery_pixel_recycler"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/memery_pixel_recycler">
+
+                <!-- 周一 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周二 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/tuesday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周三 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周四 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/thursday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周五 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周六 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/saturday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周日 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text=""
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 说明：这里的 android:layout_height="16dp"
+                     必须等于 (方块高度12dp + 上下margin各2dp = 16dp)，这样才能完美垂直对齐！ -->
+            </LinearLayout>
+
             <!-- 记忆像素列表，类似于GitHub贡献墙 -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/memery_pixel_recycler"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
                 app:layout_constraintBottom_toTopOf="@id/pixel_explanation_layout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/week_layout"
                 app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier" />
 
             <LinearLayout
@@ -143,8 +228,8 @@
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingEnd="10dp"
                 android:paddingStart="0dp"
+                android:paddingEnd="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/memery_pixel_recycler">
 

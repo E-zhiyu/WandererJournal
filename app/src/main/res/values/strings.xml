@@ -78,6 +78,9 @@
     <string name="share_picture_btn">分享图片的按钮</string>
     <string name="less">少</string>
     <string name="more">多</string>
+    <string name="tuesday">周二</string>
+    <string name="saturday">周六</string>
+    <string name="thursday">周四</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面</item>
