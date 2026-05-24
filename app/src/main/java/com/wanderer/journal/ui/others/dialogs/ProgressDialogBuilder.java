@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 import com.google.android.material.textview.MaterialTextView;
@@ -35,7 +36,6 @@ public class ProgressDialogBuilder
         progressIndicator = binding.progressIndicator;
         progressText = binding.progressText;
         subTitleText = binding.subTitleText;
-        subTitleText.setText(originSubTitle);
 
         //默认为不确定进度模式
         setIndeterminate(true);
@@ -53,6 +53,12 @@ public class ProgressDialogBuilder
     public CustomDialogBuilderBase<DialogInterface.OnClickListener, DialogInterface.OnClickListener> setNegativeButton(String btnTitle, DialogInterface.OnClickListener callback) {
         builder.setNegativeButton(btnTitle, callback);
         return this;
+    }
+
+    @Override
+    public AlertDialog show() {
+        subTitleText.setText(originSubTitle);
+        return super.show();
     }
 
     /**

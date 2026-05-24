@@ -6,7 +6,7 @@ import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 
 import com.wanderer.journal.LifecycleManager;
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 
 public class SAFHelper {
     /**

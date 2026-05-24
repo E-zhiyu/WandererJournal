@@ -23,8 +23,8 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
-import com.wanderer.journal.enums.BackupDataType;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.BackupDataType;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.StringHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -573,7 +573,7 @@ public class DataManageActivity extends AppCompatActivity {
                     } else if (currentDate != null) {
                         String content = line.trim();
                         if (!content.isEmpty()) {
-                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atStartOfDay()));
                         }
                     }
 

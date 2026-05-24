@@ -24,13 +24,13 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
-import com.wanderer.journal.enums.KeyStrings;
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
-import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.write.WriteActivity;
+import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -69,6 +69,25 @@ public class DiaryFragment extends Fragment {
         binding.addFab.setOnClickListener(view -> {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
+        });
+        binding.addFab.setOnLongClickListener(view -> {
+            DateTimePickerHelper.selectDate(
+                    LocalDate.now(),
+                    getParentFragmentManager(),
+                    selection -> {
+                        LocalDate date = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        String dateStr = date.format(formatter);
+
+                        //跳转到写日记界面并传递选择的日期
+                        Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), dateStr);
+                        skip2DiaryContent.putExtras(bundle);
+                        startActivity(skip2DiaryContent);
+                    }
+            );
+            return true;
         });
 
         //日期跳转FAB
@@ -240,23 +259,18 @@ public class DiaryFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete_diary)
                 .setMessage("此操作将删除该日记的所有内容，确认继续吗？")
-                .setPositiveButton("确定", (dialogInterface, i) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-                    DiaryDao dao = db.diaryDao();
-
-                    disposable.add(dao.deleteDiaryCompletable(diary)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(() -> {
-                                        Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
-                                        Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(requireContext(), throwable);
-                                        Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
-                                    })
-                    );
-                })
+                .setPositiveButton("确定", (dialogInterface, i) -> disposable.add(DiaryService.deleteDiaryAndParagraphMedias(diary, requireContext())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(() -> {
+                                    Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
+                                    Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
+                                },
+                                throwable -> {
+                                    ExceptionHelper.showExceptionDialog(requireContext(), throwable);
+                                    Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
+                                })
+                ))
                 .setNegativeButton("取消", null)
                 .show();
     }

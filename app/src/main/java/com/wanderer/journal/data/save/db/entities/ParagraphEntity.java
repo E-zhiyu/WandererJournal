@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
         ),
         indices = {
                 @Index("parentDiaryId"),
-                @Index("createTime")
+                @Index("createTime"),
+                @Index("paragraphId")
         }
 )
 @TypeConverters({DateTimeConverter.class})

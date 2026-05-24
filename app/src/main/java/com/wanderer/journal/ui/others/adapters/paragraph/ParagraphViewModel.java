@@ -10,7 +10,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,7 +34,7 @@ public class ParagraphViewModel extends ViewModel {
      * @return 插入分隔视图后的段落数据
      */
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphWithEmotion> pagingData) {
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityModel> pagingData) {
         Executor executor = Runnable::run;
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
@@ -75,7 +75,7 @@ public class ParagraphViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphWithEmotion> pager = new Pager<>(
+                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition, // 动态传入计算出的下标
                             () -> (start != null && end != null)

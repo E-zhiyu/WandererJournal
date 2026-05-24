@@ -65,4 +65,13 @@ public abstract class CustomDialogBuilderBase<P, N> {
     public AlertDialog show() {
         return builder.show();
     }
+
+    /**
+     * 创建对话框实例但不显示
+     *
+     * @return 对话框实例
+     */
+    public AlertDialog create() {
+        return builder.create();
+    }
 }

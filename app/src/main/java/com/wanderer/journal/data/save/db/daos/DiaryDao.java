@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
@@ -163,10 +162,9 @@ public interface DiaryDao {
      * 删除日记
      *
      * @param diary 待删除的日记实例
-     * @return 是否完成
      */
     @Delete
-    Completable deleteDiaryCompletable(DiaryEntity diary);
+    void deleteDiary(DiaryEntity diary);
 
     /**
      * 更新日记日期
