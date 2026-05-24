@@ -31,7 +31,10 @@ import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -89,8 +92,13 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      * 初始化视图
      */
     private void initViews() {
+        //翻页视图
         FullScreenMediaAdapter adapter = new FullScreenMediaAdapter(mediaUriStrings);
         binding.viewPager2.setAdapter(adapter);
+        List<Uri> mediaUriList = Arrays.stream(mediaUriStrings)
+                .map(Uri::parse)
+                .collect(Collectors.toList());
+        adapter.submitList(mediaUriList);
 
         //设置初始位置
         binding.viewPager2.setCurrentItem(startIndex, false);

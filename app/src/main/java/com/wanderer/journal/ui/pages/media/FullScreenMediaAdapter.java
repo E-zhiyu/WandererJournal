@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -13,8 +15,19 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.wanderer.journal.databinding.ViewHolderFullScreenMediaBinding;
 
 public class FullScreenMediaAdapter
-        extends RecyclerView.Adapter<FullScreenMediaAdapter.FullScreenPictureViewHolder> {
+        extends ListAdapter<Uri, FullScreenMediaAdapter.FullScreenPictureViewHolder> {
     private final String[] pictureUris; //图片Uri字符串数组
+    private static final DiffUtil.ItemCallback<Uri> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull Uri oldItem, @NonNull Uri newItem) {
+            return oldItem.equals(newItem);
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull Uri oldItem, @NonNull Uri newItem) {
+            return true;
+        }
+    };
 
     public static class FullScreenPictureViewHolder extends RecyclerView.ViewHolder {
         ViewHolderFullScreenMediaBinding binding;
@@ -31,6 +44,7 @@ public class FullScreenMediaAdapter
      * @param mediaUris 媒体 Uri 字符串数组
      */
     public FullScreenMediaAdapter(String[] mediaUris) {
+        super(ITEM_CALLBACK);
         this.pictureUris = mediaUris;
     }
 
@@ -47,7 +61,7 @@ public class FullScreenMediaAdapter
 
     @Override
     public void onBindViewHolder(@NonNull FullScreenPictureViewHolder holder, int position) {
-        Uri mediaUri = Uri.parse(pictureUris[position]);
+        Uri mediaUri = getItem(position);
         Context context = holder.itemView.getContext();
         Glide.with(context)
                 .load(mediaUri)
