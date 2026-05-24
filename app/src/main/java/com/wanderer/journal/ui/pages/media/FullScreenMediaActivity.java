@@ -65,7 +65,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             @Override
             public void onTransitionEnd(Transition transition) {
                 //动画播放完毕后隐藏状态栏
-                setFullScreen();
+                hideSystemUI();
             }
         });
 
@@ -116,9 +116,9 @@ public class FullScreenMediaActivity extends AppCompatActivity {
     }
 
     /**
-     * 设置全屏，隐藏状态栏和导航栏
+     * 设置全屏，隐藏状态栏
      */
-    private void setFullScreen() {
+    private void hideSystemUI() {
         Window window = getWindow();
 
         // 强制让临时滑出的系统栏图标和文字变成白色，确保在黑底大图上清晰可见
@@ -131,12 +131,12 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         window.setNavigationBarColor(Color.TRANSPARENT);
 
         // 确保当前 Window 铺满全屏
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowCompat.setDecorFitsSystemWindows(window, false);
 
         //根据不同 API 使用不同的方法
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             //Android 11 (API 30) 及以上的全新标准写法
-            WindowInsetsController controller = getWindow().getInsetsController();
+            WindowInsetsController controller = window.getInsetsController();
             if (controller != null) {
                 //隐藏状态栏
                 controller.hide(WindowInsets.Type.statusBars());
@@ -146,7 +146,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             }
         } else {
             //针对 Android 10 及以下老系统的兼容写法
-            View decorView = getWindow().getDecorView();
+            View decorView = window.getDecorView();
             int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_FULLSCREEN // 隐藏状态栏

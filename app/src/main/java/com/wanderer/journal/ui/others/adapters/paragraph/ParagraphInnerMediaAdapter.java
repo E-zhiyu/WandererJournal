@@ -16,6 +16,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -45,10 +46,12 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             this.binding = binding;
 
             //设置触摸监听
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceAnimationHelper.attachMorphAnimation(binding.imageView);
 
             //设置点击监听器
-            binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition(), view));
+            binding.getRoot().setOnClickListener(
+                    view -> listener.onClicked(getBindingAdapterPosition(), view)
+            );
         }
     }
 
@@ -98,7 +101,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
         MediaEntity media = getItem(position);
 
         //设置卡片圆角
-        setRadius(holder.binding.imageViewCard, position);
+//        setRadius(holder.binding.imageViewCard, position);
         setRadius(holder.binding.imageView, position);
 
         //停止旧图片加载（适配RecyclerView的复用逻辑）
@@ -135,8 +138,9 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             return;
         }
 
-        //没有媒体或只有一个媒体时不执行任何操作
-        if (getItemCount() == 0 || getItemCount() == 1) {
+        //只有一个媒体时设置为 Single 类型
+        if (getItemCount() == 1) {
+            AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE);
             return;
         }
 

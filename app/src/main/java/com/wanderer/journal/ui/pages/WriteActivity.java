@@ -125,6 +125,7 @@ public class WriteActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
 
+            //底部输入框卡片
             binding.contentInputLayout.setPadding(
                     ViewEdgeHelper.dpToPx(this, 20),
                     ViewEdgeHelper.dpToPx(this, 10),
