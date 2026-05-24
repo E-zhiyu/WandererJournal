@@ -54,6 +54,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
+import com.wanderer.journal.data.save.preference.DraftPreference;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
@@ -114,6 +115,9 @@ public class WriteActivity extends AppCompatActivity {
     private Uri cameraFileUri = null;                       //相机拍照得到的临时图片 File 类型的 Uri
     private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
+    private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
+    private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
+    private static final int DRAFT_SAVING_DELAY = 3000;     //3s没有修改文本则保存草稿
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,11 +180,30 @@ public class WriteActivity extends AppCompatActivity {
         initViews();
         initLaunchers();
         initOnBackPressedHandlers();
+
+        //第一次加载界面时显示草稿恢复对话框
+        if (savedInstanceState == null) {
+            String draft = DraftPreference.getDraft(this);
+            if (!draft.trim().isEmpty()) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("草稿恢复")
+                        .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
+                        .setPositiveButton("恢复", (dialogInterface, i) ->
+                                binding.contentTextInput.setText(draft.trim())
+                        )
+                        .setNegativeButton("取消", null)
+                        .show();
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        //清空草稿保存任务并直接保存一次草稿
+        draftSavingHandler.removeCallbacks(draftSavingRunnable);
+        saveDraft();
 
         binding = null;
         disposable.dispose();
@@ -438,7 +461,11 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                //清空旧任务
+                draftSavingHandler.removeCallbacks(draftSavingRunnable);
 
+                //添加新任务
+                draftSavingHandler.postDelayed(draftSavingRunnable, DRAFT_SAVING_DELAY);
             }
         });
 
@@ -1223,5 +1250,13 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         mediaAdapter.setSelectMode(isSelectMode);  //切换适配器选择模式
+    }
+
+    /**
+     * 保存草稿到 SharedPreference
+     */
+    private void saveDraft() {
+        String content = String.valueOf(binding.contentTextInput.getText());
+        DraftPreference.setDraft(this, content);
     }
 }
