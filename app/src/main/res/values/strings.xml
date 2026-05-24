@@ -76,6 +76,8 @@
     <string name="btn_of_delete_media">删除媒体按钮</string>
     <string name="save_picture_btn">保存图片到本地的按钮</string>
     <string name="share_picture_btn">分享图片的按钮</string>
+    <string name="less">少</string>
+    <string name="more">多</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面</item>
