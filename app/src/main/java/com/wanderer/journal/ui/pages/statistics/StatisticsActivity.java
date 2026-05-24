@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages;
+package com.wanderer.journal.ui.pages.statistics;
 
 import android.os.Bundle;
 
@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -88,6 +89,9 @@ public class StatisticsActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+
+        //记忆像素
+        initMemeryPixelRecycler();
     }
 
     /**
@@ -142,6 +146,20 @@ public class StatisticsActivity extends AppCompatActivity {
         );
         binding.memeryPixelRecycler.setLayoutManager(layoutManager);
 
-        //TODO:添加适配器
+        MemeryPixelAdapter adapter = new MemeryPixelAdapter();
+        binding.memeryPixelRecycler.setAdapter(adapter);
+
+        //查询数据
+        LocalDate end = LocalDate.now();
+        LocalDate start = LocalDate.ofYearDay(end.getYear(), 1);
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(DiaryService.getMemeryPixelData(start, end, db)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        adapter::submitList,
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
     }
 }

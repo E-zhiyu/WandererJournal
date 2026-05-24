@@ -37,7 +37,7 @@
             android:name=".ui.pages.media.FullScreenMediaActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.StatisticsActivity"
+            android:name=".ui.pages.statistics.StatisticsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"

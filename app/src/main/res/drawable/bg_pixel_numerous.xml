@@ -3,7 +3,7 @@
     android:shape="rectangle"> <!-- 指定形状为矩形 -->
 
     <!-- 填充颜色 -->
-    <solid android:color="@color/contribution_empty" />
+    <solid android:color="@color/contribution_level_4" />
 
     <corners android:radius="3dp" />
 </shape>

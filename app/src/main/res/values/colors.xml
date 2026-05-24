@@ -163,4 +163,11 @@
     <color name="color_surface_container_low_night">#161a25</color>
     <color name="black_translucent">#88000000</color>
     <color name="gray_translucent">#88737685</color>
+
+    <!-- 记忆像素颜色 -->
+    <color name="contribution_level_1">#aceebb</color>
+    <color name="contribution_level_2">#4ac26b</color>
+    <color name="contribution_level_3">#2da44e</color>
+    <color name="contribution_level_4">#116329</color>
+    <color name="contribution_empty">#eff2f5</color>      <!-- 没写日记的浅灰色 -->
 </resources>

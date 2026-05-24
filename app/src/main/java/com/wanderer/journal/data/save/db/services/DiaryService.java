@@ -9,13 +9,16 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountModel;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 public class DiaryService {
@@ -80,6 +83,56 @@ public class DiaryService {
 
             //删除数据库中的记录
             diaryDao.deleteDiary(diary);
+        });
+    }
+
+    /**
+     * 获取记忆像素数据
+     *
+     * @param start 起始日期（包含）
+     * @param end   截止日期（包含）
+     * @return 一个{@link Flowable}实例，包含能够直接提交给适配器的数据模型列表
+     */
+    public static Flowable<List<DiaryParagraphCountModel>> getMemeryPixelData(
+            LocalDate start,
+            LocalDate end,
+            DiaryDatabase db
+    ) {
+        return Flowable.defer(() -> {
+            DiaryDao diaryDao = db.diaryDao();
+
+            //获取有日记的天
+            List<DiaryParagraphCountModel> withDiaryModelList = diaryDao.getDiaryParagraphCount(start, end);
+
+            //将数据放到哈希表中
+            HashMap<LocalDate, Integer> dateMap = new HashMap<>();
+            for (DiaryParagraphCountModel model : withDiaryModelList) {
+                dateMap.put(model.getDiaryDate(), model.getParagraphCount());
+            }
+
+            List<DiaryParagraphCountModel> resultList = new ArrayList<>();
+
+            //填充头部 null 对象，使开始日期对齐（例如：星期一对齐到下标为0）
+            int dayOfWeekValue = start.getDayOfWeek().getValue();
+            int nullCount = dayOfWeekValue - 1;
+            for (int i = 0; i < nullCount; i++) {
+                resultList.add(null);
+            }
+
+            //遍历哈希表填充没有记日记的天
+            int nowDayOfYear = end.getDayOfYear();
+            for (int i = 0; i < nowDayOfYear - 1; i++) {
+                LocalDate date = start.plusDays(i);
+
+                Integer paragraphCount;
+                if (dateMap.containsKey(date) && (paragraphCount = dateMap.get(date)) != null) {
+                    resultList.add(new DiaryParagraphCountModel(date, paragraphCount));
+                } else {
+                    resultList.add(new DiaryParagraphCountModel(date, 0));
+                }
+            }
+
+            return Flowable.just(resultList);
         });
     }
 }

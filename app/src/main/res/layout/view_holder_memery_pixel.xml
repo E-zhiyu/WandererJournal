@@ -3,5 +3,4 @@
     android:id="@+id/view_cube"
     android:layout_width="12dp"
     android:layout_height="12dp"
-    android:layout_margin="2dp"
-    android:background="@drawable/bg_pixel_empty" />
+    android:layout_margin="2dp" />
