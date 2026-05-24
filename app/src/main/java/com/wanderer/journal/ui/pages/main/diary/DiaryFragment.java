@@ -70,6 +70,25 @@ public class DiaryFragment extends Fragment {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
         });
+        binding.addFab.setOnLongClickListener(view -> {
+            DateTimePickerHelper.selectDate(
+                    LocalDate.now(),
+                    getParentFragmentManager(),
+                    selection -> {
+                        LocalDate date = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        String dateStr = date.format(formatter);
+
+                        //跳转到写日记界面并传递选择的日期
+                        Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), dateStr);
+                        skip2DiaryContent.putExtras(bundle);
+                        startActivity(skip2DiaryContent);
+                    }
+            );
+            return true;
+        });
 
         //日期跳转FAB
         AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);

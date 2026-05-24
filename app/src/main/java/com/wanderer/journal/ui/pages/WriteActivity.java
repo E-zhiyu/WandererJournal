@@ -82,6 +82,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -881,7 +882,11 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMapCompletable(diaryId -> {
-                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, content.trim(), LocalDateTime.now());
+                    ParagraphEntity newParagraph = new ParagraphEntity(
+                            diaryId,
+                            content.trim(),
+                            diaryDate.atTime(LocalTime.now())
+                    );
                     return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())
