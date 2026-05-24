@@ -13,8 +13,8 @@ android {
         minSdk 28
         //noinspection OldTargetApi
         targetSdk 36
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 4
+        versionName "0.2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -59,7 +59,7 @@ dependencies {
     implementation libs.rxandroid                   //线程切换
     implementation libs.viewpager2
     implementation libs.swiperefreshlayout
-    implementation libs.glide
+    implementation libs.glide                       //图片显示
     implementation libs.photoview
     implementation libs.devicecompat                //系统名称判断
     implementation libs.biometric                   //生物验证依赖
@@ -73,4 +73,7 @@ dependencies {
     implementation libs.jackson.databind            // JSON 解析
     implementation libs.mapstruct                   // Pojo 与 Entity 转换
     annotationProcessor libs.mapstruct.processor    // Mapstruct 注解处理器
+    implementation libs.documentfile                // 用于解析SAF 返回的指向本地文件的 Uri
+    implementation libs.core                        // Markdown支持
+    implementation libs.recyclerview.selection      // Recycler 多选支持
 }

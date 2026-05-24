@@ -8,7 +8,7 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 
 import java.util.concurrent.Executor;
 

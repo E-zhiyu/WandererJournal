@@ -18,22 +18,27 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagAddModifyBinding;
-import com.wanderer.journal.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.dropdown.EmotionType;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagAddModifyActivity extends AppCompatActivity {
-    private ActivityEmotionTagAddModifyBinding binding; //绑定的XML布局
-    private boolean isModifyMode = false;               //是否为编辑模式
-    private long emotionTagId = 0;                      //正在编辑的情绪标签的 ID
+    private ActivityEmotionTagAddModifyBinding binding;     //绑定的XML布局
+    private boolean isModifyMode = false;                   //是否为编辑模式
+    private long emotionTagId = 0;                          //正在编辑的情绪标签的 ID
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
+    private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +108,8 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         binding.nameInput.setText(name);                                    //名称
         String description = bundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
         binding.descriptionInput.setText(description);                      //描述
+        int emotionTypeOrdinal = bundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
+        emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
     }
 
     /**
@@ -125,6 +132,18 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         });
         binding.nameInput.setOnClickListener(view -> binding.nameLayout.setError(null));
         ImmHelper.showImm(binding.nameInput);   //弹出输入法
+
+        //情绪类型
+        List<String> typeTitleList = Arrays.stream(EmotionType.values())
+                .map(EmotionType::getTitle)
+                .collect(Collectors.toList());
+        NoFilteringArrayAdapter<String> typeAdapter = new NoFilteringArrayAdapter<>(this, typeTitleList);
+        binding.typeInput.setAdapter(typeAdapter);
+        binding.typeInput.setText(emotionType.getTitle());
+        binding.typeInput.setOnItemClickListener(
+                (adapterView, view, i, l) ->
+                        emotionType = EmotionType.values()[i]
+        );
 
         //确认按钮
         binding.confirmButton.setOnClickListener(view -> {
@@ -170,7 +189,7 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         String description = String.valueOf(binding.descriptionInput.getText());
 
         //实例化情绪标签并获取Dao接口
-        EmotionTagEntity emotionTag = new EmotionTagEntity(name, description);
+        EmotionTagEntity emotionTag = new EmotionTagEntity(name, description, emotionType.ordinal());
         EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
 
         //保存到数据库

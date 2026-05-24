@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.daos;
 
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.paging.PagingSource;
@@ -13,11 +14,14 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -35,7 +39,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphWithEmotion> getAllParagraphPagingSource();
+    PagingSource<Integer, ParagraphEntityModel> getAllParagraphPagingSource();
 
     /**
      * 查询某个日期范围内的段落
@@ -46,7 +50,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphWithEmotion> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
     /**
      * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）
@@ -55,7 +59,7 @@ public interface ParagraphDao {
      * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
      */
     @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
-    Single<Integer> getAdjustedPositionSingle(LocalDate date);
+    int getAdjustedPositionSingle(LocalDate date);
 
     /**
      * 通过日记 ID 获取段落
@@ -67,13 +71,47 @@ public interface ParagraphDao {
     List<ParagraphEntity> getParagraphByDiaryId(long diaryId);
 
     /**
+     * 通过段落 ID 获取段落实体
+     *
+     * @param paragraphId 段落 ID
+     * @return 包裹段落实体的{@link Optional}对象
+     */
+    @Transaction
+    @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
+    Single<Optional<ParagraphEntityModel>> getParagraphOptionalSingleById(long paragraphId);
+
+    /**
      * 插入一条日记段落
      *
      * @param paragraph 日记段落实例
      * @return 插入的日记段落自动分配的编号
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    Single<Long> insertParagraphSingle(ParagraphEntity paragraph);
+    long insertParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 插入段落的事务
+     *
+     * @param paragraph       新段落实例
+     * @param newMediaUriList 该段落新添加的媒体 Uri 列表
+     * @param db              数据库实例
+     */
+    @Transaction
+    default void insertParagraph(
+            ParagraphEntity paragraph,
+            @NonNull List<Uri> newMediaUriList,
+            @NonNull DiaryDatabase db
+    ) {
+        //插入段落
+        long paragraphId = insertParagraph(paragraph);
+
+        //插入新媒体
+        List<MediaEntity> mediaEntityList = newMediaUriList.stream()
+                .map(uri -> new MediaEntity(paragraphId, uri))
+                .collect(Collectors.toList());
+        MediaDao mediaDao = db.mediaDao();
+        mediaDao.insertMedia(mediaEntityList);
+    }
 
     /**
      * 批量插入日记段落
@@ -104,19 +142,50 @@ public interface ParagraphDao {
     /**
      * 单线程更新段落
      *
-     * @param paragraphList 需要更新的段落列表
+     * @param paragraphList 更新后的段落列表
      */
     @Update
     void updateParagraph(List<ParagraphEntity> paragraphList);
 
     /**
+     * 单线程更新段落
+     *
+     * @param paragraph 更新后的段落实体
+     */
+    @Update
+    void updateParagraph(ParagraphEntity paragraph);
+
+    /**
+     * 段落更新事务
+     *
+     * @param paragraph       更新后的段落实体
+     * @param newMediaUriList 新添加的媒体文件的 Uri 列表
+     * @param db              数据库实例
+     */
+    @Transaction
+    default void updateParagraph(
+            ParagraphEntity paragraph,
+            @NonNull List<Uri> newMediaUriList,
+            @NonNull DiaryDatabase db
+    ) {
+        //更新段落
+        updateParagraph(paragraph);
+
+        //插入新媒体
+        List<MediaEntity> newMediaList = newMediaUriList.stream()
+                .map(uri -> new MediaEntity(paragraph.getParagraphId(), uri))
+                .collect(Collectors.toList());
+        MediaDao mediaDao = db.mediaDao();
+        mediaDao.insertMedia(newMediaList);
+    }
+
+    /**
      * 删除段落
      *
      * @param paragraph 待删除的段落实例
-     * @return 是否成功
      */
     @Delete
-    Completable deleteParagraphCompletable(ParagraphEntity paragraph);
+    void deleteParagraph(ParagraphEntity paragraph);
 
     /**
      * 删除某个日期段的段落

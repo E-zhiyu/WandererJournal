@@ -6,6 +6,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.Gravity;
@@ -19,15 +21,16 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
-import com.wanderer.journal.enums.KeyStrings;
-import com.wanderer.journal.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
-import com.wanderer.journal.ui.pages.read.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.write.WriteActivity;
+import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -67,6 +70,30 @@ public class DiaryFragment extends Fragment {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
         });
+        binding.addFab.setOnLongClickListener(view -> {
+            DateTimePickerHelper.selectDate(
+                    LocalDate.now(),
+                    getParentFragmentManager(),
+                    selection -> {
+                        LocalDate date = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                        String dateStr = date.format(formatter);
+
+                        //跳转到写日记界面并传递选择的日期
+                        Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), dateStr);
+                        skip2DiaryContent.putExtras(bundle);
+                        startActivity(skip2DiaryContent);
+                    }
+            );
+            return true;
+        });
+
+        //日期跳转FAB
+        AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);
+        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.dateSkipFab);
+        binding.dateSkipFab.setOnClickListener(view -> showDateScrollDatePicker());
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
@@ -106,6 +133,124 @@ public class DiaryFragment extends Fragment {
     }
 
     /**
+     * 跳转到指定日期的日记
+     */
+    private void showDateScrollDatePicker() {
+        DateTimePickerHelper.selectDate(
+                null,
+                getParentFragmentManager(),
+                selection -> {
+                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    disposable.add(dao.getDiaryCountSingle(selectedDate)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    count -> scrollToTargetPosition(count, selectedDate),
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                            )
+                    );
+                }
+        );
+    }
+
+    /**
+     * 跳转到指定位置
+     *
+     * @param targetPosition 目标下标，实际为大于目标日期的日记数量
+     * @param targetDate     希望跳转到的日期
+     */
+    private void scrollToTargetPosition(int targetPosition, LocalDate targetDate) {
+        //判断位置是否在有效范围内
+        RecyclerView.Adapter<?> adapter = binding.diaryRecycler.getAdapter();
+        if (adapter == null || targetPosition >= adapter.getItemCount()) {
+            targetPosition -= 1;    //防止超出范围
+            Toast.makeText(requireContext(), "已跳转至最早的日记", Toast.LENGTH_SHORT).show();
+        } else if (targetPosition == 0) {
+            Toast.makeText(requireContext(), "已跳转至最晚的日记", Toast.LENGTH_SHORT).show();
+        } else {
+            //判断跳转到的位置是否是目标日期
+            if (adapter instanceof DiaryAdapter) {
+                DiaryWithSummaryUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
+                LocalDate exactDate = diaryModel.getDiary().getDiaryDate();
+                if (!exactDate.isEqual(targetDate)) {
+                    Toast.makeText(requireContext(), "目标日期没有日记，已跳转至相邻日记", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+
+        //获取布局管理器
+        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
+        if (layoutManager == null) {
+            Toast.makeText(requireContext(), "无法获取布局管理器", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 获取当前屏幕上第一个完全可见的条目位置
+        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
+        if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
+            //处理没有可见视图的情况
+            Toast.makeText(requireContext(), "没有可见的日记视图", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
+            //处理不需要滚动的情况
+            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(targetPosition);
+            if (viewHolder != null) {
+                AppearanceAnimationHelper.blink(viewHolder.itemView);
+            }
+            return;
+        }
+
+        //根据距离远近采用不同的滚动方式
+        int distance = Math.abs(targetPosition - firstVisiblePos);
+        int finalTargetPosition = targetPosition;
+        final int DISTANCE_THRESHOLD = 20;
+        if (distance > DISTANCE_THRESHOLD) {
+            //瞬间滚动到附近
+            int momentPosition = targetPosition > firstVisiblePos ? targetPosition - DISTANCE_THRESHOLD : targetPosition + DISTANCE_THRESHOLD;
+            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
+
+            //然后再平滑滚动
+            binding.diaryRecycler.post(() -> {
+                //添加滚动监听器并平滑滚动
+                binding.diaryRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        // 当滚动完全停止 (IDLE) 时再闪烁
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(finalTargetPosition);
+                            if (viewHolder != null) {
+                                AppearanceAnimationHelper.blink(viewHolder.itemView);
+                            }
+                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                        }
+                    }
+                });
+                binding.diaryRecycler.smoothScrollToPosition(finalTargetPosition);
+            });
+        } else {
+            //添加滚动监听器并平滑滚动
+            binding.diaryRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    // 当滚动完全停止 (IDLE) 时再闪烁
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        RecyclerView.ViewHolder viewHolder = binding.diaryRecycler.findViewHolderForAdapterPosition(finalTargetPosition);
+                        if (viewHolder != null) {
+                            AppearanceAnimationHelper.blink(viewHolder.itemView);
+                        }
+                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                    }
+                }
+            });
+            binding.diaryRecycler.smoothScrollToPosition(targetPosition);
+        }
+    }
+
+    /**
      * 删除日记
      *
      * @param diary 待删除的日记实例
@@ -114,23 +259,18 @@ public class DiaryFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.delete_diary)
                 .setMessage("此操作将删除该日记的所有内容，确认继续吗？")
-                .setPositiveButton("确定", (dialogInterface, i) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-                    DiaryDao dao = db.diaryDao();
-
-                    disposable.add(dao.deleteDiaryCompletable(diary)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(() -> {
-                                        Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
-                                        Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(requireContext(), throwable);
-                                        Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
-                                    })
-                    );
-                })
+                .setPositiveButton("确定", (dialogInterface, i) -> disposable.add(DiaryService.deleteDiaryAndParagraphMedias(diary, requireContext())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(() -> {
+                                    Toast.makeText(requireContext(), "日记删除成功", Toast.LENGTH_SHORT).show();
+                                    Log.i(LogTags.DIARY_FRAGMENT.n(), "日记删除成功");
+                                },
+                                throwable -> {
+                                    ExceptionHelper.showExceptionDialog(requireContext(), throwable);
+                                    Log.e(LogTags.DIARY_FRAGMENT.n(), "日记删除失败");
+                                })
+                ))
                 .setNegativeButton("取消", null)
                 .show();
     }

@@ -28,8 +28,8 @@
     </style>
 
     <!-- 卡片样式基类 -->
-    <style name="CardStyleBase" parent="Widget.Material3.CardView.Filled">
-        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHighest</item>
+    <style name="CardStyleBase" parent="Widget.Material3.CardView.Elevated">
+        <item name="strokeWidth">0dp</item>
     </style>
 
     <!-- 中等圆角卡片容器 -->
@@ -54,9 +54,8 @@
     </style>
 
     <!-- “添加”浮动按钮样式 -->
-    <style name="AddFloatingActionBtnStyle" parent="ThemeOverlay.Material3.FloatingActionButton.Primary">
+    <style name="AddFloatingActionBtnStyle" parent="Widget.Material3.FloatingActionButton.Tertiary">
         <item name="android:src">@drawable/outline_add_24</item>
-        <item name="backgroundTint">?attr/colorTertiaryContainer</item>
         <item name="android:layout_marginEnd">20dp</item>
         <item name="android:layout_marginBottom">20dp</item>
     </style>
@@ -115,9 +114,30 @@
         <item name="endIconMode">clear_text</item>
     </style>
 
+    <!-- 下拉菜单式文本框布局样式 -->
+    <style name="DropdownMenuTextInputLayoutStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu">
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+
     <!-- 需要用户输入文本的文本框样式 -->
     <style name="UserInputEditTextStyle" parent="Widget.Material3.TextInputEditText.OutlinedBox.Dense">
         <item name="android:inputType">text</item>
-        <item name="android:textColorHighlight">?attr/colorSurfaceVariant</item>
+    </style>
+
+    <!-- 自动填充文本框样式 -->
+    <style name="UneditableAutoCompleteTextViewStyle" parent="Widget.Material3.AutoCompleteTextView.OutlinedBox.Dense">
+        <item name="android:inputType">none</item>
+        <item name="maxLines">1</item>
+    </style>
+
+    <!-- 可点击的文本框样式 -->
+    <style name="ClickableTextViewStyle">
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:paddingTop">15dp</item>
+        <item name="android:paddingBottom">15dp</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:drawablePadding">15dp</item>
+        <item name="android:paddingStart">20dp</item>
     </style>
 </resources>

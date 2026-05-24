@@ -19,13 +19,12 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
-import com.wanderer.journal.enums.BackupDataType;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.BackupDataType;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.StringHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -436,8 +435,7 @@ public class DataManageActivity extends AppCompatActivity {
                         data -> {
                             //获取基本数据
                             String content = data.getContent();
-                            long lastModifyTime = data.getLastModifyTime();
-                            LocalDateTime time = DateTimeConverter.toLocalDateTime(lastModifyTime);
+                            LocalDateTime lastModifyTime = data.getLastModifyTime();
                             int lineCount = StringHelper.countLinesSplit(content);
 
                             //判断删除空白字符后是否为空字符串
@@ -451,14 +449,14 @@ public class DataManageActivity extends AppCompatActivity {
                             String message = String.format(
                                     Locale.getDefault(),
                                     "所选文件信息如下：\n行数：%d\n最后编辑时间：%s\n确认追加该文件中的所有内容吗？",
-                                    lineCount, time.format(formatter)
+                                    lineCount, lastModifyTime.format(formatter)
                             );
 
                             new MaterialAlertDialogBuilder(this)
                                     .setTitle(R.string.append_paragraph)
                                     .setMessage(message)
                                     .setPositiveButton("确认", (dialogInterface, i) ->
-                                            appendParagraphsFromFile(content, time)
+                                            appendParagraphsFromFile(content, lastModifyTime)
                                     )
                                     .setNegativeButton("取消", null)
                                     .show();
@@ -575,7 +573,7 @@ public class DataManageActivity extends AppCompatActivity {
                     } else if (currentDate != null) {
                         String content = line.trim();
                         if (!content.isEmpty()) {
-                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atTime(0, 0)));
+                            currentParagraphs.add(new ParagraphEntity(0, content, currentDate.atStartOfDay()));
                         }
                     }
 

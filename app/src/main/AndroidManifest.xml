@@ -14,6 +14,13 @@
         android:name="android.hardware.camera"
         android:required="false" />
 
+    <!-- 声明需要交互的应用 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SEND" /> <!-- 分享文件 -->
+        </intent>
+    </queries>
+
     <application
         android:name=".WandererJournal"
         android:allowBackup="true"
@@ -27,7 +34,10 @@
         android:theme="@style/Theme.WandererJournal.Static"
         tools:targetApi="33">
         <activity
-            android:name=".ui.pages.statistics.StatisticsActivity"
+            android:name=".ui.pages.media.FullScreenMediaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pages.StatisticsActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"
@@ -39,10 +49,10 @@
             android:name=".ui.pages.main.settings.sub.AboutActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.write.WriteActivity"
+            android:name=".ui.pages.WriteActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.read.DiaryReadActivity"
+            android:name=".ui.pages.DiaryReadActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
@@ -56,6 +66,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

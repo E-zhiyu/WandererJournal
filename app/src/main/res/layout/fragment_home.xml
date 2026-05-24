@@ -10,7 +10,9 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingBottom="5dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -19,6 +21,23 @@
             app:layout_constraintTop_toTopOf="parent"
             app:navigationIcon="@null"
             app:title="@string/home_page" />
+
+        <!-- 随机提示文本卡片 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/random_tip_card"
+            style="@style/MediumRadiusCardStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toTopOf="@id/diary_date_card"
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/random_tip_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp" />
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- 日期统计卡片 -->
         <com.google.android.material.card.MaterialCardView
@@ -31,7 +50,7 @@
             app:layout_constraintBottom_toTopOf="@id/diary_count_card"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/toolbar">
+            app:layout_constraintTop_toBottomOf="@id/random_tip_card">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -70,7 +89,7 @@
                     android:id="@+id/date_difference_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/difference_of_date"
+                    android:text="@string/date_difference_to_today"
                     android:textAppearance="?attr/textAppearanceHeadline5"
                     app:layout_constraintBottom_toTopOf="@id/date_difference_title"
                     app:layout_constraintEnd_toEndOf="@id/date_difference_title"
@@ -82,7 +101,7 @@
                     android:id="@+id/date_difference_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/difference_of_date"
+                    android:text="@string/date_difference_to_today"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:textColor="?attr/colorOutline"
                     app:layout_constraintBottom_toBottomOf="@id/start_date_title"
@@ -100,8 +119,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="0dp"
-            android:layout_marginBottom="0dp"
             android:layout_marginEnd="2dp"
+            android:layout_marginBottom="0dp"
             app:layout_constraintBottom_toBottomOf="@id/paragraph_count_card"
             app:layout_constraintEnd_toStartOf="@id/paragraph_count_card"
             app:layout_constraintStart_toStartOf="parent"
@@ -154,8 +173,8 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:padding="10dp"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:padding="10dp">
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/paragraph_count_text"

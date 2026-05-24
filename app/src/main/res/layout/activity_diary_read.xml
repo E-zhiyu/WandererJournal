@@ -4,30 +4,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.read.DiaryReadActivity">
+    tools:context=".ui.pages.DiaryReadActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator_layout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/bottom_card"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar_layout"
             style="@style/AppBarLayoutStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/app_bar_constraint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="?attr/colorSurface"
                 app:layout_scrollFlags="scroll|enterAlways|snap">
 
                 <com.google.android.material.search.SearchBar
                     android:id="@+id/content_search_bar"
+                    style="@style/Widget.Material3Expressive.SearchBar"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:hint="@string/search_for_diary_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -42,7 +45,6 @@
             android:clipToPadding="false"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <!-- 空状态提示文本 -->
@@ -58,101 +60,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 底部输入框和编辑模式卡片 -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/bottom_card"
-        style="@style/RightAngleCardStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/bottom_card_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="10dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="10dp">
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/modify_content_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/modify_content"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                app:layout_constraintBottom_toTopOf="@id/origin_text"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/origin_text"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/origin_text"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="?attr/colorOutline"
-                app:layout_constraintBottom_toTopOf="@id/content_text_layout"
-                app:layout_constraintEnd_toStartOf="@id/modify_close_btn"
-                app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/modify_content_text" />
-
-            <ImageButton
-                android:id="@+id/modify_close_btn"
-                style="@style/ImageButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/close_btn"
-                android:src="@drawable/outline_close_small_24"
-                app:layout_constraintBottom_toBottomOf="@id/origin_text"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/modify_content_text" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/content_text_layout"
-                style="?attr/textInputOutlinedDenseStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                app:boxCornerRadiusBottomEnd="20dp"
-                app:boxCornerRadiusBottomStart="20dp"
-                app:boxCornerRadiusTopEnd="20dp"
-                app:boxCornerRadiusTopStart="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/send_btn"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/origin_text">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/content_text_input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <ImageButton
-                android:id="@+id/send_btn"
-                style="@style/ImageButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/send_btn"
-                android:src="@drawable/outline_send_24"
-                app:layout_constraintBottom_toBottomOf="@id/content_text_layout"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/content_text_layout" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-
     <!-- 搜索视图 -->
     <com.google.android.material.search.SearchView
         android:id="@+id/diary_content_search_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:hint="@string/search_for_diary_content">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/search_history_recycler"

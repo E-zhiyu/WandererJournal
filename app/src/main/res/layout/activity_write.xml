@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.write.WriteActivity">
+    tools:context=".ui.pages.WriteActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
@@ -19,6 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:paddingBottom="5dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@id/bottom_cards_barrier"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
@@ -40,7 +41,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="top"
-        app:constraint_referenced_ids="content_edit_card,content_input_card" />
+        app:constraint_referenced_ids="media_card,content_edit_card,content_input_card" />
+
+    <!-- 输入框图片列表视图 -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/media_card"
+        style="@style/RightAngleCardStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/content_edit_card">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/media_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="10dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- 编辑模式卡片 -->
     <com.google.android.material.card.MaterialCardView
@@ -54,7 +76,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
+            android:paddingStart="20dp"
             android:paddingTop="10dp"
             android:paddingEnd="10dp"
             android:paddingBottom="10dp">
@@ -111,7 +133,7 @@
             android:id="@+id/content_input_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="10dp"
+            android:paddingStart="20dp"
             android:paddingEnd="10dp">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -119,12 +141,13 @@
                 style="?attr/textInputOutlinedDenseStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 app:boxCornerRadiusBottomEnd="20dp"
                 app:boxCornerRadiusBottomStart="20dp"
                 app:boxCornerRadiusTopEnd="20dp"
                 app:boxCornerRadiusTopStart="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/send_btn"
+                app:layout_constraintEnd_toStartOf="@id/media_btn_barrier"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -132,8 +155,9 @@
                     android:id="@+id/content_text_input"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:maxLines="1" />
+                    android:imeOptions="actionNone"
+                    android:inputType="textMultiLine"
+                    android:maxLines="5" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <ImageButton
@@ -146,6 +170,36 @@
                 app:layout_constraintBottom_toBottomOf="@id/content_text_layout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@id/content_text_layout" />
+
+            <ImageButton
+                android:id="@+id/media_add_btn"
+                style="@style/ImageButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/btn_of_adding_media_files"
+                android:src="@drawable/outline_add_photo_alternate_24"
+                app:layout_constraintBottom_toBottomOf="@id/send_btn"
+                app:layout_constraintEnd_toStartOf="@id/send_btn"
+                app:layout_constraintTop_toTopOf="@id/send_btn" />
+
+            <ImageButton
+                android:id="@+id/media_delete_btn"
+                style="@style/ImageButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/btn_of_delete_media"
+                android:src="@drawable/outline_delete_24"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@id/send_btn"
+                app:layout_constraintEnd_toStartOf="@id/send_btn"
+                app:layout_constraintTop_toTopOf="@id/send_btn" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/media_btn_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="start"
+                app:constraint_referenced_ids="media_add_btn,media_delete_btn" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

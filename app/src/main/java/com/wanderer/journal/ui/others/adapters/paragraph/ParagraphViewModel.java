@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
 import androidx.paging.Pager;
@@ -11,7 +10,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphWithEmotion;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,58 +18,24 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executor;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphViewModel extends ViewModel {
-    // 使用 Processor 或 Subject 来接收外部触发的初始化信号（目标日期）
-    private final BehaviorProcessor<LocalDate> targetDateProcessor = BehaviorProcessor.create();
+    private final DiaryDatabase db; //数据库实例
 
-    private final Flowable<PagingData<ParagraphUiModel>> pagingDataFlow;
-
-    public ParagraphViewModel(@NonNull DiaryDatabase db, @Nullable LocalDate start, @Nullable LocalDate end) {
-        this.pagingDataFlow = PagingRx.cachedIn(
-                targetDateProcessor
-                        .distinctUntilChanged() // 防止重复触发
-                        .flatMapSingle(date -> {
-                            // 1. 异步获取初始位置
-                            return db.paragraphDao().getAdjustedPositionSingle(date)
-                                    .subscribeOn(Schedulers.io());
-                        })
-                        .flatMap(initPosition -> {
-                            // 2. 拿到位置后，构建 Pager 流
-                            PagingConfig pagingConfig = new PagingConfig(
-                                    10,
-                                    20,
-                                    true,
-                                    30,
-                                    60
-                            );
-
-                            Pager<Integer, ParagraphWithEmotion> pager = new Pager<>(
-                                    pagingConfig,
-                                    initPosition, // 动态传入计算出的下标
-                                    () -> (start != null && end != null)
-                                            ? db.paragraphDao().getParagraphPagingSourceInRange(start, end)
-                                            : db.paragraphDao().getAllParagraphPagingSource()
-                            );
-
-                            return PagingRx.getFlowable(pager);
-                        })
-                        .map(this::transformAndSeparator),  // 3. 变换与插入分隔符
-                ViewModelKt.getViewModelScope(this)
-        );
+    public ParagraphViewModel(@NonNull DiaryDatabase db) {
+        this.db = db;
     }
 
-    // 暴露给外部的启动接口
-    public void scrollToDate(LocalDate date) {
-        targetDateProcessor.onNext(date);
-    }
-
-    // 将复杂的转换逻辑提取出来
+    /**
+     * 为不同日期的段落之间插入日期分隔视图
+     *
+     * @param pagingData 原始段落数据
+     * @return 插入分隔视图后的段落数据
+     */
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphWithEmotion> pagingData) {
-        Executor executor = Runnable::run; // 转换通常在主线程或 Paging 内部线程同步执行
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityModel> pagingData) {
+        Executor executor = Runnable::run;
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
                 pagingData, executor, ParagraphUiModel.Item::new);
@@ -85,8 +50,53 @@ public class ParagraphViewModel extends ViewModel {
                 });
     }
 
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow() {
-        return pagingDataFlow;
+    /**
+     * 获取由 PagingData转换得到的 Flowable 数据
+     *
+     * @param start 段落起始日期
+     * @param end   段落结束日期（不包含）
+     * @return 段落数据，支持响应式更新
+     */
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(LocalDate start, LocalDate end, LocalDate targetDate) {
+        // 1. 使用 Flowable.fromCallable 将同步的数据库查询和 Pager 初始化打包
+        return Flowable.fromCallable(() -> {
+                    // 查询目标日期在数据库中的绝对位置
+                    int initPosition = 0;
+                    if (targetDate != null) {
+                        initPosition = db.paragraphDao().getAdjustedPositionSingle(targetDate);
+                    }
+
+                    // 配置 PagingConfig
+                    PagingConfig pagingConfig = new PagingConfig(
+                            10,
+                            20,
+                            true, // 必须为 true 以支持精准定位
+                            20
+                    );
+
+                    // 创建 Pager
+                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
+                            pagingConfig,
+                            initPosition, // 动态传入计算出的下标
+                            () -> (start != null && end != null)
+                                    ? db.paragraphDao().getParagraphPagingSourceInRange(start, end)
+                                    : db.paragraphDao().getAllParagraphPagingSource()
+                    );
+
+                    return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
+                })
+                .subscribeOn(Schedulers.io())   //在 IO 线程执行
+                .flatMap(pagingDataFlow -> pagingDataFlow)
+                .compose(flowable -> PagingRx.cachedIn(flowable, ViewModelKt.getViewModelScope(this)));
+    }
+
+    /**
+     * 不指定起止日期的获取段落数据方法
+     *
+     * @return 段落分页数据，支持响应式更新
+     */
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(LocalDate targetDate) {
+        return getPagingDataFlow(null, null, targetDate);
     }
 
     /**

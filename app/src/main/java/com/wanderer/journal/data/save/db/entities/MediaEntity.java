@@ -15,7 +15,10 @@ import androidx.room.PrimaryKey;
                 childColumns = "parentParagraphId", //子列名
                 onDelete = ForeignKey.CASCADE
         ),
-        indices = {@Index("parentParagraphId")}     //索引
+        indices = {
+                @Index("parentParagraphId"),
+                @Index("mediaId")
+        }
 )
 public class MediaEntity {
     @PrimaryKey(autoGenerate = true)
@@ -32,6 +35,7 @@ public class MediaEntity {
     public MediaEntity(long parentParagraphId, Uri fileUri) {
         this.parentParagraphId = parentParagraphId;
         this.fileUri = fileUri;
+        this.mediaId = 0;   //分配为0，便于数据库自动分配
     }
 
     public long getMediaId() {
@@ -56,5 +60,14 @@ public class MediaEntity {
 
     public void setParentParagraphId(long parentParagraphId) {
         this.parentParagraphId = parentParagraphId;
+    }
+
+    /**
+     * 获取与 Uri 相关的哈希值作为适配器多选的 ID，由于不含主键，因此还适用于临时媒体文件阶段
+     *
+     * @return {@link #fileUri#hashCode()}得到的哈希值
+     */
+    public long getItemId() {
+        return fileUri.hashCode();
     }
 }

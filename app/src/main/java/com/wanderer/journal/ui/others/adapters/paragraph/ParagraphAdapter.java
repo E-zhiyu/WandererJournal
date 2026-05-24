@@ -8,14 +8,17 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
-import com.wanderer.journal.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
@@ -48,9 +51,12 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
                 List<CrossRefWithEmotion> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
                 List<CrossRefWithEmotion> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
+                List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
                         oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime()) &&
-                        oldEmotionList.equals(newEmotionList);
+                        oldEmotionList.equals(newEmotionList) &&
+                        oldMediaList.equals(newMediaList);
             } else {
                 return true;
             }
@@ -58,20 +64,32 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final OnClickListener listener;
+    private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
+    private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
 
     public interface ViewHolderListener {
-        void onClicked(ParagraphEntity paragraph, View view);
+        void onClicked(ParagraphEntityModel dataModel, View view);
     }
 
-    public interface OnClickListener {
+    public interface OnParagraphClickListener {
         /**
          * 段落被点击的回调
          *
-         * @param paragraph 被点击的段落
+         * @param dataModel 点击的段落的数据实例
          * @param view      用于显示PopupMenu的视图
          */
-        void onClicked(ParagraphEntity paragraph, View view);
+        void onClicked(ParagraphEntityModel dataModel, View view);
+    }
+
+    public interface OnMediaClickedListener {
+        /**
+         * 媒体视图点击监听
+         *
+         * @param position  被点击的媒体所在的位置
+         * @param mediaView 被点击的媒体视图
+         * @param mediaList 同一个段落的媒体列表
+         */
+        void onClicked(int position, View mediaView, List<MediaEntity> mediaList);
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
@@ -85,7 +103,8 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
-        ParagraphEntity paragraph = null;   //段落实例
+        private ParagraphEntityModel data = null;   //数据实例
+
 
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
@@ -96,32 +115,36 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //设置监听器
             binding.getRoot().setOnClickListener(view -> {
-                if (paragraph == null) {
+                if (data == null) {
                     return;
                 }
 
-                listener.onClicked(paragraph, binding.getRoot());
+                listener.onClicked(data, binding.getRoot());
             });
         }
 
         /**
          * 将ViewHolder与数据实例绑定
          *
-         * @param paragraph 段落实例
+         * @param data 数据实例
          */
-        public void bindItem(ParagraphEntity paragraph) {
-            this.paragraph = paragraph;
+        public void bindItem(ParagraphEntityModel data) {
+            this.data = data;
         }
     }
 
     /**
      * 段落适配器构造方法
      *
-     * @param listener 段落点击监听器
+     * @param paragraphClickListener 段落点击监听器
      */
-    public ParagraphAdapter(OnClickListener listener) {
+    public ParagraphAdapter(
+            OnParagraphClickListener paragraphClickListener,
+            OnMediaClickedListener mediaClickedListener
+    ) {
         super(ITEM_CALLBACK);
-        this.listener = listener;
+        this.paragraphClickListener = paragraphClickListener;
+        this.mediaClickedListener = mediaClickedListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -157,7 +180,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             );
             return new ParagraphViewHolder(
                     binding,
-                    listener::onClicked
+                    paragraphClickListener::onClicked
             );
         } else {
             ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
@@ -182,43 +205,69 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         }
 
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+            ParagraphEntityModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
+            ParagraphEntity paragraph = dataModel.getParagraph();
             ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+            Context context = itemHolder.binding.getRoot().getContext();
 
             //绑定数据原型
-            itemHolder.bindItem(paragraph);
+            itemHolder.bindItem(dataModel);
+
+            //媒体列表
+            List<MediaEntity> mediaList = dataModel.getMediaList();
+            if (mediaList != null && !mediaList.isEmpty()) {
+                //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
+                int spanCount = Math.min(mediaList.size(), 3);
+                int size = itemHolder.binding.getRoot().getWidth() / spanCount;
+                GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount);
+                itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
+
+                //绑定数据
+                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
+                        size,
+                        spanCount,
+                        (mediaPosition, view) -> mediaClickedListener.onClicked(mediaPosition, view, mediaList)
+                );
+                itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
+                mediaAdapter.submitList(mediaList);
+
+                //显示列表
+                itemHolder.binding.mediaRecycler.setVisibility(View.VISIBLE);
+            } else {
+                itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
+            }
 
             //内容文本
             String content = paragraph.getContent();
             itemHolder.binding.contentText.setText(content);
 
             //情绪标签
-            List<CrossRefWithEmotion> emotionList = ((ParagraphUiModel.Item) uiModel).model.getEmotionList();
-            itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-            Context context = itemHolder.binding.getRoot().getContext();
-            for (CrossRefWithEmotion emotion : emotionList) {
-                String name = emotion.emotionTag.getName();
-                int degree = emotion.crossRef.getDegree();
-                String title = String.format(
-                        Locale.getDefault(),
-                        "%s %s",
-                        name, RomanNumberHelper.toRoman(degree)
-                );
-
-                Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
-                emotionChip.setCheckable(false);
-                emotionChip.setFocusable(false);
-
-                //设置显示文本
-                emotionChip.setText(title);
-                emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
-
-                //添加到视图中
-                itemHolder.binding.emotionChipGroup.addView(emotionChip);
-            }
+            List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {
+                itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
+                for (CrossRefWithEmotion emotion : emotionList) {
+                    String name = emotion.emotionTag.getName();
+                    int degree = emotion.crossRef.getDegree();
+                    String title = String.format(
+                            Locale.getDefault(),
+                            "%s %s",
+                            name, RomanNumberHelper.toRoman(degree)
+                    );
+
+                    Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
+                    emotionChip.setCheckable(false);
+                    emotionChip.setFocusable(false);
+
+                    //设置显示文本
+                    emotionChip.setText(title);
+                    emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
+
+                    //添加到视图中
+                    itemHolder.binding.emotionChipGroup.addView(emotionChip);
+                }
+
                 itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
             }
 

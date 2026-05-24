@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
@@ -58,10 +57,19 @@ public interface DiaryDao {
      * 查询指定日期之前（包括该日期）的所有日记的日期
      *
      * @param end 截止日期
-     * @return 日期列表
+     * @return 日期列表，升序排序
      */
     @Query("SELECT diaryDate FROM diaries WHERE diaryDate <= :end ORDER BY diaryDate")
     Single<List<LocalDate>> getDiaryDateSingle(LocalDate end);
+
+    /**
+     * 获取某个日期之后（不包括该日期）的日记数量
+     *
+     * @param start 起始日期（不包含该日期）
+     * @return 日记数量
+     */
+    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start")
+    Single<Integer> getDiaryCountSingle(LocalDate start);
 
     /**
      * 插入一条日记
@@ -154,10 +162,9 @@ public interface DiaryDao {
      * 删除日记
      *
      * @param diary 待删除的日记实例
-     * @return 是否完成
      */
     @Delete
-    Completable deleteDiaryCompletable(DiaryEntity diary);
+    void deleteDiary(DiaryEntity diary);
 
     /**
      * 更新日记日期
