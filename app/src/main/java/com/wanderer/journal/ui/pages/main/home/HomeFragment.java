@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.home;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -24,7 +25,12 @@ import com.wanderer.journal.ui.pages.StatisticsActivity;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -33,6 +39,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;        //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //订阅列表
+    private final List<String> tipsList = new LinkedList<>();   //提示文本列表
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -55,6 +62,11 @@ public class HomeFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
+        //随机提示文本
+        binding.randomTipCard.setOnClickListener(view -> showNextRandomTipText());
+        AppearanceAnimationHelper.attachMorphAnimation(binding.randomTipCard);
+        showNextRandomTipText();
+
         initDateCard();
         initDiaryCountCard();
         initParagraphCountCard();
@@ -202,5 +214,38 @@ public class HomeFragment extends Fragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(count -> binding.emotionTagCountText.setText(String.valueOf(count)))
         );
+    }
+
+    /**
+     * 显示下一个随机提示文本
+     */
+    private void showNextRandomTipText() {
+        //如果提示文本列表为空，则重新获取提示文本资源
+        if (tipsList.isEmpty()) {
+            String[] tipsArray = getResources().getStringArray(R.array.tips_array);
+            tipsList.addAll(Arrays.stream(tipsArray).collect(Collectors.toList()));
+
+            //添加小米专属的提示文本
+            String manufacturer = Build.MANUFACTURER.toLowerCase();
+            if (manufacturer.contains("xiaomi")) {
+                String[] xiaomiTips = getResources().getStringArray(R.array.xiaomi_tips);
+                tipsList.addAll(Arrays.stream(xiaomiTips).collect(Collectors.toList()));
+            }
+        }
+
+        //获取随机下标
+        Random random = new Random();
+        int randomNum = random.nextInt();
+        if (randomNum < 0) {
+            randomNum = -randomNum;
+        }
+        int tipIndex = randomNum % tipsList.size();
+
+        //显示对应的文本
+        String tip = "tip : " + tipsList.get(tipIndex);
+        binding.randomTipText.setText(tip);
+
+        //删除刚刚显示的文本防止重复
+        tipsList.remove(tipIndex);
     }
 }
