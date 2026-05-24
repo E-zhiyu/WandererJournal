@@ -16,25 +16,18 @@
             android:id="@+id/app_bar_layout"
             style="@style/AppBarLayoutStyle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            android:touchscreenBlocksFocus="false"
+            app:liftOnScroll="false"
+            app:statusBarForeground="?attr/colorSurface">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <com.google.android.material.search.SearchBar
+                android:id="@+id/content_search_bar"
+                style="@style/Widget.Material3Expressive.SearchBar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/colorSurface"
-                app:layout_scrollFlags="scroll|enterAlways|snap">
-
-                <com.google.android.material.search.SearchBar
-                    android:id="@+id/content_search_bar"
-                    style="@style/Widget.Material3Expressive.SearchBar"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/search_for_diary_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                android:hint="@string/search_for_diary_content" />
         </com.google.android.material.appbar.AppBarLayout>
 
         <!-- 段落列表 -->
