@@ -212,19 +212,19 @@ public class StatisticsActivity extends AppCompatActivity {
                     //设置文本
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
-                    String lenStr = model.getDiaryLength() + "字符";
+                    String lenStr = model.getDiaryLength() == 0 ? "无日记" : model.getDiaryLength() + "字符";
                     windowBinding.diaryLengthText.setText(lenStr);
 
                     //设置背景以允许点击外部消失
                     popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     popupWindow.setOutsideTouchable(true);
 
-                    // 5. 测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
+                    //测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
                     windowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
                     int popupHeight = windowBinding.getRoot().getMeasuredHeight();
                     int popupWidth = windowBinding.getRoot().getMeasuredWidth();
 
-                    // xOff: 居中对齐, yOff: 放在 Chip 上方（注意负数表示向上偏移）
+                    //xOff: 居中对齐, yOff: 放在上方
                     int xOffset = (view.getWidth() - popupWidth) / 2;
                     int yOffset = -(view.getHeight() + popupHeight) - ViewEdgeHelper.dpToPx(this, 5);
 
