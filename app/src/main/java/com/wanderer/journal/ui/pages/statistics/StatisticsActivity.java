@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
-import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -93,7 +93,7 @@ public class StatisticsActivity extends AppCompatActivity {
         );
 
         //最大段落字符数量
-        ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
         AppearanceAnimationHelper.setRadius(
                 this,
                 binding.maxCharacterCountCard,
@@ -102,21 +102,6 @@ public class StatisticsActivity extends AppCompatActivity {
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
-        disposable.add(paragraphDao.getMaxDiaryCharacterCountSingle()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        count -> {
-                            String txt = count + "字符";
-                            binding.maxCharacterCountText.setText(txt);
-
-                            //查询出最大长度后
-                            initMemeryPixelRecycler(count);
-                        },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
-
         AppearanceAnimationHelper.setRadius(
                 this,
                 binding.averageCharacterCountCard,
@@ -125,13 +110,20 @@ public class StatisticsActivity extends AppCompatActivity {
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
         );
-        disposable.add(paragraphDao.getAverageDiaryCharacterCountSingle()
+        disposable.add(ParagraphService.getDiaryLengthData(db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        count -> {
-                            String txt = count + "字符";
-                            binding.averageCharacterCountText.setText(txt);
+                        diaryLength -> {
+                            int max = diaryLength.getMax();
+                            int avg = diaryLength.getAvg();
+
+                            String maxStr = max + "字符";
+                            String avgStr = avg + "字符";
+                            binding.maxCharacterCountText.setText(maxStr);
+                            binding.averageCharacterCountText.setText(avgStr);
+
+                            initMemeryPixelRecycler(max, avg);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
@@ -178,9 +170,12 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     /**
-     * 初始化记忆像素列表
+     * 初始化记忆像素
+     *
+     * @param maxDiaryLength 最大日记长度
+     * @param avgDiaryLength 平均日记长度
      */
-    private void initMemeryPixelRecycler(int maxParagraphCount) {
+    private void initMemeryPixelRecycler(int maxDiaryLength, int avgDiaryLength) {
         //实例化一个7行的网格布局并应用于Recycler
         GridLayoutManager layoutManager = new GridLayoutManager(
                 this,
@@ -190,7 +185,7 @@ public class StatisticsActivity extends AppCompatActivity {
         );
         binding.memeryPixelRecycler.setLayoutManager(layoutManager);
 
-        MemeryPixelAdapter adapter = new MemeryPixelAdapter(maxParagraphCount);
+        MemeryPixelAdapter adapter = new MemeryPixelAdapter(maxDiaryLength, avgDiaryLength);
         binding.memeryPixelRecycler.setAdapter(adapter);
 
         //查询数据

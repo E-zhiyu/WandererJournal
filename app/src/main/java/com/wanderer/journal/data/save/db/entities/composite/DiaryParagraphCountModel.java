@@ -4,11 +4,11 @@ import java.time.LocalDate;
 
 public class DiaryParagraphCountModel {
     private LocalDate diaryDate;    //日记日期
-    private int paragraphWordCount; //段落字符数量
+    private int diaryLength;        //日记长度
 
-    public DiaryParagraphCountModel(LocalDate diaryDate, int paragraphWordCount) {
+    public DiaryParagraphCountModel(LocalDate diaryDate, int diaryLength) {
         this.diaryDate = diaryDate;
-        this.paragraphWordCount = paragraphWordCount;
+        this.diaryLength = diaryLength;
     }
 
     public LocalDate getDiaryDate() {
@@ -19,11 +19,11 @@ public class DiaryParagraphCountModel {
         this.diaryDate = diaryDate;
     }
 
-    public int getParagraphWordCount() {
-        return paragraphWordCount;
+    public int getDiaryLength() {
+        return diaryLength;
     }
 
-    public void setParagraphWordCount(int paragraphWordCount) {
-        this.paragraphWordCount = paragraphWordCount;
+    public void setDiaryLength(int diaryLength) {
+        this.diaryLength = diaryLength;
     }
 }

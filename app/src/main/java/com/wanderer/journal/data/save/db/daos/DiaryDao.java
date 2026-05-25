@@ -63,9 +63,9 @@ public interface DiaryDao {
      */
     @Query(
             "SELECT diaryDate AS diaryDate," +
-            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS paragraphWordCount " +
-            "FROM diaries " +
-            "WHERE diaryDate >= :start AND diaryDate <= :end"
+                    "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS diaryLength " +
+                    "FROM diaries " +
+                    "WHERE diaryDate >= :start AND diaryDate <= :end"
     )
     List<DiaryParagraphCountModel> getDiaryParagraphWordCount(LocalDate start, LocalDate end);
 

@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 public class DiaryService {
@@ -91,14 +90,14 @@ public class DiaryService {
      *
      * @param start 起始日期（包含）
      * @param end   截止日期（包含）
-     * @return 一个{@link Flowable}实例，包含能够直接提交给适配器的数据模型列表
+     * @return 一个{@link Single}实例，包含能够直接提交给适配器的数据模型列表
      */
-    public static Flowable<List<DiaryParagraphCountModel>> getMemeryPixelData(
+    public static Single<List<DiaryParagraphCountModel>> getMemeryPixelData(
             LocalDate start,
             LocalDate end,
             DiaryDatabase db
     ) {
-        return Flowable.defer(() -> {
+        return Single.defer(() -> {
             DiaryDao diaryDao = db.diaryDao();
 
             //获取有日记的天
@@ -107,7 +106,7 @@ public class DiaryService {
             //将数据放到哈希表中
             HashMap<LocalDate, Integer> dateMap = new HashMap<>();
             for (DiaryParagraphCountModel model : withDiaryModelList) {
-                dateMap.put(model.getDiaryDate(), model.getParagraphWordCount());
+                dateMap.put(model.getDiaryDate(), model.getDiaryLength());
             }
 
             List<DiaryParagraphCountModel> resultList = new ArrayList<>();
@@ -121,7 +120,7 @@ public class DiaryService {
 
             //遍历哈希表填充没有记日记的天
             int nowDayOfYear = end.getDayOfYear();
-            for (int i = 0; i < nowDayOfYear - 1; i++) {
+            for (int i = 0; i <= nowDayOfYear - 1; i++) {
                 LocalDate date = start.plusDays(i);
 
                 Integer paragraphCount;
@@ -132,7 +131,7 @@ public class DiaryService {
                 }
             }
 
-            return Flowable.just(resultList);
+            return Single.just(resultList);
         });
     }
 }

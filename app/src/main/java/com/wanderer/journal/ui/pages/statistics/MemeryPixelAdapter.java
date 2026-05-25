@@ -13,7 +13,8 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountM
 import com.wanderer.journal.databinding.ViewHolderMemeryPixelBinding;
 
 public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
-    private final int maxCharacterCount;    //最大日记字符数量
+    private final int maxDiaryLength;   //最大日记长度
+    private final int avgDiaryLength;   //平均日记长度
     private final static DiffUtil.ItemCallback<DiaryParagraphCountModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull DiaryParagraphCountModel oldItem, @NonNull DiaryParagraphCountModel newItem) {
@@ -22,18 +23,19 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, Me
 
         @Override
         public boolean areContentsTheSame(@NonNull DiaryParagraphCountModel oldItem, @NonNull DiaryParagraphCountModel newItem) {
-            return oldItem.getParagraphWordCount() == newItem.getParagraphWordCount();
+            return oldItem.getDiaryLength() == newItem.getDiaryLength();
         }
     };
 
     /**
      * 记忆像素适配器构造方法
      *
-     * @param maxCharacterCount 最大日记字符数量
+     * @param maxDiaryLength 最大日记字符数量
      */
-    public MemeryPixelAdapter(int maxCharacterCount) {
+    public MemeryPixelAdapter(int maxDiaryLength, int avgDiaryLength) {
         super(ITEM_CALLBACK);
-        this.maxCharacterCount = maxCharacterCount;
+        this.maxDiaryLength = maxDiaryLength;
+        this.avgDiaryLength = avgDiaryLength;
     }
 
     public static class MemeryPixelViewHolder extends RecyclerView.ViewHolder {
@@ -65,15 +67,19 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, Me
             return;
         }
 
+        //生成等级分隔符
+        int lv1 = avgDiaryLength / 2;
+        int lv3 = (avgDiaryLength + maxDiaryLength) / 2;
+
         //根据内容多少分配颜色
-        int paragraphCount = model.getParagraphWordCount();
-        if (paragraphCount == 0) {
+        int diaryLength = model.getDiaryLength();
+        if (diaryLength == 0) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_empty);
-        } else if (paragraphCount < maxCharacterCount * .25) {
+        } else if (diaryLength < lv1) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_few);
-        } else if (paragraphCount < maxCharacterCount * .5) {
+        } else if (diaryLength < avgDiaryLength) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_moderate);
-        } else if (paragraphCount < maxCharacterCount * .75) {
+        } else if (diaryLength < lv3) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_many);
         } else {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_numerous);
