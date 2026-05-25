@@ -11,7 +11,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 
 import java.time.LocalDate;
@@ -67,7 +67,7 @@ public interface DiaryDao {
                     "FROM diaries " +
                     "WHERE diaryDate >= :start AND diaryDate <= :end"
     )
-    List<DiaryParagraphCountModel> getDiaryParagraphWordCount(LocalDate start, LocalDate end);
+    List<DiaryLengthModel> getDiaryParagraphWordCount(LocalDate start, LocalDate end);
 
     /**
      * 查询指定日期之前（包括该日期）的所有日记的日期

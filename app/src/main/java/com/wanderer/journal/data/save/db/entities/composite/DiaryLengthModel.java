@@ -2,11 +2,11 @@ package com.wanderer.journal.data.save.db.entities.composite;
 
 import java.time.LocalDate;
 
-public class DiaryParagraphCountModel {
+public class DiaryLengthModel {
     private LocalDate diaryDate;    //日记日期
     private int diaryLength;        //日记长度
 
-    public DiaryParagraphCountModel(LocalDate diaryDate, int diaryLength) {
+    public DiaryLengthModel(LocalDate diaryDate, int diaryLength) {
         this.diaryDate = diaryDate;
         this.diaryLength = diaryLength;
     }

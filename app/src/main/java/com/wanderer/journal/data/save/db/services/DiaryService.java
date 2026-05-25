@@ -9,7 +9,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
@@ -92,7 +92,7 @@ public class DiaryService {
      * @param end   截止日期（包含）
      * @return 一个{@link Single}实例，包含能够直接提交给适配器的数据模型列表
      */
-    public static Single<List<DiaryParagraphCountModel>> getMemeryPixelData(
+    public static Single<List<DiaryLengthModel>> getMemeryPixelData(
             LocalDate start,
             LocalDate end,
             DiaryDatabase db
@@ -101,15 +101,15 @@ public class DiaryService {
             DiaryDao diaryDao = db.diaryDao();
 
             //获取有日记的天
-            List<DiaryParagraphCountModel> withDiaryModelList = diaryDao.getDiaryParagraphWordCount(start, end);
+            List<DiaryLengthModel> withDiaryModelList = diaryDao.getDiaryParagraphWordCount(start, end);
 
             //将数据放到哈希表中
             HashMap<LocalDate, Integer> dateMap = new HashMap<>();
-            for (DiaryParagraphCountModel model : withDiaryModelList) {
+            for (DiaryLengthModel model : withDiaryModelList) {
                 dateMap.put(model.getDiaryDate(), model.getDiaryLength());
             }
 
-            List<DiaryParagraphCountModel> resultList = new ArrayList<>();
+            List<DiaryLengthModel> resultList = new ArrayList<>();
 
             //填充头部 null 对象，使开始日期对齐（例如：星期一对齐到下标为0）
             int dayOfWeekValue = start.getDayOfWeek().getValue();
@@ -125,9 +125,9 @@ public class DiaryService {
 
                 Integer paragraphCount;
                 if (dateMap.containsKey(date) && (paragraphCount = dateMap.get(date)) != null) {
-                    resultList.add(new DiaryParagraphCountModel(date, paragraphCount));
+                    resultList.add(new DiaryLengthModel(date, paragraphCount));
                 } else {
-                    resultList.add(new DiaryParagraphCountModel(date, 0));
+                    resultList.add(new DiaryLengthModel(date, 0));
                 }
             }
 

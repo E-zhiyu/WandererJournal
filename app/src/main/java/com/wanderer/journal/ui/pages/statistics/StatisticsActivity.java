@@ -1,6 +1,12 @@
 package com.wanderer.journal.ui.pages.statistics;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -15,10 +21,13 @@ import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
+import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -185,7 +194,43 @@ public class StatisticsActivity extends AppCompatActivity {
         );
         binding.memeryPixelRecycler.setLayoutManager(layoutManager);
 
-        MemeryPixelAdapter adapter = new MemeryPixelAdapter(maxDiaryLength, avgDiaryLength);
+        MemeryPixelAdapter adapter = new MemeryPixelAdapter(
+                maxDiaryLength,
+                avgDiaryLength,
+                (model, view) -> {
+                    //构建悬浮视图
+                    PopupWindowMemeryPixelBinding windowBinding = PopupWindowMemeryPixelBinding.inflate(
+                            LayoutInflater.from(this)
+                    );
+                    PopupWindow popupWindow = new PopupWindow(
+                            windowBinding.getRoot(),
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            true
+                    );
+
+                    //设置文本
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
+                    String lenStr = model.getDiaryLength() + "字符";
+                    windowBinding.diaryLengthText.setText(lenStr);
+
+                    //设置背景以允许点击外部消失
+                    popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    popupWindow.setOutsideTouchable(true);
+
+                    // 5. 测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
+                    windowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+                    int popupHeight = windowBinding.getRoot().getMeasuredHeight();
+                    int popupWidth = windowBinding.getRoot().getMeasuredWidth();
+
+                    // xOff: 居中对齐, yOff: 放在 Chip 上方（注意负数表示向上偏移）
+                    int xOffset = (view.getWidth() - popupWidth) / 2;
+                    int yOffset = -(view.getHeight() + popupHeight) - ViewEdgeHelper.dpToPx(this, 5);
+
+                    popupWindow.showAsDropDown(view, xOffset, yOffset);
+                }
+        );
         binding.memeryPixelRecycler.setAdapter(adapter);
 
         //查询数据

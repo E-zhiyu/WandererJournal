@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.color.MaterialColors;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 
 import java.time.LocalDate;
 import java.time.format.TextStyle;
@@ -19,11 +19,11 @@ import java.util.Locale;
 
 public class MonthHeaderDecoration extends RecyclerView.ItemDecoration {
 
-    private final List<DiaryParagraphCountModel> dataList;
+    private final List<DiaryLengthModel> dataList;
     private final Paint paint;
     private final int topMargin;
 
-    public MonthHeaderDecoration(List<DiaryParagraphCountModel> dataList, Context context) {
+    public MonthHeaderDecoration(List<DiaryLengthModel> dataList, Context context) {
         this.dataList = dataList;
         this.topMargin = dpToPx(16); // 顶部留出 16dp 放文字
 
@@ -55,7 +55,7 @@ public class MonthHeaderDecoration extends RecyclerView.ItemDecoration {
 
             if (position == RecyclerView.NO_POSITION || position >= dataList.size()) continue;
 
-            DiaryParagraphCountModel item = dataList.get(position);
+            DiaryLengthModel item = dataList.get(position);
             if (item == null) continue;
 
             LocalDate date = item.getDiaryDate();
