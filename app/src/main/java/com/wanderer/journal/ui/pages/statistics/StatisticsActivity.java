@@ -107,7 +107,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         count -> {
-                            String txt = count + "个字符";
+                            String txt = count + "字符";
                             binding.maxCharacterCountText.setText(txt);
 
                             //查询出最大长度后
@@ -130,7 +130,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         count -> {
-                            String txt = count + "个字符";
+                            String txt = count + "字符";
                             binding.averageCharacterCountText.setText(txt);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
