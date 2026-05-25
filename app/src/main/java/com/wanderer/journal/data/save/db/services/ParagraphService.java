@@ -96,8 +96,8 @@ public class ParagraphService {
     public static Single<DiaryLength> getDiaryLengthData(@NonNull DiaryDatabase db) {
         ParagraphDao paragraphDao = db.paragraphDao();
         return Single.zip(
-                paragraphDao.getMaxDiaryCharacterCountSingle(),
-                paragraphDao.getAverageDiaryCharacterCountSingle(),
+                paragraphDao.getMaxDiaryLengthSingle(),
+                paragraphDao.getAverageDiaryLengthSingle(),
                 DiaryLength::new
         );
     }

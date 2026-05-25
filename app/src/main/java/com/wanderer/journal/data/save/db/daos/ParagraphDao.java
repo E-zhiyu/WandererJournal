@@ -86,12 +86,14 @@ public interface ParagraphDao {
      * @return 最大的日记字符数量
      */
     @Query(
-            "SELECT TOTAL(LENGTH(content)) AS length FROM paragraphs " +
+            "SELECT COALESCE((" +
+                    "SELECT TOTAL(LENGTH(content)) AS length FROM paragraphs " +
                     "GROUP BY parentDiaryId " +
                     "ORDER BY length DESC " +
-                    "LIMIT 1"
+                    "LIMIT 1" +
+                    "), 0)"
     )
-    Single<Integer> getMaxDiaryCharacterCountSingle();
+    Single<Integer> getMaxDiaryLengthSingle();
 
     /**
      * 查询平均日记长度
@@ -99,12 +101,13 @@ public interface ParagraphDao {
      * @return 平均日记字符数量
      */
     @Query(
-            "SELECT AVG(LENGTH(content)) AS length FROM paragraphs " +
-                    "GROUP BY parentDiaryId " +
-                    "ORDER BY length DESC " +
-                    "LIMIT 1"
+            "SELECT COALESCE(AVG(length), 0) FROM (" +
+                    "SELECT TOTAL(LENGTH(content)) AS length " +
+                    "FROM paragraphs " +
+                    "GROUP BY parentDiaryId" +
+                    ")"
     )
-    Single<Integer> getAverageDiaryCharacterCountSingle();
+    Single<Integer> getAverageDiaryLengthSingle();
 
     /**
      * 插入一条日记段落
