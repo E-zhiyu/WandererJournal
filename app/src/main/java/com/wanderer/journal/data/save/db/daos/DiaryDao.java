@@ -55,18 +55,19 @@ public interface DiaryDao {
     Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
 
     /**
-     * 获取日记段落数量数据
+     * 获取日记段落的字符数量数据
      *
      * @param start 起算日期（包含）
      * @param end   截止日期（包含）
      * @return 在指定日期段的日记的段落数量数据
      */
-    @Query("SELECT diaryDate AS diaryDate," +
-            "(SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = diaryId) AS paragraphCount " +
+    @Query(
+            "SELECT diaryDate AS diaryDate," +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS paragraphWordCount " +
             "FROM diaries " +
-            "WHERE diaryDate >= :start AND diaryDate <= :end " +
-            "ORDER BY diaryDate ASC")
-    List<DiaryParagraphCountModel> getDiaryParagraphCount(LocalDate start, LocalDate end);
+            "WHERE diaryDate >= :start AND diaryDate <= :end"
+    )
+    List<DiaryParagraphCountModel> getDiaryParagraphWordCount(LocalDate start, LocalDate end);
 
     /**
      * 查询指定日期之前（包括该日期）的所有日记的日期

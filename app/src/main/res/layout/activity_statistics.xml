@@ -55,7 +55,7 @@
                         android:id="@+id/continuous_count_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/diary_continuous_count"
+                        android:text="@string/infinity"
                         android:textAppearance="?attr/textAppearanceHeadline5"
                         app:layout_constraintBottom_toTopOf="@id/continuous_count_title"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -97,7 +97,7 @@
                         android:id="@+id/max_continuous_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/max_diary_continuous"
+                        android:text="@string/infinity"
                         android:textAppearance="?attr/textAppearanceHeadline5"
                         app:layout_constraintBottom_toTopOf="@id/max_continuous_title"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -118,13 +118,107 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 以上卡片的底部屏障 -->
+            <!-- 连续天数卡片底部屏障 -->
             <androidx.constraintlayout.widget.Barrier
                 android:id="@+id/continuous_card_barrier"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:barrierDirection="bottom"
                 app:constraint_referenced_ids="continuous_count_card,max_continuous_card" />
+
+            <!-- 最大日记字符数量 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/max_character_count_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="0dp"
+                app:layout_constraintEnd_toStartOf="@id/average_character_count_card"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/max_character_count_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/infinity"
+                        android:textAppearance="?attr/textAppearanceHeadline5"
+                        app:layout_constraintBottom_toTopOf="@id/max_character_count_title"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/max_character_count_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/max_character_count"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOutline"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/max_character_count_text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 平均日记字符数量 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/average_character_count_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/max_character_count_card"
+                app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/average_character_count_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/infinity"
+                        android:textAppearance="?attr/textAppearanceHeadline5"
+                        app:layout_constraintBottom_toTopOf="@id/average_character_count_title"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/average_character_count_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/average_character_count"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOutline"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/average_character_count_text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 段落字符数量卡片底部屏障 -->
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/character_count_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="max_character_count_card,average_character_count_card" />
 
             <!-- 左侧固定星期（不跟随滚动） -->
             <!-- layout_marginTop="16dp" 用于错开顶部月份占用的 16dp 高度 -->
@@ -220,12 +314,13 @@
                 app:layout_constraintBottom_toTopOf="@id/pixel_explanation_layout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/week_layout"
-                app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier" />
+                app:layout_constraintTop_toBottomOf="@id/character_count_barrier" />
 
             <LinearLayout
                 android:id="@+id/pixel_explanation_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="0dp"

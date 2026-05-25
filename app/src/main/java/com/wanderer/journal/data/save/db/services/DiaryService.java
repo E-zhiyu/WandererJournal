@@ -102,12 +102,12 @@ public class DiaryService {
             DiaryDao diaryDao = db.diaryDao();
 
             //获取有日记的天
-            List<DiaryParagraphCountModel> withDiaryModelList = diaryDao.getDiaryParagraphCount(start, end);
+            List<DiaryParagraphCountModel> withDiaryModelList = diaryDao.getDiaryParagraphWordCount(start, end);
 
             //将数据放到哈希表中
             HashMap<LocalDate, Integer> dateMap = new HashMap<>();
             for (DiaryParagraphCountModel model : withDiaryModelList) {
-                dateMap.put(model.getDiaryDate(), model.getParagraphCount());
+                dateMap.put(model.getDiaryDate(), model.getParagraphWordCount());
             }
 
             List<DiaryParagraphCountModel> resultList = new ArrayList<>();

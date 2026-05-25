@@ -81,6 +81,32 @@ public interface ParagraphDao {
     Single<Optional<ParagraphEntityModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
+     * 查询最大的日记长度
+     *
+     * @return 最大的日记字符数量
+     */
+    @Query(
+            "SELECT TOTAL(LENGTH(content)) AS length FROM paragraphs " +
+                    "GROUP BY parentDiaryId " +
+                    "ORDER BY length DESC " +
+                    "LIMIT 1"
+    )
+    Single<Integer> getMaxDiaryCharacterCountSingle();
+
+    /**
+     * 查询平均日记长度
+     *
+     * @return 平均日记字符数量
+     */
+    @Query(
+            "SELECT AVG(LENGTH(content)) AS length FROM paragraphs " +
+                    "GROUP BY parentDiaryId " +
+                    "ORDER BY length DESC " +
+                    "LIMIT 1"
+    )
+    Single<Integer> getAverageDiaryCharacterCountSingle();
+
+    /**
      * 插入一条日记段落
      *
      * @param paragraph 日记段落实例

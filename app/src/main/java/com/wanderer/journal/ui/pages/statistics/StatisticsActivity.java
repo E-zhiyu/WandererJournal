@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -68,7 +69,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 binding.continuousCountCard,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
         AppearanceAnimationHelper.setRadius(
@@ -77,7 +78,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
 
         //连续日期数据
@@ -91,8 +92,50 @@ public class StatisticsActivity extends AppCompatActivity {
                 )
         );
 
-        //记忆像素
-        initMemeryPixelRecycler();
+        //最大段落字符数量
+        ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
+        AppearanceAnimationHelper.setRadius(
+                this,
+                binding.maxCharacterCountCard,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+        );
+        disposable.add(paragraphDao.getMaxDiaryCharacterCountSingle()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> {
+                            String txt = count + "个字符";
+                            binding.maxCharacterCountText.setText(txt);
+
+                            //查询出最大长度后
+                            initMemeryPixelRecycler(count);
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+
+        AppearanceAnimationHelper.setRadius(
+                this,
+                binding.averageCharacterCountCard,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+        );
+        disposable.add(paragraphDao.getAverageDiaryCharacterCountSingle()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> {
+                            String txt = count + "个字符";
+                            binding.averageCharacterCountText.setText(txt);
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
     }
 
     /**
@@ -137,7 +180,7 @@ public class StatisticsActivity extends AppCompatActivity {
     /**
      * 初始化记忆像素列表
      */
-    private void initMemeryPixelRecycler() {
+    private void initMemeryPixelRecycler(int maxParagraphCount) {
         //实例化一个7行的网格布局并应用于Recycler
         GridLayoutManager layoutManager = new GridLayoutManager(
                 this,
@@ -147,7 +190,7 @@ public class StatisticsActivity extends AppCompatActivity {
         );
         binding.memeryPixelRecycler.setLayoutManager(layoutManager);
 
-        MemeryPixelAdapter adapter = new MemeryPixelAdapter();
+        MemeryPixelAdapter adapter = new MemeryPixelAdapter(maxParagraphCount);
         binding.memeryPixelRecycler.setAdapter(adapter);
 
         //查询数据

@@ -13,6 +13,7 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryParagraphCountM
 import com.wanderer.journal.databinding.ViewHolderMemeryPixelBinding;
 
 public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
+    private final int maxCharacterCount;    //最大日记字符数量
     private final static DiffUtil.ItemCallback<DiaryParagraphCountModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull DiaryParagraphCountModel oldItem, @NonNull DiaryParagraphCountModel newItem) {
@@ -21,12 +22,18 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, Me
 
         @Override
         public boolean areContentsTheSame(@NonNull DiaryParagraphCountModel oldItem, @NonNull DiaryParagraphCountModel newItem) {
-            return oldItem.getParagraphCount() == newItem.getParagraphCount();
+            return oldItem.getParagraphWordCount() == newItem.getParagraphWordCount();
         }
     };
 
-    protected MemeryPixelAdapter() {
+    /**
+     * 记忆像素适配器构造方法
+     *
+     * @param maxCharacterCount 最大日记字符数量
+     */
+    public MemeryPixelAdapter(int maxCharacterCount) {
         super(ITEM_CALLBACK);
+        this.maxCharacterCount = maxCharacterCount;
     }
 
     public static class MemeryPixelViewHolder extends RecyclerView.ViewHolder {
@@ -59,14 +66,14 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryParagraphCountModel, Me
         }
 
         //根据内容多少分配颜色
-        int paragraphCount = model.getParagraphCount();
+        int paragraphCount = model.getParagraphWordCount();
         if (paragraphCount == 0) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_empty);
-        } else if (paragraphCount < 3) {
+        } else if (paragraphCount < maxCharacterCount * .25) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_few);
-        } else if (paragraphCount < 6) {
+        } else if (paragraphCount < maxCharacterCount * .5) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_moderate);
-        } else if (paragraphCount < 10) {
+        } else if (paragraphCount < maxCharacterCount * .75) {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_many);
         } else {
             holder.binding.viewCube.setBackgroundResource(R.drawable.bg_pixel_numerous);
