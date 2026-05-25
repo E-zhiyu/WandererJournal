@@ -63,6 +63,7 @@ import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -118,6 +119,7 @@ public class WriteActivity extends AppCompatActivity {
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
     private static final int DRAFT_SAVING_DELAY = 3000;     //3s没有修改文本则保存草稿
+    private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,6 +183,9 @@ public class WriteActivity extends AppCompatActivity {
         initLaunchers();
         initOnBackPressedHandlers();
 
+        //实例化键盘监听器
+        keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
+
         //第一次加载界面时显示草稿恢复对话框
         if (savedInstanceState == null) {
             String draft = DraftPreference.getDraft(this);
@@ -194,6 +199,55 @@ public class WriteActivity extends AppCompatActivity {
                         .setNegativeButton("取消", null)
                         .show();
             }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+
+        if (keyboardAttachmentHelper != null) {
+            keyboardAttachmentHelper.startLegacyTracking(
+                    (currentHeight, previousHeight) -> {
+                        if (hasWindowFocus()) {
+                            return;
+                        }
+
+                        binding.contentInputCard
+                                .animate()
+                                .translationY(-currentHeight)
+                                .setDuration(250)
+                                .start();
+                        binding.contentEditCard
+                                .animate()
+                                .translationY(-currentHeight)
+                                .setDuration(250)
+                                .start();
+                        binding.mediaCard
+                                .animate()
+                                .translationY(-currentHeight)
+                                .setDuration(250)
+                                .start();
+
+                        //内容 RecyclerView 额外增加5dp的底部内边距
+                        binding.contentRecycler.setPadding(
+                                0,
+                                0,
+                                0,
+                                currentHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                        );
+                    }
+            );
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (keyboardAttachmentHelper != null) {
+            keyboardAttachmentHelper.stopTracking();
         }
     }
 
