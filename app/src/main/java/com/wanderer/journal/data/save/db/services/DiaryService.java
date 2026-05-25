@@ -13,6 +13,7 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -119,8 +120,8 @@ public class DiaryService {
             }
 
             //遍历哈希表填充没有记日记的天
-            int nowDayOfYear = end.getDayOfYear();
-            for (int i = 0; i <= nowDayOfYear - 1; i++) {
+            long dateDiff = ChronoUnit.DAYS.between(start, end);
+            for (int i = 0; i <= dateDiff; i++) {
                 LocalDate date = start.plusDays(i);
 
                 Integer paragraphCount;

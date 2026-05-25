@@ -198,6 +198,10 @@ public class StatisticsActivity extends AppCompatActivity {
                 maxDiaryLength,
                 avgDiaryLength,
                 (model, view) -> {
+                    if (model == null) {
+                        return;
+                    }
+
                     //构建悬浮视图
                     PopupWindowMemeryPixelBinding windowBinding = PopupWindowMemeryPixelBinding.inflate(
                             LayoutInflater.from(this)
@@ -234,8 +238,8 @@ public class StatisticsActivity extends AppCompatActivity {
         binding.memeryPixelRecycler.setAdapter(adapter);
 
         //查询数据
-        LocalDate end = LocalDate.now();
-        LocalDate start = LocalDate.ofYearDay(end.getYear(), 1);
+        LocalDate end = LocalDate.now();    //直到今天
+        LocalDate start = end.plusYears(-1).plusDays(1);    //从去年的今天的第二天开始
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getMemeryPixelData(start, end, db)
                 .observeOn(AndroidSchedulers.mainThread())
