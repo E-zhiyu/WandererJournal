@@ -127,8 +127,8 @@ public class StatisticsActivity extends AppCompatActivity {
                             int max = diaryLength.getMax();
                             int avg = diaryLength.getAvg();
 
-                            String maxStr = max + "字符";
-                            String avgStr = avg + "字符";
+                            String maxStr = max + "字";
+                            String avgStr = avg + "字";
                             binding.maxCharacterCountText.setText(maxStr);
                             binding.averageCharacterCountText.setText(avgStr);
 
