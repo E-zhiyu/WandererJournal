@@ -91,7 +91,7 @@ public class DiaryFragment extends Fragment {
         });
 
         //日期跳转按钮
-        binding.dateSkipFab.setOnClickListener(view -> DateTimePickerHelper.selectDate(
+        binding.dateSkipBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
                 null,
                 getParentFragmentManager(),
                 "选择跳转到的日期",
