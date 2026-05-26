@@ -68,7 +68,7 @@ public interface ParagraphDao {
      * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符）
      */
     @Query(
-            "SELECT pure_paragraph_position + date_separator_count " +
+            "SELECT (pure_paragraph_position + date_separator_count) " +
                     "FROM (" +
                     "    SELECT " +
                     "        content, " +
