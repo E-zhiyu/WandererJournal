@@ -72,7 +72,6 @@ import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
@@ -614,9 +613,8 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), diaryDate)
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->

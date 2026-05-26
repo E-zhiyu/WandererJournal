@@ -27,13 +27,8 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphViewModel extends ViewModel {
-    private final DiaryDatabase db; //数据库实例
     private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(new ArrayList<>());   //匹配搜索的位置列表
     private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);   //当前所在的匹配搜索位置的下标
-
-    public ParagraphViewModel(@NonNull DiaryDatabase db) {
-        this.db = db;
-    }
 
     public LiveData<Integer> getCurrentMatchIndex() {
         return currentMatchIndex;
@@ -73,37 +68,35 @@ public class ParagraphViewModel extends ViewModel {
      * @param end   段落结束日期（不包含）
      * @return 段落数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(LocalDate start, LocalDate end, LocalDate targetDate) {
-        // 1. 使用 Flowable.fromCallable 将同步的数据库查询和 Pager 初始化打包
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
+            @NonNull LocalDate start,
+            @NonNull LocalDate end,
+            DiaryDatabase db
+    ) {
         return Flowable.fromCallable(() -> {
-                    // 查询目标日期在数据库中的绝对位置
-                    int initPosition = 0;
-                    if (targetDate != null) {
-                        initPosition = db.paragraphDao().getAdjustedPositionSingle(targetDate);
-                    }
-
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
-                            2,
-                            4,
+                            10,
+                            20,
                             true, // 必须为 true 以支持精准定位
-                            10
+                            20
                     );
 
                     // 创建 Pager
                     Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
-                            initPosition, // 动态传入计算出的下标
-                            () -> (start != null && end != null)
-                                    ? db.paragraphDao().getParagraphPagingSourceInRange(start, end)
-                                    : db.paragraphDao().getAllParagraphPagingSource()
+                            0, // 从最开始加载
+                            () -> db.paragraphDao().getParagraphPagingSourceInRange(start, end)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
                 })
                 .subscribeOn(Schedulers.io())   //在 IO 线程执行
                 .flatMap(pagingDataFlow -> pagingDataFlow)
-                .compose(flowable -> PagingRx.cachedIn(flowable, ViewModelKt.getViewModelScope(this)));
+                .compose(flowable -> PagingRx.cachedIn(
+                        flowable,
+                        ViewModelKt.getViewModelScope(this)
+                ));
     }
 
     /**
@@ -111,8 +104,31 @@ public class ParagraphViewModel extends ViewModel {
      *
      * @return 段落分页数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(LocalDate targetDate) {
-        return getPagingDataFlow(null, null, targetDate);
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDatabase db) {
+        return Flowable.fromCallable(() -> {
+                    // 配置 PagingConfig
+                    PagingConfig pagingConfig = new PagingConfig(
+                            10,
+                            20,
+                            true, // 必须为 true 以支持精准定位
+                            20
+                    );
+
+                    // 创建 Pager
+                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
+                            pagingConfig,
+                            initPosition, // 动态传入计算出的下标
+                            () -> db.paragraphDao().getAllParagraphPagingSource()
+                    );
+
+                    return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
+                })
+                .subscribeOn(Schedulers.io())   //在 IO 线程执行
+                .flatMap(pagingDataFlow -> pagingDataFlow)
+                .compose(flowable -> PagingRx.cachedIn(
+                        flowable,
+                        ViewModelKt.getViewModelScope(this)
+                ));
     }
 
     /**
@@ -154,7 +170,7 @@ public class ParagraphViewModel extends ViewModel {
      * @param keyword 搜索关键词
      * @return 是否已从数据库中获取符合搜索条件的下标
      */
-    public Completable executeSearch(String keyword) {
+    public Completable executeSearch(String keyword, DiaryDatabase db) {
         if (keyword == null || keyword.isEmpty()) {
             clearSearch();
             return Completable.complete();
@@ -172,7 +188,7 @@ public class ParagraphViewModel extends ViewModel {
             List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(finalSafeKeyword);
             matchedPositions.postValue(positionList);
             if (!positionList.isEmpty()) {
-                currentMatchIndex.postValue(0);
+                currentMatchIndex.postValue(positionList.size() - 1);
             } else {
                 currentMatchIndex.postValue(-1);
             }
@@ -185,7 +201,9 @@ public class ParagraphViewModel extends ViewModel {
         List<Integer> positions = matchedPositions.getValue();
         Integer currentIndex = currentMatchIndex.getValue();
         if (positions != null && !positions.isEmpty() && currentIndex != null) {
-            int nextIndex = (currentIndex + 1) % positions.size(); // 循环滚动
+            int nextIndex = currentIndex == -1 ?
+                    0 :
+                    (currentIndex + 1) % positions.size(); // 循环滚动
             currentMatchIndex.setValue(nextIndex);
         }
     }
@@ -195,7 +213,9 @@ public class ParagraphViewModel extends ViewModel {
         List<Integer> positions = matchedPositions.getValue();
         Integer currentIndex = currentMatchIndex.getValue();
         if (positions != null && !positions.isEmpty() && currentIndex != null) {
-            int prevIndex = (currentIndex - 1 + positions.size()) % positions.size();
+            int prevIndex = currentIndex == -1 ?
+                    positions.size() - 1 :
+                    (currentIndex - 1 + positions.size()) % positions.size();
             currentMatchIndex.setValue(prevIndex);
         }
     }

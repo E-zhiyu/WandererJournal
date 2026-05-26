@@ -39,9 +39,7 @@ import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
@@ -57,9 +55,9 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
-    private ActivityDiaryReadBinding binding;               //绑定的XML布局
-    private LocalDate initDiaryDate = null;                 //初始页的日期
-    private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
+    private ActivityDiaryReadBinding binding;   //绑定的XML布局
+    private LocalDate initDiaryDate = null;     //初始页的日期
+    private Integer scrollPosition = null;      //加载列表时需要跳转到的位置
     private final CompositeDisposable disposable = new CompositeDisposable();
     private ParagraphAdapter adapter;
 
@@ -124,17 +122,13 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
-            ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-            ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
+            ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToPrevious();
         });
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
-            ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-            ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
+            ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToNext();
         });
     }
@@ -158,11 +152,10 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 //获取 ViewModel
                 DiaryDatabase db = DiaryDatabase.getInstance(this);
-                ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-                ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
+                ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
 
                 //执行搜索
-                disposable.add(viewModel.executeSearch(keyword)
+                disposable.add(viewModel.executeSearch(keyword, db)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(
@@ -183,8 +176,6 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化RecyclerView
      */
     private void initRecyclerView() {
-        pendingTargetDate = initDiaryDate;
-
         //设置适配器
         adapter = new ParagraphAdapter(
                 (model, view) -> {
@@ -246,48 +237,35 @@ public class DiaryReadActivity extends AppCompatActivity {
             boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
             boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
 
-            if (isNotLoading && endOfPaginationReached) {
-                if (adapter.getItemCount() == 0) {
-                    binding.emptyText.setVisibility(View.VISIBLE);
-                } else {
-                    binding.emptyText.setVisibility(View.GONE);
-                }
+            if (isNotLoading && endOfPaginationReached && adapter.getItemCount() == 0) {
+                binding.emptyText.setVisibility(View.VISIBLE);
             } else {
                 binding.emptyText.setVisibility(View.GONE);
             }
 
-            // 当刷新完成且数据已提交到 UI
-            if (isNotLoading && pendingTargetDate != null) {
-                // 遍历当前已加载的列表，找到对应的日期项
-                int position = -1;
-                for (int i = 0; i < adapter.getItemCount(); i++) {
-                    ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
-                    if (item instanceof ParagraphUiModel.Item) {
-                        if (((ParagraphUiModel.Item) item).model.getParagraph().getCreateTime().toLocalDate().equals(pendingTargetDate)) {
-                            position = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (position != -1) {
-                    // 关键：强制滚动到该位置，并将偏移量设为 0 (置顶)
-                    if (binding.contentRecycler.getLayoutManager() != null) {
-                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                .scrollToPositionWithOffset(position, 0);
-                        pendingTargetDate = null; // 跳转完成，清空标记
-                    }
+            //当刷新完成且数据已提交到 UI
+            if (isNotLoading && scrollPosition != null) {
+                if (binding.contentRecycler.getLayoutManager() != null) {
+                    ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                            .scrollToPositionWithOffset(scrollPosition, 0);
+                    scrollPosition = null; // 跳转完成，清空标记
                 }
             }
+
             return Unit.INSTANCE;
         });
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow(initDiaryDate)
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
+                .flatMapPublisher(
+                        initPosition -> {
+                            scrollPosition = initPosition;
+                            return viewModel.getPagingDataFlow(initPosition, db);
+                        }
+                )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
@@ -300,11 +278,14 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
         viewModel.getCurrentMatchIndex().observe(this, index -> {
+            //判断是否为默认占位符
+            if (index == -1) {
+                return;
+            }
+
+            //获取目标下标
             List<Integer> positions = viewModel.getMatchedPositions().getValue();
             if (index >= 0 && positions != null && index < positions.size()) {
                 int targetPosition = positions.get(index);
@@ -326,11 +307,17 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void safeScrollToPosition(int targetPosition) {
         binding.appBarLayout.setExpanded(false, true);  //收起顶部搜索视图
 
+        //判断位置有效性
+        if (targetPosition >= adapter.getItemCount() || targetPosition < 0) {
+            return;
+        }
+
+        //TODO:解决进入界面无法正常初始化、需要滚动多次才能精确滚动的BUG
+
         // 调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
         // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置
-        if (targetPosition < adapter.getItemCount()) {
-            adapter.peek(targetPosition);
-        }
+        adapter.peek(targetPosition);
+        scrollPosition = targetPosition;    //修改滚动标志位，让适配器加载后再精确滚动
 
         //滚动列表视图
         AppearanceAnimationHelper.scrollRecycler(
