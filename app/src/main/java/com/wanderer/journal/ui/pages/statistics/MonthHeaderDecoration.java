@@ -34,7 +34,7 @@ public class MonthHeaderDecoration extends RecyclerView.ItemDecoration {
                 Color.parseColor("#57606A")
         ));
         paint.setTextSize(dpToPx(9)); // 文字大小 9sp
-        paint.setTextAlign(Paint.Align.LEFT);
+        paint.setTextAlign(Paint.Align.CENTER);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class MonthHeaderDecoration extends RecyclerView.ItemDecoration {
             if (date.getDayOfWeek().getValue() == 1 && date.getDayOfMonth() <= 7) {
                 String monthName = date.getMonth().getDisplayName(TextStyle.SHORT, Locale.getDefault());
 
-                float x = child.getLeft();
+                float x = (child.getLeft() + child.getRight()) / 2f;
                 // Y轴固定在顶部 padding 的区间内（不受方块位置影响）
                 float y = topMargin - dpToPx(4);
 
