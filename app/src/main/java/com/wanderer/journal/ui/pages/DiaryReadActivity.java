@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -35,6 +36,7 @@ import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
@@ -324,16 +326,78 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void safeScrollToPosition(int targetPosition) {
         binding.appBarLayout.setExpanded(false, true);  //收起顶部搜索视图
 
-        // 1. 核心：调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
+        // 调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
         // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置
         if (targetPosition < adapter.getItemCount()) {
             adapter.peek(targetPosition);
         }
 
-        // 2. 滚动到指定位置，并置顶显示
+        // 滚动到指定位置，并置顶显示
         LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
-        if (layoutManager != null) {
-            layoutManager.scrollToPositionWithOffset(targetPosition, 0);
+        if (layoutManager == null) {
+            return;
+        }
+
+        //获取可见位置并比较
+        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
+        if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
+            //处理没有可见视图的情况
+            Toast.makeText(this, "没有可见的段落视图", Toast.LENGTH_SHORT).show();
+            return;
+        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
+            //处理不需要滚动的情况
+            RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
+            if (viewHolder != null) {
+                AppearanceAnimationHelper.blink(viewHolder.itemView);
+            }
+            return;
+        }
+
+        //根据距离远近采用不同的滚动方式
+        int distance = Math.abs(targetPosition - firstVisiblePos);
+        final int DISTANCE_THRESHOLD = 10;
+        if (distance > DISTANCE_THRESHOLD) {
+            //瞬间滚动到附近
+            int momentPosition = targetPosition > firstVisiblePos ? targetPosition - DISTANCE_THRESHOLD : targetPosition + DISTANCE_THRESHOLD;
+            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
+
+            //然后再平滑滚动
+            binding.contentRecycler.post(() -> {
+                //添加滚动监听器并平滑滚动
+                binding.contentRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        // 当滚动完全停止 (IDLE) 时再闪烁
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
+                            if (viewHolder != null) {
+                                AppearanceAnimationHelper.blink(viewHolder.itemView);
+                            }
+                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                        }
+                    }
+                });
+                binding.contentRecycler.smoothScrollToPosition(targetPosition);
+            });
+        } else {
+            //添加滚动监听器并平滑滚动
+            binding.contentRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    // 当滚动完全停止 (IDLE) 时再闪烁
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
+                        if (viewHolder != null) {
+                            AppearanceAnimationHelper.blink(viewHolder.itemView);
+                        }
+                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                    }
+                }
+            });
+            binding.contentRecycler.smoothScrollToPosition(targetPosition);
         }
     }
 
