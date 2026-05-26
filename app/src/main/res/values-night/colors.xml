@@ -140,4 +140,11 @@
     <color name="md_theme_surfaceContainer_highContrast">#2F3036</color>
     <color name="md_theme_surfaceContainerHigh_highContrast">#3A3B41</color>
     <color name="md_theme_surfaceContainerHighest_highContrast">#46464C</color>
+
+    <!-- 记忆像素颜色 -->
+    <color name="contribution_level_1">#033a16</color>
+    <color name="contribution_level_2">#196c2e</color>
+    <color name="contribution_level_3">#2ea043</color>
+    <color name="contribution_level_4">#56d364</color>
+    <color name="contribution_empty">#151b23</color>      <!-- 没写日记的浅灰色 -->
 </resources>

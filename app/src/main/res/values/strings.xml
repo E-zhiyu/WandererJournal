@@ -76,6 +76,15 @@
     <string name="btn_of_delete_media">删除媒体按钮</string>
     <string name="save_picture_btn">保存图片到本地的按钮</string>
     <string name="share_picture_btn">分享图片的按钮</string>
+    <string name="less">少</string>
+    <string name="more">多</string>
+    <string name="tuesday">周二</string>
+    <string name="saturday">周六</string>
+    <string name="thursday">周四</string>
+    <string name="last_write_date">最后写日记日期</string>
+    <string name="infinity">∞</string>
+    <string name="max_character_count">最大日记长度</string>
+    <string name="average_character_count">平均日记长度</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面</item>
@@ -83,7 +92,7 @@
         <item>这句话是错……误……的😵‍💫</item>
         <item>手握两把锟斤拷，口中直呼烫烫烫……</item>
         <item>你说得对，但Material You是由谷歌推出的一套全新动态设计语言系统。它构建于名为「Material Design」的视觉框架之上，通过智能算法实现「以你为本」的个性化体验。在这个充满活力的数字世界中，用户将通过「动态色彩」技术获得专属的视觉风格。</item>
-        <item>软件图标中的角色叫斯莱，是游戏《空洞骑士》中一位很有个性的人物。</item>
+        <item>软件图标中的物品是《空洞骑士》中的一个收集品，叫做“漫游者日记”。</item>
         <item>AI真的太好用了你知道吗？这里几乎所有动画都是AI写的！</item>
         <item>何意味是什么意思</item>
         <item>大手子云控中😈……什么？我根本没写云服务？😦</item>

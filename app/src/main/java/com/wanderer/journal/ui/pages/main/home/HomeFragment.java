@@ -20,7 +20,7 @@ import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.StatisticsActivity;
+import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -170,8 +170,8 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.paragraphCountCard.setOnClickListener(view -> {
-            Intent skip2DiaryRead = new Intent(requireContext(), DiaryReadActivity.class);
-            startActivity(skip2DiaryRead);
+            Intent skip2DiaryStatistics = new Intent(requireContext(), StatisticsActivity.class);
+            startActivity(skip2DiaryStatistics);
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.paragraphCountCard);
 

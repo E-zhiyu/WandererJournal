@@ -90,10 +90,24 @@ public class DiaryFragment extends Fragment {
             return true;
         });
 
-        //日期跳转FAB
-        AppearanceAnimationHelper.attachMorphAnimation(binding.dateSkipFab);
-        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.diaryRecycler, binding.dateSkipFab);
-        binding.dateSkipFab.setOnClickListener(view -> showDateScrollDatePicker());
+        //日期跳转按钮
+        binding.dateSkipBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
+                null,
+                getParentFragmentManager(),
+                "选择跳转到的日期",
+                selection -> {
+                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    disposable.add(dao.getDiaryCountSingle(selectedDate)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    count -> scrollToTargetPosition(count, selectedDate),
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                            )
+                    );
+                }
+        ));
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
@@ -129,28 +143,6 @@ public class DiaryFragment extends Fragment {
                             Log.e(LogTags.DIARY_FRAGMENT.n(), "日记数据库读取失败");
                         }
                 )
-        );
-    }
-
-    /**
-     * 跳转到指定日期的日记
-     */
-    private void showDateScrollDatePicker() {
-        DateTimePickerHelper.selectDate(
-                null,
-                getParentFragmentManager(),
-                selection -> {
-                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
-                    disposable.add(dao.getDiaryCountSingle(selectedDate)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    count -> scrollToTargetPosition(count, selectedDate),
-                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
-                            )
-                    );
-                }
         );
     }
 

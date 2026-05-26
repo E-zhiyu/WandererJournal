@@ -68,8 +68,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            binding.coordinatorLayout.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
-
             //列表视图
             binding.contentRecycler.setPadding(
                     systemBars.left,

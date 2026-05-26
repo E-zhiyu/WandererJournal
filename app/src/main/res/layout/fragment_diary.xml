@@ -1,59 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.pages.main.diary.DiaryFragment">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@null"
-        app:title="@string/diary" />
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+            app:expandedTitleGravity="bottom|center_horizontal"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:toolbarId="@id/toolbar">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_collapseMode="pin">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:navigationIcon="@null"
+                    app:title="@string/diary" />
+
+                <ImageButton
+                    android:id="@+id/date_skip_btn"
+                    style="@style/ImageButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="15dp"
+                    android:contentDescription="@string/date_skip_btn"
+                    android:src="@drawable/outline_date_range_24"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/empty_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/no_diary"
-        android:textAppearance="?attr/textAppearanceBodyLarge"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textAppearance="?attr/textAppearanceBodyLarge" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/diary_recycler"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:paddingBottom="5dp"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_fab"
         style="@style/AddFloatingActionBtnStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/button_to_add"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/date_skip_fab"
-        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:contentDescription="@string/date_skip_btn"
-        android:src="@drawable/outline_date_range_24"
-        app:layout_constraintBottom_toTopOf="@id/add_fab"
-        app:layout_constraintEnd_toEndOf="@id/add_fab"
-        app:layout_constraintStart_toStartOf="@id/add_fab" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_gravity="end|bottom"
+        android:contentDescription="@string/button_to_add" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

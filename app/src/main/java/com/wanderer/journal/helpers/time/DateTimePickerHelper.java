@@ -46,8 +46,29 @@ public class DateTimePickerHelper {
             Context context,
             MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>> listener
     ) {
+        selectDateRange(start, end, fragmentManager, "选择日期范围", context, listener);
+    }
+
+    /**
+     * 选择日期范围
+     *
+     * @param start           初始化时的起始日期
+     * @param end             初始化时的结束日期
+     * @param fragmentManager 显示对话框所需Fragment管理器
+     * @param title           对话框标题
+     * @param context         上下文
+     * @param listener        确认按钮点击回调
+     */
+    public static void selectDateRange(
+            LocalDate start,
+            LocalDate end,
+            FragmentManager fragmentManager,
+            String title,
+            Context context,
+            MaterialPickerOnPositiveButtonClickListener<Pair<Long, Long>> listener
+    ) {
         MaterialDatePicker.Builder<Pair<Long, Long>> dateBuilder = MaterialDatePicker.Builder.dateRangePicker();
-        dateBuilder.setTitleText("选择日期范围");
+        dateBuilder.setTitleText(title);
 
         //初始化已选中的日期范围
         if (start != null && end != null) {
@@ -91,9 +112,26 @@ public class DateTimePickerHelper {
             FragmentManager fragmentManager,
             MaterialPickerOnPositiveButtonClickListener<Long> listener
     ) {
+        selectDate(initDate, fragmentManager, "选择日期", listener);
+    }
+
+    /**
+     * 选择日期
+     *
+     * @param initDate        初始化时选中的日期
+     * @param fragmentManager 显示对话框的FragmentManager
+     * @param title           日期选择对话框标题
+     * @param listener        确定监听器
+     */
+    public static void selectDate(
+            LocalDate initDate,
+            FragmentManager fragmentManager,
+            String title,
+            MaterialPickerOnPositiveButtonClickListener<Long> listener
+    ) {
         //创建日期选择对话框构建器
         MaterialDatePicker.Builder<Long> dateBuilder = MaterialDatePicker.Builder.datePicker();
-        dateBuilder.setTitleText("选择日期");
+        dateBuilder.setTitleText(title);
         if (initDate != null) {
             long dateSelection = initDate.atStartOfDay()
                     .toInstant(ZoneOffset.UTC)

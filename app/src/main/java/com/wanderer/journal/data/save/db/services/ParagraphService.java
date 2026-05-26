@@ -5,6 +5,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.wanderer.journal.auxiliary.classes.DiaryLength;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -15,6 +16,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 public class ParagraphService {
     /**
@@ -84,5 +86,19 @@ public class ParagraphService {
             //删除数据库中的记录
             paragraphDao.deleteParagraph(paragraph);
         });
+    }
+
+    /**
+     * 获取日记平均长度、最大长度
+     * @param db 数据库实例
+     * @return 包含日记长度等数据的实例
+     */
+    public static Single<DiaryLength> getDiaryLengthData(@NonNull DiaryDatabase db) {
+        ParagraphDao paragraphDao = db.paragraphDao();
+        return Single.zip(
+                paragraphDao.getMaxDiaryLengthSingle(),
+                paragraphDao.getAverageDiaryLengthSingle(),
+                DiaryLength::new
+        );
     }
 }

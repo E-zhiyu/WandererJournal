@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.StatisticsActivity">
+    tools:context=".ui.pages.statistics.StatisticsActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/diary_statistics" />
+        android:fitsSystemWindows="true">
 
-    <ScrollView
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@string/diary_statistics" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:orientation="vertical"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
 
@@ -48,7 +55,7 @@
                         android:id="@+id/continuous_count_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/diary_continuous_count"
+                        android:text="@string/infinity"
                         android:textAppearance="?attr/textAppearanceHeadline5"
                         app:layout_constraintBottom_toTopOf="@id/continuous_count_title"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -90,7 +97,7 @@
                         android:id="@+id/max_continuous_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/max_diary_continuous"
+                        android:text="@string/infinity"
                         android:textAppearance="?attr/textAppearanceHeadline5"
                         app:layout_constraintBottom_toTopOf="@id/max_continuous_title"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -110,6 +117,259 @@
                         app:layout_constraintTop_toBottomOf="@id/max_continuous_text" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- 连续天数卡片底部屏障 -->
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/continuous_card_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="continuous_count_card,max_continuous_card" />
+
+            <!-- 最大日记字符数量 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/max_character_count_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="0dp"
+                app:layout_constraintEnd_toStartOf="@id/average_character_count_card"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/max_character_count_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/infinity"
+                        android:textAppearance="?attr/textAppearanceHeadline5"
+                        app:layout_constraintBottom_toTopOf="@id/max_character_count_title"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/max_character_count_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/max_character_count"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOutline"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/max_character_count_text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 平均日记字符数量 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/average_character_count_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:layout_marginTop="2dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/max_character_count_card"
+                app:layout_constraintTop_toBottomOf="@id/continuous_card_barrier">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="20dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/average_character_count_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/infinity"
+                        android:textAppearance="?attr/textAppearanceHeadline5"
+                        app:layout_constraintBottom_toTopOf="@id/average_character_count_title"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/average_character_count_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/average_character_count"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="?attr/colorOutline"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/average_character_count_text" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 段落字符数量卡片底部屏障 -->
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/character_count_barrier"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="max_character_count_card,average_character_count_card" />
+
+            <!-- 左侧固定星期（不跟随滚动） -->
+            <!-- layout_marginTop="16dp" 用于错开顶部月份占用的 16dp 高度 -->
+            <LinearLayout
+                android:id="@+id/week_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="6dp"
+                android:gravity="end|center_vertical"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="@id/memery_pixel_recycler"
+                app:layout_constraintEnd_toStartOf="@id/memery_pixel_recycler"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/memery_pixel_recycler">
+
+                <!-- 周一 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周二 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/tuesday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周三 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周四 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/thursday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周五 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周六 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text="@string/saturday"
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 周日 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="16dp"
+                    android:layout_weight="1"
+                    android:text=""
+                    android:textColor="?attr/colorOutline"
+                    android:textSize="11sp" />
+
+                <!-- 说明：这里的 android:layout_height="16dp"
+                     必须等于 (方块高度12dp + 上下margin各2dp = 16dp)，这样才能完美垂直对齐！ -->
+            </LinearLayout>
+
+            <!-- 记忆像素列表，类似于GitHub贡献墙 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/memery_pixel_recycler"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                app:layout_constraintBottom_toTopOf="@id/pixel_explanation_layout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/week_layout"
+                app:layout_constraintTop_toBottomOf="@id/character_count_barrier" />
+
+            <LinearLayout
+                android:id="@+id/pixel_explanation_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="0dp"
+                android:paddingEnd="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/memery_pixel_recycler">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:text="@string/less" />
+
+                <View
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_pixel_empty" />
+
+                <View
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_pixel_few" />
+
+                <View
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_pixel_moderate" />
+
+                <View
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_pixel_many" />
+
+                <View
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_pixel_numerous" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/more" />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

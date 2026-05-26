@@ -9,10 +9,13 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -80,6 +83,56 @@ public class DiaryService {
 
             //删除数据库中的记录
             diaryDao.deleteDiary(diary);
+        });
+    }
+
+    /**
+     * 获取记忆像素数据
+     *
+     * @param start 起始日期（包含）
+     * @param end   截止日期（包含）
+     * @return 一个{@link Single}实例，包含能够直接提交给适配器的数据模型列表
+     */
+    public static Single<List<DiaryLengthModel>> getMemeryPixelData(
+            LocalDate start,
+            LocalDate end,
+            DiaryDatabase db
+    ) {
+        return Single.defer(() -> {
+            DiaryDao diaryDao = db.diaryDao();
+
+            //获取有日记的天
+            List<DiaryLengthModel> withDiaryModelList = diaryDao.getDiaryParagraphWordCount(start, end);
+
+            //将数据放到哈希表中
+            HashMap<LocalDate, Integer> dateMap = new HashMap<>();
+            for (DiaryLengthModel model : withDiaryModelList) {
+                dateMap.put(model.getDiaryDate(), model.getDiaryLength());
+            }
+
+            List<DiaryLengthModel> resultList = new ArrayList<>();
+
+            //填充头部 null 对象，使开始日期对齐（例如：星期一对齐到下标为0）
+            int dayOfWeekValue = start.getDayOfWeek().getValue();
+            int nullCount = dayOfWeekValue - 1;
+            for (int i = 0; i < nullCount; i++) {
+                resultList.add(null);
+            }
+
+            //遍历哈希表填充没有记日记的天
+            long dateDiff = ChronoUnit.DAYS.between(start, end);
+            for (int i = 0; i <= dateDiff; i++) {
+                LocalDate date = start.plusDays(i);
+
+                Integer paragraphCount;
+                if (dateMap.containsKey(date) && (paragraphCount = dateMap.get(date)) != null) {
+                    resultList.add(new DiaryLengthModel(date, paragraphCount));
+                } else {
+                    resultList.add(new DiaryLengthModel(date, 0));
+                }
+            }
+
+            return Single.just(resultList);
         });
     }
 }

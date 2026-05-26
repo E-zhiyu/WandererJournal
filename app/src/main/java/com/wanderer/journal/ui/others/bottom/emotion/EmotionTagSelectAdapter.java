@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagSelectBinding;
 
@@ -114,11 +115,19 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
     @Override
     public void onBindViewHolder(@NonNull EmotionTagSelectViewHolder holder, int position) {
         EmotionTagUiModel item = getItem(position);
+        if (item == null) {
+            holder.binding.chip.setChecked(false);
+            holder.binding.chip.setCheckable(false);            //不可选择
+            holder.binding.chip.setCloseIconVisible(false);     //隐藏关闭按钮
+            holder.binding.chip.setCheckedIconVisible(true);    //显示左侧选择按钮
+            holder.binding.chip.setCheckedIconResource(R.drawable.outline_add_24);  //左侧改为添加图标
+            holder.binding.chip.setText("添加情绪标签");
+        } else {
+            //设置选中状态
+            holder.binding.chip.setChecked(item.isChecked());
 
-        //设置选中状态
-        holder.binding.chip.setChecked(item.isChecked());
-
-        //设置名称
-        holder.binding.chip.setText(item.getEmotionTag().getName());
+            //设置名称
+            holder.binding.chip.setText(item.getEmotionTag().getName());
+        }
     }
 }
