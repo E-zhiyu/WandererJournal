@@ -10,6 +10,7 @@ import android.os.Vibrator;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
@@ -18,6 +19,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
 
@@ -237,5 +239,104 @@ public class AppearanceAnimationHelper {
         });
 
         animator.start();
+    }
+
+    /**
+     * 将 RecyclerView平滑滚动到指定位置
+     *
+     * @param recyclerView        需要滚动的 RecyclerView
+     * @param layoutManager       RecyclerView 的布局管理器
+     * @param targetPosition      需要滚动到的目标下标
+     * @param distanceThresholder 最大平滑滚动的距离，超出该距离先闪现到附近再平滑滚动
+     * @param listener            滚动结果监听器
+     */
+    public static void scrollRecycler(
+            @NonNull RecyclerView recyclerView,
+            LinearLayoutManager layoutManager,
+            int targetPosition,
+            int distanceThresholder,
+            RecyclerViewScrollListener listener
+    ) {
+        //判断布局管理器
+        if (layoutManager == null) {
+            listener.onError("布局管理器为空");
+            return;
+        }
+
+        //判断位置是否有效
+        RecyclerView.Adapter<?> adapter = recyclerView.getAdapter();
+        if (adapter == null) {
+            listener.onError("无法获取适配器");
+            return;
+        } else if (targetPosition < 0 || targetPosition >= adapter.getItemCount()) {
+            listener.onError("目标位置无效");
+            return;
+        }
+
+        //获取可见位置并比较
+        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
+        if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
+            //处理没有可见视图的情况
+            listener.onError("没有可见视图");
+            return;
+        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
+            //处理不需要滚动的情况
+            RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
+            if (viewHolder != null) {
+                AppearanceAnimationHelper.blink(viewHolder.itemView);
+            }
+            listener.onSuccess();
+            return;
+        }
+
+        //根据距离远近采用不同的滚动方式
+        int distance = Math.abs(targetPosition - firstVisiblePos);
+        if (distance > distanceThresholder) {
+            //瞬间滚动到附近
+            int momentPosition = targetPosition > firstVisiblePos ?
+                    targetPosition - distanceThresholder :
+                    targetPosition + distanceThresholder;
+            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
+
+            //然后再平滑滚动
+            recyclerView.post(() -> {
+                //添加滚动监听器并平滑滚动
+                recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                    @Override
+                    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                        super.onScrollStateChanged(recyclerView, newState);
+                        // 当滚动完全停止 (IDLE) 时再闪烁
+                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
+                            if (viewHolder != null) {
+                                AppearanceAnimationHelper.blink(viewHolder.itemView);
+                            }
+                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                        }
+                    }
+                });
+                recyclerView.smoothScrollToPosition(targetPosition);
+            });
+        } else {
+            //添加滚动监听器并平滑滚动
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    // 当滚动完全停止 (IDLE) 时再闪烁
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
+                        if (viewHolder != null) {
+                            AppearanceAnimationHelper.blink(viewHolder.itemView);
+                        }
+                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+                    }
+                }
+            });
+            recyclerView.smoothScrollToPosition(targetPosition);
+        }
+
+        listener.onSuccess();
     }
 }

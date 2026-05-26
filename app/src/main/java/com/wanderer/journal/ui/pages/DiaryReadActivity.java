@@ -20,11 +20,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -332,73 +332,23 @@ public class DiaryReadActivity extends AppCompatActivity {
             adapter.peek(targetPosition);
         }
 
-        // 滚动到指定位置，并置顶显示
-        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
-        if (layoutManager == null) {
-            return;
-        }
-
-        //获取可见位置并比较
-        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
-        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
-        if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
-            //处理没有可见视图的情况
-            Toast.makeText(this, "没有可见的段落视图", Toast.LENGTH_SHORT).show();
-            return;
-        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
-            //处理不需要滚动的情况
-            RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
-            if (viewHolder != null) {
-                AppearanceAnimationHelper.blink(viewHolder.itemView);
-            }
-            return;
-        }
-
-        //根据距离远近采用不同的滚动方式
-        int distance = Math.abs(targetPosition - firstVisiblePos);
-        final int DISTANCE_THRESHOLD = 10;
-        if (distance > DISTANCE_THRESHOLD) {
-            //瞬间滚动到附近
-            int momentPosition = targetPosition > firstVisiblePos ? targetPosition - DISTANCE_THRESHOLD : targetPosition + DISTANCE_THRESHOLD;
-            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
-
-            //然后再平滑滚动
-            binding.contentRecycler.post(() -> {
-                //添加滚动监听器并平滑滚动
-                binding.contentRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        //滚动列表视图
+        AppearanceAnimationHelper.scrollRecycler(
+                binding.contentRecycler,
+                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                targetPosition,
+                10,
+                new RecyclerViewScrollListener() {
                     @Override
-                    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                        super.onScrollStateChanged(recyclerView, newState);
-                        // 当滚动完全停止 (IDLE) 时再闪烁
-                        if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                            RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
-                            if (viewHolder != null) {
-                                AppearanceAnimationHelper.blink(viewHolder.itemView);
-                            }
-                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
-                        }
+                    public void onSuccess() {
                     }
-                });
-                binding.contentRecycler.smoothScrollToPosition(targetPosition);
-            });
-        } else {
-            //添加滚动监听器并平滑滚动
-            binding.contentRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                @Override
-                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                    super.onScrollStateChanged(recyclerView, newState);
-                    // 当滚动完全停止 (IDLE) 时再闪烁
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        RecyclerView.ViewHolder viewHolder = binding.contentRecycler.findViewHolderForAdapterPosition(targetPosition);
-                        if (viewHolder != null) {
-                            AppearanceAnimationHelper.blink(viewHolder.itemView);
-                        }
-                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+
+                    @Override
+                    public void onError(String errMessage) {
+                        Toast.makeText(DiaryReadActivity.this, errMessage, Toast.LENGTH_SHORT).show();
                     }
                 }
-            });
-            binding.contentRecycler.smoothScrollToPosition(targetPosition);
-        }
+        );
     }
 
     /**
