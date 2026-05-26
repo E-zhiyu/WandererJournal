@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.others.bottom.emotion;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagAddModifyActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -94,6 +96,12 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         //情绪标签列表
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
                 (model, view) -> {
+                    if (model == null) {
+                        Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagAddModifyActivity.class);
+                        startActivity(skip2EmotionAdd);
+                        return;
+                    }
+
                     //仅当没有选中时才触发上级监听
                     if (!model.isChecked()) {
                         checkedChangedListener.onCheckChanged(model, true);
@@ -103,6 +111,10 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                     showSuspendedSlider(model, view);
                 },
                 model -> {
+                    if (model == null) {
+                        return;
+                    }
+
                     //目标状态与当前状态相同则不触发监听
                     if (!model.isChecked()) {
                         return;
@@ -117,7 +129,10 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        adapter::submitList,
+                        emotionList -> {
+                            emotionList.add(null);  //加上一个 null 占位符，作为添加标签的功能按钮
+                            adapter.submitList(emotionList);
+                        },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
