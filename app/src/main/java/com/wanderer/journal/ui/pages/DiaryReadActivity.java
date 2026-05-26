@@ -164,7 +164,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(
-                                viewModel::jumpToPrevious,
+                                () -> {
+                                },
                                 e -> ExceptionHelper.showExceptionDialog(this, e)
                         )
                 );
@@ -321,6 +322,8 @@ public class DiaryReadActivity extends AppCompatActivity {
      * @param targetPosition 需要滚动到的位置
      */
     private void safeScrollToPosition(int targetPosition) {
+        binding.appBarLayout.setExpanded(false, true);  //收起顶部搜索视图
+
         // 1. 核心：调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
         // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置
         if (targetPosition < adapter.getItemCount()) {

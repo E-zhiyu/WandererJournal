@@ -273,7 +273,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
 
             //设置圆角

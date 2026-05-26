@@ -84,10 +84,10 @@ public class ParagraphViewModel extends ViewModel {
 
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
-                            10,
-                            20,
+                            2,
+                            4,
                             true, // 必须为 true 以支持精准定位
-                            20
+                            10
                     );
 
                     // 创建 Pager
@@ -164,10 +164,12 @@ public class ParagraphViewModel extends ViewModel {
         String safeKeyword = keyword.replace("/", "//")
                 .replace("%", "/%")
                 .replace("_", "/_");
+        safeKeyword = "%" + safeKeyword + "%";
 
+        String finalSafeKeyword = safeKeyword;
         return Completable.defer(() -> {
             ParagraphDao paragraphDao = db.paragraphDao();
-            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
+            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(finalSafeKeyword);
             matchedPositions.postValue(positionList);
             if (!positionList.isEmpty()) {
                 currentMatchIndex.postValue(0);

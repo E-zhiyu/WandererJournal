@@ -65,13 +65,20 @@ public interface ParagraphDao {
      * 获取匹配搜索的段落的位置
      *
      * @param keyword 搜索关键词
-     * @return 包含所有匹配搜索位置的整数列表
+     * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符）
      */
     @Query(
-            "SELECT position FROM (" +
-                    "SELECT paragraphId, content, " +
-                    "(ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS position " +
-                    "FROM paragraphs " +
+            "SELECT pure_paragraph_position + date_separator_count " +
+                    "FROM (" +
+                    "    SELECT " +
+                    "        content, " +
+                    "        -- 1. 计算纯段落的绝对位置（从 0 开始）\n" +
+                    "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
+                    "        -- 2. 核心：通过子查询，统计日记表中日期小于当前段落所属日记日期的数量\n" +
+                    "        -- 因为你按创建时间升序，且每天只有一篇日记，这个 COUNT 结果刚好等于前面已经出现的日记总数（即分隔符总数）\n" +
+                    "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= createTime) AS date_separator_count" +
+                    "    FROM paragraphs " +
+                    "    INNER JOIN diaries ON parentDiaryId = diaryId" +
                     ") " +
                     "WHERE content LIKE '%' || :keyword || '%'"
     )
