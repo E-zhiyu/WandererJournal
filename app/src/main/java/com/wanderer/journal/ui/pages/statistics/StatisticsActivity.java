@@ -248,11 +248,15 @@ public class StatisticsActivity extends AppCompatActivity {
                         modelList -> {
                             adapter.submitList(modelList);
 
+                            //处理装饰器以绘制月份标签
                             if (headerDecoration != null) {
                                 binding.memeryPixelRecycler.removeItemDecoration(headerDecoration);
                             }
                             headerDecoration = new MonthHeaderDecoration(modelList, this);
                             binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
+
+                            //滚动到最右侧
+                            binding.memeryPixelRecycler.scrollToPosition(adapter.getItemCount() - 1);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
