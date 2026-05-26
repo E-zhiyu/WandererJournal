@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
 import androidx.paging.Pager;
@@ -10,21 +12,35 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphViewModel extends ViewModel {
     private final DiaryDatabase db; //数据库实例
+    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(new ArrayList<>());   //匹配搜索的位置列表
+    private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);   //当前所在的匹配搜索位置的下标
 
     public ParagraphViewModel(@NonNull DiaryDatabase db) {
         this.db = db;
+    }
+
+    public LiveData<Integer> getCurrentMatchIndex() {
+        return currentMatchIndex;
+    }
+
+    public LiveData<List<Integer>> getMatchedPositions() {
+        return matchedPositions;
     }
 
     /**
@@ -122,5 +138,63 @@ public class ParagraphViewModel extends ViewModel {
         LocalDate d1 = t1.toLocalDate();
         LocalDate d2 = t2.toLocalDate();
         return d1.equals(d2);
+    }
+
+    /**
+     * 清空搜索
+     */
+    private void clearSearch() {
+        matchedPositions.postValue(new ArrayList<>());
+        currentMatchIndex.postValue(-1);
+    }
+
+    /**
+     * 执行搜索逻辑
+     *
+     * @param keyword 搜索关键词
+     * @return 是否已从数据库中获取符合搜索条件的下标
+     */
+    public Completable executeSearch(String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            clearSearch();
+            return Completable.complete();
+        }
+
+        //转义防止 SQL 注入
+        String safeKeyword = keyword.replace("/", "//")
+                .replace("%", "/%")
+                .replace("_", "/_");
+
+        return Completable.defer(() -> {
+            ParagraphDao paragraphDao = db.paragraphDao();
+            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
+            matchedPositions.postValue(positionList);
+            if (!positionList.isEmpty()) {
+                currentMatchIndex.postValue(0);
+            } else {
+                currentMatchIndex.postValue(-1);
+            }
+            return Completable.complete();
+        });
+    }
+
+    // 点击“向下”按钮
+    public void jumpToNext() {
+        List<Integer> positions = matchedPositions.getValue();
+        Integer currentIndex = currentMatchIndex.getValue();
+        if (positions != null && !positions.isEmpty() && currentIndex != null) {
+            int nextIndex = (currentIndex + 1) % positions.size(); // 循环滚动
+            currentMatchIndex.setValue(nextIndex);
+        }
+    }
+
+    // 点击“向上”按钮
+    public void jumpToPrevious() {
+        List<Integer> positions = matchedPositions.getValue();
+        Integer currentIndex = currentMatchIndex.getValue();
+        if (positions != null && !positions.isEmpty() && currentIndex != null) {
+            int prevIndex = (currentIndex - 1 + positions.size()) % positions.size();
+            currentMatchIndex.setValue(prevIndex);
+        }
     }
 }

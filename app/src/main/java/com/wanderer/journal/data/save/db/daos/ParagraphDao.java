@@ -62,6 +62,22 @@ public interface ParagraphDao {
     int getAdjustedPositionSingle(LocalDate date);
 
     /**
+     * 获取匹配搜索的段落的位置
+     *
+     * @param keyword 搜索关键词
+     * @return 包含所有匹配搜索位置的整数列表
+     */
+    @Query(
+            "SELECT position FROM (" +
+                    "SELECT paragraphId, content, " +
+                    "(ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS position " +
+                    "FROM paragraphs " +
+                    ") " +
+                    "WHERE content LIKE '%' || :keyword || '%'"
+    )
+    List<Integer> getSearchMatchedParagraphPositions(String keyword);
+
+    /**
      * 通过日记 ID 获取段落
      *
      * @param diaryId 日记 ID
