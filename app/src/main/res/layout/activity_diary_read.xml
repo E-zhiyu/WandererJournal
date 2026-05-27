@@ -42,6 +42,30 @@
         android:text="@string/no_paragraph"
         android:textAppearance="?attr/textAppearanceBodyLarge" />
 
+    <!-- 向上按钮 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/up_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="90dp"
+        android:contentDescription="@string/btn_up"
+        android:src="@drawable/outline_keyboard_arrow_up_24"
+        android:visibility="gone" />
+
+    <!-- 向下按钮 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/down_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:contentDescription="@string/btn_down"
+        android:src="@drawable/outline_keyboard_arrow_down_24"
+        android:visibility="gone" />
+
     <!-- 搜索视图 -->
     <com.google.android.material.search.SearchView
         android:id="@+id/diary_content_search_view"
@@ -55,24 +79,4 @@
             android:layout_height="wrap_content"
             app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
     </com.google.android.material.search.SearchView>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/up_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/btn_up"
-        android:layout_gravity="end|bottom"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="90dp"
-        android:src="@drawable/outline_keyboard_arrow_up_24" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:contentDescription="@string/btn_down"
-        android:id="@+id/down_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:src="@drawable/outline_keyboard_arrow_down_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
