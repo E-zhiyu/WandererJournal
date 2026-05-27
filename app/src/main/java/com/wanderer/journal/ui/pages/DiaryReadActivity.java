@@ -177,9 +177,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (i == EditorInfo.IME_ACTION_SEARCH) {
                 //收起搜索视图并保存搜索词
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
-                if (!keyword.isEmpty()) {
-                    setSearchMode(true);
-                }
                 binding.diaryContentSearchView.hide();
                 binding.contentSearchBar.setText(keyword);
 
@@ -192,7 +189,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(
-                                () -> {
+                                positionList -> {
+                                    adapter.setHighlightTarget(keyword, positionList);
+                                    setSearchMode(true);
                                 },
                                 e -> ExceptionHelper.showExceptionDialog(this, e)
                         )
@@ -328,9 +327,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             List<Integer> positions = viewModel.getMatchedPositions().getValue();
             if (index >= 0 && positions != null && index < positions.size()) {
                 int targetPosition = positions.get(index);
-
-                // 高亮逻辑（通知 Adapter 刷新高亮，需在 Adapter 中实现）
-//                mySearchAdapter.setHighlightPosition(targetPosition);
 
                 // 执行 Paging 安全跳转
                 safeScrollToPosition(targetPosition);
@@ -535,6 +531,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.downFab.hide();
 
             backHelper.unregisterHandler(searchBackHandler);
+            adapter.clearHighlight();   //清除文本高亮
         } else {
             binding.upFab.show();
             binding.downFab.show();

@@ -24,6 +24,7 @@ import java.util.concurrent.Executor;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphViewModel extends ViewModel {
@@ -168,31 +169,30 @@ public class ParagraphViewModel extends ViewModel {
      * 执行搜索逻辑
      *
      * @param keyword 搜索关键词
-     * @return 是否已从数据库中获取符合搜索条件的下标
+     * @return 从数据库中获取符合搜索条件的下标
      */
-    public Completable executeSearch(String keyword, DiaryDatabase db) {
+    public Single<List<Integer>> executeSearch(String keyword, DiaryDatabase db) {
         if (keyword == null || keyword.isEmpty()) {
             clearSearch();
-            return Completable.complete();
+            return Single.just(new ArrayList<>());
         }
 
-        //转义防止 SQL 注入
-        String safeKeyword = keyword.replace("/", "//")
-                .replace("%", "/%")
-                .replace("_", "/_");
-        safeKeyword = "%" + safeKeyword + "%";
+        return Single.defer(() -> {
+            //转义防止 SQL 注入
+            String safeKeyword = keyword.replace("/", "//")
+                    .replace("%", "/%")
+                    .replace("_", "/_");
 
-        String finalSafeKeyword = safeKeyword;
-        return Completable.defer(() -> {
+            //在数据库中查询并返回结果
             ParagraphDao paragraphDao = db.paragraphDao();
-            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(finalSafeKeyword);
+            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
             matchedPositions.postValue(positionList);
             if (!positionList.isEmpty()) {
                 currentMatchIndex.postValue(positionList.size() - 1);
             } else {
                 currentMatchIndex.postValue(-1);
             }
-            return Completable.complete();
+            return Single.just(positionList);
         });
     }
 

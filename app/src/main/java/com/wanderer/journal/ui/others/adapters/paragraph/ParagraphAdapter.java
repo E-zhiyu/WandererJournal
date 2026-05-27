@@ -1,6 +1,10 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,10 +28,13 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
+    private String currentKeyword = "";                             //当前高亮的搜索关键词
+    private final List<Integer> positionList = new ArrayList<>();   //当前高亮的段落下标列表
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -239,7 +246,23 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //内容文本
             String content = paragraph.getContent();
-            itemHolder.binding.contentText.setText(content);
+            if (currentKeyword != null && !currentKeyword.isEmpty() && content.contains(currentKeyword)) {
+                SpannableStringBuilder builder = new SpannableStringBuilder(content);
+                int startIndex = content.indexOf(currentKeyword);
+
+                while (startIndex >= 0) {
+                    int endIndex = startIndex + currentKeyword.length();
+                    // 设置文字颜色为橘红色
+                    builder.setSpan(new ForegroundColorSpan(Color.parseColor("#FF5722")),
+                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    // 循环查找，防止一句话里有多个相同的关键词
+                    startIndex = content.indexOf(currentKeyword, endIndex);
+                }
+                itemHolder.binding.contentText.setText(builder);
+            } else {
+                itemHolder.binding.contentText.setText(content);
+            }
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
@@ -256,13 +279,19 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                             name, RomanNumberHelper.toRoman(degree)
                     );
 
-                    Chip emotionChip = new Chip(context, null, com.google.android.material.R.style.Widget_Material3_Chip_Suggestion);
+                    Chip emotionChip = new Chip(
+                            context,
+                            null,
+                            com.google.android.material.R.style.Widget_Material3_Chip_Suggestion
+                    );
                     emotionChip.setCheckable(false);
                     emotionChip.setFocusable(false);
 
                     //设置显示文本
                     emotionChip.setText(title);
-                    emotionChip.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelMedium);
+                    emotionChip.setTextAppearance(
+                            com.google.android.material.R.style.TextAppearance_Material3_LabelMedium
+                    );
 
                     //添加到视图中
                     itemHolder.binding.emotionChipGroup.addView(emotionChip);
@@ -318,5 +347,30 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
+    }
+
+    /**
+     * 设置高亮
+     *
+     * @param keyword      高亮关键词
+     * @param positionList 有符合关键词的视图的下标
+     */
+    public void setHighlightTarget(String keyword, @NonNull List<Integer> positionList) {
+        this.currentKeyword = keyword;
+        for (int i : positionList) {
+            notifyItemChanged(i);
+        }
+        this.positionList.addAll(positionList);
+    }
+
+    /**
+     * 清除高亮
+     */
+    public void clearHighlight() {
+        this.currentKeyword = "";
+        for (int position : positionList) {
+            notifyItemChanged(position);
+        }
+        positionList.clear();
     }
 }
