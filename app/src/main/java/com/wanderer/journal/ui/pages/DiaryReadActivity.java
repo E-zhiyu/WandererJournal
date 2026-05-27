@@ -39,6 +39,7 @@ import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
@@ -130,12 +131,16 @@ public class DiaryReadActivity extends AppCompatActivity {
             ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToPrevious();
         });
+        ViewEdgeHelper.setMarginToNavigation(binding.upFab, 90, this);
+        AppearanceAnimationHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
             ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToNext();
         });
+        ViewEdgeHelper.setMarginToNavigation(binding.downFab, this);
+        AppearanceAnimationHelper.attachMorphAnimation(binding.downFab);
     }
 
     private void initBackHandlers() {
