@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
@@ -36,6 +37,7 @@ import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -59,7 +61,9 @@ public class DiaryReadActivity extends AppCompatActivity {
     private LocalDate initDiaryDate = null;     //初始页的日期
     private Integer scrollPosition = null;      //加载列表时需要跳转到的位置
     private final CompositeDisposable disposable = new CompositeDisposable();
-    private ParagraphAdapter adapter;
+    private ParagraphAdapter adapter;           //段落列表适配器
+    private BackPressedCallbackHelper backHelper;   //返回监听帮助器
+    private BackPressedCallbackHelper.BackHandler searchBackHandler;    //搜索返回处理器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +88,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         receiveIntent();
         initViews();
         observeLiveData();
+        initBackHandlers();
     }
 
     @Override
@@ -133,6 +138,31 @@ public class DiaryReadActivity extends AppCompatActivity {
         });
     }
 
+    private void initBackHandlers() {
+        OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                backHelper.dispatchBackPressed();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
+        backHelper = new BackPressedCallbackHelper(backPressedCallback);
+
+        //搜索返回处理器
+        searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                setSearchMode(false);
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 1;
+            }
+        };
+    }
+
     /**
      * 初始化搜索组件
      */
@@ -147,6 +177,9 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (i == EditorInfo.IME_ACTION_SEARCH) {
                 //收起搜索视图并保存搜索词
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
+                if (!keyword.isEmpty()) {
+                    setSearchMode(true);
+                }
                 binding.diaryContentSearchView.hide();
                 binding.contentSearchBar.setText(keyword);
 
@@ -488,5 +521,25 @@ public class DiaryReadActivity extends AppCompatActivity {
                 ))
                 .setNegativeButton("取消", null)
                 .show();
+    }
+
+    /**
+     * 设置搜索模式
+     *
+     * @param isSearchMode 是否为搜索模式
+     */
+    private void setSearchMode(boolean isSearchMode) {
+        if (!isSearchMode) {
+            binding.contentSearchBar.setText(null);
+            binding.upFab.hide();
+            binding.downFab.hide();
+
+            backHelper.unregisterHandler(searchBackHandler);
+        } else {
+            binding.upFab.show();
+            binding.downFab.show();
+
+            backHelper.registerHandler(searchBackHandler);
+        }
     }
 }
