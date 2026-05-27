@@ -249,9 +249,11 @@ public class DiaryReadActivity extends AppCompatActivity {
             //当刷新完成且数据已提交到 UI
             if (scrollPosition != null) {
                 if (binding.contentRecycler.getLayoutManager() != null) {
-                    ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                            .scrollToPositionWithOffset(scrollPosition, 0);
-                    scrollPosition = null; // 跳转完成，清空标记
+                    binding.contentRecycler.post(() -> {
+                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                                .scrollToPositionWithOffset(scrollPosition, 0);
+                        scrollPosition = null; // 跳转完成，清空标记
+                    });
                 }
             }
 
@@ -315,8 +317,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         if (targetPosition >= adapter.getItemCount() || targetPosition < 0) {
             return;
         }
-
-        //TODO:解决需要滚动多次才能精确滚动的BUG
 
         // 调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
         // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置
