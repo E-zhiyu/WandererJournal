@@ -45,6 +45,7 @@
     <!-- 向上按钮 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/up_fab"
+        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
@@ -57,6 +58,7 @@
     <!-- 向下按钮 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/down_fab"
+        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
@@ -71,12 +73,32 @@
         android:id="@+id/diary_content_search_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="@string/search_for_diary_content">
+        android:hint="@string/search_for_diary_content"
+        app:layout_anchor="@id/content_search_bar">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/search_history_recycler"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/search_history_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clear_history_btn"
+                style="@style/TextBtnStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:text="@string/clear_search_history" />
+        </LinearLayout>
     </com.google.android.material.search.SearchView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

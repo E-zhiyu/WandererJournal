@@ -33,6 +33,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
+import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
@@ -42,6 +43,7 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
@@ -50,6 +52,7 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -131,7 +134,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToPrevious();
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.upFab, 90, this);
+        ViewEdgeHelper.setMarginToNavigation(binding.upFab, 105, this);
         AppearanceAnimationHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
@@ -175,15 +178,62 @@ public class DiaryReadActivity extends AppCompatActivity {
         //先隐藏搜索框
         binding.appBarLayout.setExpanded(false, false);
 
-        //绑定在一起
-        binding.diaryContentSearchView.setupWithSearchBar(binding.contentSearchBar);
+        //搜索历史显示
+        SearchHistoryAdapter historyAdapter = new SearchHistoryAdapter(
+                SearchHistoryPreference.KEY_DIARY_CONTENT,
+                keyword -> {
+                    binding.diaryContentSearchView.hide();
+                    binding.contentSearchBar.setText(keyword);
 
+                    //获取 ViewModel
+                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+
+                    //执行搜索
+                    disposable.add(viewModel.executeSearch(keyword, db)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    positionList -> {
+                                        adapter.setHighlightTarget(keyword, positionList);
+                                        setSearchMode(true);
+                                    },
+                                    e -> ExceptionHelper.showExceptionDialog(this, e)
+                            )
+                    );
+                }
+        );
+        List<String> initList = SearchHistoryPreference.getHistory(
+                SearchHistoryPreference.KEY_DIARY_CONTENT,
+                this
+        );
+        historyAdapter.submitList(new ArrayList<>(initList));
+        binding.searchHistoryRecycler.setAdapter(historyAdapter);
+
+        //设置清除搜索历史按钮点击监听
+        binding.clearHistoryBtn.setOnClickListener(v -> {
+            SearchHistoryPreference.clearHistory(
+                    SearchHistoryPreference.KEY_DIARY_CONTENT,
+                    this
+            );
+            historyAdapter.submitList(new ArrayList<>());
+        });
+
+        //设置搜索监听
         binding.diaryContentSearchView.getEditText().setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_SEARCH) {
                 //收起搜索视图并保存搜索词
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
                 binding.diaryContentSearchView.hide();
                 binding.contentSearchBar.setText(keyword);
+
+                //保存搜索历史
+                List<String> historyList = SearchHistoryPreference.addKeyword(
+                        keyword,
+                        SearchHistoryPreference.KEY_DIARY_CONTENT,
+                        this
+                );
+                historyAdapter.submitList(new ArrayList<>(historyList));
 
                 //获取 ViewModel
                 DiaryDatabase db = DiaryDatabase.getInstance(this);
@@ -284,14 +334,14 @@ public class DiaryReadActivity extends AppCompatActivity {
         });
         adapter.addOnPagesUpdatedListener(() -> {
             //当刷新完成且数据已提交到 UI
-            if (scrollPosition != null) {
-                if (binding.contentRecycler.getLayoutManager() != null) {
-                    binding.contentRecycler.post(() -> {
+            if (binding.contentRecycler.getLayoutManager() != null) {
+                binding.contentRecycler.post(() -> {
+                    if (scrollPosition != null) {
                         ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
                                 .scrollToPositionWithOffset(scrollPosition, 0);
                         scrollPosition = null; // 跳转完成，清空标记
-                    });
-                }
+                    }
+                });
             }
 
             return Unit.INSTANCE;
