@@ -251,19 +251,16 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 SpannableStringBuilder builder = new SpannableStringBuilder(content);
                 int startIndex = content.indexOf(currentKeyword);
 
-                //设置文本颜色
-                ForegroundColorSpan colorSpan = new ForegroundColorSpan(MaterialColors.getColor(
-                        context,
-                        android.R.attr.colorFocusedHighlight,
-                        Color.parseColor("#FF5722")
-                ));
-
                 //循环高亮文本
                 while (startIndex >= 0) {
                     int endIndex = startIndex + currentKeyword.length();
                     // 设置文字颜色为橘红色
                     builder.setSpan(
-                            colorSpan,
+                            new ForegroundColorSpan(MaterialColors.getColor(
+                                    context,
+                                    android.R.attr.colorFocusedHighlight,
+                                    Color.parseColor("#FF5722")
+                            )),
                             startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                     );
 
