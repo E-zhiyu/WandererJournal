@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -246,15 +247,25 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //内容文本
             String content = paragraph.getContent();
-            if (currentKeyword != null && !currentKeyword.isEmpty() && content.contains(currentKeyword)) {
+            if (currentKeyword != null && !currentKeyword.isEmpty() && positionList.contains(position)) {
                 SpannableStringBuilder builder = new SpannableStringBuilder(content);
                 int startIndex = content.indexOf(currentKeyword);
 
+                //设置文本颜色
+                ForegroundColorSpan colorSpan = new ForegroundColorSpan(MaterialColors.getColor(
+                        context,
+                        android.R.attr.colorFocusedHighlight,
+                        Color.parseColor("#FF5722")
+                ));
+
+                //循环高亮文本
                 while (startIndex >= 0) {
                     int endIndex = startIndex + currentKeyword.length();
                     // 设置文字颜色为橘红色
-                    builder.setSpan(new ForegroundColorSpan(Color.parseColor("#FF5722")),
-                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    builder.setSpan(
+                            colorSpan,
+                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    );
 
                     // 循环查找，防止一句话里有多个相同的关键词
                     startIndex = content.indexOf(currentKeyword, endIndex);
