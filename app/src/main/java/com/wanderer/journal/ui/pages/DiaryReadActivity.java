@@ -363,7 +363,16 @@ public class DiaryReadActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                        pagingData -> {
+                            adapter.submitData(getLifecycle(), pagingData);
+
+                            if (binding.contentRecycler.getLayoutManager() != null) {
+                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + scrollPosition);
+                                ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                                        .scrollToPositionWithOffset(scrollPosition, 0);
+                            }
+                        },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
