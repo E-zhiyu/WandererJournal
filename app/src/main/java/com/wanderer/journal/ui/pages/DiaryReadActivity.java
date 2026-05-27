@@ -115,6 +115,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //起始页日期
         String initDate = bundle.getString(KeyStrings.INIT_DATE.getS());
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDate);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         initDiaryDate = LocalDate.parse(initDate, formatter);
     }
@@ -337,6 +338,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (binding.contentRecycler.getLayoutManager() != null) {
                 binding.contentRecycler.post(() -> {
                     if (scrollPosition != null) {
+                        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "滚动位置：" + scrollPosition);
                         ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
                                 .scrollToPositionWithOffset(scrollPosition, 0);
                         scrollPosition = null; // 跳转完成，清空标记
