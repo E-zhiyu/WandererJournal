@@ -243,8 +243,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.emptyText.setVisibility(View.GONE);
             }
 
+            return Unit.INSTANCE;
+        });
+        adapter.addOnPagesUpdatedListener(() -> {
             //当刷新完成且数据已提交到 UI
-            if (isNotLoading && scrollPosition != null) {
+            if (scrollPosition != null) {
                 if (binding.contentRecycler.getLayoutManager() != null) {
                     ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
                             .scrollToPositionWithOffset(scrollPosition, 0);
@@ -268,8 +271,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                 )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(pagingData ->
-                        adapter.submitData(getLifecycle(), pagingData)
+                .subscribe(
+                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
     }
@@ -312,7 +316,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             return;
         }
 
-        //TODO:解决进入界面无法正常初始化、需要滚动多次才能精确滚动的BUG
+        //TODO:解决需要滚动多次才能精确滚动的BUG
 
         // 调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
         // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置

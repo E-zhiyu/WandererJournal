@@ -79,7 +79,7 @@ public class ParagraphViewModel extends ViewModel {
                             10,
                             20,
                             true, // 必须为 true 以支持精准定位
-                            20
+                            8
                     );
 
                     // 创建 Pager
@@ -111,7 +111,7 @@ public class ParagraphViewModel extends ViewModel {
                             10,
                             20,
                             true, // 必须为 true 以支持精准定位
-                            20
+                            8
                     );
 
                     // 创建 Pager
