@@ -331,19 +331,19 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.emptyText.setVisibility(View.GONE);
             }
 
-            return Unit.INSTANCE;
-        });
-        adapter.addOnPagesUpdatedListener(() -> {
-            //当刷新完成且数据已提交到 UI
-            if (binding.contentRecycler.getLayoutManager() != null) {
-                binding.contentRecycler.post(() -> {
-                    if (scrollPosition != null) {
-                        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "滚动位置：" + scrollPosition);
-                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                .scrollToPositionWithOffset(scrollPosition, 0);
-                        scrollPosition = null; // 跳转完成，清空标记
-                    }
-                });
+            if (isNotLoading && scrollPosition != null) {
+                if (binding.contentRecycler.getLayoutManager() != null) {
+                    // 保险起见，依然用 post 确保等待当前帧布局绘制结束
+                    binding.contentRecycler.post(() -> {
+                        if (scrollPosition != null) {
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + scrollPosition);
+                            ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
+                                    .scrollToPositionWithOffset(scrollPosition, 0);
+                            scrollPosition = null; // 清空标记
+                        }
+                    });
+                }
             }
 
             return Unit.INSTANCE;
