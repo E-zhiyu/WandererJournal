@@ -42,31 +42,71 @@
         android:text="@string/no_paragraph"
         android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-    <!-- 向上按钮 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/up_fab"
-        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_skip_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="90dp"
-        android:contentDescription="@string/btn_up"
-        android:src="@drawable/outline_keyboard_arrow_up_24"
-        android:visibility="gone" />
-
-    <!-- 向下按钮 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/down_fab"
-        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="15dp"
         android:layout_marginBottom="20dp"
-        android:contentDescription="@string/btn_down"
-        android:src="@drawable/outline_keyboard_arrow_down_24"
-        android:visibility="gone" />
+        android:visibility="gone">
+
+        <!-- 匹配项数量指示器 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/matched_items_counter"
+            style="@style/MediumRadiusCardStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/up_fab"
+            app:layout_constraintEnd_toEndOf="@id/down_fab"
+            app:layout_constraintStart_toStartOf="@id/down_fab"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="1dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="5dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/counter_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/infinity"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 向上按钮 -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/up_fab"
+            style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:contentDescription="@string/btn_up"
+            android:src="@drawable/outline_keyboard_arrow_up_24"
+            app:layout_constraintBottom_toTopOf="@id/down_fab"
+            app:layout_constraintEnd_toEndOf="@id/down_fab"
+            app:layout_constraintStart_toStartOf="@id/down_fab"
+            app:layout_constraintTop_toBottomOf="@id/matched_items_counter" />
+
+        <!-- 向下按钮 -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/down_fab"
+            style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="15dp"
+            android:contentDescription="@string/btn_down"
+            android:src="@drawable/outline_keyboard_arrow_down_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/up_fab" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 搜索视图 -->
     <com.google.android.material.search.SearchView

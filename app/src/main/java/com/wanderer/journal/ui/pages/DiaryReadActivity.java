@@ -3,6 +3,10 @@ package com.wanderer.journal.ui.pages;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.transition.Fade;
+import android.transition.Slide;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -19,6 +23,7 @@ import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -56,6 +61,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -137,7 +143,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToPrevious();
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.upFab, 105, this);
         AppearanceAnimationHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
@@ -145,8 +150,10 @@ public class DiaryReadActivity extends AppCompatActivity {
             ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
             viewModel.jumpToNext();
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.downFab, this);
         AppearanceAnimationHelper.attachMorphAnimation(binding.downFab);
+
+        //搜索跳转组件布局
+        ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
     }
 
     private void initBackHandlers() {
@@ -427,6 +434,15 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 }
                                 dialog.dismiss();
                                 Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
+
+                                //更新跳转数量指示器
+                                String counterText = String.format(
+                                        Locale.getDefault(),
+                                        "%d/%d",
+                                        positions.size() - index,
+                                        positions.size()
+                                );
+                                binding.counterText.setText(counterText);
                             }
 
                             @Override
@@ -605,16 +621,24 @@ public class DiaryReadActivity extends AppCompatActivity {
      * @param isSearchMode 是否为搜索模式
      */
     private void setSearchMode(boolean isSearchMode) {
+        //定义过渡动画
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.END))
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250);
+
+        //通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.searchSkipLayout, set);
+
         if (!isSearchMode) {
             binding.contentSearchBar.setText(null);
-            binding.upFab.hide();
-            binding.downFab.hide();
+            binding.searchSkipLayout.setVisibility(View.GONE);
 
             backHelper.unregisterHandler(searchBackHandler);
             adapter.clearHighlight();   //清除文本高亮
         } else {
-            binding.upFab.show();
-            binding.downFab.show();
+            binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
             backHelper.registerHandler(searchBackHandler);
         }
