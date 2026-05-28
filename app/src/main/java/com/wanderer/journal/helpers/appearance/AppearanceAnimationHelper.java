@@ -10,6 +10,7 @@ import android.os.Vibrator;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,6 +20,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
@@ -259,17 +261,23 @@ public class AppearanceAnimationHelper {
     ) {
         //判断布局管理器
         if (layoutManager == null) {
-            listener.onError("布局管理器为空");
+            if (listener != null) {
+                listener.onFailed("布局管理器为空");
+            }
             return;
         }
 
         //判断位置是否有效
         RecyclerView.Adapter<?> adapter = recyclerView.getAdapter();
         if (adapter == null) {
-            listener.onError("无法获取适配器");
+            if (listener != null) {
+                listener.onFailed("无法获取适配器");
+            }
             return;
         } else if (targetPosition < 0 || targetPosition >= adapter.getItemCount()) {
-            listener.onError("目标位置无效");
+            if (listener != null) {
+                listener.onFailed("目标位置无效");
+            }
             return;
         }
 
@@ -278,7 +286,9 @@ public class AppearanceAnimationHelper {
         int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
         if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
             //处理没有可见视图的情况
-            listener.onError("没有可见视图");
+            if (listener != null) {
+                listener.onFailed("没有可见视图");
+            }
             return;
         } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
             //处理不需要滚动的情况
@@ -286,7 +296,9 @@ public class AppearanceAnimationHelper {
             if (viewHolder != null) {
                 AppearanceAnimationHelper.blink(viewHolder.itemView);
             }
-            listener.onSuccess();
+            if (listener != null) {
+                listener.onSucceed();
+            }
             return;
         }
 
@@ -337,6 +349,112 @@ public class AppearanceAnimationHelper {
             recyclerView.smoothScrollToPosition(targetPosition);
         }
 
-        listener.onSuccess();
+        if (listener != null) {
+            listener.onSucceed();
+        }
+    }
+
+    /**
+     * 滚动带有{@link PagingDataAdapter}类型适配器的{@link RecyclerView}
+     *
+     * @param recyclerView     需要滚动的 RecyclerView
+     * @param layoutManager    RecyclerView 的布局管理器
+     * @param adapter          RecyclerView 的适配器
+     * @param targetPosition   需要滚动到的位置
+     * @param maxRetryCount    最大重试次数
+     * @param retryDelayMillis 重试时间间隔（毫秒）
+     * @param listener         滚动状态监听器
+     */
+    public static void scrollPagingRecycler(
+            RecyclerView recyclerView,
+            LinearLayoutManager layoutManager,
+            PagingDataAdapter<?, ?> adapter,
+            int targetPosition,
+            int maxRetryCount,
+            int retryDelayMillis,
+            PagingRecyclerScrollListener listener
+    ) {
+        if (layoutManager == null) {
+            return;
+        }
+
+        recyclerView.postDelayed(() -> {
+                    Object o;
+                    try {
+                        o = adapter.peek(targetPosition);
+                    } catch (IndexOutOfBoundsException e) {
+                        o = null;
+                    }
+                    if (o != null) {
+                        // 已真实加载
+                        AppearanceAnimationHelper.scrollRecycler(
+                                recyclerView,
+                                layoutManager,
+                                targetPosition,
+                                10,
+                                new RecyclerViewScrollListener() {
+                                    @Override
+                                    public void onSucceed() {
+                                        listener.onSucceed();
+                                    }
+
+                                    @Override
+                                    public void onFailed(String errMessage) {
+                                        listener.onFailed();
+                                    }
+                                }
+                        );
+                    } else {
+                        // 未加载成功，继续等待
+                        recyclerView.postDelayed(new Runnable() {
+                            private int failCount = 0;
+
+                            @Override
+                            public void run() {
+                                Object object;
+                                boolean outOfBounds;
+                                try {
+                                    object = adapter.peek(targetPosition);
+                                    outOfBounds = false;
+                                } catch (IndexOutOfBoundsException e) {
+                                    object = null;
+                                    outOfBounds = true;
+                                }
+                                if (object != null) {
+                                    AppearanceAnimationHelper.scrollRecycler(
+                                            recyclerView,
+                                            layoutManager,
+                                            targetPosition,
+                                            10,
+                                            new RecyclerViewScrollListener() {
+                                                @Override
+                                                public void onSucceed() {
+                                                    listener.onSucceed();
+                                                }
+
+                                                @Override
+                                                public void onFailed(String errMessage) {
+                                                    listener.onFailed();
+                                                }
+                                            }
+                                    );
+                                } else if (failCount < maxRetryCount) {
+                                    failCount++;
+                                    listener.onRetry(failCount);
+
+                                    //跳转到边界以触发加载
+                                    int itemCount = adapter.getItemCount();
+                                    layoutManager.scrollToPositionWithOffset(outOfBounds ? itemCount - 1 : 0, 0);
+
+                                    recyclerView.postDelayed(this, retryDelayMillis);
+                                } else {
+                                    listener.onFailed();
+                                }
+                            }
+                        }, 50);
+                    }
+                },
+                100
+        );
     }
 }

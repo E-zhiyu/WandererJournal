@@ -183,11 +183,11 @@ public class DiaryFragment extends Fragment {
                 20,
                 new RecyclerViewScrollListener() {
                     @Override
-                    public void onSuccess() {
+                    public void onSucceed() {
                     }
 
                     @Override
-                    public void onError(String errMessage) {
+                    public void onFailed(String errMessage) {
                         Toast.makeText(requireContext(), errMessage, Toast.LENGTH_SHORT).show();
                     }
                 }

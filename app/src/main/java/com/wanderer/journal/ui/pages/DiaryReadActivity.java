@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityOptionsCompat;
@@ -25,7 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
-import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
+import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -47,6 +48,7 @@ import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDate;
@@ -63,7 +65,7 @@ import kotlin.Unit;
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;   //绑定的XML布局
     private LocalDate initDiaryDate = null;     //初始页的日期
-    private Integer scrollPosition = null;      //加载列表时需要跳转到的位置
+    private Integer initScrollPosition = null;      //加载列表时需要跳转到的位置
     private final CompositeDisposable disposable = new CompositeDisposable();
     private ParagraphAdapter adapter;           //段落列表适配器
     private BackPressedCallbackHelper backHelper;   //返回监听帮助器
@@ -331,16 +333,16 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.emptyText.setVisibility(View.GONE);
             }
 
-            if (isNotLoading && scrollPosition != null) {
+            if (isNotLoading && initScrollPosition != null) {
                 if (binding.contentRecycler.getLayoutManager() != null) {
                     // 保险起见，依然用 post 确保等待当前帧布局绘制结束
                     binding.contentRecycler.post(() -> {
-                        if (scrollPosition != null) {
+                        if (initScrollPosition != null) {
                             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + scrollPosition);
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition);
                             ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                    .scrollToPositionWithOffset(scrollPosition, 0);
-                            scrollPosition = null; // 清空标记
+                                    .scrollToPositionWithOffset(initScrollPosition, 0);
+                            initScrollPosition = null; // 清空标记
                         }
                     });
                 }
@@ -356,7 +358,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
                 .flatMapPublisher(
                         initPosition -> {
-                            scrollPosition = initPosition;
+                            initScrollPosition = initPosition;
                             return viewModel.getPagingDataFlow(initPosition, db);
                         }
                 )
@@ -368,7 +370,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                             if (binding.contentRecycler.getLayoutManager() != null) {
                                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + scrollPosition);
+                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition);
 
                                 //加载第0个位置，防止前面的占位符未加载
                                 ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
@@ -396,39 +398,57 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (index >= 0 && positions != null && index < positions.size()) {
                 int targetPosition = positions.get(index);
 
-                // 执行 Paging 安全跳转
-                safeScrollToPosition(targetPosition);
+                //收起顶部搜索视图
+                binding.appBarLayout.setExpanded(false, true);
+
+                //构建滚动进度条
+                int maxRetryCount = 10;
+                ProgressDialogBuilder builder = new ProgressDialogBuilder(
+                        this,
+                        "搜索项跳转",
+                        "正在跳转至目标位置……"
+                );
+                AlertDialog dialog = builder.create();
+                dialog.setCancelable(false);    //不可取消
+
+                //执行滚动逻辑
+                AppearanceAnimationHelper.scrollPagingRecycler(
+                        binding.contentRecycler,
+                        (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                        adapter,
+                        targetPosition,
+                        maxRetryCount,
+                        750,
+                        new PagingRecyclerScrollListener() {
+                            @Override
+                            public void onSucceed() {
+                                if (dialog.isShowing()) {
+                                    Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
+                                }
+                                dialog.dismiss();
+                                Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
+                            }
+
+                            @Override
+                            public void onRetry(int failCount) {
+                                dialog.show();
+                                builder.setIndeterminate(false);
+                                builder.updateProgress(failCount, maxRetryCount, "已重试" + failCount + "次");
+                                Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
+                            }
+
+                            @Override
+                            public void onFailed() {
+                                if (dialog.isShowing()) {
+                                    Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
+                                }
+                                dialog.dismiss();
+                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
+                            }
+                        }
+                );
             }
         });
-    }
-
-    /**
-     * RecyclerView 滚动到指定位置
-     *
-     * @param targetPosition 需要滚动到的位置
-     */
-    private void safeScrollToPosition(int targetPosition) {
-        binding.appBarLayout.setExpanded(false, true);  //收起顶部搜索视图
-
-        scrollPosition = targetPosition;
-
-        //滚动列表视图
-        AppearanceAnimationHelper.scrollRecycler(
-                binding.contentRecycler,
-                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
-                targetPosition,
-                10,
-                new RecyclerViewScrollListener() {
-                    @Override
-                    public void onSuccess() {
-                    }
-
-                    @Override
-                    public void onError(String errMessage) {
-                        Toast.makeText(DiaryReadActivity.this, errMessage, Toast.LENGTH_SHORT).show();
-                    }
-                }
-        );
     }
 
     /**
