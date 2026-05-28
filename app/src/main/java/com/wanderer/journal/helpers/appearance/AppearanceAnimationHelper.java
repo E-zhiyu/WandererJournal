@@ -297,7 +297,7 @@ public class AppearanceAnimationHelper {
             int momentPosition = targetPosition > firstVisiblePos ?
                     targetPosition - distanceThresholder :
                     targetPosition + distanceThresholder;
-            layoutManager.scrollToPositionWithOffset(momentPosition, recyclerView.getHeight() / 3);
+            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
 
             //然后再平滑滚动
             recyclerView.post(() -> {

@@ -80,7 +80,7 @@ public interface ParagraphDao {
                     "    FROM paragraphs " +
                     "    INNER JOIN diaries ON parentDiaryId = diaryId" +
                     ") " +
-                    "WHERE content LIKE '%' || :keyword || '%'"
+                    "WHERE content LIKE '%' || :keyword || '%' ESCAPE '/'"
     )
     List<Integer> getSearchMatchedParagraphPositions(String keyword);
 

@@ -188,7 +188,7 @@ public class ParagraphViewModel extends ViewModel {
             List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
             matchedPositions.postValue(positionList);
             if (!positionList.isEmpty()) {
-                currentMatchIndex.postValue(positionList.size() - 1);
+                currentMatchIndex.postValue(0);
             } else {
                 currentMatchIndex.postValue(-1);
             }
@@ -204,7 +204,7 @@ public class ParagraphViewModel extends ViewModel {
             int nextIndex = currentIndex == -1 ?
                     0 :
                     (currentIndex + 1) % positions.size(); // 循环滚动
-            currentMatchIndex.setValue(nextIndex);
+            currentMatchIndex.postValue(nextIndex);
         }
     }
 
@@ -216,7 +216,7 @@ public class ParagraphViewModel extends ViewModel {
             int prevIndex = currentIndex == -1 ?
                     positions.size() - 1 :
                     (currentIndex - 1 + positions.size()) % positions.size();
-            currentMatchIndex.setValue(prevIndex);
+            currentMatchIndex.postValue(prevIndex);
         }
     }
 }

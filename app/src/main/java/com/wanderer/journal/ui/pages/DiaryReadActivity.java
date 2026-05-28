@@ -408,15 +408,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void safeScrollToPosition(int targetPosition) {
         binding.appBarLayout.setExpanded(false, true);  //收起顶部搜索视图
 
-        //判断位置有效性
-        if (targetPosition >= adapter.getItemCount() || targetPosition < 0) {
-            return;
-        }
-
-        // 调用 PagingDataAdapter 的 peek 或通过内部方法触发 Paging 异步加载该位置的数据
-        // 虽然 peek 不会触发占位符刷新，但会让 Paging 知道 UI 正在关注这个位置
-        adapter.peek(targetPosition);
-        scrollPosition = targetPosition;    //修改滚动标志位，让适配器加载后再精确滚动
+        scrollPosition = targetPosition;
 
         //滚动列表视图
         AppearanceAnimationHelper.scrollRecycler(
