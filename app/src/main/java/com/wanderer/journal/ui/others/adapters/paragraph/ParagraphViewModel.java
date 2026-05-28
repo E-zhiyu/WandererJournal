@@ -118,7 +118,7 @@ public class ParagraphViewModel extends ViewModel {
                     // 创建 Pager
                     Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
-                            initPosition, // 动态传入计算出的下标
+                            initPosition,
                             () -> db.paragraphDao().getAllParagraphPagingSource()
                     );
 
