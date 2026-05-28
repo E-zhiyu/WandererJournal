@@ -118,7 +118,7 @@ public class ParagraphViewModel extends ViewModel {
                     // 创建 Pager
                     Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
-                            initPosition, // 动态传入计算出的下标
+                            initPosition,
                             () -> db.paragraphDao().getAllParagraphPagingSource()
                     );
 
@@ -188,7 +188,7 @@ public class ParagraphViewModel extends ViewModel {
             List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
             matchedPositions.postValue(positionList);
             if (!positionList.isEmpty()) {
-                currentMatchIndex.postValue(0);
+                currentMatchIndex.postValue(positionList.size() - 1);
             } else {
                 currentMatchIndex.postValue(-1);
             }

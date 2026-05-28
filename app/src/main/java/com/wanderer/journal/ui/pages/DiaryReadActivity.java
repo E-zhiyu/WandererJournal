@@ -369,8 +369,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                             if (binding.contentRecycler.getLayoutManager() != null) {
                                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
                                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + scrollPosition);
+
+                                //加载第0个位置，防止前面的占位符未加载
                                 ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                        .scrollToPositionWithOffset(scrollPosition, 0);
+                                        .scrollToPositionWithOffset(0, 0);
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
