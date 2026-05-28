@@ -85,6 +85,25 @@ public class SearchHistoryPreference {
     }
 
     /**
+     * 移除搜索历史记录
+     *
+     * @param keyword 需要移除的搜索关键词
+     * @param key     保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
+     * @param context 上下文
+     * @return 移除了关键词后的列表
+     */
+    public static List<String> removeKeyword(String keyword, String key, Context context) {
+        List<String> historyList = getHistory(key, context);
+        if (keyword == null || keyword.isEmpty()) {
+            return historyList;
+        }
+
+        historyList.remove(keyword);
+        setHistory(key, historyList, context);
+        return historyList;
+    }
+
+    /**
      * 清空历史搜索记录
      *
      * @param key     需要清空的搜索记录的关键字

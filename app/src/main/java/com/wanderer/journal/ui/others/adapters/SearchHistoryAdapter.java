@@ -26,19 +26,19 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
             return true;
         }
     };
-    private final String key;                   //保存搜索历史的关键字
-    private final OnClickerListener listener;   //视图的点击监听
+    private final String key;                                   //保存搜索历史的关键字
+    private final OnClickedListener clickedListener;            //点击监听
 
     /**
      * 搜索历史适配器构造方法
      *
-     * @param key      保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
-     * @param listener 搜索历史Chip点击监听器
+     * @param key             保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
+     * @param clickedListener 搜索历史 Chip 点击监听器
      */
-    public SearchHistoryAdapter(String key, OnClickerListener listener) {
+    public SearchHistoryAdapter(String key, OnClickedListener clickedListener) {
         super(ITEM_CALLBACK);
         this.key = key;
-        this.listener = listener;
+        this.clickedListener = clickedListener;
     }
 
     public static class SearchHistoryViewHolder extends RecyclerView.ViewHolder {
@@ -48,11 +48,18 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
             super(binding.getRoot());
             this.binding = binding;
 
+            //设置点击监听
             binding.titleChip.setOnClickListener(v -> listener.onClicked(getBindingAdapterPosition()));
+
+            //设置长按监听
+            binding.titleChip.setOnLongClickListener(view -> {
+                listener.onLongClicked(getBindingAdapterPosition());
+                return true;
+            });
         }
     }
 
-    public interface OnClickerListener {
+    public interface OnClickedListener {
         /**
          * 搜索历史记录点击监听
          *
@@ -62,12 +69,9 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     }
 
     public interface ViewHolderListener {
-        /**
-         * 当ViewHolder被点击时的监听器
-         *
-         * @param position 被点击的ViewHolder在Adapter中的真实下标
-         */
         void onClicked(int position);
+
+        void onLongClicked(int position);
     }
 
     @NonNull
@@ -78,18 +82,37 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
                 parent,
                 false
         );
-        return new SearchHistoryViewHolder(binding, position -> {
-            String historyKeyWord = getItem(position);
-            listener.onClicked(historyKeyWord);
+        return new SearchHistoryViewHolder(
+                binding,
+                new ViewHolderListener() {
+                    @Override
+                    public void onClicked(int position) {
+                        String historyKeyWord = getItem(position);
+                        clickedListener.onClicked(historyKeyWord);
 
-            //将点击的关键词放到第一位
-            List<String> historyList = SearchHistoryPreference.addKeyword(
-                    historyKeyWord,
-                    key,
-                    parent.getContext()
-            );
-            submitList(new ArrayList<>(historyList));
-        });
+                        //将点击的关键词放到第一位
+                        List<String> historyList = SearchHistoryPreference.addKeyword(
+                                historyKeyWord,
+                                key,
+                                parent.getContext()
+                        );
+                        submitList(new ArrayList<>(historyList));
+                    }
+
+                    @Override
+                    public void onLongClicked(int position) {
+                        String historyKeyWord = getItem(position);
+
+                        //将点击的关键词放到第一位
+                        List<String> historyList = SearchHistoryPreference.removeKeyword(
+                                historyKeyWord,
+                                key,
+                                parent.getContext()
+                        );
+                        submitList(new ArrayList<>(historyList));
+                    }
+                }
+        );
     }
 
     @Override
