@@ -378,7 +378,7 @@ public class AppearanceAnimationHelper {
             return;
         }
 
-        recyclerView.postDelayed(() -> {
+        recyclerView.post(() -> {
                     Object o;
                     try {
                         o = adapter.peek(targetPosition);
@@ -453,8 +453,7 @@ public class AppearanceAnimationHelper {
                             }
                         }, 50);
                     }
-                },
-                100
+                }
         );
     }
 }
