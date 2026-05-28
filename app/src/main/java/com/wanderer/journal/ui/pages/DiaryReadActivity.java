@@ -185,9 +185,6 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化搜索组件
      */
     private void initSearchComponents() {
-        //先隐藏搜索框
-        binding.appBarLayout.setExpanded(false, false);
-
         //搜索历史显示
         SearchHistoryAdapter historyAdapter = new SearchHistoryAdapter(
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
@@ -332,12 +329,13 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
         adapter.addLoadStateListener(loadStates -> {
             boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
-            boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
 
-            if (isNotLoading && endOfPaginationReached && adapter.getItemCount() == 0) {
-                binding.emptyText.setVisibility(View.VISIBLE);
-            } else {
-                binding.emptyText.setVisibility(View.GONE);
+            if (isNotLoading) {
+                if (adapter.getItemCount() == 0) {
+                    binding.emptyText.setVisibility(View.VISIBLE);
+                } else {
+                    binding.emptyText.setVisibility(View.GONE);
+                }
             }
 
             if (isNotLoading && initScrollPosition != null) {
@@ -372,18 +370,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        pagingData -> {
-                            adapter.submitData(getLifecycle(), pagingData);
-
-                            if (binding.contentRecycler.getLayoutManager() != null) {
-                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition);
-
-                                //加载第0个位置，防止前面的占位符未加载
-                                ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                        .scrollToPositionWithOffset(0, 0);
-                            }
-                        },
+                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
@@ -405,66 +392,73 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (index >= 0 && positions != null && index < positions.size()) {
                 int targetPosition = positions.get(index);
 
-                //收起顶部搜索视图
-                binding.appBarLayout.setExpanded(false, true);
-
-                //构建滚动进度条
-                int maxRetryCount = 10;
-                ProgressDialogBuilder builder = new ProgressDialogBuilder(
-                        this,
-                        "搜索项跳转",
-                        "正在跳转至目标位置……"
+                //更新跳转数量指示器
+                String counterText = String.format(
+                        Locale.getDefault(),
+                        "%d/%d",
+                        positions.size() - index,
+                        positions.size()
                 );
-                AlertDialog dialog = builder.create();
-                dialog.setCancelable(false);    //不可取消
+                binding.counterText.setText(counterText);
 
-                //执行滚动逻辑
-                AppearanceAnimationHelper.scrollPagingRecycler(
-                        binding.contentRecycler,
-                        (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
-                        adapter,
-                        targetPosition,
-                        maxRetryCount,
-                        750,
-                        new PagingRecyclerScrollListener() {
-                            @Override
-                            public void onSucceed() {
-                                if (dialog.isShowing()) {
-                                    Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
-                                }
-                                dialog.dismiss();
-                                Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
-
-                                //更新跳转数量指示器
-                                String counterText = String.format(
-                                        Locale.getDefault(),
-                                        "%d/%d",
-                                        positions.size() - index,
-                                        positions.size()
-                                );
-                                binding.counterText.setText(counterText);
-                            }
-
-                            @Override
-                            public void onRetry(int failCount) {
-                                dialog.show();
-                                builder.setIndeterminate(false);
-                                builder.updateProgress(failCount, maxRetryCount, "已重试" + failCount + "次");
-                                Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
-                            }
-
-                            @Override
-                            public void onFailed() {
-                                if (dialog.isShowing()) {
-                                    Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
-                                }
-                                dialog.dismiss();
-                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
-                            }
-                        }
-                );
+                //滚动列表
+                scrollContentRecycler(targetPosition);
             }
         });
+    }
+
+    /**
+     * 滚动日记内容 RecyclerView
+     *
+     * @param targetPosition 需要滚动到的位置
+     */
+    private void scrollContentRecycler(int targetPosition) {
+        //构建滚动进度条
+        int maxRetryCount = 10;
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(
+                this,
+                "加载日记内容",
+                "正在跳转至目标位置……"
+        );
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);    //不可取消
+
+        //执行滚动逻辑
+        AppearanceAnimationHelper.scrollPagingRecycler(
+                binding.contentRecycler,
+                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                adapter,
+                targetPosition,
+                maxRetryCount,
+                750,
+                new PagingRecyclerScrollListener() {
+                    @Override
+                    public void onSucceed() {
+                        if (dialog.isShowing()) {
+                            Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();
+                        Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
+                    }
+
+                    @Override
+                    public void onRetry(int failCount) {
+                        dialog.show();
+                        builder.setIndeterminate(false);
+                        builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
+                        Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        if (dialog.isShowing()) {
+                            Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
+                        }
+                        dialog.dismiss();
+                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
+                    }
+                }
+        );
     }
 
     /**

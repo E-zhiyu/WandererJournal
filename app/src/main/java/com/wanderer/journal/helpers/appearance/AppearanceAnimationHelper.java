@@ -20,6 +20,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.ViewTags;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
@@ -306,6 +307,7 @@ public class AppearanceAnimationHelper {
         int distance = Math.abs(targetPosition - firstVisiblePos);
         if (distance > distanceThresholder) {
             //瞬间滚动到附近
+            recyclerView.stopScroll();
             int momentPosition = targetPosition > firstVisiblePos ?
                     targetPosition - distanceThresholder :
                     targetPosition + distanceThresholder;
@@ -313,8 +315,13 @@ public class AppearanceAnimationHelper {
 
             //然后再平滑滚动
             recyclerView.post(() -> {
+                Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
+                if (tag instanceof RecyclerView.OnScrollListener) {
+                    recyclerView.removeOnScrollListener((RecyclerView.OnScrollListener) tag);
+                    recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
+                }
                 //添加滚动监听器并平滑滚动
-                recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
                     @Override
                     public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                         super.onScrollStateChanged(recyclerView, newState);
@@ -324,15 +331,27 @@ public class AppearanceAnimationHelper {
                             if (viewHolder != null) {
                                 AppearanceAnimationHelper.blink(viewHolder.itemView);
                             }
-                            recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+
+                            //移除滚动监听器防止用户滚动时触发闪烁
+                            recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
+                            recyclerView.removeOnScrollListener(this);
                         }
                     }
-                });
+                };
+                recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), scrollListener);
+                recyclerView.addOnScrollListener(scrollListener);
                 recyclerView.smoothScrollToPosition(targetPosition);
             });
         } else {
+            Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
+            if (tag instanceof RecyclerView.OnScrollListener) {
+                recyclerView.removeOnScrollListener((RecyclerView.OnScrollListener) tag);
+                recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
+            }
+            recyclerView.stopScroll();
+
             //添加滚动监听器并平滑滚动
-            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
                 @Override
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                     super.onScrollStateChanged(recyclerView, newState);
@@ -342,10 +361,15 @@ public class AppearanceAnimationHelper {
                         if (viewHolder != null) {
                             AppearanceAnimationHelper.blink(viewHolder.itemView);
                         }
-                        recyclerView.removeOnScrollListener(this);  //移除滚动监听器防止用户滚动时触发闪烁
+
+                        //移除滚动监听器防止用户滚动时触发闪烁
+                        recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
+                        recyclerView.removeOnScrollListener(this);
                     }
                 }
-            });
+            };
+            recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), scrollListener);
+            recyclerView.addOnScrollListener(scrollListener);
             recyclerView.smoothScrollToPosition(targetPosition);
         }
 
@@ -387,7 +411,7 @@ public class AppearanceAnimationHelper {
                     }
                     if (o != null) {
                         // 已真实加载
-                        AppearanceAnimationHelper.scrollRecycler(
+                        scrollRecycler(
                                 recyclerView,
                                 layoutManager,
                                 targetPosition,
@@ -421,7 +445,7 @@ public class AppearanceAnimationHelper {
                                     outOfBounds = true;
                                 }
                                 if (object != null) {
-                                    AppearanceAnimationHelper.scrollRecycler(
+                                    scrollRecycler(
                                             recyclerView,
                                             layoutManager,
                                             targetPosition,
