@@ -158,6 +158,7 @@ public class WriteActivity extends AppCompatActivity {
                 binding.contentInputCard.setTranslationY(-keyboardHeight);
                 binding.contentEditCard.setTranslationY(-keyboardHeight);
                 binding.mediaCard.setTranslationY(-keyboardHeight);
+                binding.emptyText.setTranslationY(-keyboardHeight / 2f);
 
                 //内容 RecyclerView 额外增加5dp的底部内边距
                 binding.contentRecycler.setPadding(
@@ -226,6 +227,11 @@ public class WriteActivity extends AppCompatActivity {
                         binding.mediaCard
                                 .animate()
                                 .translationY(-currentHeight)
+                                .setDuration(250)
+                                .start();
+                        binding.emptyText
+                                .animate()
+                                .translationY(-currentHeight / 2f)
                                 .setDuration(250)
                                 .start();
 
