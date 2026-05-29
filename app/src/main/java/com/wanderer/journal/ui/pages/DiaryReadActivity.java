@@ -62,6 +62,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -71,7 +72,6 @@ import kotlin.Unit;
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;   //绑定的XML布局
     private LocalDate initDiaryDate = null;     //初始页的日期
-    private Integer initScrollPosition = null;      //加载列表时需要跳转到的位置
     private final CompositeDisposable disposable = new CompositeDisposable();
     private ParagraphAdapter adapter;           //段落列表适配器
     private BackPressedCallbackHelper backHelper;   //返回监听帮助器
@@ -327,6 +327,27 @@ public class DiaryReadActivity extends AppCompatActivity {
                     startActivity(skip2FullScreen, options.toBundle());
                 }
         );
+
+        //监听数据库的响应
+        AtomicInteger initScrollPosition = new AtomicInteger(-1);
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
+                .flatMapPublisher(
+                        initPosition -> {
+                            initScrollPosition.set(initPosition);
+                            return viewModel.getPagingDataFlow(initPosition, db);
+                        }
+                )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+
+        //添加加载状态监听
         adapter.addLoadStateListener(loadStates -> {
             boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
 
@@ -338,16 +359,16 @@ public class DiaryReadActivity extends AppCompatActivity {
                 }
             }
 
-            if (isNotLoading && initScrollPosition != null) {
+            if (isNotLoading && initScrollPosition.get() != -1) {
                 if (binding.contentRecycler.getLayoutManager() != null) {
                     // 保险起见，依然用 post 确保等待当前帧布局绘制结束
                     binding.contentRecycler.post(() -> {
-                        if (initScrollPosition != null) {
+                        if (initScrollPosition.get() != -1) {
                             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition);
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
                             ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                    .scrollToPositionWithOffset(initScrollPosition, 0);
-                            initScrollPosition = null; // 清空标记
+                                    .scrollToPositionWithOffset(initScrollPosition.get(), 0);
+                            initScrollPosition.set(-1);
                         }
                     });
                 }
@@ -356,24 +377,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             return Unit.INSTANCE;
         });
         binding.contentRecycler.setAdapter(adapter);
-
-        //监听数据库的响应
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
-                .flatMapPublisher(
-                        initPosition -> {
-                            initScrollPosition = initPosition;
-                            return viewModel.getPagingDataFlow(initPosition, db);
-                        }
-                )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
     }
 
     /**
