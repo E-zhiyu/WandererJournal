@@ -283,7 +283,7 @@ public class AppearanceAnimationHelper {
         }
 
         //获取可见位置并比较
-        int firstVisiblePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
         int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
         if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
             //处理没有可见视图的情况
@@ -335,6 +335,11 @@ public class AppearanceAnimationHelper {
                             //移除滚动监听器防止用户滚动时触发闪烁
                             recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
                             recyclerView.removeOnScrollListener(this);
+
+                            recyclerView.post(() -> layoutManager.scrollToPositionWithOffset(
+                                    targetPosition,
+                                    0
+                            ));
                         }
                     }
                 };
@@ -348,7 +353,6 @@ public class AppearanceAnimationHelper {
                 recyclerView.removeOnScrollListener((RecyclerView.OnScrollListener) tag);
                 recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
             }
-            recyclerView.stopScroll();
 
             //添加滚动监听器并平滑滚动
             RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
@@ -365,6 +369,11 @@ public class AppearanceAnimationHelper {
                         //移除滚动监听器防止用户滚动时触发闪烁
                         recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
                         recyclerView.removeOnScrollListener(this);
+
+                        recyclerView.post(() -> layoutManager.scrollToPositionWithOffset(
+                                targetPosition,
+                                0
+                        ));
                     }
                 }
             };
@@ -432,18 +441,25 @@ public class AppearanceAnimationHelper {
                         // 未加载成功，继续等待
                         recyclerView.postDelayed(new Runnable() {
                             private int failCount = 0;
+                            private boolean scrollBottomOrTop = true;   //true:下次滚动到底部，false:下次滚动到顶部
 
                             @Override
                             public void run() {
+                                //获取目标位置的数据实例，判断是否滚动成功
                                 Object object;
-                                boolean outOfBounds;
                                 try {
                                     object = adapter.peek(targetPosition);
-                                    outOfBounds = false;
                                 } catch (IndexOutOfBoundsException e) {
                                     object = null;
-                                    outOfBounds = true;
                                 }
+
+                                //计算下次重试的滚动位置
+                                int bottom = adapter.getItemCount() - 1;
+                                //下次重试时滚动到的位置
+                                int nextRetryPosition = scrollBottomOrTop ?
+                                        bottom - (bottom - targetPosition) * failCount / maxRetryCount :
+                                        targetPosition * failCount / maxRetryCount;
+
                                 if (object != null) {
                                     scrollRecycler(
                                             recyclerView,
@@ -467,8 +483,8 @@ public class AppearanceAnimationHelper {
                                     listener.onRetry(failCount);
 
                                     //跳转到边界以触发加载
-                                    int itemCount = adapter.getItemCount();
-                                    layoutManager.scrollToPositionWithOffset(outOfBounds ? itemCount - 1 : 0, 0);
+                                    layoutManager.scrollToPositionWithOffset(nextRetryPosition, 0);
+                                    scrollBottomOrTop = !scrollBottomOrTop;
 
                                     recyclerView.postDelayed(this, retryDelayMillis);
                                 } else {

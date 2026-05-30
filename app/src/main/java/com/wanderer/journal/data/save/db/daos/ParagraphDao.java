@@ -56,9 +56,12 @@ public interface ParagraphDao {
      * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）
      *
      * @param date 日记的日期
-     * @return 小于该日期的段落数量，即需要跳转到的日记的段落下标
+     * @return 小于该日期的段落数量+小于该日期的日记数量，即需要跳转到的日记的段落下标
      */
-    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime < :date")
+    @Query("SELECT " +
+            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date) + " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date)"
+    )
     Single<Integer> getAdjustedPositionSingle(LocalDate date);
 
     /**

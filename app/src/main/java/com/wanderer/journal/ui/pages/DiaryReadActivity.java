@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
@@ -73,8 +74,10 @@ import kotlin.Unit;
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private LocalDate initDiaryDate = null;                                 //初始页的日期
-    private final CompositeDisposable disposable = new CompositeDisposable();
+    private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphAdapter adapter;                                       //段落列表适配器
+    private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
+    private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
@@ -356,7 +359,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
 
         //监听数据库的响应
-        AtomicInteger initScrollPosition = new AtomicInteger(-1);
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
         disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
@@ -386,24 +388,51 @@ public class DiaryReadActivity extends AppCompatActivity {
                 }
             }
 
-            if (isNotLoading && initScrollPosition.get() != -1) {
-                if (binding.contentRecycler.getLayoutManager() != null) {
-                    // 保险起见，依然用 post 确保等待当前帧布局绘制结束
-                    binding.contentRecycler.post(() -> {
-                        if (initScrollPosition.get() != -1) {
-                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
-                            ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                    .scrollToPositionWithOffset(initScrollPosition.get(), 0);
-                            initScrollPosition.set(-1);
-                        }
-                    });
-                }
+            return Unit.INSTANCE;
+        });
+        adapter.addOnPagesUpdatedListener(() -> {
+            if (initScrollPosition.get() != -1) {
+                //500毫秒的间隔防抖
+                binding.contentRecycler.removeCallbacks(scrollToInit);
+                binding.contentRecycler.postDelayed(scrollToInit, 500);
             }
-
             return Unit.INSTANCE;
         });
         binding.contentRecycler.setAdapter(adapter);
+    }
+
+    /**
+     * 将段落内容列表滚动到初始位置
+     */
+    private void scrollRecyclerToInitPosition() {
+        if (binding.contentRecycler.getLayoutManager() != null) {
+            if (initScrollPosition.get() != -1) {
+                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+
+                scrollContentRecyclerWithProgressDialog(
+                        initScrollPosition.get(),
+                        new PagingRecyclerScrollListener() {
+                            @Override
+                            public void onSucceed() {
+                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
+                                initScrollPosition.set(-1);
+                            }
+
+                            @Override
+                            public void onRetry(int failCount) {
+                                Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
+                            }
+
+                            @Override
+                            public void onFailed() {
+                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
+                                initScrollPosition.set(-1);
+                            }
+                        }
+                );
+            }
+        }
     }
 
     /**
@@ -432,17 +461,21 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.counterText.setText(counterText);
 
                 //滚动列表
-                scrollContentRecycler(targetPosition);
+                scrollContentRecyclerWithProgressDialog(targetPosition, null);
             }
         });
     }
 
     /**
-     * 滚动日记内容 RecyclerView
+     * 滚动日记内容 RecyclerView，并显示进度条对话框
      *
      * @param targetPosition 需要滚动到的位置
+     * @param listener       滚动状态监听器
      */
-    private void scrollContentRecycler(int targetPosition) {
+    private void scrollContentRecyclerWithProgressDialog(
+            int targetPosition,
+            @Nullable PagingRecyclerScrollListener listener
+    ) {
         //构建滚动进度条
         int maxRetryCount = 10;
         ProgressDialogBuilder builder = new ProgressDialogBuilder(
@@ -464,6 +497,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                 new PagingRecyclerScrollListener() {
                     @Override
                     public void onSucceed() {
+                        if (listener != null) {
+                            listener.onSucceed();
+                        }
+
                         if (dialog.isShowing()) {
                             Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
                         }
@@ -473,6 +510,10 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     @Override
                     public void onRetry(int failCount) {
+                        if (listener != null) {
+                            listener.onRetry(failCount);
+                        }
+
                         dialog.show();
                         builder.setIndeterminate(false);
                         builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
@@ -481,6 +522,10 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailed() {
+                        if (listener != null) {
+                            listener.onFailed();
+                        }
+
                         if (dialog.isShowing()) {
                             Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
                         }

@@ -180,7 +180,7 @@ public class DiaryFragment extends Fragment {
                 binding.diaryRecycler,
                 layoutManager,
                 targetPosition,
-                20,
+                40,
                 new RecyclerViewScrollListener() {
                     @Override
                     public void onSucceed() {
