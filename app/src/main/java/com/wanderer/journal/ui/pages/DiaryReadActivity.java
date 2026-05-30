@@ -52,7 +52,8 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.filter.EmotionTagFilterBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -70,12 +71,13 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
-    private ActivityDiaryReadBinding binding;   //绑定的XML布局
-    private LocalDate initDiaryDate = null;     //初始页的日期
+    private ActivityDiaryReadBinding binding;                               //绑定的XML布局
+    private LocalDate initDiaryDate = null;                                 //初始页的日期
     private final CompositeDisposable disposable = new CompositeDisposable();
-    private ParagraphAdapter adapter;           //段落列表适配器
-    private BackPressedCallbackHelper backHelper;   //返回监听帮助器
-    private BackPressedCallbackHelper.BackHandler searchBackHandler;    //搜索返回处理器
+    private ParagraphAdapter adapter;                                       //段落列表适配器
+    private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
+    private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
+    private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -263,6 +265,31 @@ public class DiaryReadActivity extends AppCompatActivity {
             } else {
                 return false;
             }
+        });
+
+        //设置 SearchBar 的菜单按钮点击监听
+        binding.contentSearchBar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_emotion_select) {
+                EmotionTagFilterBottomSheet bottomSheet = new EmotionTagFilterBottomSheet(
+                        checkedEmotionTagIdList,
+                        (emotionTag, isChecked) -> {
+                            long emotionId = emotionTag.getEmotionId();
+                            if (isChecked && checkedEmotionTagIdList.contains(emotionId)) {
+                                checkedEmotionTagIdList.add(emotionId);
+                            } else if (!isChecked) {
+                                checkedEmotionTagIdList.remove(emotionId);
+                            }
+                        }
+                );
+                bottomSheet.setOnDismissListener(() -> {
+                    //TODO:这里写消失监听，用于更新搜索内容
+                });
+                bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
+
+                return true;
+            }
+
+            return false;
         });
     }
 
@@ -585,7 +612,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
                 }
         );
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 
     /**

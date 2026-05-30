@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.bottom.emotion;
+package com.wanderer.journal.ui.others.bottom.emotion.select;
 
 import android.view.LayoutInflater;
 import android.view.View;

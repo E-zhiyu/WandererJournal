@@ -73,7 +73,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
@@ -1150,7 +1150,7 @@ public class WriteActivity extends AppCompatActivity {
                     );
                 }
         );
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 
     /**
@@ -1314,7 +1314,9 @@ public class WriteActivity extends AppCompatActivity {
      * 保存草稿到 SharedPreference
      */
     private void saveDraft() {
-        String content = String.valueOf(binding.contentTextInput.getText());
-        DraftPreference.setDraft(this, content);
+        if (binding != null) {
+            String content = String.valueOf(binding.contentTextInput.getText());
+            DraftPreference.setDraft(this, content);
+        }
     }
 }

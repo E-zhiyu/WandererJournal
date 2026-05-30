@@ -21,7 +21,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_for_diary_content"
-            app:layout_scrollFlags="scroll|enterAlways|snap" />
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:menu="@menu/menu_diary_read_search_bar" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- 段落列表 -->
