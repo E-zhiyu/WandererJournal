@@ -1,12 +1,10 @@
 package com.wanderer.journal.ui.pages;
 
+
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.transition.Fade;
-import android.transition.Slide;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -26,8 +24,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LoadState;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.transition.Fade;
+import androidx.transition.Slide;
+import androidx.transition.TransitionManager;
+import androidx.transition.TransitionSet;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -376,20 +377,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 )
         );
 
-        //添加加载状态监听
-        adapter.addLoadStateListener(loadStates -> {
-            boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
-
-            if (isNotLoading) {
-                if (adapter.getItemCount() == 0) {
-                    binding.emptyText.setVisibility(View.VISIBLE);
-                } else {
-                    binding.emptyText.setVisibility(View.GONE);
-                }
-            }
-
-            return Unit.INSTANCE;
-        });
+        //添加页面加载监听，用以滚动到初始位置
         adapter.addOnPagesUpdatedListener(() -> {
             if (initScrollPosition.get() != -1) {
                 //500毫秒的间隔防抖
@@ -415,6 +403,19 @@ public class DiaryReadActivity extends AppCompatActivity {
                         new PagingRecyclerScrollListener() {
                             @Override
                             public void onSucceed() {
+                                TransitionSet set = new TransitionSet()
+                                        .addTransition(new Fade())
+                                        .setInterpolator(new FastOutSlowInInterpolator())
+                                        .setDuration(250);
+                                TransitionManager.beginDelayedTransition(binding.loadingIndicatorLayout, set);
+
+                                binding.loadingIndicatorLayout.setVisibility(View.GONE);
+                                if (adapter.getItemCount() == 0) {
+                                    binding.emptyText.setVisibility(View.VISIBLE);
+                                } else {
+                                    binding.emptyText.setVisibility(View.GONE);
+                                }
+
                                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
                                 initScrollPosition.set(-1);
                             }
@@ -426,6 +427,19 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                             @Override
                             public void onFailed() {
+                                TransitionSet set = new TransitionSet()
+                                        .addTransition(new Fade())
+                                        .setInterpolator(new FastOutSlowInInterpolator())
+                                        .setDuration(250);
+                                TransitionManager.beginDelayedTransition(binding.loadingIndicatorLayout, set);
+
+                                binding.loadingIndicatorLayout.setVisibility(View.GONE);
+                                if (adapter.getItemCount() == 0) {
+                                    binding.emptyText.setVisibility(View.VISIBLE);
+                                } else {
+                                    binding.emptyText.setVisibility(View.GONE);
+                                }
+
                                 Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
                                 initScrollPosition.set(-1);
                             }

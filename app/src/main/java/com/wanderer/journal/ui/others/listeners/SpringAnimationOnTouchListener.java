@@ -20,7 +20,7 @@ import com.google.android.material.shape.Shapeable;
 public class SpringAnimationOnTouchListener implements View.OnTouchListener {
     private static final long MORPH_DURATION = 120;             //动画持续时间
     private static final float PRESSED_SCALE = 0.94f;           //按下时缩放程度
-    private float cornerPercentage = 0.4f;                      //圆角半径
+    private final float cornerPercentage;                       //圆角半径
     private ValueAnimator cornerAnimator;                       //圆角动画执行器
     private SpringAnimation scaleXAnim;                         //X轴缩放动画
     private SpringAnimation scaleYAnim;                         //Y轴缩放动画
