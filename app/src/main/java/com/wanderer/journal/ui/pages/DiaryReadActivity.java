@@ -772,7 +772,8 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.searchSkipLayout.setVisibility(View.GONE);
 
             backHelper.unregisterHandler(searchBackHandler);
-            adapter.clearHighlight();   //清除文本高亮
+            adapter.clearHighlight();           //清除文本高亮
+            checkedEmotionTagIdList.clear();    //清空选择的情绪标签
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
