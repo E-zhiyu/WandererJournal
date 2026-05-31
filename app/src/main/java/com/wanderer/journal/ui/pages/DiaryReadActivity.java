@@ -525,9 +525,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 //滚动列表
                 scrollContentRecyclerWithProgressDialog(targetPosition, null);
-            } else {
-                binding.counterText.setText(R.string.not_applicable);
-                Toast.makeText(this, "未找到匹配的搜索项", Toast.LENGTH_SHORT).show();
             }
         });
     }

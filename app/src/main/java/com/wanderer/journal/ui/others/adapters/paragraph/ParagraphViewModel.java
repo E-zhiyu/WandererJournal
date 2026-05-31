@@ -19,6 +19,7 @@ import com.wanderer.journal.data.save.db.services.ParagraphService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -171,13 +172,27 @@ public class ParagraphViewModel extends ViewModel {
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(String keyword, List<Long> emotionIdList, DiaryDatabase db) {
-        //搜索之前先清除搜索结果
+
+        //判断关键词是否为空
+        if ((keyword == null || keyword.isEmpty()) && (emotionIdList == null || emotionIdList.isEmpty())) {
+            List<Integer> emptyData = new ArrayList<>();
+            matchedPositions.postValue(emptyData);
+            currentMatchIndex.postValue(-1);
+            return Flowable.just(emptyData);
+        }
+
+        //清空上次的搜索结果，重置 matchedPositions 和 currentMatchIndex
         clearSearch();
 
         // 转义防止 SQL 注入
-        String safeKeyword = keyword.replace("/", "//")
-                .replace("%", "/%")
-                .replace("_", "/_");
+        String safeKeyword;
+        if (keyword != null) {
+            safeKeyword = keyword.replace("/", "//")
+                    .replace("%", "/%")
+                    .replace("_", "/_");
+        } else {
+            safeKeyword = "";
+        }
 
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
         return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(safeKeyword, emotionIdList, db)
