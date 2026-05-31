@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages;
 
 
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -285,9 +284,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             }
                         }
                 );
-                bottomSheet.setOnDismissListener(() -> {
-                    //TODO:这里写消失监听，用于更新搜索内容
-                });
+                bottomSheet.setOnDismissListener(checkedEmotionTagIdList::clear);
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
                 return true;
@@ -407,9 +404,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                                         .addTransition(new Fade())
                                         .setInterpolator(new FastOutSlowInInterpolator())
                                         .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.loadingIndicatorLayout, set);
+                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
 
-                                binding.loadingIndicatorLayout.setVisibility(View.GONE);
+                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
                                 if (adapter.getItemCount() == 0) {
                                     binding.emptyText.setVisibility(View.VISIBLE);
                                 } else {
@@ -431,9 +428,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                                         .addTransition(new Fade())
                                         .setInterpolator(new FastOutSlowInInterpolator())
                                         .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.loadingIndicatorLayout, set);
+                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
 
-                                binding.loadingIndicatorLayout.setVisibility(View.GONE);
+                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
                                 if (adapter.getItemCount() == 0) {
                                     binding.emptyText.setVisibility(View.VISIBLE);
                                 } else {

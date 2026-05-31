@@ -25,20 +25,36 @@
             app:menu="@menu/menu_diary_read_search_bar" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <LinearLayout
-        android:id="@+id/loading_indicator_layout"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/center_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="vertical">
+        android:layout_gravity="center">
+
+        <!-- 空状态提示文本 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/empty_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_paragraph"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <!-- 列表加载指示器 -->
         <com.google.android.material.loadingindicator.LoadingIndicator
             android:id="@+id/recycler_loading_indicator"
             style="@style/Widget.Material3.LoadingIndicator.Contained"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 段落列表 -->
     <androidx.recyclerview.widget.RecyclerView
@@ -48,16 +64,6 @@
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-    <!-- 空状态提示文本 -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/empty_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/no_paragraph"
-        android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:visibility="gone" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/search_skip_layout"
