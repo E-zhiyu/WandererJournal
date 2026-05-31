@@ -1,7 +1,7 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum ViewTags {
-    RECYCLER_SCROLL_LISTENER(0x7f000001);
+    RECYCLER_SCROLL_LISTENER(0x7f000001);       // RecyclerView 的滚动监听器
     private final int t;
 
     ViewTags(int t) {

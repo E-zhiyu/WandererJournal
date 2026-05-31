@@ -325,6 +325,7 @@ public class AppearanceAnimationHelper {
                         super.onScrollStateChanged(recyclerView, newState);
                         // 当滚动完全停止 (IDLE) 时再闪烁
                         if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                            //闪烁视图以提醒用户
                             RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
                             if (viewHolder != null) {
                                 AppearanceAnimationHelper.blink(viewHolder.itemView);
@@ -348,15 +349,13 @@ public class AppearanceAnimationHelper {
                 Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "平滑滚动目标：" + targetPosition);
 
                 //一定时间后瞬间滚动到附近以缩短行程
-                recyclerView.postDelayed(() -> {
-                            int momentPosition = targetPosition > firstVisiblePos ?
-                                    targetPosition - distanceThresholder :
-                                    targetPosition + distanceThresholder;
-                            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
-                            Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "滚动到附近：" + momentPosition);
-                        },
-                        300
-                );
+                recyclerView.post(() -> {
+                    int momentPosition = targetPosition > firstVisiblePos ?
+                            targetPosition - distanceThresholder :
+                            targetPosition + distanceThresholder;
+                    layoutManager.scrollToPositionWithOffset(momentPosition, 0);
+                    Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "滚动到附近：" + momentPosition);
+                });
             });
         } else {
             //移除旧的滚动监听器
@@ -373,6 +372,7 @@ public class AppearanceAnimationHelper {
                     super.onScrollStateChanged(recyclerView, newState);
                     // 当滚动完全停止 (IDLE) 时再闪烁
                     if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        //闪烁视图以提醒用户
                         RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
                         if (viewHolder != null) {
                             AppearanceAnimationHelper.blink(viewHolder.itemView);
