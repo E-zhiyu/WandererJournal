@@ -67,25 +67,36 @@ public interface ParagraphDao {
     /**
      * 获取匹配搜索的段落的位置
      *
-     * @param keyword 搜索关键词
+     * @param keyword          搜索关键词
+     * @param emotionIds       情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
+     * @param useContentFilter 是否过滤段落内容
+     * @param useEmotionFilter 是否过滤情绪标签，(1：过滤，0：不过滤)
      * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
      */
     @Query(
             "SELECT (pure_paragraph_position + date_separator_count) " +
                     "FROM (" +
                     "    SELECT " +
-                    "        content, " +
+                    "        p.paragraphId, " +
+                    "        p.content, " +
                     "        -- 1. 计算纯段落的绝对位置（从 0 开始）\n" +
-                    "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
-                    "        -- 2. 核心：通过子查询，统计日记表中日期小于当前段落所属日记日期的数量\n" +
-                    "        -- 因为你按创建时间升序，且每天只有一篇日记，这个 COUNT 结果刚好等于前面已经出现的日记总数（即分隔符总数）\n" +
-                    "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= createTime) AS date_separator_count" +
-                    "    FROM paragraphs " +
-                    "    INNER JOIN diaries ON parentDiaryId = diaryId" +
+                    "        (ROW_NUMBER() OVER(ORDER BY p.createTime ASC) - 1) AS pure_paragraph_position," +
+                    "        -- 2. 统计当前段落前的日期分隔符数量\n" +
+                    "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= d.diaryDate) AS date_separator_count" +
+                    "    FROM paragraphs p" +
+                    "    INNER JOIN diaries d ON p.parentDiaryId = d.diaryId" +
                     ") " +
-                    "WHERE content LIKE '%' || :keyword || '%' ESCAPE '/'"
+                    "WHERE (:useContentFilter = 0 OR (content LIKE '%' || :keyword || '%' ESCAPE '/')) " +
+                    "  AND (:useEmotionFilter = 0 OR paragraphId IN (" +
+                    "      SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (:emotionIds)" +
+                    "  ))"
     )
-    Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowable(String keyword);
+    Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
+            String keyword,
+            List<Long> emotionIds,
+            int useContentFilter,
+            int useEmotionFilter
+    );
 
     /**
      * 通过日记 ID 获取段落

@@ -36,6 +36,7 @@ import java.util.Locale;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
     private String currentKeyword = "";                             //当前高亮的搜索关键词
+    private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
     private final List<Integer> positionList = new ArrayList<>();   //当前高亮的段落下标列表
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -280,6 +281,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
+                    long emotionId = emotion.emotionTag.getEmotionId();
                     String name = emotion.emotionTag.getName();
                     int degree = emotion.crossRef.getDegree();
                     String title = String.format(
@@ -288,21 +290,8 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                             name, RomanNumberHelper.toRoman(degree)
                     );
 
-                    Chip emotionChip = new Chip(
-                            context,
-                            null,
-                            com.google.android.material.R.style.Widget_Material3_Chip_Suggestion
-                    );
-                    emotionChip.setCheckable(false);
-                    emotionChip.setFocusable(false);
-
-                    //设置显示文本
-                    emotionChip.setText(title);
-                    emotionChip.setTextAppearance(
-                            com.google.android.material.R.style.TextAppearance_Material3_LabelMedium
-                    );
-
-                    //添加到视图中
+                    //添加 Chip 到视图中
+                    Chip emotionChip = getEmotionChip(context, emotionId, title);
                     itemHolder.binding.emotionChipGroup.addView(emotionChip);
                 }
 
@@ -322,6 +311,36 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
             separatorViewHolder.binding.dateText.setText(dateStr);
         }
+    }
+
+    /**
+     * 获取情绪标签 Chip 视图
+     *
+     * @param context   上下文
+     * @param emotionId 情绪标签 ID
+     * @param title     情绪标签名称
+     * @return 显示情绪标签名称的{@link Chip}实例
+     */
+    @NonNull
+    private Chip getEmotionChip(Context context, long emotionId, String title) {
+        Chip emotionChip = new Chip(
+                context,
+                null,
+                com.google.android.material.R.style.Widget_Material3_Chip_Suggestion
+        );
+        emotionChip.setFocusable(false);
+
+        //设置是否选中（即高亮）
+        boolean isHighLighted = filterEmotionIdList.contains(emotionId);
+        emotionChip.setCheckable(isHighLighted);
+        emotionChip.setChecked(isHighLighted);
+
+        //设置显示文本
+        emotionChip.setText(title);
+        emotionChip.setTextAppearance(
+                com.google.android.material.R.style.TextAppearance_Material3_LabelMedium
+        );
+        return emotionChip;
     }
 
     /**
@@ -364,8 +383,11 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
      * @param keyword      高亮关键词
      * @param positionList 有符合关键词的视图的下标
      */
-    public void setHighlightTarget(String keyword, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(String keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+        //修改搜索元素数据
         this.currentKeyword = keyword;
+        this.filterEmotionIdList.clear();
+        this.filterEmotionIdList.addAll(filterEmotionIdList);
 
         //更改位置列表中的内容
         List<Integer> oldPositionList = new ArrayList<>(positionList);
@@ -388,6 +410,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
      */
     public void clearHighlight() {
         this.currentKeyword = "";
+        this.filterEmotionIdList.clear();
         for (int position : positionList) {
             notifyItemChanged(position);
         }

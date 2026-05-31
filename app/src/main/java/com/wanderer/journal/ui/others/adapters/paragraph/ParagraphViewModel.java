@@ -13,13 +13,12 @@ import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -167,17 +166,13 @@ public class ParagraphViewModel extends ViewModel {
     /**
      * 执行搜索逻辑
      *
-     * @param keyword 搜索关键词
+     * @param keyword       搜索关键词
+     * @param emotionIdList 用户选择的情绪标签 ID
      * @return 从数据库中获取符合搜索条件的下标
      */
-    public Flowable<List<Integer>> executeSearch(String keyword, DiaryDatabase db) {
+    public Flowable<List<Integer>> executeSearch(String keyword, List<Long> emotionIdList, DiaryDatabase db) {
         //搜索之前先清除搜索结果
         clearSearch();
-
-        //判断关键词是否为空
-        if (keyword == null || keyword.isEmpty()) {
-            return Flowable.just(new ArrayList<>());
-        }
 
         // 转义防止 SQL 注入
         String safeKeyword = keyword.replace("/", "//")
@@ -185,8 +180,7 @@ public class ParagraphViewModel extends ViewModel {
                 .replace("_", "/_");
 
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
-        ParagraphDao paragraphDao = db.paragraphDao();
-        return paragraphDao.getSearchMatchedParagraphPositionsFlowable(safeKeyword)
+        return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(safeKeyword, emotionIdList, db)
                 .doOnNext(positionList -> {
                     // 每次收到新数据时更新 UI 状态
                     matchedPositions.postValue(positionList);

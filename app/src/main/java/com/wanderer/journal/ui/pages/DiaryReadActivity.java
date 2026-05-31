@@ -202,13 +202,13 @@ public class DiaryReadActivity extends AppCompatActivity {
                     ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
 
                     //执行搜索
-                    disposable.add(viewModel.executeSearch(keyword, db)
+                    disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
                                     positionList -> {
-                                        if (!positionList.isEmpty()){
-                                            adapter.setHighlightTarget(keyword, positionList);
+                                        if (!positionList.isEmpty()) {
+                                            adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
                                         } else {
                                             adapter.clearHighlight();
                                         }
@@ -256,13 +256,13 @@ public class DiaryReadActivity extends AppCompatActivity {
                 ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
 
                 //执行搜索
-                disposable.add(viewModel.executeSearch(keyword, db)
+                disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(
                                 positionList -> {
-                                    if (!positionList.isEmpty()){
-                                        adapter.setHighlightTarget(keyword, positionList);
+                                    if (!positionList.isEmpty()) {
+                                        adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
                                     } else {
                                         adapter.clearHighlight();
                                     }
@@ -285,7 +285,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                         checkedEmotionTagIdList,
                         (emotionTag, isChecked) -> {
                             long emotionId = emotionTag.getEmotionId();
-                            if (isChecked && checkedEmotionTagIdList.contains(emotionId)) {
+                            if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
                                 checkedEmotionTagIdList.add(emotionId);
                             } else if (!isChecked) {
                                 checkedEmotionTagIdList.remove(emotionId);
@@ -294,7 +294,24 @@ public class DiaryReadActivity extends AppCompatActivity {
                         checkedEmotionTagIdList::clear
                 );
                 bottomSheet.setOnDismissListener(() -> {
-                    //TODO:设置消失监听
+                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    String keyword = (String) binding.contentSearchBar.getText();
+                    ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+                    disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    positionList -> {
+                                        if (!positionList.isEmpty()) {
+                                            adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
+                                        } else {
+                                            adapter.clearHighlight();
+                                        }
+                                        setSearchMode(true);
+                                    },
+                                    e -> ExceptionHelper.showExceptionDialog(this, e)
+                            )
+                    );
                 });
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
