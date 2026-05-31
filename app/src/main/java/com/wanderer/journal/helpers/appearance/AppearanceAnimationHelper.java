@@ -27,6 +27,7 @@ import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
+import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;
 
 /**
  * 视图显示和动画帮助器
@@ -310,12 +311,14 @@ public class AppearanceAnimationHelper {
         if (distance > distanceThresholder) {
             //然后再平滑滚动
             recyclerView.post(() -> {
+                //移除旧的滚动监听器
                 Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
                 if (tag instanceof RecyclerView.OnScrollListener) {
                     recyclerView.removeOnScrollListener((RecyclerView.OnScrollListener) tag);
                     recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
                 }
-                //添加滚动监听器并平滑滚动
+
+                //添加滚动监听器
                 RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
                     @Override
                     public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -332,38 +335,38 @@ public class AppearanceAnimationHelper {
                             //移除滚动监听器防止用户滚动时触发闪烁
                             recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
                             recyclerView.removeOnScrollListener(this);
-
-                            recyclerView.post(() -> layoutManager.scrollToPositionWithOffset(
-                                    targetPosition,
-                                    0
-                            ));
                         }
                     }
                 };
                 recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), scrollListener);
                 recyclerView.addOnScrollListener(scrollListener);
-                recyclerView.smoothScrollToPosition(targetPosition);
+
+                //开始平滑滚动
+                CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(recyclerView.getContext());
+                scroller.setTargetPosition(targetPosition);
+                layoutManager.startSmoothScroll(scroller);
                 Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "平滑滚动目标：" + targetPosition);
 
-                //瞬间滚动到附近
+                //一定时间后瞬间滚动到附近以缩短行程
                 recyclerView.postDelayed(() -> {
                             int momentPosition = targetPosition > firstVisiblePos ?
                                     targetPosition - distanceThresholder :
                                     targetPosition + distanceThresholder;
                             layoutManager.scrollToPositionWithOffset(momentPosition, 0);
                             Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "滚动到附近：" + momentPosition);
-                            },
+                        },
                         300
                 );
             });
         } else {
+            //移除旧的滚动监听器
             Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
             if (tag instanceof RecyclerView.OnScrollListener) {
                 recyclerView.removeOnScrollListener((RecyclerView.OnScrollListener) tag);
                 recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
             }
 
-            //添加滚动监听器并平滑滚动
+            //添加滚动监听器
             RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
                 @Override
                 public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -378,17 +381,16 @@ public class AppearanceAnimationHelper {
                         //移除滚动监听器防止用户滚动时触发闪烁
                         recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), null);
                         recyclerView.removeOnScrollListener(this);
-
-                        recyclerView.post(() -> layoutManager.scrollToPositionWithOffset(
-                                targetPosition,
-                                0
-                        ));
                     }
                 }
             };
             recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), scrollListener);
             recyclerView.addOnScrollListener(scrollListener);
-            recyclerView.smoothScrollToPosition(targetPosition);
+
+            //开始平滑滚动
+            CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(recyclerView.getContext());
+            scroller.setTargetPosition(targetPosition);
+            layoutManager.startSmoothScroll(scroller);
         }
 
         if (listener != null) {
