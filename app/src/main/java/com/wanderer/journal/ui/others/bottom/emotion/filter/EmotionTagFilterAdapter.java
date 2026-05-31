@@ -1,0 +1,104 @@
+package com.wanderer.journal.ui.others.bottom.emotion.filter;
+
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.databinding.ViewHolderEmotionTagSelectBinding;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, EmotionTagFilterAdapter.EmotionTagFilterViewHolder> {
+    private static final DiffUtil.ItemCallback<EmotionTagEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
+            return oldItem.getEmotionId() == newItem.getEmotionId();
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
+            return oldItem.getName().equals(newItem.getName());
+        }
+    };
+    private final List<Long> checkedEmotionIdList = new ArrayList<>();  //被选择了的情绪标签的 ID 列表
+    private final OnCheckedChangedListener checkedChangedListener;      //选择状态变化监听器
+
+    public static class EmotionTagFilterViewHolder extends RecyclerView.ViewHolder {
+        ViewHolderEmotionTagSelectBinding binding;
+        private boolean isBlocked;
+
+        public EmotionTagFilterViewHolder(@NonNull ViewHolderEmotionTagSelectBinding binding, ViewHolderListener listener) {
+            super(binding.getRoot());
+            this.binding = binding;
+
+            binding.chip.setCheckable(true);            //设置为可点击
+            binding.chip.setCloseIconVisible(false);    //隐藏关闭图标
+
+            binding.chip.setOnCheckedChangeListener((compoundButton, b) -> {
+                if (isBlocked) {
+                    return;
+                }
+
+                listener.onCheckChanged(getBindingAdapterPosition(), b);
+            });
+        }
+    }
+
+    public interface OnCheckedChangedListener {
+        /**
+         * 标签选中状态变更回调
+         *
+         * @param emotionTag 改变选中状态的情绪标签
+         * @param isChecked  是否被选中
+         */
+        void onCheckChanged(EmotionTagEntity emotionTag, boolean isChecked);
+    }
+
+    public interface ViewHolderListener {
+        void onCheckChanged(int position, boolean isChecked);
+    }
+
+    public EmotionTagFilterAdapter(List<Long> checkedEmotionIdList, OnCheckedChangedListener checkedChangedListener) {
+        super(ITEM_CALLBACK);
+        this.checkedEmotionIdList.addAll(checkedEmotionIdList);
+        this.checkedChangedListener = checkedChangedListener;
+    }
+
+    @NonNull
+    @Override
+    public EmotionTagFilterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ViewHolderEmotionTagSelectBinding binding = ViewHolderEmotionTagSelectBinding.inflate(
+                LayoutInflater.from(parent.getContext()),
+                parent,
+                false
+        );
+        return new EmotionTagFilterViewHolder(
+                binding,
+                (position, isChecked) -> {
+                    EmotionTagEntity emotionTag = getItem(position);
+                    checkedChangedListener.onCheckChanged(emotionTag, isChecked);
+                }
+        );
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull EmotionTagFilterViewHolder holder, int position) {
+        EmotionTagEntity emotionTag = getItem(position);
+
+        //名称文本
+        holder.binding.chip.setText(emotionTag.getName());
+
+        //设置选择状态
+        holder.isBlocked = true;
+        if (checkedEmotionIdList.contains(emotionTag.getEmotionId())) {
+            holder.binding.chip.setChecked(true);
+        }
+        holder.isBlocked = false;
+    }
+}

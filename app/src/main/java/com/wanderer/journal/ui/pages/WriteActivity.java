@@ -8,15 +8,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.transition.Fade;
-import android.transition.Slide;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.transition.Fade;
+import androidx.transition.Slide;
+import androidx.transition.TransitionManager;
+import androidx.transition.TransitionSet;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -70,11 +70,10 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModelFactory;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
@@ -159,6 +158,7 @@ public class WriteActivity extends AppCompatActivity {
                 binding.contentInputCard.setTranslationY(-keyboardHeight);
                 binding.contentEditCard.setTranslationY(-keyboardHeight);
                 binding.mediaCard.setTranslationY(-keyboardHeight);
+                binding.emptyText.setTranslationY(-keyboardHeight / 2f);
 
                 //内容 RecyclerView 额外增加5dp的底部内边距
                 binding.contentRecycler.setPadding(
@@ -193,9 +193,10 @@ public class WriteActivity extends AppCompatActivity {
                 new MaterialAlertDialogBuilder(this)
                         .setTitle("草稿恢复")
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
-                        .setPositiveButton("恢复", (dialogInterface, i) ->
-                                binding.contentTextInput.setText(draft.trim())
-                        )
+                        .setPositiveButton("恢复", (dialogInterface, i) -> {
+                            binding.contentTextInput.setText(draft.trim());
+                            ImmHelper.showImm(binding.contentTextInput);
+                        })
                         .setNegativeButton("取消", null)
                         .show();
             }
@@ -227,6 +228,11 @@ public class WriteActivity extends AppCompatActivity {
                         binding.mediaCard
                                 .animate()
                                 .translationY(-currentHeight)
+                                .setDuration(250)
+                                .start();
+                        binding.emptyText
+                                .animate()
+                                .translationY(-currentHeight / 2f)
                                 .setDuration(250)
                                 .start();
 
@@ -614,9 +620,8 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModelFactory factory = new ParagraphViewModelFactory(db);
-        ParagraphViewModel viewModel = new ViewModelProvider(this, factory).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), diaryDate)
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
@@ -1146,7 +1151,7 @@ public class WriteActivity extends AppCompatActivity {
                     );
                 }
         );
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_TAG_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 
     /**
@@ -1204,7 +1209,7 @@ public class WriteActivity extends AppCompatActivity {
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+        TransitionManager.beginDelayedTransition(binding.contentEditCard, set);
 
         //执行状态改变
         if (isEditMode) {
@@ -1257,7 +1262,7 @@ public class WriteActivity extends AppCompatActivity {
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+        TransitionManager.beginDelayedTransition(binding.mediaCard, set);
 
         //切换视图可见性
         if (isVisible) {
@@ -1284,7 +1289,7 @@ public class WriteActivity extends AppCompatActivity {
             backHelper.unregisterHandler(selectionBackHandler);
         }
 
-        //定义过渡动画：组合滑入和渐变
+        //定义过渡动画
         TransitionSet set = new TransitionSet()
                 .addTransition(new Fade())
                 .setInterpolator(new FastOutSlowInInterpolator())
@@ -1310,7 +1315,9 @@ public class WriteActivity extends AppCompatActivity {
      * 保存草稿到 SharedPreference
      */
     private void saveDraft() {
-        String content = String.valueOf(binding.contentTextInput.getText());
-        DraftPreference.setDraft(this, content);
+        if (binding != null) {
+            String content = String.valueOf(binding.contentTextInput.getText());
+            DraftPreference.setDraft(this, content);
+        }
     }
 }

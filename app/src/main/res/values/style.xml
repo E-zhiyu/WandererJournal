@@ -45,6 +45,7 @@
     <style name="ImageViewStyle">
         <item name="backgroundTint">@android:color/transparent</item>
         <item name="tint">?attr/colorPrimary</item>
+        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:padding">10dp</item>
     </style>
 
@@ -65,6 +66,7 @@
     <!-- 图标按钮样式 -->
     <style name="ImageButtonStyle" parent="Widget.AppCompat.ImageButton">
         <item name="tint">?attr/colorPrimary</item>
+        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:padding">10dp</item>
         <item name="android:background">@drawable/ripple_circle</item>
     </style>
@@ -128,6 +130,7 @@
 
     <!-- 可点击的文本框样式 -->
     <style name="ClickableTextViewStyle">
+        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:paddingTop">15dp</item>
         <item name="android:paddingBottom">15dp</item>

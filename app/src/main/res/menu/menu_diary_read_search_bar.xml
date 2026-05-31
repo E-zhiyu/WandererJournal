@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_emotion_select"
+        android:icon="@drawable/outline_mood_24"
+        android:title="@string/select_emotion_tag"
+        app:showAsAction="ifRoom" />
+</menu>

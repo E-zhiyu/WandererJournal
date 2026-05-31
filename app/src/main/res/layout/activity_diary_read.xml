@@ -21,8 +21,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/search_for_diary_content"
-            app:layout_scrollFlags="scroll|enterAlways|snap" />
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:menu="@menu/menu_diary_read_search_bar" />
     </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/center_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+
+        <!-- 空状态提示文本 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/empty_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_paragraph"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- 列表加载指示器 -->
+        <com.google.android.material.loadingindicator.LoadingIndicator
+            android:id="@+id/recycler_loading_indicator"
+            style="@style/Widget.Material3.LoadingIndicator.Contained"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 段落列表 -->
     <androidx.recyclerview.widget.RecyclerView
@@ -33,26 +65,102 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- 空状态提示文本 -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/empty_text"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_skip_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/no_paragraph"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="20dp"
+        android:visibility="gone">
+
+        <!-- 匹配项数量指示器 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/matched_items_counter"
+            style="@style/MediumRadiusCardStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/up_fab"
+            app:layout_constraintEnd_toEndOf="@id/down_fab"
+            app:layout_constraintStart_toStartOf="@id/down_fab"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="1dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="15dp"
+                android:paddingTop="7dp"
+                android:paddingEnd="15dp"
+                android:paddingBottom="7dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/counter_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/not_applicable"
+                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 向上按钮 -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/up_fab"
+            style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:contentDescription="@string/btn_up"
+            android:src="@drawable/outline_keyboard_arrow_up_24"
+            app:layout_constraintBottom_toTopOf="@id/down_fab"
+            app:layout_constraintEnd_toEndOf="@id/down_fab"
+            app:layout_constraintStart_toStartOf="@id/down_fab"
+            app:layout_constraintTop_toBottomOf="@id/matched_items_counter" />
+
+        <!-- 向下按钮 -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/down_fab"
+            style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="30dp"
+            android:contentDescription="@string/btn_down"
+            android:src="@drawable/outline_keyboard_arrow_down_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/up_fab" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- 搜索视图 -->
     <com.google.android.material.search.SearchView
         android:id="@+id/diary_content_search_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="@string/search_for_diary_content">
+        android:hint="@string/search_for_diary_content"
+        app:layout_anchor="@id/content_search_bar">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/search_history_recycler"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/search_history_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clear_history_btn"
+                style="@style/TextBtnStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="5dp"
+                android:text="@string/clear_search_history" />
+        </LinearLayout>
     </com.google.android.material.search.SearchView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

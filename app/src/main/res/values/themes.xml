@@ -49,7 +49,6 @@
         <item name="colorSurfaceContainerHighest">@color/md_theme_surfaceContainerHighest</item>
 
         <item name="toolbarStyle">@style/ToolBarStyle</item>
-        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="colorControlActivated">?attr/colorPrimary</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
@@ -59,7 +58,6 @@
     <style name="Theme.WandererJournal.Dynamic" parent="Theme.Material3.DynamicColors.Light.NoActionBar">
         <!-- 自定义颜色和样式 -->
         <item name="toolbarStyle">@style/ToolBarStyle</item>
-        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="colorControlActivated">?attr/colorPrimary</item>
         <item name="android:windowLightStatusBar">true</item>
 

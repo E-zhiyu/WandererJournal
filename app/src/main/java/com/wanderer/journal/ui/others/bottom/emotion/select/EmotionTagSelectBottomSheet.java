@@ -1,6 +1,5 @@
-package com.wanderer.journal.ui.others.bottom.emotion;
+package com.wanderer.journal.ui.others.bottom.emotion.select;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -15,11 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.slider.Slider;
-import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
+import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagAddModifyActivity;
@@ -124,6 +123,8 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 }
         );
         binding.recycler.setAdapter(adapter);
+
+        //获取数据源
         EmotionTagDao dao = DiaryDatabase.getInstance(requireContext()).emotionTagDao();
         disposable.add(dao.getSelectableEmotionTagFlowable(paragraphId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -147,15 +148,16 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private void showSuspendedSlider(@NonNull EmotionTagUiModel model, @NonNull View anchor) {
         // 1. 加载悬浮窗布局
         Context context = anchor.getContext();
-        @SuppressLint("InflateParams") View popupView = LayoutInflater.from(context).inflate(R.layout.popup_window_slider, null);
-        Slider popupSlider = popupView.findViewById(R.id.popup_slider);
+        PopupWindowSliderBinding popupWindowBinding = PopupWindowSliderBinding.inflate(
+                LayoutInflater.from(context)
+        );
 
         // 2. 初始化 Slider 的值
-        popupSlider.setValue(model.getDegree());
+        popupWindowBinding.popupSlider.setValue(model.getDegree());
 
         // 3. 创建 PopupWindow
         PopupWindow popupWindow = new PopupWindow(
-                popupView,
+                popupWindowBinding.getRoot(),
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 true // true 代表点击外部时自动消失
@@ -166,7 +168,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         popupWindow.setOutsideTouchable(true);
 
         // 4. 设置 Slider 滑动监听
-        popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+        popupWindowBinding.popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {
             }
@@ -179,9 +181,9 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         });
 
         // 5. 测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
-        popupView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        int popupHeight = popupView.getMeasuredHeight();
-        int popupWidth = popupView.getMeasuredWidth();
+        popupWindowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int popupHeight = popupWindowBinding.getRoot().getMeasuredHeight();
+        int popupWidth = popupWindowBinding.getRoot().getMeasuredWidth();
 
         // xOff: 居中对齐, yOff: 放在 Chip 上方（注意负数表示向上偏移）
         int xOffset = (anchor.getWidth() - popupWidth) / 2;

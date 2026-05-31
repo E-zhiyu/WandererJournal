@@ -1,6 +1,4 @@
-package com.wanderer.journal.ui.others.adapters.paragraph;
-
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+package com.wanderer.journal.data.save.db.entities.composite;
 
 public abstract class ParagraphUiModel {
     // 段落项

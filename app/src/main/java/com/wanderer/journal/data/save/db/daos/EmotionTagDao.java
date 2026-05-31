@@ -72,7 +72,7 @@ public interface EmotionTagDao {
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
 
     /**
-     * 获取可以选择的情绪标签数据，并按照使用量降序排序
+     * 获取可以选择的情绪标签数据
      *
      * @param paragraphId 正在编辑情绪标签的段落 ID
      * @return 可供选择的情绪标签 Item 列表

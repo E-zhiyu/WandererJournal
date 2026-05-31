@@ -11,10 +11,9 @@ android {
     defaultConfig {
         applicationId "com.wanderer.journal"
         minSdk 28
-        //noinspection OldTargetApi
-        targetSdk 36
-        versionCode 8
-        versionName "0.2.5"
+        targetSdk 37
+        versionCode 14
+        versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

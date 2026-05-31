@@ -85,7 +85,10 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
 
         //判断是否为 null 占位符
         if (model == null) {
+            holder.binding.viewCube.setVisibility(View.GONE);
             return;
+        } else {
+            holder.binding.viewCube.setVisibility(View.VISIBLE);
         }
 
         //生成等级分隔符

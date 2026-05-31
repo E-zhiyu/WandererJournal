@@ -1,12 +1,12 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum TagStrings {
-    PARAGRAPH_CONTENT_MODIFY_SHEET("paragraph_content_modify_sheet"),
-    EMOTION_TAG_SELECT_BOTTOM_SHEET("emotion_tag_select_bottom_sheet"),
-    DATE_PICKER("date_picker"),
-    MEDIA_ADD_BOTTOM_SHEET("media_add_bottom_sheet"),
-    TIME_PICKER("time_picker"),
-    MEDIA_SELECTION("media_selection");
+    EMOTION_SELECT_BOTTOM_SHEET("emotion_select_bottom_sheet"), //情绪标签选择对话框
+    EMOTION_FILTER_BOTTOM_SHEET("emotion_filter_bottom_sheet"), //情绪标签过滤对话框
+    DATE_PICKER("date_picker"),                                 //日期选择对话框
+    MEDIA_ADD_BOTTOM_SHEET("media_add_bottom_sheet"),           //媒体添加对话框
+    TIME_PICKER("time_picker"),                                 //时间选择对话框
+    MEDIA_SELECTION("media_selection");                         //媒体多选追踪器
     private final String tag;
 
     TagStrings(String tag) {

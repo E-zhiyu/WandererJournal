@@ -41,7 +41,7 @@ public class DateTimeConverter {
     @TypeConverter
     public static Long fromLocalDate(LocalDate date) {
         // 将 LocalDate 转为该日凌晨的时间戳
-        return date == null ? null : date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+        return date == null ? null : date.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
     }
 
     /**
