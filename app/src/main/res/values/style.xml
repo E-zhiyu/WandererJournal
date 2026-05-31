@@ -130,6 +130,7 @@
 
     <!-- 可点击的文本框样式 -->
     <style name="ClickableTextViewStyle">
+        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:paddingTop">15dp</item>
         <item name="android:paddingBottom">15dp</item>
