@@ -7,6 +7,7 @@ import android.content.Context;
 import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -19,6 +20,7 @@ import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.ViewTags;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
@@ -306,13 +308,6 @@ public class AppearanceAnimationHelper {
         //根据距离远近采用不同的滚动方式
         int distance = Math.abs(targetPosition - firstVisiblePos);
         if (distance > distanceThresholder) {
-            //瞬间滚动到附近
-            recyclerView.stopScroll();
-            int momentPosition = targetPosition > firstVisiblePos ?
-                    targetPosition - distanceThresholder :
-                    targetPosition + distanceThresholder;
-            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
-
             //然后再平滑滚动
             recyclerView.post(() -> {
                 Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
@@ -330,6 +325,8 @@ public class AppearanceAnimationHelper {
                             RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
                             if (viewHolder != null) {
                                 AppearanceAnimationHelper.blink(viewHolder.itemView);
+                            } else {
+                                Log.w(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "待闪烁的ViewHolder为null");
                             }
 
                             //移除滚动监听器防止用户滚动时触发闪烁
@@ -346,6 +343,18 @@ public class AppearanceAnimationHelper {
                 recyclerView.setTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT(), scrollListener);
                 recyclerView.addOnScrollListener(scrollListener);
                 recyclerView.smoothScrollToPosition(targetPosition);
+                Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "平滑滚动目标：" + targetPosition);
+
+                //瞬间滚动到附近
+                recyclerView.postDelayed(() -> {
+                            int momentPosition = targetPosition > firstVisiblePos ?
+                                    targetPosition - distanceThresholder :
+                                    targetPosition + distanceThresholder;
+                            layoutManager.scrollToPositionWithOffset(momentPosition, 0);
+                            Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "滚动到附近：" + momentPosition);
+                            },
+                        300
+                );
             });
         } else {
             Object tag = recyclerView.getTag(ViewTags.RECYCLER_SCROLL_LISTENER.getT());
@@ -442,6 +451,8 @@ public class AppearanceAnimationHelper {
                         recyclerView.postDelayed(new Runnable() {
                             private int failCount = 0;
                             private boolean scrollBottomOrTop = true;   //true:下次滚动到底部，false:下次滚动到顶部
+                            private int retryTopCount = 0;      //重试滚动到顶部次数
+                            private int retryBottomCount = 0;   //重试滚动到底部次数
 
                             @Override
                             public void run() {
@@ -454,11 +465,15 @@ public class AppearanceAnimationHelper {
                                 }
 
                                 //计算下次重试的滚动位置
-                                int bottom = adapter.getItemCount() - 1;
-                                //下次重试时滚动到的位置
-                                int nextRetryPosition = scrollBottomOrTop ?
-                                        bottom - (bottom - targetPosition) * failCount / maxRetryCount :
-                                        targetPosition * failCount / maxRetryCount;
+                                int nextRetryPosition;
+                                if (scrollBottomOrTop) {
+                                    int bottom = adapter.getItemCount() - 1;
+                                    nextRetryPosition = bottom - (bottom - targetPosition) * retryBottomCount / maxRetryCount;
+                                    retryBottomCount++;
+                                } else {
+                                    nextRetryPosition = targetPosition * retryTopCount / maxRetryCount;
+                                    retryTopCount++;
+                                }
 
                                 if (object != null) {
                                     scrollRecycler(

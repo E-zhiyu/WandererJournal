@@ -10,6 +10,7 @@ public enum LogTags {
     DATA_IO_HELPER("DataIOHelper"),
     FILE_HELPER("FileHelper"),
     PERMISSION_HELPER("PermissionHelper"),
+    APPEARANCE_ANIMATION_HELPER("AppearanceAnimationHelper"),
     ZIP_HELPER("ZipHelper");
     private final String tagName;
 
