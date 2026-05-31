@@ -26,6 +26,7 @@ public class EmotionTagFilterBottomSheet extends BaseBottomSheetDialogFragment {
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private final List<Long> checkedEmotionTagIdList;                           //选中的情绪标签 ID 列表，用于初始化视图选中状态
     private final OnCheckedChangedListener checkedChangedListener;              //情绪标签选中状态变更监听器
+    private final OnClearedListener clearedListener;                            //清除筛选的监听器
 
     public interface OnCheckedChangedListener {
         /**
@@ -37,6 +38,13 @@ public class EmotionTagFilterBottomSheet extends BaseBottomSheetDialogFragment {
         void onCheckChanged(EmotionTagEntity emotionTag, boolean isChecked);
     }
 
+    public interface OnClearedListener {
+        /**
+         * 清除筛选回调
+         */
+        void onCleared();
+    }
+
     /**
      * 情绪标签筛选对话框构造方法
      *
@@ -45,10 +53,12 @@ public class EmotionTagFilterBottomSheet extends BaseBottomSheetDialogFragment {
      */
     public EmotionTagFilterBottomSheet(
             List<Long> checkedEmotionTagIdList,
-            OnCheckedChangedListener checkedChangedListener
+            OnCheckedChangedListener checkedChangedListener,
+            OnClearedListener clearedListener
     ) {
         this.checkedEmotionTagIdList = checkedEmotionTagIdList;
         this.checkedChangedListener = checkedChangedListener;
+        this.clearedListener = clearedListener;
     }
 
     @Nullable
@@ -89,5 +99,11 @@ public class EmotionTagFilterBottomSheet extends BaseBottomSheetDialogFragment {
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
+
+        //清除按钮
+        binding.clearBtn.setOnClickListener(view -> {
+            clearedListener.onCleared();
+            dismiss();
+        });
     }
 }

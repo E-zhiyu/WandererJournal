@@ -282,9 +282,12 @@ public class DiaryReadActivity extends AppCompatActivity {
                             } else if (!isChecked) {
                                 checkedEmotionTagIdList.remove(emotionId);
                             }
-                        }
+                        },
+                        checkedEmotionTagIdList::clear
                 );
-                bottomSheet.setOnDismissListener(checkedEmotionTagIdList::clear);
+                bottomSheet.setOnDismissListener(() -> {
+                    //TODO:设置消失监听
+                });
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
                 return true;
@@ -473,6 +476,8 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 //滚动列表
                 scrollContentRecyclerWithProgressDialog(targetPosition, null);
+            } else {
+                Toast.makeText(this, "未找到匹配的搜索项", Toast.LENGTH_SHORT).show();
             }
         });
     }
