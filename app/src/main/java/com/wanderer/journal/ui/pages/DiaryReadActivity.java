@@ -394,7 +394,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             if (initScrollPosition.get() != -1) {
                 //500毫秒的间隔防抖
                 binding.contentRecycler.removeCallbacks(scrollToInit);
-                binding.contentRecycler.postDelayed(scrollToInit, 500);
+                binding.contentRecycler.postDelayed(scrollToInit, 100);
             }
             return Unit.INSTANCE;
         });
