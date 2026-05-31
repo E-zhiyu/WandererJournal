@@ -423,8 +423,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
                 Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
 
-                scrollContentRecyclerWithProgressDialog(
+                scrollContentRecycler(
                         initScrollPosition.get(),
+                        false,
                         new PagingRecyclerScrollListener() {
                             @Override
                             public void onSucceed() {
@@ -524,7 +525,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.counterText.setText(counterText);
 
                 //滚动列表
-                scrollContentRecyclerWithProgressDialog(targetPosition, null);
+                scrollContentRecycler(targetPosition, true, null);
             }
         });
     }
@@ -535,8 +536,9 @@ public class DiaryReadActivity extends AppCompatActivity {
      * @param targetPosition 需要滚动到的位置
      * @param listener       滚动状态监听器
      */
-    private void scrollContentRecyclerWithProgressDialog(
+    private void scrollContentRecycler(
             int targetPosition,
+            boolean withDialog,
             @Nullable PagingRecyclerScrollListener listener
     ) {
         //构建滚动进度条
@@ -577,9 +579,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                             listener.onRetry(failCount);
                         }
 
-                        dialog.show();
-                        builder.setIndeterminate(false);
-                        builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
+                        if (withDialog) {
+                            dialog.show();
+                            builder.setIndeterminate(false);
+                            builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
+                        }
                         Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
                     }
 
