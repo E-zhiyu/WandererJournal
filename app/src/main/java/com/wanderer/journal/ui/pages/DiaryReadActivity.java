@@ -207,7 +207,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                             .subscribeOn(Schedulers.io())
                             .subscribe(
                                     positionList -> {
-                                        adapter.setHighlightTarget(keyword, positionList);
+                                        if (!positionList.isEmpty()){
+                                            adapter.setHighlightTarget(keyword, positionList);
+                                        } else {
+                                            adapter.clearHighlight();
+                                        }
                                         setSearchMode(true);
                                     },
                                     e -> ExceptionHelper.showExceptionDialog(this, e)
@@ -257,7 +261,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .subscribe(
                                 positionList -> {
-                                    adapter.setHighlightTarget(keyword, positionList);
+                                    if (!positionList.isEmpty()){
+                                        adapter.setHighlightTarget(keyword, positionList);
+                                    } else {
+                                        adapter.clearHighlight();
+                                    }
                                     setSearchMode(true);
                                 },
                                 e -> ExceptionHelper.showExceptionDialog(this, e)
@@ -454,6 +462,30 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void observeLiveData() {
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+
+        //匹配项的位置列表
+        viewModel.getMatchedPositions().observe(this, positionList -> {
+            Integer index = viewModel.getCurrentMatchIndex().getValue();
+            if (positionList == null || index == null) {
+                return;
+            }
+
+            if (positionList.isEmpty()) {
+                binding.counterText.setText(R.string.not_applicable);
+                Toast.makeText(this, "未找到匹配的搜索项", Toast.LENGTH_SHORT).show();
+            } else {
+                //更新跳转数量指示器
+                String counterText = String.format(
+                        Locale.getDefault(),
+                        "%d/%d",
+                        positionList.size() - index,
+                        positionList.size()
+                );
+                binding.counterText.setText(counterText);
+            }
+        });
+
+        //当前匹配项下标
         viewModel.getCurrentMatchIndex().observe(this, index -> {
             //判断是否为默认占位符
             if (index == -1) {
@@ -461,22 +493,23 @@ public class DiaryReadActivity extends AppCompatActivity {
             }
 
             //获取目标下标
-            List<Integer> positions = viewModel.getMatchedPositions().getValue();
-            if (index >= 0 && positions != null && index < positions.size()) {
-                int targetPosition = positions.get(index);
+            List<Integer> positionList = viewModel.getMatchedPositions().getValue();
+            if (index >= 0 && positionList != null && !positionList.isEmpty() && index < positionList.size()) {
+                int targetPosition = positionList.get(index);
 
                 //更新跳转数量指示器
                 String counterText = String.format(
                         Locale.getDefault(),
                         "%d/%d",
-                        positions.size() - index,
-                        positions.size()
+                        positionList.size() - index,
+                        positionList.size()
                 );
                 binding.counterText.setText(counterText);
 
                 //滚动列表
                 scrollContentRecyclerWithProgressDialog(targetPosition, null);
             } else {
+                binding.counterText.setText(R.string.not_applicable);
                 Toast.makeText(this, "未找到匹配的搜索项", Toast.LENGTH_SHORT).show();
             }
         });

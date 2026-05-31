@@ -97,7 +97,7 @@
                     android:id="@+id/counter_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/infinity"
+                    android:text="@string/not_applicable"
                     android:textAppearance="?attr/textAppearanceTitleMedium" />
             </FrameLayout>
         </com.google.android.material.card.MaterialCardView>

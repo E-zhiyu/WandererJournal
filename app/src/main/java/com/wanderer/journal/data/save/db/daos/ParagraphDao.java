@@ -68,7 +68,7 @@ public interface ParagraphDao {
      * 获取匹配搜索的段落的位置
      *
      * @param keyword 搜索关键词
-     * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符）
+     * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
      */
     @Query(
             "SELECT (pure_paragraph_position + date_separator_count) " +
@@ -85,7 +85,7 @@ public interface ParagraphDao {
                     ") " +
                     "WHERE content LIKE '%' || :keyword || '%' ESCAPE '/'"
     )
-    List<Integer> getSearchMatchedParagraphPositions(String keyword);
+    Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowable(String keyword);
 
     /**
      * 通过日记 ID 获取段落

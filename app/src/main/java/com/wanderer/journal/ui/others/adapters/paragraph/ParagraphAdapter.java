@@ -366,10 +366,21 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
      */
     public void setHighlightTarget(String keyword, @NonNull List<Integer> positionList) {
         this.currentKeyword = keyword;
+
+        //更改位置列表中的内容
+        List<Integer> oldPositionList = new ArrayList<>(positionList);
+        this.positionList.clear();
+        this.positionList.addAll(positionList);
+
+        //提醒旧的取消高亮
+        for (int i : oldPositionList) {
+            notifyItemChanged(i);
+        }
+
+        //提醒新的进行高亮
         for (int i : positionList) {
             notifyItemChanged(i);
         }
-        this.positionList.addAll(positionList);
     }
 
     /**

@@ -24,11 +24,10 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphViewModel extends ViewModel {
-    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(new ArrayList<>());   //匹配搜索的位置列表
+    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);   //匹配搜索的位置列表
     private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);   //当前所在的匹配搜索位置的下标
 
     public LiveData<Integer> getCurrentMatchIndex() {
@@ -161,7 +160,7 @@ public class ParagraphViewModel extends ViewModel {
      * 清空搜索
      */
     private void clearSearch() {
-        matchedPositions.postValue(new ArrayList<>());
+        matchedPositions.postValue(null);
         currentMatchIndex.postValue(-1);
     }
 
@@ -171,32 +170,41 @@ public class ParagraphViewModel extends ViewModel {
      * @param keyword 搜索关键词
      * @return 从数据库中获取符合搜索条件的下标
      */
-    public Single<List<Integer>> executeSearch(String keyword, DiaryDatabase db) {
+    public Flowable<List<Integer>> executeSearch(String keyword, DiaryDatabase db) {
+        //搜索之前先清除搜索结果
+        clearSearch();
+
+        //判断关键词是否为空
         if (keyword == null || keyword.isEmpty()) {
-            clearSearch();
-            return Single.just(new ArrayList<>());
+            return Flowable.just(new ArrayList<>());
         }
 
-        return Single.defer(() -> {
-            //转义防止 SQL 注入
-            String safeKeyword = keyword.replace("/", "//")
-                    .replace("%", "/%")
-                    .replace("_", "/_");
+        // 转义防止 SQL 注入
+        String safeKeyword = keyword.replace("/", "//")
+                .replace("%", "/%")
+                .replace("_", "/_");
 
-            //在数据库中查询并返回结果
-            ParagraphDao paragraphDao = db.paragraphDao();
-            List<Integer> positionList = paragraphDao.getSearchMatchedParagraphPositions(safeKeyword);
-            matchedPositions.postValue(positionList);
-            if (!positionList.isEmpty()) {
-                currentMatchIndex.postValue(positionList.size() - 1);
-            } else {
-                currentMatchIndex.postValue(-1);
-            }
-            return Single.just(positionList);
-        });
+        // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
+        ParagraphDao paragraphDao = db.paragraphDao();
+        return paragraphDao.getSearchMatchedParagraphPositionsFlowable(safeKeyword)
+                .doOnNext(positionList -> {
+                    // 每次收到新数据时更新 UI 状态
+                    matchedPositions.postValue(positionList);
+
+                    Integer currentIndex = currentMatchIndex.getValue();
+                    if (!positionList.isEmpty()) {
+                        if (currentIndex != null && currentIndex == -1) {
+                            currentMatchIndex.postValue(positionList.size() - 1);
+                        }
+                    } else {
+                        currentMatchIndex.postValue(-1);
+                    }
+                });
     }
 
-    // 点击“向下”按钮
+    /**
+     * 跳转至下一个搜索匹配项
+     */
     public void jumpToNext() {
         List<Integer> positions = matchedPositions.getValue();
         Integer currentIndex = currentMatchIndex.getValue();
@@ -205,10 +213,14 @@ public class ParagraphViewModel extends ViewModel {
                     0 :
                     (currentIndex + 1) % positions.size(); // 循环滚动
             currentMatchIndex.postValue(nextIndex);
+        } else {
+            currentMatchIndex.postValue(-1);
         }
     }
 
-    // 点击“向上”按钮
+    /**
+     * 跳转至上一个搜索匹配项
+     */
     public void jumpToPrevious() {
         List<Integer> positions = matchedPositions.getValue();
         Integer currentIndex = currentMatchIndex.getValue();
@@ -217,6 +229,8 @@ public class ParagraphViewModel extends ViewModel {
                     positions.size() - 1 :
                     (currentIndex - 1 + positions.size()) % positions.size();
             currentMatchIndex.postValue(prevIndex);
+        } else {
+            currentMatchIndex.postValue(-1);
         }
     }
 }
