@@ -1,4 +1,4 @@
-name: ManagerAssistant Release CI
+name: WandererJournal Release CI
 
 on:
   push:
