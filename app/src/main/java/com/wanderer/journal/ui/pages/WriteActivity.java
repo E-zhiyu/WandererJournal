@@ -39,7 +39,6 @@ import androidx.paging.LoadState;
 import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -70,7 +69,6 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
@@ -106,7 +104,6 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
     private LocalDate diaryDate = LocalDate.now();          //父日记的日期
-    private LocalDate pendingTargetDate = null;             //加载列表时需要跳转的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private boolean needScrollToBottom = false;             //是否需要在段落刷新的时候滚动到底部
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
@@ -629,37 +626,6 @@ public class WriteActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
-
-        //跳转到指定日期
-        pendingTargetDate = diaryDate;
-
-        //添加加载监听器用于精细调控加载位置
-        adapter.addLoadStateListener(loadStates -> {
-            // 当刷新完成且数据已提交到 UI
-            if (loadStates.getRefresh() instanceof LoadState.NotLoading && pendingTargetDate != null) {
-                // 遍历当前已加载的列表，找到对应的日期项
-                int position = -1;
-                for (int i = 0; i < adapter.getItemCount(); i++) {
-                    ParagraphUiModel item = adapter.peek(i); // 使用 peek 不触发分页加载
-                    if (item instanceof ParagraphUiModel.Item) {
-                        if (((ParagraphUiModel.Item) item).model.getParagraph().getCreateTime().toLocalDate().equals(pendingTargetDate)) {
-                            position = i;
-                            break;
-                        }
-                    }
-                }
-
-                if (position != -1) {
-                    // 关键：强制滚动到该位置，并将偏移量设为 0 (置顶)
-                    if (binding.contentRecycler.getLayoutManager() != null) {
-                        ((LinearLayoutManager) binding.contentRecycler.getLayoutManager())
-                                .scrollToPositionWithOffset(position, 0);
-                        pendingTargetDate = null; // 跳转完成，清空标记
-                    }
-                }
-            }
-            return null;
-        });
     }
 
     /**
