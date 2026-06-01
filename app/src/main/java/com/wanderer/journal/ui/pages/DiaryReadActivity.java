@@ -51,7 +51,7 @@ import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphViewModel;
+import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.filter.EmotionTagFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
@@ -197,26 +197,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                     binding.diaryContentSearchView.hide();
                     binding.contentSearchBar.setText(keyword);
 
-                    //获取 ViewModel
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
-                    ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-
                     //执行搜索
-                    disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    positionList -> {
-                                        if (!positionList.isEmpty()) {
-                                            adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
-                                        } else {
-                                            adapter.clearHighlight();
-                                        }
-                                        setSearchMode(true);
-                                    },
-                                    e -> ExceptionHelper.showExceptionDialog(this, e)
-                            )
-                    );
+                    executeSearch(keyword);
                 }
         );
         List<String> initList = SearchHistoryPreference.getHistory(
@@ -241,7 +223,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                 //收起搜索视图并保存搜索词
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
                 binding.diaryContentSearchView.hide();
-                binding.contentSearchBar.setText(keyword);
+                if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
+                    binding.contentSearchBar.setText(keyword);
+                }
 
                 //保存搜索历史
                 List<String> historyList = SearchHistoryPreference.addKeyword(
@@ -251,26 +235,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                 );
                 historyAdapter.submitList(new ArrayList<>(historyList));
 
-                //获取 ViewModel
-                DiaryDatabase db = DiaryDatabase.getInstance(this);
-                ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-
                 //执行搜索
-                disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                positionList -> {
-                                    if (!positionList.isEmpty()) {
-                                        adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
-                                    } else {
-                                        adapter.clearHighlight();
-                                    }
-                                    setSearchMode(true);
-                                },
-                                e -> ExceptionHelper.showExceptionDialog(this, e)
-                        )
-                );
+                executeSearch(keyword);
 
                 return true;
             } else {
@@ -294,24 +260,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                         checkedEmotionTagIdList::clear
                 );
                 bottomSheet.setOnDismissListener(() -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
                     String keyword = (String) binding.contentSearchBar.getText();
-                    ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-                    disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    positionList -> {
-                                        if (!positionList.isEmpty()) {
-                                            adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
-                                        } else {
-                                            adapter.clearHighlight();
-                                        }
-                                        setSearchMode(true);
-                                    },
-                                    e -> ExceptionHelper.showExceptionDialog(this, e)
-                            )
-                    );
+                    executeSearch(keyword);
                 });
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
@@ -600,6 +550,31 @@ public class DiaryReadActivity extends AppCompatActivity {
                         Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
                     }
                 }
+        );
+    }
+
+    /**
+     * 执行 ViewModel 的搜索方法并根据返回的数据更新 UI
+     *
+     * @param keyword 搜索关键词
+     */
+    private void executeSearch(String keyword) {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        positionList -> {
+                            if (!positionList.isEmpty()) {
+                                adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
+                            } else {
+                                adapter.clearHighlight();
+                            }
+                            setSearchMode(true);
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
         );
     }
 

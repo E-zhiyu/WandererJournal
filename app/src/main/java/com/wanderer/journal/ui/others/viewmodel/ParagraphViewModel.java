@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.adapters.paragraph;
+package com.wanderer.journal.ui.others.viewmodel;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
@@ -19,7 +19,6 @@ import com.wanderer.journal.data.save.db.services.ParagraphService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -172,13 +171,9 @@ public class ParagraphViewModel extends ViewModel {
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(String keyword, List<Long> emotionIdList, DiaryDatabase db) {
-
         //判断关键词是否为空
         if ((keyword == null || keyword.isEmpty()) && (emotionIdList == null || emotionIdList.isEmpty())) {
-            List<Integer> emptyData = new ArrayList<>();
-            matchedPositions.postValue(emptyData);
-            currentMatchIndex.postValue(-1);
-            return Flowable.just(emptyData);
+            return Flowable.empty();
         }
 
         //清空上次的搜索结果，重置 matchedPositions 和 currentMatchIndex
