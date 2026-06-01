@@ -23,6 +23,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.options.AuthOpportunity;
 import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
+import com.wanderer.journal.helpers.about.AboutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSpinnerView;
@@ -71,6 +72,19 @@ public class SettingsFragment extends Fragment {
         //初始化安全设置
         initSecuritySettings();
 
+        //更新日志
+        SettingClickableTextView changelogOption = new SettingClickableTextView(
+                requireContext(),
+                binding.changelogOption,
+                R.string.changelog,
+                null,
+                R.drawable.outline_lab_profile_24,
+                RadiusStyle.TOP
+        );
+        changelogOption.setFunctionListener(
+                view -> AboutHelper.showChangelog(requireContext())
+        );
+
         //关于软件
         SettingClickableTextView aboutOption = new SettingClickableTextView(
                 requireContext(),
@@ -78,7 +92,7 @@ public class SettingsFragment extends Fragment {
                 R.string.about_software,
                 null,
                 R.drawable.outline_info_24,
-                RadiusStyle.SINGLE
+                RadiusStyle.BOTTOM
         );
         aboutOption.setFunctionListener(view -> {
             Intent skip2About = new Intent(requireContext(), AboutActivity.class);
