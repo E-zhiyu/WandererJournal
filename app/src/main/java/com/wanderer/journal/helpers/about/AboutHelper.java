@@ -17,7 +17,13 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.0.0\n" +
+    private final static String CHANGELOG = "# v1.0.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复读日记界面搜索段落时没有搜索词也没有筛选情绪标签时搜索行为会异常响应的BUG\n" +
+            "\n" +
+            "# v1.0.0\n" +
             "\n" +
             "> 该版本为首个Release版本，以下为核心功能概述\n" +
             "\n" +
