@@ -17,7 +17,17 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.0.1\n" +
+    private final static String CHANGELOG = "# v1.0.2\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复读日记界面跳转按钮的阴影被裁切的BUG\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 优化日记列表的文字显示\n" +
+            "\n" +
+            "# v1.0.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
