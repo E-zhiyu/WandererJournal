@@ -15,6 +15,7 @@
         app:liftOnScroll="false"
         app:statusBarForeground="?attr/colorSurface">
 
+        <!-- 搜索框 -->
         <com.google.android.material.search.SearchBar
             android:id="@+id/content_search_bar"
             style="@style/Widget.Material3Expressive.SearchBar"
@@ -23,8 +24,22 @@
             android:hint="@string/search_for_diary_content"
             app:layout_scrollFlags="scroll|enterAlways|snap"
             app:menu="@menu/menu_diary_read_search_bar" />
+
+        <!-- 选中的情绪标签显示 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/emotion_tag_in_appbar_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="10dp"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- 加载指示器和空状态文本 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/center_layout"
         android:layout_width="wrap_content"
@@ -65,6 +80,7 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+    <!-- 跳转搜索结果的按钮布局 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/search_skip_layout"
         android:layout_width="wrap_content"

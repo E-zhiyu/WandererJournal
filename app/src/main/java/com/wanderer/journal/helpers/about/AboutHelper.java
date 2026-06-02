@@ -27,6 +27,7 @@ public class AboutHelper {
             "### 优化内容\n" +
             "\n" +
             "- 优化日记列表的文字显示\n" +
+            "- 读日记界面现在会显示正在过滤的情绪标签\n" +
             "\n" +
             "# v1.0.1\n" +
             "\n" +
@@ -87,19 +88,6 @@ public class AboutHelper {
         PackageInfo packageInfo = context.getPackageManager()
                 .getPackageInfo(context.getPackageName(), 0);
         return packageInfo.versionName;
-    }
-
-    /**
-     * 获取当前版本代码
-     *
-     * @param context 上下文
-     * @return 版本代码整数值
-     * @throws PackageManager.NameNotFoundException 包名未找到引发的异常
-     */
-    public static long getVersionCode(@NonNull Context context) throws PackageManager.NameNotFoundException {
-        PackageInfo packageInfo = context.getPackageManager()
-                .getPackageInfo(context.getPackageName(), 0);
-        return packageInfo.getLongVersionCode();
     }
 
     /**

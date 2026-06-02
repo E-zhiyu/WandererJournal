@@ -77,15 +77,25 @@ public interface EmotionTagDao {
      * @param paragraphId 正在编辑情绪标签的段落 ID
      * @return 可供选择的情绪标签 Item 列表
      */
-    @Query("SELECT " +
-            "    e.*, " +
-            "    (r.paragraphId IS NOT NULL) AS isChecked, " +
-            "    COALESCE(r.degree, 1) AS degree " +
-            "FROM emotionTags e " +
-            "LEFT JOIN emotionParagraphCrossRef r " +
-            "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId "
+    @Query(
+            "SELECT " +
+                    "    e.*, " +
+                    "    (r.paragraphId IS NOT NULL) AS isChecked, " +
+                    "    COALESCE(r.degree, 1) AS degree " +
+                    "FROM emotionTags e " +
+                    "LEFT JOIN emotionParagraphCrossRef r " +
+                    "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId "
     )
     Flowable<List<EmotionTagUiModel>> getSelectableEmotionTagFlowable(long paragraphId);
+
+    /**
+     * 获取在 ID 列表中的情绪标签
+     *
+     * @param emotionIdList 需要获取的标签对应的 ID 列表
+     * @return ID 在列表中的情绪标签实例
+     */
+    @Query("SELECT * FROM emotionTags WHERE emotionId IN (:emotionIdList)")
+    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(List<Long> emotionIdList);
 
     /**
      * 导出情绪标签数据
