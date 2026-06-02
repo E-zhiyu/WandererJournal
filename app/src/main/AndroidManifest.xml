@@ -80,8 +80,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- 日记提醒广播接收器 -->
         <receiver
-            android:name=".automation.broadcast.DiaryCheckReceiver"
+            android:name=".automation.broadcast.DiaryAlarmReceiver"
             android:enabled="true"
             android:exported="false"
             android:label="触发检查当天是否有日记的广播接收器">
@@ -89,6 +91,8 @@
                 <action android:name="com.wanderer.journal.DiaryCheckReceiver" />
             </intent-filter>
         </receiver>
+
+        <!-- 开机广播接收器 -->
         <receiver
             android:name=".automation.broadcast.BootReceiver"
             android:enabled="true"
