@@ -22,6 +22,7 @@ public class AboutHelper {
             "### BUG修复\n" +
             "\n" +
             "- 修复读日记界面跳转按钮的阴影被裁切的BUG\n" +
+            "- 修复搜索关键词不会填充到SearchBar的BUG\n" +
             "\n" +
             "### 优化内容\n" +
             "\n" +
