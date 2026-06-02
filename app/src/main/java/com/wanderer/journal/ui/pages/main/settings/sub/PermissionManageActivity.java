@@ -77,7 +77,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         camera.setFunctionListener(v -> showExplanationDialog(
                 R.string.camera_permission,
                 "该权限允许应用调用摄像头，应用范围如下：\n" +
-                        "- 添加流水记录图片时使用内置拍照功能拍照\n",
+                        "- 写日记时使用系统相机添加媒体文件\n",
                 () -> requestRuntimePermission(Manifest.permission.CAMERA)
         ));
 
@@ -93,8 +93,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         notification.setFunctionListener(v -> showExplanationDialog(
                         R.string.notification_permission,
                         "该权限允许应用发送通知，应用范围如下：\n" +
-                                "- 预算余额低时发送提醒通知\n" +
-                                "- 触发自动记账后发送确认通知\n",
+                                "- 没写日记时发送提醒通知\n",
                         () -> {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 requestRuntimePermission(Manifest.permission.POST_NOTIFICATIONS);
@@ -117,7 +116,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         alarm.setFunctionListener(v -> showExplanationDialog(
                 R.string.alarm_permission,
                 "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-                        "- 每日0点自动检查并重置预算\n",
+                        "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
                 () -> {
                     Intent skip2ExactAlarm = PermissionHelper.buildExactAlarmIntent(this);
                     LifecycleManager.startExternalActivity(this, skip2ExactAlarm);
