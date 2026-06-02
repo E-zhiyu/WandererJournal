@@ -10,8 +10,8 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
-import com.wanderer.journal.databinding.ViewHolderAddEmotionTagBinding;
-import com.wanderer.journal.databinding.ViewHolderEmotionTagSelectBinding;
+import com.wanderer.journal.databinding.ViewHolderChipTextElevatedBinding;
+import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
 public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, RecyclerView.ViewHolder> {
     private static final int TYPE_ADD_ENTRY = 1;
@@ -68,9 +68,9 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
     }
 
     public static class EmotionTagSelectViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderEmotionTagSelectBinding binding;
+        ViewHolderClosableChipBinding binding;
 
-        public EmotionTagSelectViewHolder(@NonNull ViewHolderEmotionTagSelectBinding binding, ViewHolderListener listener) {
+        public EmotionTagSelectViewHolder(@NonNull ViewHolderClosableChipBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -89,11 +89,14 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
     }
 
     public static class AddEmotionViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderAddEmotionTagBinding binding;
+        ViewHolderChipTextElevatedBinding binding;
 
-        public AddEmotionViewHolder(@NonNull ViewHolderAddEmotionTagBinding binding, ViewHolderListener listener) {
+        public AddEmotionViewHolder(@NonNull ViewHolderChipTextElevatedBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
+
+            //不可选择
+            binding.chip.setCheckable(false);
 
             //设置点击监听
             binding.chip.setOnClickListener(view -> {
@@ -117,7 +120,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_NORMAL) {
-            ViewHolderEmotionTagSelectBinding binding = ViewHolderEmotionTagSelectBinding.inflate(
+            ViewHolderClosableChipBinding binding = ViewHolderClosableChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -139,7 +142,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
                     }
             );
         } else {
-            ViewHolderAddEmotionTagBinding binding = ViewHolderAddEmotionTagBinding.inflate(
+            ViewHolderChipTextElevatedBinding binding = ViewHolderChipTextElevatedBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false

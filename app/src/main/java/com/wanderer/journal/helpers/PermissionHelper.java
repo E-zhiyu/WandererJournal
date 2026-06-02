@@ -82,7 +82,7 @@ public class PermissionHelper {
             this.intentBuilder = i;
         }
 
-        boolean isGranted(Context c) {
+        public boolean isGranted(Context c) {
             return checker.check(c);
         }
 
@@ -155,6 +155,8 @@ public class PermissionHelper {
                             rationaleRuntimePermissions.remove(permission);
                         }
                     }
+
+                    start();
                 }
         );
     }

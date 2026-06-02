@@ -30,6 +30,7 @@ import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingS
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
 
 import java.util.Arrays;
@@ -68,6 +69,20 @@ public class SettingsFragment extends Fragment {
         dataManage.setFunctionListener(view -> {
             Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
             startActivity(skip2DataManage);
+        });
+
+        //日记提醒设置
+        SettingClickableTextView diaryAlarmOption = new SettingClickableTextView(
+                requireContext(),
+                binding.diaryAlarmOption,
+                R.string.diary_alarm,
+                "点击跳转至日记提醒设置界面",
+                R.drawable.outline_alarm_24,
+                RadiusStyle.SINGLE
+        );
+        diaryAlarmOption.setFunctionListener(view -> {
+            Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
+            startActivity(skip2DiaryAlarmSetting);
         });
 
         //初始化安全设置

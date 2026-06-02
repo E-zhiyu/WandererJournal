@@ -999,7 +999,7 @@ public class WriteActivity extends AppCompatActivity {
      * @param paragraph 原来的段落实例
      */
     private void updateParagraphCreateTime(@NonNull ParagraphEntity paragraph) {
-        DateTimePickerHelper.selectDateTime(
+        DateTimePickerHelper.selectTime(
                 paragraph.getCreateTime(),
                 getSupportFragmentManager(),
                 timePicker -> {

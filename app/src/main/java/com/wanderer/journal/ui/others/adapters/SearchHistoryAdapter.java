@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
-import com.wanderer.journal.databinding.ViewHolderSearchHistoryBinding;
+import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,17 +42,17 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     }
 
     public static class SearchHistoryViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderSearchHistoryBinding binding;
+        ViewHolderChipTextBinding binding;
 
-        public SearchHistoryViewHolder(@NonNull ViewHolderSearchHistoryBinding binding, ViewHolderListener listener) {
+        public SearchHistoryViewHolder(@NonNull ViewHolderChipTextBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
             //设置点击监听
-            binding.titleChip.setOnClickListener(v -> listener.onClicked(getBindingAdapterPosition()));
+            binding.chip.setOnClickListener(v -> listener.onClicked(getBindingAdapterPosition()));
 
             //设置长按监听
-            binding.titleChip.setOnLongClickListener(view -> {
+            binding.chip.setOnLongClickListener(view -> {
                 listener.onLongClicked(getBindingAdapterPosition());
                 return true;
             });
@@ -77,7 +77,7 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     @NonNull
     @Override
     public SearchHistoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderSearchHistoryBinding binding = ViewHolderSearchHistoryBinding.inflate(
+        ViewHolderChipTextBinding binding = ViewHolderChipTextBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false
@@ -118,6 +118,6 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     @Override
     public void onBindViewHolder(@NonNull SearchHistoryViewHolder holder, int position) {
         String historyKeyWord = getItem(position);
-        holder.binding.titleChip.setText(historyKeyWord);
+        holder.binding.chip.setText(historyKeyWord);
     }
 }
