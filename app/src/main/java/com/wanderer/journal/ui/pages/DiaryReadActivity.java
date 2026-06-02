@@ -220,10 +220,15 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置搜索监听
         binding.diaryContentSearchView.getEditText().setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_SEARCH) {
-                //收起搜索视图并保存搜索词
+                //收起搜索视图
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
                 binding.diaryContentSearchView.hide();
+
+                //根据搜索词和选中的情绪标签选择是否执行搜索操作
                 if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
+                    setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
+                } else {
+                    executeSearch(keyword);
                     binding.contentSearchBar.setText(keyword);
                 }
 
@@ -234,9 +239,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                         this
                 );
                 historyAdapter.submitList(new ArrayList<>(historyList));
-
-                //执行搜索
-                executeSearch(keyword);
 
                 return true;
             } else {
