@@ -43,9 +43,7 @@
 
     <!-- 图片视图样式 -->
     <style name="ImageViewStyle">
-        <item name="backgroundTint">@android:color/transparent</item>
         <item name="tint">?attr/colorPrimary</item>
-        <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:padding">10dp</item>
     </style>
 

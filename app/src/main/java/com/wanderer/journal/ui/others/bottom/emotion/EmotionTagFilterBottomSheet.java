@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.bottom.emotion.filter;
+package com.wanderer.journal.ui.others.bottom.emotion;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +13,7 @@ import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 
 import java.util.List;

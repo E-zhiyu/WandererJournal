@@ -51,10 +51,11 @@ import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
+import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-import com.wanderer.journal.ui.others.bottom.emotion.filter.EmotionTagFilterBottomSheet;
-import com.wanderer.journal.ui.others.bottom.emotion.select.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
+import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -81,6 +82,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
+    private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,6 +142,25 @@ public class DiaryReadActivity extends AppCompatActivity {
         //搜索组件
         initSearchComponents();
 
+        //顶部情绪标签视图
+        appbarEmotionAdapter = new EmotionTagInAppBarAdapter(
+                emotionTag -> {
+                    //移除已选择的情绪标签 ID
+                    checkedEmotionTagIdList.remove(emotionTag.getEmotionId());
+
+                    //执行搜索逻辑或退出搜搜模式
+                    String searchKeyword = (String) binding.contentSearchBar.getText();
+                    if (searchKeyword.isEmpty() && checkedEmotionTagIdList.isEmpty()) {
+                        setSearchMode(false);   //退出搜索模式
+                    } else {
+                        //执行搜索逻辑并更新 RecyclerView
+                        refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
+                        executeSearch(searchKeyword);
+                    }
+                }
+        );
+        binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
+
         //日记段落列表
         initRecyclerView();
 
@@ -161,6 +182,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
     }
 
+    /**
+     * 初始化返回手势处理
+     */
     private void initBackHandlers() {
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(false) {
             @Override
@@ -220,10 +244,15 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置搜索监听
         binding.diaryContentSearchView.getEditText().setOnEditorActionListener((textView, i, keyEvent) -> {
             if (i == EditorInfo.IME_ACTION_SEARCH) {
-                //收起搜索视图并保存搜索词
+                //收起搜索视图
                 String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
                 binding.diaryContentSearchView.hide();
+
+                //根据搜索词和选中的情绪标签选择是否执行搜索操作
                 if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
+                    setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
+                } else {
+                    executeSearch(keyword);
                     binding.contentSearchBar.setText(keyword);
                 }
 
@@ -234,9 +263,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                         this
                 );
                 historyAdapter.submitList(new ArrayList<>(historyList));
-
-                //执行搜索
-                executeSearch(keyword);
 
                 return true;
             } else {
@@ -261,6 +287,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 );
                 bottomSheet.setOnDismissListener(() -> {
                     String keyword = (String) binding.contentSearchBar.getText();
+                    refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
                     executeSearch(keyword);
                 });
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
@@ -273,7 +300,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
-     * 初始化RecyclerView
+     * 初始化 RecyclerView
      */
     private void initRecyclerView() {
         //设置适配器
@@ -749,10 +776,51 @@ public class DiaryReadActivity extends AppCompatActivity {
             backHelper.unregisterHandler(searchBackHandler);
             adapter.clearHighlight();           //清除文本高亮
             checkedEmotionTagIdList.clear();    //清空选择的情绪标签
+            refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
             backHelper.registerHandler(searchBackHandler);
+        }
+    }
+
+    /**
+     * 刷新选中的情绪标签显示视图
+     *
+     * @param checkedEmotionTagIdList 需要获取的情绪标签的 ID 列表
+     */
+    private void refreshFilterEmotionTagGroup(List<Long> checkedEmotionTagIdList) {
+        if (checkedEmotionTagIdList != null && !checkedEmotionTagIdList.isEmpty()) {
+            TransitionSet set = new TransitionSet()
+                    .addTransition(new Slide(Gravity.TOP))
+                    .addTransition(new Fade())
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .addTarget(binding.emotionTagInAppbarRecycler)
+                    .setDuration(250);
+            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
+            binding.emotionTagInAppbarRecycler.setVisibility(View.VISIBLE);
+
+            //从数据库中读取标签名称并显示
+            EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
+            disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdList)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        } else {
+            TransitionSet set = new TransitionSet()
+                    .addTransition(new Slide(Gravity.TOP))
+                    .addTransition(new Fade())
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .addTarget(binding.emotionTagInAppbarRecycler)
+                    .setDuration(250);
+            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
+            binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
+
+            appbarEmotionAdapter.submitList(new ArrayList<>());
         }
     }
 }
