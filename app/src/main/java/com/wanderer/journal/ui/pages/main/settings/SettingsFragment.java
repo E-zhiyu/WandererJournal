@@ -30,6 +30,7 @@ import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingS
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -122,7 +123,7 @@ public class SettingsFragment extends Fragment {
                 R.string.dynamic_color,
                 "将壁纸颜色作为APP主题色",
                 R.drawable.outline_colorize_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
@@ -131,6 +132,23 @@ public class SettingsFragment extends Fragment {
                     ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
                 }
         );
+
+        //权限管理
+        SettingClickableTextView permissionsOption = new SettingClickableTextView(
+                requireContext(),
+                binding.permissionsOption,
+                R.string.permissions_setting,
+                "点击进入权限管理界面",
+                R.drawable.outline_admin_panel_settings_24,
+                RadiusStyle.BOTTOM
+        );
+        permissionsOption.setFunctionListener(v -> {
+            Intent skip2PermissionManage = new Intent(
+                    requireContext(),
+                    PermissionManageActivity.class
+            );
+            startActivity(skip2PermissionManage);
+        });
     }
 
     /**

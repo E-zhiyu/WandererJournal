@@ -47,6 +47,11 @@
                 android:id="@+id/dynamic_color_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 权限管理 -->
+            <include
+                android:id="@+id/permissions_option"
+                layout="@layout/view_setting_option" />
+
             <!-- 数据管理 -->
             <include
                 android:id="@+id/data_manage_option"

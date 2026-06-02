@@ -1,0 +1,163 @@
+package com.wanderer.journal.ui.pages.main.settings.sub;
+
+import android.Manifest;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.StringRes;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.wanderer.journal.LifecycleManager;
+import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
+import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
+import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
+
+import io.noties.markwon.Markwon;
+
+public class PermissionManageActivity extends AppCompatActivity {
+    private ActivityPermissionManageBinding binding;                //绑定的XML视图
+    private final ActivityResultLauncher<String> runtimeLauncher =  //申请运行时权限的启动器
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    o -> {
+                    }
+            );
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+
+        binding = ActivityPermissionManageBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            binding.scrollView.setPadding(
+                    0,
+                    0,
+                    0,
+                    systemBars.bottom + ViewEdgeHelper.dpToPx(this, 15)
+            );
+            return insets;
+        });
+
+        initViews();
+    }
+
+    /**
+     * 初始化视图
+     */
+    private void initViews() {
+        binding.toolbar.setNavigationOnClickListener(v -> finish());
+
+        //相机权限
+        SettingClickableTextView camera = new SettingClickableTextView(
+                this,
+                binding.cameraOption,
+                R.string.camera_permission,
+                "允许使用摄像头",
+                R.drawable.baseline_photo_camera_24,
+                RadiusStyle.TOP
+        );
+        camera.setFunctionListener(v -> showExplanationDialog(
+                R.string.camera_permission,
+                "该权限允许应用调用摄像头，应用范围如下：\n" +
+                        "- 添加流水记录图片时使用内置拍照功能拍照\n",
+                () -> requestRuntimePermission(Manifest.permission.CAMERA)
+        ));
+
+        //通知权限
+        SettingClickableTextView notification = new SettingClickableTextView(
+                this,
+                binding.notificationOption,
+                R.string.notification_permission,
+                "允许发送通知",
+                R.drawable.outline_notification_settings_24,
+                RadiusStyle.MIDDLE
+        );
+        notification.setFunctionListener(v -> showExplanationDialog(
+                        R.string.notification_permission,
+                        "该权限允许应用发送通知，应用范围如下：\n" +
+                                "- 预算余额低时发送提醒通知\n" +
+                                "- 触发自动记账后发送确认通知\n",
+                        () -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                requestRuntimePermission(Manifest.permission.POST_NOTIFICATIONS);
+                            } else {
+                                Toast.makeText(this, "权限已授予", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                )
+        );
+
+        //精确闹钟权限
+        SettingClickableTextView alarm = new SettingClickableTextView(
+                this,
+                binding.alarmOption,
+                R.string.alarm_permission,
+                "允许设置定时任务",
+                R.drawable.outline_alarm_24,
+                RadiusStyle.BOTTOM
+        );
+        alarm.setFunctionListener(v -> showExplanationDialog(
+                R.string.alarm_permission,
+                "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
+                        "- 每日0点自动检查并重置预算\n",
+                () -> {
+                    Intent skip2ExactAlarm = PermissionHelper.buildExactAlarmIntent(this);
+                    LifecycleManager.startExternalActivity(this, skip2ExactAlarm);
+                }
+        ));
+    }
+
+    /**
+     * 显示权限解释对话框
+     *
+     * @param title   对话框标题
+     * @param message 对话框内容，支持Markdown格式
+     * @param action  点击确定按钮后执行的操作
+     */
+    private void showExplanationDialog(@StringRes int title, String message, Runnable action) {
+        //获取自定义弹窗视图
+        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(getLayoutInflater());
+
+        //使用Markown渲染Markdown文本
+        Markwon markwon = Markwon.create(this);
+        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, message);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(title)
+                .setView(markdownTextBinding.getRoot())
+                .setPositiveButton("前往设置", (dialog, which) -> action.run())
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /**
+     * 申请运行时权限
+     *
+     * @param permission 运行时权限
+     */
+    private void requestRuntimePermission(String permission) {
+        if (PermissionHelper.isRuntimePermissionGranted(permission, this)) {
+            Toast.makeText(this, "权限已授予", Toast.LENGTH_SHORT).show();
+        } else {
+            runtimeLauncher.launch(permission);
+        }
+    }
+}
