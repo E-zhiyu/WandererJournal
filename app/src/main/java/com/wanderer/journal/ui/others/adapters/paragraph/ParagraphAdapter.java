@@ -10,7 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.paging.PagingDataAdapter;
+import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
+    private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
     private String currentKeyword = "";                             //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
     private final List<Integer> positionList = new ArrayList<>();   //当前高亮的段落下标列表
@@ -115,7 +119,6 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         ViewHolderParagraphBinding binding;
         private ParagraphEntityModel data = null;   //数据实例
 
-
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
@@ -140,6 +143,38 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
          */
         public void bindItem(ParagraphEntityModel data) {
             this.data = data;
+        }
+
+        /**
+         * 为 Selection 库提供信息
+         *
+         * @return Selection 库的 Item 信息
+         */
+        public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
+            return new ItemDetailsLookup.ItemDetails<>() {
+                @Override
+                public int getPosition() {
+                    return getBindingAdapterPosition();
+                }
+
+                @Nullable
+                @Override
+                public Long getSelectionKey() {
+                    int pos = getBindingAdapterPosition();
+                    if (pos == RecyclerView.NO_POSITION) return null;
+
+                    // 🚀 核心防御：通过 adapter.peek 检查当前项是不是占位符
+                    ParagraphAdapter adapter = (ParagraphAdapter) getBindingAdapter();
+                    ParagraphUiModel item = null;
+                    if (adapter != null) {
+                        item = adapter.peek(pos);
+                    }
+                    if (!(item instanceof ParagraphUiModel.Item)) {
+                        return null; // 如果是占位符，返回 null 拒绝激活多选
+                    }
+                    return ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId();
+                }
+            };
         }
     }
 

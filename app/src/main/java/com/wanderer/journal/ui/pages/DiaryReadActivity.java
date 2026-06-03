@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
@@ -83,6 +84,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
+    private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
