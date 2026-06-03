@@ -66,6 +66,9 @@ public class DiaryAlarmActivity extends AppCompatActivity {
      * 初始化视图
      */
     private void initViews() {
+        //工具栏
+        binding.toolbar.setNavigationOnClickListener(view -> finish());
+
         //开关
         boolean isSwitchOpened = DiaryAlarmPreference.getSwitchStat(this);
         SettingSwitchView diaryAlarmSwitch = new SettingSwitchView(
