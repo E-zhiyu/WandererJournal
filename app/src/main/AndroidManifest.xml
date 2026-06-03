@@ -66,6 +66,11 @@
             android:name=".ui.pages.main.settings.sub.PermissionManageActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.pages.SharePreviewActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.pages.DiaryReadActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.pages.main.MainActivity"
             android:exported="true">
             <intent-filter>
@@ -84,6 +89,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <receiver
             android:name=".automation.broadcast.DiaryAlarmReceiver"
             android:enabled="true"

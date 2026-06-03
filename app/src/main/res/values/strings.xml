@@ -100,6 +100,8 @@
     <string name="alarm_time">提醒时间</string>
     <string name="total_switch">总开关</string>
     <string name="add_alarm_time">添加提醒时间</string>
+    <string name="share_preview">分享预览</string>
+    <string name="share">分享</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>

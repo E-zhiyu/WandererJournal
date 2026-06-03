@@ -293,6 +293,12 @@ public class DiaryReadActivity extends AppCompatActivity {
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
                 return true;
+            } else if (item.getItemId() == R.id.action_share) {
+                //TODO:将这个改为多选逻辑
+                Intent intent = new Intent(this, SharePreviewActivity.class);
+                startActivity(intent);
+
+                return true;
             }
 
             return false;

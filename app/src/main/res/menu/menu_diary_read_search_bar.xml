@@ -6,4 +6,7 @@
         android:icon="@drawable/outline_mood_24"
         android:title="@string/select_emotion_tag"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/share" />
 </menu>
