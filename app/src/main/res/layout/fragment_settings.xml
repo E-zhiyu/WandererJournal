@@ -47,6 +47,11 @@
                 android:id="@+id/dynamic_color_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 权限管理 -->
+            <include
+                android:id="@+id/permissions_option"
+                layout="@layout/view_setting_option" />
+
             <!-- 数据管理 -->
             <include
                 android:id="@+id/data_manage_option"
@@ -55,6 +60,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp" />
+
+            <!-- 日记提醒入口 -->
+            <include
+                android:id="@+id/diary_alarm_option"
+                layout="@layout/view_setting_option"
+                android:layout_width="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp" />
 
             <!-- 身份验证开关 -->

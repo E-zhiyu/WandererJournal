@@ -156,13 +156,13 @@ public class DateTimePickerHelper {
     }
 
     /**
-     * 选择日期和时间
+     * 选择时间
      *
-     * @param dateTime        初始化的日期和时间
+     * @param dateTime        初始化的时间
      * @param fragmentManager 显示对话框所需的FragmentManager
      * @param listener        确定按钮的监听器
      */
-    public static void selectDateTime(
+    public static void selectTime(
             LocalDateTime dateTime,
             FragmentManager fragmentManager,
             OnTimePickerPositiveBtnClickedListener listener

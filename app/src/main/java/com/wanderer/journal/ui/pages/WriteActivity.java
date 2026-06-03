@@ -192,6 +192,7 @@ public class WriteActivity extends AppCompatActivity {
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
                         .setPositiveButton("恢复", (dialogInterface, i) -> {
                             binding.contentTextInput.setText(draft.trim());
+                            binding.contentTextInput.setSelection(draft.trim().length());
                             ImmHelper.showImm(binding.contentTextInput);
                         })
                         .setNegativeButton("取消", null)
@@ -999,7 +1000,7 @@ public class WriteActivity extends AppCompatActivity {
      * @param paragraph 原来的段落实例
      */
     private void updateParagraphCreateTime(@NonNull ParagraphEntity paragraph) {
-        DateTimePickerHelper.selectDateTime(
+        DateTimePickerHelper.selectTime(
                 paragraph.getCreateTime(),
                 getSupportFragmentManager(),
                 timePicker -> {

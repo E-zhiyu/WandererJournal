@@ -11,6 +11,9 @@ public enum LogTags {
     FILE_HELPER("FileHelper"),
     PERMISSION_HELPER("PermissionHelper"),
     APPEARANCE_ANIMATION_HELPER("AppearanceAnimationHelper"),
+    BOOT_RECEIVER("BootReceiver"),
+    DIARY_ALARM_RECEIVER("DiaryAlarmReceiver"),
+    ALARM_HELPER("AlarmHelper"),
     ZIP_HELPER("ZipHelper");
     private final String tagName;
 

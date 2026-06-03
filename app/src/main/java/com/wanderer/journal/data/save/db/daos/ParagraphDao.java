@@ -53,6 +53,16 @@ public interface ParagraphDao {
     PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
 
     /**
+     * 查询某个日期段内的段落数量
+     *
+     * @param start 起始日期（包含）
+     * @param end   结束日期（不包含）
+     * @return 该时间段内的段落数量
+     */
+    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :start AND createTime < :end")
+    Single<Integer> getParagraphCountByDateRange(LocalDate start, LocalDate end);
+
+    /**
      * 获取分页中需要跳转到的日记的段落的下标（所有段落都被读取到分页中的情况）
      *
      * @param date 日记的日期

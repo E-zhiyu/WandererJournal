@@ -5,19 +5,29 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textview.MaterialTextView;
 import com.wanderer.journal.R;
+import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.0.2\n" +
+    private final static String CHANGELOG = "# v1.1.0\n" +
+            "\n" +
+            "### 新增功能\n" +
+            "\n" +
+            "- 新增日记提醒功能，会在忘记写日记时发送通知提醒用户\n" +
+            "- 添加权限管理界面\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 写日记界面恢复草稿后光标移动到末尾\n" +
+            "\n" +
+            "# v1.0.2\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
@@ -118,17 +128,18 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        View updateDialogView = LayoutInflater.from(context)
-                .inflate(R.layout.view_markdown_text, null);
-        MaterialTextView textView = updateDialogView.findViewById(R.id.md_textview_in_dialog);
+        //获取自定义弹窗视图
+        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(
+                LayoutInflater.from(context)
+        );
 
-        //使用Markown渲染Markdown文本
+        //渲染 Markdown 文本
         Markwon markwon = Markwon.create(context);
-        markwon.setMarkdown(textView, CHANGELOG);
+        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, CHANGELOG);
 
         new MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.changelog)
-                .setView(updateDialogView)
+                .setView(markdownTextBinding.getRoot())
                 .setPositiveButton("关闭", null)
                 .show();
     }

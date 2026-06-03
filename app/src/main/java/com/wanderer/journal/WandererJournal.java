@@ -5,12 +5,16 @@ import android.app.Application;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 
 public class WandererJournal extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        //注册通知渠道
+        NotificationHelper.createNotificationChannels(this);
 
         if (getProcessName().equals(getPackageName())) {
             //初始化动态配色

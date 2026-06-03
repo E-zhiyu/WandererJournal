@@ -12,8 +12,6 @@ import android.os.PowerManager;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.ComponentActivity;
@@ -25,11 +23,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textview.MaterialTextView;
 import com.hjq.device.compat.DeviceOs;
 import com.wanderer.journal.LifecycleManager;
-import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,7 +79,7 @@ public class PermissionHelper {
             this.intentBuilder = i;
         }
 
-        boolean isGranted(Context c) {
+        public boolean isGranted(Context c) {
             return checker.check(c);
         }
 
@@ -155,6 +152,8 @@ public class PermissionHelper {
                             rationaleRuntimePermissions.remove(permission);
                         }
                     }
+
+                    start();
                 }
         );
     }
@@ -283,16 +282,15 @@ public class PermissionHelper {
         }
 
         //显示为Markdown
-        View updateDialogView = LayoutInflater.from(activity)
-                .inflate(R.layout.view_markdown_text, null);
-        MaterialTextView textView = updateDialogView.findViewById(R.id.md_textview_in_dialog);
+        //获取自定义弹窗视图
+        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(activity.getLayoutInflater());
         Markwon markwon = Markwon.create(activity);
-        markwon.setMarkdown(textView, messageBuilder.toString());
+        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, messageBuilder.toString());
 
         //显示对话框
         new MaterialAlertDialogBuilder(activity)
                 .setTitle("需要权限")
-                .setView(updateDialogView)
+                .setView(markdownTextBinding.getRoot())
                 .setPositiveButton("确定", (dialog, which) -> runtimeLauncher.launch(permissions))
                 .setNegativeButton("取消", null)
                 .show();

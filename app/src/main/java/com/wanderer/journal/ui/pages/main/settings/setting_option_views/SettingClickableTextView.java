@@ -2,19 +2,24 @@ package com.wanderer.journal.ui.pages.main.settings.setting_option_views;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.ImageView;
+import android.view.ViewGroup;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.widget.TextViewCompat;
 
+import com.google.android.material.textview.MaterialTextView;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.appearance.ColorHelper;
 
 
-public class SettingClickableTextView extends SettingOptionViewBase<ImageView, View.OnClickListener> {
+public class SettingClickableTextView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
     /**
      * 点击式设置项构造方法
      *
@@ -38,9 +43,15 @@ public class SettingClickableTextView extends SettingOptionViewBase<ImageView, V
 
     @Override
     protected void initView(Context context) {
-        functionComponent = new ImageView(context);
-        functionComponent.setImageResource(R.drawable.outline_keyboard_arrow_right_24);
-        functionComponent.setImageTintList(ColorStateList.valueOf(ColorHelper.getPrimaryColor(context)));
+        Drawable endDrawable = AppCompatResources.getDrawable(context, R.drawable.outline_keyboard_arrow_right_24);
+        functionComponent = new MaterialTextView(context);
+        functionComponent.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        functionComponent.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, endDrawable, null);
+        functionComponent.setGravity(Gravity.CENTER_VERTICAL);
+        TextViewCompat.setCompoundDrawableTintList(functionComponent, ColorStateList.valueOf(ColorHelper.getPrimaryColor(context)));
         functionComponent.setPadding(10, 10, 25, 10);
         binding.componentLayout.addView(functionComponent);
     }

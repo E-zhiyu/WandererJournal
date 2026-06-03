@@ -92,6 +92,14 @@
     <string name="filter_emotion_tag">筛选情绪标签</string>
     <string name="clear_filter">清除筛选</string>
     <string name="changelog">更新日志</string>
+    <string name="permissions_setting">权限设置</string>
+    <string name="camera_permission">相机权限</string>
+    <string name="notification_permission">通知权限</string>
+    <string name="alarm_permission">精确闹钟权限</string>
+    <string name="diary_alarm">日记提醒</string>
+    <string name="alarm_time">提醒时间</string>
+    <string name="total_switch">总开关</string>
+    <string name="add_alarm_time">添加提醒时间</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>

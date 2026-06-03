@@ -83,9 +83,9 @@ abstract public class BaseBottomSheetDialogFragment extends BottomSheetDialogFra
         dialog.setOnShowListener(d -> {
             BottomSheetDialog sheetDialog = (BottomSheetDialog) d;
 
-            FrameLayout bottomSheet =
-                    sheetDialog.findViewById(
-                            com.google.android.material.R.id.design_bottom_sheet);
+            FrameLayout bottomSheet = sheetDialog.findViewById(
+                    com.google.android.material.R.id.design_bottom_sheet
+            );
 
             if (bottomSheet != null) {
                 bottomSheetView = bottomSheet;

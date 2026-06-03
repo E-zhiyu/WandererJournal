@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.databinding.ViewHolderEmotionInAppbarBinding;
+import com.wanderer.journal.databinding.ViewHolderClosableChipElevatedBinding;
 
 public class EmotionTagInAppBarAdapter
         extends ListAdapter<EmotionTagEntity, EmotionTagInAppBarAdapter.ViewHolderEmotionTagInAppBar> {
@@ -27,9 +27,9 @@ public class EmotionTagInAppBarAdapter
     private final OnClosedListener closedListener;
 
     public static class ViewHolderEmotionTagInAppBar extends RecyclerView.ViewHolder {
-        ViewHolderEmotionInAppbarBinding binding;
+        ViewHolderClosableChipElevatedBinding binding;
 
-        public ViewHolderEmotionTagInAppBar(@NonNull ViewHolderEmotionInAppbarBinding binding, ViewHolderListener listener) {
+        public ViewHolderEmotionTagInAppBar(@NonNull ViewHolderClosableChipElevatedBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -68,7 +68,7 @@ public class EmotionTagInAppBarAdapter
     @NonNull
     @Override
     public ViewHolderEmotionTagInAppBar onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderEmotionInAppbarBinding binding = ViewHolderEmotionInAppbarBinding.inflate(
+        ViewHolderClosableChipElevatedBinding binding = ViewHolderClosableChipElevatedBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false

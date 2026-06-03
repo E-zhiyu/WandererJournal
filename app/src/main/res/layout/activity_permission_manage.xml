@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.main.settings.sub.DataManageActivity">
+    tools:context=".ui.pages.main.settings.sub.PermissionManageActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_layout"
@@ -14,8 +14,11 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:title="@string/data_manage" />
+            android:layout_height="?attr/actionBarSize"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@string/permissions_setting" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -24,41 +27,27 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:scrollbars="none"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <LinearLayout
+            android:id="@+id/app_settings_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
 
-            <!-- 导出数据 -->
             <include
-                android:id="@+id/export_data_option"
-                layout="@layout/view_setting_option"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginEnd="10dp" />
-
-            <!-- 导入数据 -->
-            <include
-                android:id="@+id/import_data_option"
+                android:id="@+id/camera_option"
                 layout="@layout/view_setting_option" />
 
-            <!-- 从文本文件中追加 -->
             <include
-                android:id="@+id/append_from_file_option"
-                layout="@layout/view_setting_option"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="10dp" />
+                android:id="@+id/notification_option"
+                layout="@layout/view_setting_option" />
 
-            <!-- 导入日记 -->
             <include
-                android:id="@+id/import_diary_option"
+                android:id="@+id/alarm_option"
                 layout="@layout/view_setting_option" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

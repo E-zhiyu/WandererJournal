@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.databinding.ViewHolderEmotionTagSelectBinding;
+import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +30,10 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
     private final OnCheckedChangedListener checkedChangedListener;      //选择状态变化监听器
 
     public static class EmotionTagFilterViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderEmotionTagSelectBinding binding;
+        ViewHolderClosableChipBinding binding;
         private boolean isBlocked;
 
-        public EmotionTagFilterViewHolder(@NonNull ViewHolderEmotionTagSelectBinding binding, ViewHolderListener listener) {
+        public EmotionTagFilterViewHolder(@NonNull ViewHolderClosableChipBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -73,7 +73,7 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
     @NonNull
     @Override
     public EmotionTagFilterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderEmotionTagSelectBinding binding = ViewHolderEmotionTagSelectBinding.inflate(
+        ViewHolderClosableChipBinding binding = ViewHolderClosableChipBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false

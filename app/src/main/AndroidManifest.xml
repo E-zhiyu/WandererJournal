@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> <!-- 闹钟设置权限 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> <!-- 精确闹钟设置权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- 开机监听权限 -->
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:ignore="RequestInstallPackagesPolicy" /> <!-- 安装APK权限 -->
@@ -12,9 +13,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" /> <!-- 生物验证使用权限 -->
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" />
-
-    <!-- 声明需要交互的应用 -->
+        android:required="false" /> <!-- 声明需要交互的应用 -->
     <queries>
         <intent>
             <action android:name="android.intent.action.SEND" /> <!-- 分享文件 -->
@@ -34,6 +33,9 @@
         android:theme="@style/Theme.WandererJournal.Static"
         tools:targetApi="33">
         <activity
+            android:name=".ui.pages.main.settings.sub.DiaryAlarmActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.pages.media.FullScreenMediaActivity"
             android:exported="false" />
         <activity
@@ -41,7 +43,8 @@
             android:exported="false" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.emotion.EmotionTagManageActivity" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagManageActivity"
             android:exported="false" />
@@ -50,12 +53,17 @@
             android:exported="false" />
         <activity
             android:name=".ui.pages.WriteActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.DiaryReadActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pages.main.settings.sub.PermissionManageActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.main.MainActivity"
@@ -76,6 +84,20 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <receiver
+            android:name=".automation.broadcast.DiaryAlarmReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:label="触发检查当天是否有日记的广播接收器" /> <!-- 日记提醒广播接收器 -->
+        <receiver
+            android:name=".automation.broadcast.BootReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:label="开机完毕的监听器，用于自动安排第二天0点的预算重置闹钟">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver> <!-- 开机广播接收器 -->
     </application>
 
 </manifest>
