@@ -13,7 +13,7 @@ import androidx.core.app.NotificationCompat;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.NotificationID;
+import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.helpers.ExceptionHelper;

@@ -72,7 +72,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 this,
                 binding.diaryAlarmSwitch,
                 R.string.total_switch,
-                "未记日记时发送通知提醒",
+                "忘记写日记时发送通知提醒",
                 R.drawable.outline_alarm_24,
                 RadiusStyle.TOP
         );
@@ -121,6 +121,9 @@ public class DiaryAlarmActivity extends AppCompatActivity {
 
             //更新 UI
             adapter.submitList(removedTimeList);
+
+            //更新定时任务
+            AlarmHelper.setDiaryAlarm(this);
         });
         List<LocalTime> savedTimeList = DiaryAlarmPreference.getAlarmTime(this);
         adapter.submitList(savedTimeList);
@@ -131,7 +134,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 this,
                 binding.addAlarmTimeOption,
                 R.string.add_alarm_time,
-                null,
+                "添加日记检查触发的具体时间",
                 R.drawable.baseline_add_alarm_24,
                 RadiusStyle.BOTTOM
         );
@@ -161,6 +164,11 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                     //更新 UI 并提示
                     adapter.submitList(timeList);
                     Toast.makeText(this, "提醒时间添加成功", Toast.LENGTH_SHORT).show();
+
+                    //更新定时任务
+                    if (DiaryAlarmPreference.getSwitchStat(this)) {
+                        AlarmHelper.setDiaryAlarm(this);
+                    }
                 }
         ));
     }

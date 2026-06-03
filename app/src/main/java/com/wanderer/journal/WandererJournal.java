@@ -13,8 +13,6 @@ public class WandererJournal extends Application {
     public void onCreate() {
         super.onCreate();
 
-        //TODO:注册日记检查闹钟
-
         //注册通知渠道
         NotificationHelper.createNotificationChannels(this);
 

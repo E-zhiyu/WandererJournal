@@ -12,12 +12,12 @@ import androidx.annotation.NonNull;
 
 import com.wanderer.journal.automation.broadcast.DiaryAlarmReceiver;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.RequestResultCode;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.auxiliary.enums.intent.RequestResultCode;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 public class AlarmHelper {
@@ -28,10 +28,13 @@ public class AlarmHelper {
      * @param intent   闹钟触发后执行的意图
      * @param context  上下文
      */
-    public static void setAlarm(LocalDateTime dateTime, int requestCode, Intent intent, @NonNull Context context) {
+    public static void setAlarm(@NonNull LocalDateTime dateTime, int requestCode, Intent intent, @NonNull Context context) {
         //转换为时间戳
-        long timeMillis = DateTimeConverter.fromLocalDateTime(dateTime);
+        long timeMillis = dateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();   //使用当前时区转换为时间戳
+        long systemMillis = System.currentTimeMillis();
         Log.d(LogTags.ALARM_HELPER.n(), "已安排定时任务，时间：" + dateTime);
+        Log.d(LogTags.ALARM_HELPER.n(), "安排的任务的时间戳：" + timeMillis);
+        Log.d(LogTags.ALARM_HELPER.n(), "系统时间戳：" + systemMillis);
 
         //获取闹钟管理器
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -45,11 +48,14 @@ public class AlarmHelper {
         );
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (am.canScheduleExactAlarms()) {
-                am.setExactAndAllowWhileIdle(
+                am.setExact(
                         AlarmManager.RTC_WAKEUP,
                         timeMillis,
                         pi
                 );
+                Log.i(LogTags.ALARM_HELPER.n(), "已设置定时任务");
+            } else {
+                Log.e(LogTags.ALARM_HELPER.n(), "无法设置定时任务");
             }
         } else {
             am.setExact(
@@ -57,6 +63,7 @@ public class AlarmHelper {
                     timeMillis,
                     pi
             );
+            Log.i(LogTags.ALARM_HELPER.n(), "已设置定时任务（旧版本）");
         }
     }
 
@@ -120,7 +127,6 @@ public class AlarmHelper {
 
         //根据现在的时间安排下一个闹钟
         Intent toDiaryAlarmReceiver = new Intent(context, DiaryAlarmReceiver.class);
-        toDiaryAlarmReceiver.setAction("com.wanderer.journal.DiaryCheckReceiver");
         if (now.isBefore(todayAlarmDateTime)) {
             setAlarm(
                     todayAlarmDateTime,
@@ -154,7 +160,6 @@ public class AlarmHelper {
      */
     public static void cancelDiaryAlarm(Context context) {
         Intent toDiaryAlarmReceiver = new Intent(context, DiaryAlarmReceiver.class);
-        toDiaryAlarmReceiver.setAction("com.wanderer.journal.DiaryCheckReceiver");
 
         cancelAlarm(RequestResultCode.REQUEST_SET_DIARY_ALARM.ordinal(), toDiaryAlarmReceiver, context);
     }
