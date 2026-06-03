@@ -43,7 +43,8 @@
             android:exported="false" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.emotion.EmotionTagManageActivity" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagManageActivity"
             android:exported="false" />
@@ -52,10 +53,12 @@
             android:exported="false" />
         <activity
             android:name=".ui.pages.WriteActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.DiaryReadActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
             android:exported="false" />
@@ -85,8 +88,7 @@
             android:name=".automation.broadcast.DiaryAlarmReceiver"
             android:enabled="true"
             android:exported="false"
-            android:label="触发检查当天是否有日记的广播接收器">
-        </receiver> <!-- 日记提醒广播接收器 -->
+            android:label="触发检查当天是否有日记的广播接收器" /> <!-- 日记提醒广播接收器 -->
         <receiver
             android:name=".automation.broadcast.BootReceiver"
             android:enabled="true"

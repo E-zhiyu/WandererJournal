@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
@@ -76,12 +77,13 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
 
         //生成点击跳转的 Intent 和 PendingIntent
         Intent skip2Write = new Intent(context, WriteActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(
-                context,
-                PendingRequestCode.TO_WRITE_DIARY.ordinal(),
-                skip2Write,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        skip2Write.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);    //如果任务栈有重复的界面，清理任务栈中重复界面上面的界面
+        PendingIntent contentIntent = TaskStackBuilder.create(context)
+                .addNextIntentWithParentStack(skip2Write)
+                .getPendingIntent(
+                        PendingRequestCode.TO_WRITE_DIARY.ordinal(),
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                );
 
         //构建通知
         String channelID = ChannelInfo.DIARY_ALARM.getId();
