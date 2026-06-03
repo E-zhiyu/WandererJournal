@@ -1,6 +1,7 @@
 package com.wanderer.journal.automation.broadcast;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,11 +15,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
+import com.wanderer.journal.auxiliary.enums.intent.PendingRequestCode;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
+import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
 
@@ -30,7 +33,6 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(LogTags.DIARY_ALARM_RECEIVER.n(), "日记提醒接收器已触发");
-        //TODO:检查定时任务无法触发的BUG
 
         // 建立一个临时性的 CompositeDisposable
         final PendingResult pendingResult = goAsync();
@@ -72,12 +74,27 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
             return;
         }
 
+        //生成点击跳转的 Intent 和 PendingIntent
+        Intent skip2Write = new Intent(context, WriteActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(
+                context,
+                PendingRequestCode.TO_WRITE_DIARY.ordinal(),
+                skip2Write,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        //构建通知
         String channelID = ChannelInfo.DIARY_ALARM.getId();
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("日记提醒")
-                .setContentText("今天还未写日记，别忘了哦~");
+                .setContentText("今天还未写日记，点击跳转写日记界面")
+                .setContentIntent(contentIntent)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_CALL);
 
+        //发送通知
         NotificationHelper.sendNotification(
                 NotificationID.DIARY_ALARM.ordinal(),
                 builder,
