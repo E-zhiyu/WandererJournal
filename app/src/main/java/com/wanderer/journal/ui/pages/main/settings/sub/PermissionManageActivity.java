@@ -32,7 +32,12 @@ public class PermissionManageActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String> runtimeLauncher =  //申请运行时权限的启动器
             registerForActivityResult(
                     new ActivityResultContracts.RequestPermission(),
-                    o -> {
+                    isGranted -> {
+                        if (isGranted) {
+                            Toast.makeText(this, "成功授予该权限", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "该权限被拒绝", Toast.LENGTH_SHORT).show();
+                        }
                     }
             );
 
@@ -135,7 +140,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         //获取自定义弹窗视图
         ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(getLayoutInflater());
 
-        //使用Markown渲染Markdown文本
+        // 渲染 Markdown 文本
         Markwon markwon = Markwon.create(this);
         markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, message);
 
