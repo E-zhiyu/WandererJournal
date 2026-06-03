@@ -2,8 +2,10 @@ package com.wanderer.journal.ui.pages.main.settings.sub;
 
 import android.Manifest;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -36,10 +38,11 @@ public class PermissionManageActivity extends AppCompatActivity {
                         if (isGranted) {
                             Toast.makeText(this, "成功授予该权限", Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(this, "该权限被拒绝", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "该权限被拒绝，请长按进入系统设置后授权", Toast.LENGTH_SHORT).show();
                         }
                     }
             );
+    private SettingClickableTextView camera, notification, alarm;   //权限申请视图
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,21 @@ public class PermissionManageActivity extends AppCompatActivity {
         initViews();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //刷新权限授予情况指示器
+        refreshPermissionStat();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        binding = null;
+    }
+
     /**
      * 初始化视图
      */
@@ -71,7 +89,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
         //相机权限
-        SettingClickableTextView camera = new SettingClickableTextView(
+        camera = new SettingClickableTextView(
                 this,
                 binding.cameraOption,
                 R.string.camera_permission,
@@ -85,9 +103,16 @@ public class PermissionManageActivity extends AppCompatActivity {
                         "- 写日记时使用系统相机添加媒体文件\n",
                 () -> requestRuntimePermission(Manifest.permission.CAMERA)
         ));
+        camera.setOnLongClickListener(view -> {
+            Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", getPackageName(), null);
+            skip2Settings.setData(uri);
+            startActivity(skip2Settings);
+            return true;
+        });
 
         //通知权限
-        SettingClickableTextView notification = new SettingClickableTextView(
+        notification = new SettingClickableTextView(
                 this,
                 binding.notificationOption,
                 R.string.notification_permission,
@@ -108,9 +133,16 @@ public class PermissionManageActivity extends AppCompatActivity {
                         }
                 )
         );
+        notification.setOnLongClickListener(view -> {
+            Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            Uri uri = Uri.fromParts("package", getPackageName(), null);
+            skip2Settings.setData(uri);
+            startActivity(skip2Settings);
+            return true;
+        });
 
         //精确闹钟权限
-        SettingClickableTextView alarm = new SettingClickableTextView(
+        alarm = new SettingClickableTextView(
                 this,
                 binding.alarmOption,
                 R.string.alarm_permission,
@@ -162,6 +194,39 @@ public class PermissionManageActivity extends AppCompatActivity {
             Toast.makeText(this, "权限已授予", Toast.LENGTH_SHORT).show();
         } else {
             runtimeLauncher.launch(permission);
+        }
+    }
+
+    /**
+     * 刷新权限授予情况指示器
+     */
+    private void refreshPermissionStat() {
+        final String GRANTED = "已授予";
+        final String NOT_GRANTED = "未授予";
+
+        //相机权限
+        boolean isCameraGranted = PermissionHelper.isRuntimePermissionGranted(Manifest.permission.CAMERA, this);
+        if (isCameraGranted) {
+            camera.getFunctionComponent().setText(GRANTED);
+        } else {
+            camera.getFunctionComponent().setText(NOT_GRANTED);
+        }
+
+        //通知权限
+        boolean isNotificationGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                PermissionHelper.isRuntimePermissionGranted(Manifest.permission.POST_NOTIFICATIONS, this);
+        if (isNotificationGranted) {
+            notification.getFunctionComponent().setText(GRANTED);
+        } else {
+            notification.getFunctionComponent().setText(NOT_GRANTED);
+        }
+
+        //精确闹钟权限
+        boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
+        if (isAlarmGranted) {
+            alarm.getFunctionComponent().setText(GRANTED);
+        } else {
+            alarm.getFunctionComponent().setText(NOT_GRANTED);
         }
     }
 }
