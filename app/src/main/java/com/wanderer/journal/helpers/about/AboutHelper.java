@@ -17,7 +17,14 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.0.2\n" +
+    private final static String CHANGELOG = "# v1.1.0\n" +
+            "\n" +
+            "### 新增功能\n" +
+            "\n" +
+            "- 新增日记提醒功能，会在忘记写日记时发送通知提醒用户\n" +
+            "- 添加权限管理界面\n" +
+            "\b" +
+            "# v1.0.2\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
