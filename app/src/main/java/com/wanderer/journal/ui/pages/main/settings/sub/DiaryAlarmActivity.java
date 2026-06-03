@@ -16,6 +16,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
@@ -71,7 +72,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 this,
                 binding.diaryAlarmSwitch,
                 R.string.total_switch,
-                null,
+                "未记日记时发送通知提醒",
                 R.drawable.outline_alarm_24,
                 RadiusStyle.TOP
         );
@@ -100,7 +101,12 @@ public class DiaryAlarmActivity extends AppCompatActivity {
             //保存开关状态
             DiaryAlarmPreference.setSwitchStat(this, b);
 
-            //TODO:安排精确闹钟
+            //安排提醒闹钟
+            if (b) {
+                AlarmHelper.setDiaryAlarm(this);
+            } else {
+                AlarmHelper.cancelDiaryAlarm(this);
+            }
         });
 
         //提醒时间 RecyclerView
