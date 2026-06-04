@@ -48,6 +48,9 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
             super(binding.getRoot());
             this.binding = binding;
 
+            //设置不可选择
+            binding.chip.setCheckable(false);
+
             //设置点击监听
             binding.chip.setOnClickListener(v -> listener.onClicked(getBindingAdapterPosition()));
 

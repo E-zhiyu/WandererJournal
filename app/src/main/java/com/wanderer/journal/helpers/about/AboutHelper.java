@@ -18,6 +18,10 @@ import io.noties.markwon.Markwon;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.2.0\n" +
             "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复搜索历史Chip可以点击切换选择状态的BUG\n" +
+            "\n" +
             "### 修改内容\n" +
             "\n" +
             "- 读日记界面的情绪标签显示现在会随搜索栏一同隐藏\n" +
