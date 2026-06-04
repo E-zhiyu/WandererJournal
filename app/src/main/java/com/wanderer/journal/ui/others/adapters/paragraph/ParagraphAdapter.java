@@ -132,21 +132,24 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
         ViewHolderParagraphBinding binding;
         private ParagraphEntityModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, ViewHolderListener listener) {
+        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            //设置触摸监听
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
-
             //设置监听器
-            binding.getRoot().setOnClickListener(view -> {
-                if (data == null) {
-                    return;
-                }
+            if (listener != null) {
+                //设置触摸监听
+                AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
 
-                listener.onClicked(data, binding.getRoot());
-            });
+                //设置点击监听
+                binding.getRoot().setOnClickListener(view -> {
+                    if (data == null) {
+                        return;
+                    }
+
+                    listener.onClicked(data, binding.getRoot());
+                });
+            }
         }
 
         /**
@@ -194,10 +197,11 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     /**
      * 段落适配器构造方法
      *
-     * @param paragraphClickListener 段落点击监听器
+     * @param paragraphClickListener 段落点击监听器（传递 null 则不设置点击监听）
+     * @param mediaClickedListener   媒体预览图点击监听
      */
     public ParagraphAdapter(
-            OnParagraphClickListener paragraphClickListener,
+            @Nullable OnParagraphClickListener paragraphClickListener,
             OnMediaClickedListener mediaClickedListener
     ) {
         super(ITEM_CALLBACK);
@@ -236,9 +240,21 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                     parent,
                     false
             );
+            ViewHolderListener listener;
+            if (paragraphClickListener != null) {
+                listener = (paragraphEntityModel, view) -> {
+                    if (!isSelectMode) {
+                        paragraphClickListener.onClicked(paragraphEntityModel, view);
+                    } else {
+                        selectionTracker.select(paragraphEntityModel.getParagraph().getParagraphId());
+                    }
+                };
+            } else {
+                listener = null;
+            }
             return new ParagraphViewHolder(
                     binding,
-                    paragraphClickListener::onClicked
+                    listener
             );
         } else {
             ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
@@ -405,6 +421,10 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
         isSelectMode = selectMode;
         notifyItemRangeChanged(0, getItemCount());
+    }
+
+    public boolean getSelectMode() {
+        return isSelectMode;
     }
 
     /**

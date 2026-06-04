@@ -42,6 +42,16 @@ public interface ParagraphDao {
     PagingSource<Integer, ParagraphEntityModel> getAllParagraphPagingSource();
 
     /**
+     * 查询指定 ID 的段落
+     *
+     * @param paragraphIds 需要查询的段落的 ID
+     * @return ID 包含在数组中的段落
+     */
+    @Transaction
+    @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
+    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceById(long[] paragraphIds);
+
+    /**
      * 查询某个日期范围内的段落
      *
      * @param start 起始日期
@@ -50,7 +60,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceInRange(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
 
     /**
      * 查询某个日期段内的段落数量

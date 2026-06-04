@@ -85,7 +85,7 @@ public class ParagraphViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceInRange(start, end)
+                            () -> db.paragraphDao().getParagraphPagingSourceByDate(start, end)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
@@ -118,6 +118,39 @@ public class ParagraphViewModel extends ViewModel {
                             pagingConfig,
                             initPosition,
                             () -> db.paragraphDao().getAllParagraphPagingSource()
+                    );
+
+                    return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
+                })
+                .subscribeOn(Schedulers.io())   //在 IO 线程执行
+                .flatMap(pagingDataFlow -> pagingDataFlow)
+                .compose(flowable -> PagingRx.cachedIn(
+                        flowable,
+                        ViewModelKt.getViewModelScope(this)
+                ));
+    }
+
+    /**
+     * 获取指定 ID 的段落数据
+     *
+     * @param paragraphIds 需要获取的段落的 ID
+     * @return ID 在数组中的段落数据
+     */
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(long[] paragraphIds, DiaryDatabase db) {
+        return Flowable.fromCallable(() -> {
+                    // 配置 PagingConfig
+                    PagingConfig pagingConfig = new PagingConfig(
+                            10,
+                            20,
+                            true, // 必须为 true 以支持精准定位
+                            8
+                    );
+
+                    // 创建 Pager
+                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
+                            pagingConfig,
+                            null,
+                            () -> db.paragraphDao().getParagraphPagingSourceById(paragraphIds)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);

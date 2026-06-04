@@ -25,7 +25,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,6 +43,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -88,6 +89,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
+    private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
@@ -169,6 +171,33 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
         binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
 
+        //分享按钮
+        binding.shareBtn.setOnClickListener(view -> {
+            //判空
+            if (!selectionTracker.hasSelection()) {
+                Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            //获取所有选择的段落 ID
+            long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
+                    .mapToLong(Long::longValue)
+                    .toArray();
+
+            //创建 Intent
+            Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
+            skip2SharePreview.putExtras(bundle);
+
+            //跳转界面
+            startActivity(skip2SharePreview);
+
+            //关闭分享选择
+            setShareSelectMode(false);
+        });
+        ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, 25, this);
+
         //日记段落列表
         initRecyclerView();
 
@@ -208,6 +237,20 @@ public class DiaryReadActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 setSearchMode(false);
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 2;
+            }
+        };
+
+        //多选模式返回处理器
+        shareChoiceBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                setShareSelectMode(false);
                 return true;
             }
 
@@ -302,9 +345,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
-                //TODO:将这个改为多选逻辑
-                Intent intent = new Intent(this, SharePreviewActivity.class);
-                startActivity(intent);
+                setShareSelectMode(true);
 
                 return true;
             }
@@ -384,7 +425,37 @@ public class DiaryReadActivity extends AppCompatActivity {
                 new ParagraphLookup(binding.contentRecycler),
                 StorageStrategy.createLongStorage()
         ).withSelectionPredicate(
-                SelectionPredicates.createSelectAnything() // 允许多选
+                new SelectionTracker.SelectionPredicate<>() {
+                    @Override
+                    public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
+                        boolean isItem = false;
+                        List<ParagraphUiModel> snapshot = adapter.snapshot().getItems();
+                        for (int i = 0; i < snapshot.size(); i++) {
+                            ParagraphUiModel item = snapshot.get(i);
+                            if ((item instanceof ParagraphUiModel.Item) && ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId() == key) {
+                                isItem = true;
+                                break;
+                            }
+                        }
+                        return adapter != null && adapter.getSelectMode() && isItem;
+                    }
+
+                    @Override
+                    public boolean canSetStateAtPosition(int position, boolean nextState) {
+                        if (adapter == null) {
+                            return false;
+                        }
+
+                        boolean isSelectMode = adapter.getSelectMode();
+                        boolean isItem = adapter.peek(position) instanceof ParagraphUiModel.Item;
+                        return isSelectMode && isItem;
+                    }
+
+                    @Override
+                    public boolean canSelectMultiple() {
+                        return true;
+                    }
+                }
         ).build();
         adapter.setSelectionTracker(selectionTracker);
 
@@ -394,12 +465,12 @@ public class DiaryReadActivity extends AppCompatActivity {
             public void onSelectionChanged() {
                 super.onSelectionChanged();
                 if (selectionTracker.hasSelection()) {
-                    new Handler(Looper.getMainLooper()).post(() -> adapter.setSelectMode(true));
+                    new Handler(Looper.getMainLooper()).post(() -> setShareSelectMode(true));
 
                     int size = selectionTracker.getSelection().size();
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
                 } else {
-                    new Handler(Looper.getMainLooper()).post(() -> adapter.setSelectMode(false));
+                    new Handler(Looper.getMainLooper()).post(() -> setShareSelectMode(false));
                     Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
                 }
             }
@@ -806,11 +877,12 @@ public class DiaryReadActivity extends AppCompatActivity {
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.END))
                 .addTransition(new Fade())
+                .addTarget(binding.searchSkipLayout)
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.searchSkipLayout, set);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
         if (!isSearchMode) {
             binding.contentSearchBar.setText(null);
@@ -824,6 +896,38 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
             backHelper.registerHandler(searchBackHandler);
+        }
+    }
+
+    /**
+     * 设置分享时的段落多选模式是否开启
+     *
+     * @param isSelectMode 是否开启段落多选模式
+     */
+    private void setShareSelectMode(boolean isSelectMode) {
+        if (isSelectMode == adapter.getSelectMode()) return;
+
+        //定义过渡动画
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.START))
+                .addTransition(new Fade())
+                .addTarget(binding.shareBtn)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .setDuration(250);
+
+        //通知布局即将发生变化
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+
+        //更新 UI
+        adapter.setSelectMode(isSelectMode);
+        if (isSelectMode) {
+            backHelper.registerHandler(shareChoiceBackHandler);
+            binding.shareBtn.setVisibility(View.VISIBLE);
+        } else {
+            backHelper.unregisterHandler(shareChoiceBackHandler);
+            binding.shareBtn.setVisibility(View.GONE);
+
+            selectionTracker.clearSelection();  //清空多选
         }
     }
 

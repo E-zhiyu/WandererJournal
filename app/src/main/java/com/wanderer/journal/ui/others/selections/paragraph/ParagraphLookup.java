@@ -3,13 +3,12 @@ package com.wanderer.journal.ui.others.selections.paragraph;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 public class ParagraphLookup extends ItemDetailsLookup<Long> {
     private final RecyclerView recyclerView;

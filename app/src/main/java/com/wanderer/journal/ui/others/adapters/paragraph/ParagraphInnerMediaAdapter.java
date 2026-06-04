@@ -77,7 +77,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
         //初始化Glide设置
         glideOptions = new RequestOptions()
                 .centerCrop()
-                .error(R.drawable.outline_error_24)             //错误图
+                .error(R.drawable.outline_mood_24)              //错误图
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) //缓存策略
                 .override(size, size);                          //图片尺寸
     }

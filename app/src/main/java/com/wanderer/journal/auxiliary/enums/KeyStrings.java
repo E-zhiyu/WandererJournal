@@ -9,6 +9,7 @@ public enum KeyStrings {
     WRITE_MODIFY_PARAGRAPH_ID("write_modify_paragraph_id"), //写日记界面初始化进入编辑模式时的段落 ID
     VIEW_HOLDER_POSITION("view_holder_position"),       // ViewHolder 的位置
     FILE_URIS("file_uris"),                             //文件 Uri
+    SHARED_PARAGRAPH_ID("shared_paragraph_id"),         //分享的段落 ID
     INIT_DATE("init_date");                             //读日记界面的起始日记日期
     private final String s;
 

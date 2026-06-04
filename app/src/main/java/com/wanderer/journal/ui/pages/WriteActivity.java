@@ -1240,9 +1240,9 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 设置媒体删除按钮的可见性
+     * 设置媒体多选模式是否启用
      *
-     * @param isSelectMode 是否可见
+     * @param isSelectMode 是否在媒体多选模式
      */
     private void setSelectMode(boolean isSelectMode) {
         if (isSelectMode && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||

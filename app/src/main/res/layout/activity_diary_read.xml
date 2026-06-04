@@ -79,7 +79,20 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
+
+    <!-- 分享按钮 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/share_btn"
+        style="@style/Widget.Material3.FloatingActionButton.Tertiary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="15dp"
+        android:layout_marginBottom="25dp"
+        android:contentDescription="@string/btn_share"
+        android:src="@drawable/outline_share_24"
+        android:visibility="gone" />
 
     <!-- 跳转搜索结果的按钮布局 -->
     <androidx.constraintlayout.widget.ConstraintLayout
