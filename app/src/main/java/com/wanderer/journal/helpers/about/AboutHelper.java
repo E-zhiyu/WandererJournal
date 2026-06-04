@@ -16,7 +16,13 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.1.0\n" +
+    private final static String CHANGELOG = "# v1.2.0\n" +
+            "\n" +
+            "### 修改内容\n" +
+            "\n" +
+            "- 读日记界面的情绪标签显示现在会随搜索栏一同隐藏\n" +
+            "\n" +
+            "# v1.1.0\n" +
             "\n" +
             "### 新增功能\n" +
             "\n" +
