@@ -36,7 +36,8 @@
             android:paddingEnd="20dp"
             android:paddingBottom="10dp"
             android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_scrollFlags="scroll|enterAlways|snap" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- 加载指示器和空状态文本 -->
