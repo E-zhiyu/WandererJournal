@@ -29,11 +29,13 @@
             app:layout_constraintVertical_chainStyle="packed" />
 
         <!-- 内容文本 -->
-        <com.google.android.material.textview.MaterialTextView
+        <androidx.appcompat.widget.AppCompatCheckedTextView
             android:id="@+id/content_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
+            android:drawablePadding="5dp"
+            android:gravity="center_vertical"
             android:text="@string/diary_paragraph"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             app:layout_constraintBottom_toTopOf="@id/emotion_chip_group"

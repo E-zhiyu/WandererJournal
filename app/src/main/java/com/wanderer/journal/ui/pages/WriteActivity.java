@@ -1259,12 +1259,13 @@ public class WriteActivity extends AppCompatActivity {
         //定义过渡动画
         TransitionSet set = new TransitionSet()
                 .addTransition(new Fade())
+                .addTarget(binding.mediaDeleteBtn)
+                .addTarget(binding.mediaAddBtn)
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
         TransitionManager.beginDelayedTransition(binding.contentInputCard, set);
-        TransitionManager.beginDelayedTransition(binding.mediaRecycler, set);   //通知媒体RecyclerView，让复选框也有动画
 
         //切换视图可见性
         if (isSelectMode) {

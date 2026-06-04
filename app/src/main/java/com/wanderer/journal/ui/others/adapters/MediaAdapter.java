@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.others.adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -154,12 +153,11 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
      *
      * @param selectMode 是否为选择模式
      */
-    @SuppressLint("NotifyDataSetChanged")
     public void setSelectMode(boolean selectMode) {
         if (isSelectMode == selectMode) return;
 
         isSelectMode = selectMode;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
     }
 
     @Override

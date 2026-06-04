@@ -2,15 +2,18 @@ package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -38,10 +41,11 @@ import java.util.List;
 import java.util.Locale;
 
 public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
-    private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
-    private String currentKeyword = "";                             //当前高亮的搜索关键词
+    private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
+    private String currentKeyword = "";                                 //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
-    private final List<Integer> positionList = new ArrayList<>();   //当前高亮的段落下标列表
+    private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
+    private boolean isSelectMode = false;                               //是否是选择模式
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -80,6 +84,15 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
     private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+
+    /**
+     * 设置多选追踪器
+     *
+     * @param selectionTracker 多选追踪器
+     */
+    public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
+        this.selectionTracker = selectionTracker;
+    }
 
     public interface ViewHolderListener {
         void onClicked(ParagraphEntityModel dataModel, View view);
@@ -163,7 +176,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                     int pos = getBindingAdapterPosition();
                     if (pos == RecyclerView.NO_POSITION) return null;
 
-                    // 🚀 核心防御：通过 adapter.peek 检查当前项是不是占位符
+                    // 通过 adapter.peek 检查当前项是不是占位符
                     ParagraphAdapter adapter = (ParagraphAdapter) getBindingAdapter();
                     ParagraphUiModel item = null;
                     if (adapter != null) {
@@ -309,6 +322,40 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                 itemHolder.binding.contentText.setText(content);
             }
 
+            //选择状态
+            if (isSelectMode) {
+                //添加图标
+                TypedValue typedValue = new TypedValue();
+                boolean resolved = context.getTheme().resolveAttribute(
+                        android.R.attr.listChoiceIndicatorMultiple,
+                        typedValue,
+                        true
+                );
+                if (resolved) {
+                    Drawable drawable = AppCompatResources.getDrawable(context, typedValue.resourceId);
+                    itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                            drawable,
+                            null,
+                            null,
+                            null
+                    );
+                }
+            } else {
+                //去掉图标
+                itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            }
+            //设置选择状态
+            itemHolder.binding.contentText.setChecked(
+                    selectionTracker != null &&
+                            selectionTracker.hasSelection() &&
+                            selectionTracker.getSelection().contains(paragraph.getParagraphId())
+            );
+
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
             if (emotionList.isEmpty()) {
@@ -346,6 +393,18 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
             separatorViewHolder.binding.dateText.setText(dateStr);
         }
+    }
+
+    /**
+     * 更新选择模式
+     *
+     * @param selectMode 是否为选择模式
+     */
+    public void setSelectMode(boolean selectMode) {
+        if (isSelectMode == selectMode) return;
+
+        isSelectMode = selectMode;
+        notifyItemRangeChanged(0, getItemCount());
     }
 
     /**

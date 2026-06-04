@@ -6,6 +6,7 @@ public enum TagStrings {
     DATE_PICKER("date_picker"),                                 //日期选择对话框
     MEDIA_ADD_BOTTOM_SHEET("media_add_bottom_sheet"),           //媒体添加对话框
     TIME_PICKER("time_picker"),                                 //时间选择对话框
+    PARAGRAPH_SELECTION("paragraph_selection"),                 //段落多选追踪器
     MEDIA_SELECTION("media_selection");                         //媒体多选追踪器
     private final String tag;
 

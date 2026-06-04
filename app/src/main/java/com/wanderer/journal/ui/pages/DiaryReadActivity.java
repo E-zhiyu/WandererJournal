@@ -4,6 +4,8 @@ package com.wanderer.journal.ui.pages;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -23,7 +25,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.selection.SelectionPredicates;
 import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
@@ -53,6 +57,8 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
+import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
+import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
@@ -368,6 +374,36 @@ public class DiaryReadActivity extends AppCompatActivity {
                     startActivity(skip2FullScreen, options.toBundle());
                 }
         );
+        binding.contentRecycler.setAdapter(adapter);
+
+        //为适配器绑定选择追踪器
+        selectionTracker = new SelectionTracker.Builder<>(
+                TagStrings.PARAGRAPH_SELECTION.getTag(),
+                binding.contentRecycler,
+                new ParagraphKeyProvider(adapter),
+                new ParagraphLookup(binding.contentRecycler),
+                StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(
+                SelectionPredicates.createSelectAnything() // 允许多选
+        ).build();
+        adapter.setSelectionTracker(selectionTracker);
+
+        //设置多选追踪器选择监听
+        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<>() {
+            @Override
+            public void onSelectionChanged() {
+                super.onSelectionChanged();
+                if (selectionTracker.hasSelection()) {
+                    new Handler(Looper.getMainLooper()).post(() -> adapter.setSelectMode(true));
+
+                    int size = selectionTracker.getSelection().size();
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> adapter.setSelectMode(false));
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
+                }
+            }
+        });
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
@@ -396,7 +432,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             }
             return Unit.INSTANCE;
         });
-        binding.contentRecycler.setAdapter(adapter);
     }
 
     /**
