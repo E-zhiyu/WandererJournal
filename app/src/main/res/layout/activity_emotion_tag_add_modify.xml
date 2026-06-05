@@ -6,83 +6,104 @@
     android:layout_height="match_parent"
     tools:context=".ui.pages.emotion.EmotionTagAddModifyActivity">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/add_emotion_tag" />
-
-    <ScrollView
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scrollbars="none"
         app:layout_constraintBottom_toTopOf="@id/bottom_btn_group"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:orientation="vertical"
-            android:padding="10dp">
+            android:fitsSystemWindows="true">
 
-            <!-- 名称 -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/name_layout"
-                style="@style/CommonTextInputLayoutStyle"
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                style="@style/CollapsingToolbarLayoutStyle"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+                app:toolbarId="@id/toolbar">
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"
+                    app:title="@string/add_emotion_tag" />
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/name"
-                android:nextFocusDown="@id/description_layout"
-                app:counterEnabled="true"
-                app:counterMaxLength="10"
-                app:helperText="@string/emotion_tag_name_helper">
+                android:clipToPadding="false"
+                android:orientation="vertical"
+                android:padding="10dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/name_input"
-                    style="@style/UserInputEditTextStyle"
+                <!-- 名称 -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/name_layout"
+                    style="@style/CommonTextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:maxLength="10"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="@string/name"
+                    android:nextFocusDown="@id/description_layout"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="10"
+                    app:helperText="@string/emotion_tag_name_helper">
 
-            <!-- 描述 -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/description_layout"
-                style="@style/CommonTextInputLayoutStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/description"
-                app:helperText="@string/emotion_tag_description_helper">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/name_input"
+                        style="@style/UserInputEditTextStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLength="10"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/description_input"
-                    style="@style/UserInputEditTextStyle"
+                <!-- 描述 -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/description_layout"
+                    style="@style/CommonTextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:maxLines="1" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:hint="@string/description"
+                    app:helperText="@string/emotion_tag_description_helper">
 
-            <!-- 类型 -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/type_layout"
-                style="@style/DropdownMenuTextInputLayoutStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/emotion_type"
-                app:helperText="@string/emotion_type_helper">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/description_input"
+                        style="@style/UserInputEditTextStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                    android:id="@+id/type_input"
-                    style="@style/UneditableAutoCompleteTextViewStyle"
+                <!-- 类型 -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/type_layout"
+                    style="@style/DropdownMenuTextInputLayoutStyle"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
-    </ScrollView>
+                    android:layout_height="wrap_content"
+                    android:hint="@string/emotion_type"
+                    app:helperText="@string/emotion_type_helper">
 
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/type_input"
+                        style="@style/UneditableAutoCompleteTextViewStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- 底部按钮视图 -->
     <com.google.android.material.button.MaterialButtonGroup
         android:id="@+id/bottom_btn_group"
         android:layout_width="match_parent"

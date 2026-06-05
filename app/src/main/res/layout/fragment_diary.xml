@@ -14,10 +14,9 @@
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsing_toolbar_layout"
+            style="@style/CollapsingToolbarLayoutStyle"
             android:layout_width="match_parent"
             android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
-            app:expandedTitleGravity="bottom|center_horizontal"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
             app:toolbarId="@id/toolbar">
 
             <androidx.constraintlayout.widget.ConstraintLayout
