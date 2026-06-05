@@ -193,9 +193,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
             //跳转界面
             startActivity(skip2SharePreview);
-
-            //关闭分享选择
-            setShareSelectMode(false);
         });
         ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, 25, this);
 

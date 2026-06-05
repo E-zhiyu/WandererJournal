@@ -1,28 +1,17 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
-import androidx.recyclerview.selection.ItemDetailsLookup;
-import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -36,16 +25,10 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
-    private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
-    private String currentKeyword = "";                                 //当前高亮的搜索关键词
-    private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
-    private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
-    private boolean isSelectMode = false;                               //是否是选择模式
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -84,29 +67,6 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
 
-    /**
-     * 设置多选追踪器
-     *
-     * @param selectionTracker 多选追踪器
-     */
-    public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
-        this.selectionTracker = selectionTracker;
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(ParagraphEntityModel dataModel, View view);
-    }
-
-    public interface OnParagraphClickListener {
-        /**
-         * 段落被点击的回调
-         *
-         * @param dataModel 点击的段落的数据实例
-         * @param view      用于显示PopupMenu的视图
-         */
-        void onClicked(ParagraphEntityModel dataModel, View view);
-    }
-
     public interface OnMediaClickedListener {
         /**
          * 媒体视图点击监听
@@ -133,38 +93,6 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-        }
-
-        /**
-         * 为 Selection 库提供信息
-         *
-         * @return Selection 库的 Item 信息
-         */
-        public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
-            return new ItemDetailsLookup.ItemDetails<>() {
-                @Override
-                public int getPosition() {
-                    return getBindingAdapterPosition();
-                }
-
-                @Nullable
-                @Override
-                public Long getSelectionKey() {
-                    int pos = getBindingAdapterPosition();
-                    if (pos == RecyclerView.NO_POSITION) return null;
-
-                    // 通过 adapter.peek 检查当前项是不是占位符
-                    ParagraphListAdapter adapter = (ParagraphListAdapter) getBindingAdapter();
-                    ParagraphUiModel item = null;
-                    if (adapter != null) {
-                        item = adapter.getItem(pos);
-                    }
-                    if (!(item instanceof ParagraphUiModel.Item)) {
-                        return null; // 如果是占位符，返回 null 拒绝激活多选
-                    }
-                    return ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId();
-                }
-            };
         }
     }
 
@@ -266,64 +194,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本
             String content = paragraph.getContent();
-            if (currentKeyword != null && !currentKeyword.isEmpty() && positionList.contains(position)) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(content);
-                int startIndex = content.indexOf(currentKeyword);
-
-                //循环高亮文本
-                while (startIndex >= 0) {
-                    int endIndex = startIndex + currentKeyword.length();
-                    // 设置文字颜色为橘红色
-                    builder.setSpan(
-                            new ForegroundColorSpan(MaterialColors.getColor(
-                                    context,
-                                    android.R.attr.colorFocusedHighlight,
-                                    Color.parseColor("#FF5722")
-                            )),
-                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    );
-
-                    // 循环查找，防止一句话里有多个相同的关键词
-                    startIndex = content.indexOf(currentKeyword, endIndex);
-                }
-                itemHolder.binding.contentText.setText(builder);
-            } else {
                 itemHolder.binding.contentText.setText(content);
-            }
-
-            //选择状态
-            if (isSelectMode) {
-                //添加图标
-                TypedValue typedValue = new TypedValue();
-                boolean resolved = context.getTheme().resolveAttribute(
-                        android.R.attr.listChoiceIndicatorMultiple,
-                        typedValue,
-                        true
-                );
-                if (resolved) {
-                    Drawable drawable = AppCompatResources.getDrawable(context, typedValue.resourceId);
-                    itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            drawable,
-                            null,
-                            null,
-                            null
-                    );
-                }
-            } else {
-                //去掉图标
-                itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        null,
-                        null,
-                        null,
-                        null
-                );
-            }
-            //设置选择状态
-            itemHolder.binding.contentText.setChecked(
-                    selectionTracker != null &&
-                            selectionTracker.hasSelection() &&
-                            selectionTracker.getSelection().contains(paragraph.getParagraphId())
-            );
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
@@ -332,7 +203,6 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
-                    long emotionId = emotion.emotionTag.getEmotionId();
                     String name = emotion.emotionTag.getName();
                     int degree = emotion.crossRef.getDegree();
                     String title = String.format(
@@ -342,7 +212,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                     );
 
                     //添加 Chip 到视图中
-                    Chip emotionChip = getEmotionChip(context, emotionId, title);
+                    Chip emotionChip = getEmotionChip(context, title);
                     itemHolder.binding.emotionChipGroup.addView(emotionChip);
                 }
 
@@ -365,42 +235,20 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     /**
-     * 更新选择模式
-     *
-     * @param selectMode 是否为选择模式
-     */
-    public void setSelectMode(boolean selectMode) {
-        if (isSelectMode == selectMode) return;
-
-        isSelectMode = selectMode;
-        notifyItemRangeChanged(0, getItemCount());
-    }
-
-    public boolean getSelectMode() {
-        return isSelectMode;
-    }
-
-    /**
      * 获取情绪标签 Chip 视图
      *
      * @param context   上下文
-     * @param emotionId 情绪标签 ID
      * @param title     情绪标签名称
      * @return 显示情绪标签名称的{@link Chip}实例
      */
     @NonNull
-    private Chip getEmotionChip(Context context, long emotionId, String title) {
+    private Chip getEmotionChip(Context context, String title) {
         Chip emotionChip = new Chip(
                 context,
                 null,
                 com.google.android.material.R.style.Widget_Material3_Chip_Suggestion
         );
         emotionChip.setFocusable(false);
-
-        //设置是否选中（即高亮）
-        boolean isHighLighted = filterEmotionIdList.contains(emotionId);
-        emotionChip.setCheckable(isHighLighted);
-        emotionChip.setChecked(isHighLighted);
 
         //设置显示文本
         emotionChip.setText(title);
@@ -442,45 +290,5 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
-    }
-
-    /**
-     * 设置高亮
-     *
-     * @param keyword      高亮关键词
-     * @param positionList 有符合关键词的视图的下标
-     */
-    public void setHighlightTarget(String keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
-        //修改搜索元素数据
-        this.currentKeyword = keyword;
-        this.filterEmotionIdList.clear();
-        this.filterEmotionIdList.addAll(filterEmotionIdList);
-
-        //更改位置列表中的内容
-        List<Integer> oldPositionList = new ArrayList<>(positionList);
-        this.positionList.clear();
-        this.positionList.addAll(positionList);
-
-        //提醒旧的取消高亮
-        for (int i : oldPositionList) {
-            notifyItemChanged(i);
-        }
-
-        //提醒新的进行高亮
-        for (int i : positionList) {
-            notifyItemChanged(i);
-        }
-    }
-
-    /**
-     * 清除高亮
-     */
-    public void clearHighlight() {
-        this.currentKeyword = "";
-        this.filterEmotionIdList.clear();
-        for (int position : positionList) {
-            notifyItemChanged(position);
-        }
-        positionList.clear();
     }
 }
