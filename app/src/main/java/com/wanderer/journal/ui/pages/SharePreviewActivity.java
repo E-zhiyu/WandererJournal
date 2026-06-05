@@ -6,28 +6,33 @@ import android.os.Bundle;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.paging.LoadState;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import kotlin.Unit;
 
 public class SharePreviewActivity extends AppCompatActivity {
     private ActivitySharePreviewBinding binding;    //绑定的 XML 布局
@@ -78,6 +83,8 @@ public class SharePreviewActivity extends AppCompatActivity {
             return;
         }
 
+        //TODO:完成分享成品图片的渲染
+
         //分享的段落 ID 数组
         sharedParagraphIds = bundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
     }
@@ -98,8 +105,7 @@ public class SharePreviewActivity extends AppCompatActivity {
      */
     private void initRecycler() {
         //绑定适配器
-        ParagraphAdapter adapter = new ParagraphAdapter(
-                null,   //段落不可点击
+        ParagraphListAdapter adapter = new ParagraphListAdapter(
                 (position, mediaView, mediaList) -> {
                     String[] uriStrArray = mediaList.stream()
                             .map(MediaEntity::getFileUri)
@@ -120,32 +126,71 @@ public class SharePreviewActivity extends AppCompatActivity {
                     startActivity(skip2FullScreen, options.toBundle());
                 }
         );
-        adapter.addLoadStateListener(loadStates -> {
-            boolean isNotLoading = loadStates.getRefresh() instanceof LoadState.NotLoading;
-
-            if (isNotLoading) {
-                if (adapter.getItemCount() == 0) {
-                    binding.emptyText.setVisibility(View.VISIBLE);
-                } else {
-                    binding.emptyText.setVisibility(View.GONE);
-                }
-            } else {
-                binding.emptyText.setVisibility(View.GONE);
-            }
-            return Unit.INSTANCE;
-        });
         binding.previewRecycler.setAdapter(adapter);
 
         //获取数据源
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(viewModel.getPagingDataFlow(sharedParagraphIds, db)
+        disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
+                .flatMap(paragraphEntityModels ->
+                        Single.just(insertDateSeparator(paragraphEntityModels))
+                )
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                        paragraphList -> {
+                            if (paragraphList.isEmpty()) {
+                                binding.emptyText.setVisibility(View.VISIBLE);
+                            } else {
+                                binding.emptyText.setVisibility(View.GONE);
+                            }
+
+                            adapter.submitList(paragraphList);
+                        },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+    }
+
+    /**
+     * 将{@link ParagraphEntityModel}列表转换为{@link ParagraphUiModel}列表并插入日期分隔符
+     *
+     * @param paragraphList 纯段落列表
+     * @return 包含日期分隔符的段落列表
+     */
+    @NonNull
+    private List<ParagraphUiModel> insertDateSeparator(List<ParagraphEntityModel> paragraphList) {
+        List<ParagraphUiModel> uiModelList = new ArrayList<>();
+
+        //判空
+        if (paragraphList == null || paragraphList.isEmpty()) {
+            return uiModelList;
+        }
+
+        //第一个位置插入日期分隔符
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+        uiModelList.add(new ParagraphUiModel.Separator(
+                paragraphList.get(0).getParagraph().getCreateTime().format(formatter))
+        );
+
+        //遍历插入段落和剩下的分隔符
+        for (int i = 0; i < paragraphList.size(); i++) {
+            //获取 ParagraphEntityModel 实例
+            ParagraphEntityModel current = paragraphList.get(i);
+            ParagraphEntityModel next = i >= paragraphList.size() - 1 ? null : paragraphList.get(i + 1);
+
+            //插入段落数据
+            uiModelList.add(new ParagraphUiModel.Item(current));
+
+            //获取日期
+            LocalDateTime currentTime = current.getParagraph().getCreateTime();
+            LocalDateTime nextTime = next == null ? null : next.getParagraph().getCreateTime();
+
+            //比较日期并判断是否需要插入分隔符
+            if (nextTime != null && !currentTime.toLocalDate().isEqual(nextTime.toLocalDate())) {
+                uiModelList.add(new ParagraphUiModel.Separator(nextTime.format(formatter)));
+            }
+        }
+
+        return uiModelList;
     }
 }

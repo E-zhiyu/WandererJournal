@@ -14,23 +14,23 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
-import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
-import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
+public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
     private String currentKeyword = "";                                 //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
@@ -82,8 +82,7 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
-    private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
 
     /**
      * 设置多选追踪器
@@ -130,35 +129,10 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
-        private ParagraphEntityModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable ViewHolderListener listener) {
+        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-
-            //设置监听器
-            if (listener != null) {
-                //设置触摸监听
-                AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
-
-                //设置点击监听
-                binding.getRoot().setOnClickListener(view -> {
-                    if (data == null) {
-                        return;
-                    }
-
-                    listener.onClicked(data, binding.getRoot());
-                });
-            }
-        }
-
-        /**
-         * 将ViewHolder与数据实例绑定
-         *
-         * @param data 数据实例
-         */
-        public void bindItem(ParagraphEntityModel data) {
-            this.data = data;
         }
 
         /**
@@ -180,10 +154,10 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                     if (pos == RecyclerView.NO_POSITION) return null;
 
                     // 通过 adapter.peek 检查当前项是不是占位符
-                    ParagraphAdapter adapter = (ParagraphAdapter) getBindingAdapter();
+                    ParagraphListAdapter adapter = (ParagraphListAdapter) getBindingAdapter();
                     ParagraphUiModel item = null;
                     if (adapter != null) {
-                        item = adapter.peek(pos);
+                        item = adapter.getItem(pos);
                     }
                     if (!(item instanceof ParagraphUiModel.Item)) {
                         return null; // 如果是占位符，返回 null 拒绝激活多选
@@ -197,15 +171,12 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     /**
      * 段落适配器构造方法
      *
-     * @param paragraphClickListener 段落点击监听器（传递 null 则不设置点击监听）
      * @param mediaClickedListener   媒体预览图点击监听
      */
-    public ParagraphAdapter(
-            @Nullable OnParagraphClickListener paragraphClickListener,
-            OnMediaClickedListener mediaClickedListener
+    public ParagraphListAdapter(
+            ParagraphListAdapter.OnMediaClickedListener mediaClickedListener
     ) {
         super(ITEM_CALLBACK);
-        this.paragraphClickListener = paragraphClickListener;
         this.mediaClickedListener = mediaClickedListener;
 
         //注册数据变更监听器，用于自动更新圆角
@@ -240,29 +211,14 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
                     parent,
                     false
             );
-            ViewHolderListener listener;
-            if (paragraphClickListener != null) {
-                listener = (paragraphEntityModel, view) -> {
-                    if (!isSelectMode) {
-                        paragraphClickListener.onClicked(paragraphEntityModel, view);
-                    } else {
-                        selectionTracker.select(paragraphEntityModel.getParagraph().getParagraphId());
-                    }
-                };
-            } else {
-                listener = null;
-            }
-            return new ParagraphViewHolder(
-                    binding,
-                    listener
-            );
+            return new ParagraphListAdapter.ParagraphViewHolder(binding);
         } else {
             ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
             );
-            return new DateSeparatorViewHolder(binding);
+            return new ParagraphListAdapter.DateSeparatorViewHolder(binding);
         }
     }
 
@@ -270,22 +226,19 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
-            if (holder instanceof ParagraphViewHolder) {
-                ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+            if (holder instanceof ParagraphListAdapter.ParagraphViewHolder) {
+                ParagraphListAdapter.ParagraphViewHolder itemHolder = (ParagraphListAdapter.ParagraphViewHolder) holder;
                 itemHolder.binding.contentText.setText("正在加载段落内容……");
                 itemHolder.binding.dateTimeText.setText("未知");
             }
             return;
         }
 
-        if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
+        if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
             ParagraphEntityModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
             ParagraphEntity paragraph = dataModel.getParagraph();
-            ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+            ParagraphListAdapter.ParagraphViewHolder itemHolder = (ParagraphListAdapter.ParagraphViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();
-
-            //绑定数据原型
-            itemHolder.bindItem(dataModel);
 
             //媒体列表
             List<MediaEntity> mediaList = dataModel.getMediaList();
@@ -403,8 +356,8 @@ public class ParagraphAdapter extends PagingDataAdapter<ParagraphUiModel, Recycl
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), position);
-        } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
-            DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
+        } else if (holder instanceof ParagraphListAdapter.DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
+            ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
             separatorViewHolder.binding.dateText.setText(dateStr);

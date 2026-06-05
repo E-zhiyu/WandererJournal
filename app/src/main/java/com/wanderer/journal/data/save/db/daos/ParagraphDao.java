@@ -49,7 +49,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
-    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceById(long[] paragraphIds);
+    Single<List<ParagraphEntityModel>> getParagraphSingleById(long[] paragraphIds);
 
     /**
      * 查询某个日期范围内的段落

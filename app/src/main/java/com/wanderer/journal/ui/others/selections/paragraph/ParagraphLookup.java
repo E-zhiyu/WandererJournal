@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 
 public class ParagraphLookup extends ItemDetailsLookup<Long> {
     private final RecyclerView recyclerView;
@@ -22,8 +22,8 @@ public class ParagraphLookup extends ItemDetailsLookup<Long> {
         View view = recyclerView.findChildViewUnder(e.getX(), e.getY());
         if (view != null) {
             RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(view);
-            if (holder instanceof ParagraphAdapter.ParagraphViewHolder) {
-                return ((ParagraphAdapter.ParagraphViewHolder) holder).getItemDetails();
+            if (holder instanceof ParagraphPagingAdapter.ParagraphViewHolder) {
+                return ((ParagraphPagingAdapter.ParagraphViewHolder) holder).getItemDetails();
             }
         }
         return null;

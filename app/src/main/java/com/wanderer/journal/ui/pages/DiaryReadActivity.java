@@ -60,7 +60,7 @@ import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
@@ -84,7 +84,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private LocalDate initDiaryDate = null;                                 //初始页的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
-    private ParagraphAdapter adapter;                                       //段落列表适配器
+    private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
@@ -360,7 +360,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         //设置适配器
-        adapter = new ParagraphAdapter(
+        adapter = new ParagraphPagingAdapter(
                 (model, view) -> {
                     ParagraphEntity paragraph = model.getParagraph();
 

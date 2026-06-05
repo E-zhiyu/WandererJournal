@@ -6,14 +6,14 @@ import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 
 import java.util.List;
 
 public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
-    private final ParagraphAdapter adapter;
+    private final ParagraphPagingAdapter adapter;
 
-    public ParagraphKeyProvider(ParagraphAdapter adapter) {
+    public ParagraphKeyProvider(ParagraphPagingAdapter adapter) {
         super(SCOPE_MAPPED);
         this.adapter = adapter;
     }

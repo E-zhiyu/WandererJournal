@@ -68,7 +68,7 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
@@ -536,7 +536,7 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initParagraphRecycler() {
         //设置适配器
-        ParagraphAdapter adapter = new ParagraphAdapter(
+        ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
                 (dataModel, view) -> {
                     ParagraphEntity paragraph = dataModel.getParagraph();
 

@@ -53,8 +53,12 @@ public class ParagraphViewModel extends ViewModel {
         return PagingDataTransforms.insertSeparators(
                 itemPagingData, executor, (before, after) -> {
                     if (after == null) return null;
+
                     if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
-                        return new ParagraphUiModel.Separator(formatDate(after.model.getParagraph().getCreateTime()));
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+                        return new ParagraphUiModel.Separator(
+                                after.model.getParagraph().getCreateTime().format(formatter)
+                        );
                     }
                     return null;
                 });
@@ -131,51 +135,6 @@ public class ParagraphViewModel extends ViewModel {
     }
 
     /**
-     * 获取指定 ID 的段落数据
-     *
-     * @param paragraphIds 需要获取的段落的 ID
-     * @return ID 在数组中的段落数据
-     */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(long[] paragraphIds, DiaryDatabase db) {
-        return Flowable.fromCallable(() -> {
-                    // 配置 PagingConfig
-                    PagingConfig pagingConfig = new PagingConfig(
-                            10,
-                            20,
-                            true, // 必须为 true 以支持精准定位
-                            8
-                    );
-
-                    // 创建 Pager
-                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
-                            pagingConfig,
-                            null,
-                            () -> db.paragraphDao().getParagraphPagingSourceById(paragraphIds)
-                    );
-
-                    return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
-                })
-                .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .flatMap(pagingDataFlow -> pagingDataFlow)
-                .compose(flowable -> PagingRx.cachedIn(
-                        flowable,
-                        ViewModelKt.getViewModelScope(this)
-                ));
-    }
-
-    /**
-     * 将{@link LocalDateTime}转换为yyyy-MM-dd日期字符串
-     *
-     * @param datetime 需要转换的时间类
-     * @return 转换得到的日期字符串
-     */
-    @NonNull
-    private String formatDate(@NonNull LocalDateTime datetime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
-        return datetime.format(formatter);
-    }
-
-    /**
      * 判断两个时间是否在同一天
      *
      * @param t1 时间实例
@@ -185,7 +144,7 @@ public class ParagraphViewModel extends ViewModel {
     private boolean isSameDay(@NonNull LocalDateTime t1, @NonNull LocalDateTime t2) {
         LocalDate d1 = t1.toLocalDate();
         LocalDate d2 = t2.toLocalDate();
-        return d1.equals(d2);
+        return d1.isEqual(d2);
     }
 
     /**
