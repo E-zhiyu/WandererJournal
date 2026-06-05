@@ -8,5 +8,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_share"
-        android:title="@string/share" />
+        android:icon="@drawable/outline_share_24"
+        android:title="@string/share"
+        app:showAsAction="ifRoom" />
 </menu>
