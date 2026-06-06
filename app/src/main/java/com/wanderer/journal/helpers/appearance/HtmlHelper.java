@@ -52,41 +52,37 @@ public class HtmlHelper {
 
         WebView.enableSlowWholeDocumentDraw();
 
-        // 1. 在内存中动态创建 WebView（不传入 Activity 的 layout）
+        //在内存中动态创建 WebView
         WebView backgroundWebView = new WebView(context);
 
-        // 2. 配置 WebView 属性
+        //配置 WebView 属性
         backgroundWebView.getSettings().setJavaScriptEnabled(true);
         backgroundWebView.getSettings().setUseWideViewPort(true);
         backgroundWebView.getSettings().setLoadWithOverviewMode(true);
+        backgroundWebView.getSettings().setSupportZoom(false); // 禁用缩放
 
-        // 核心：强制给一个初始宽度（例如标准分享图宽度 1080 像素），以便让 HTML 内部有测量基准
-        int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY);
-        int heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        backgroundWebView.measure(widthMeasureSpec, heightMeasureSpec);
-        backgroundWebView.layout(0, 0, 1080, 0);
+        //动态获取当前手机屏幕的真实物理像素宽度 (px)
+        int screenWidthPx = ViewEdgeHelper.getScreenWidth(context);
 
-        // 3. 注入 JS 桥梁
+        //用动态算出的屏幕宽度去强行测绘 WebView
+        backgroundWebView.measure(
+                View.MeasureSpec.makeMeasureSpec(screenWidthPx, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        );
+        backgroundWebView.layout(0, 0, screenWidthPx, 20);
+
+        //注入 JS 桥梁
         backgroundWebView.addJavascriptInterface(
                 new AndroidBridge(backgroundWebView, context, listener),
                 "AndroidShareBridge"
         );
 
-        // 4. 监听加载完成
+        //监听加载完成
         backgroundWebView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-
-                // 【关键修复】在页面加载完成后，再次强制在主线程触发一次布局测量
-                view.measure(
-                        View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY),
-                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-                );
-                view.layout(0, 0, 1080, view.getMeasuredHeight());
-
-                // 网页模板加载完后，将 JSON 数据传过去
-                // 方案 A：使用 Base64 编码（最稳妥，完美解决换行和引号问题）
+                // 使用 Base64 编码解决换行和引号问题
                 String base64Data = Base64.encodeToString(jsonData.getBytes(), Base64.NO_WRAP);
                 String javascript = "javascript:initDataFromBase64('" + base64Data + "')";
                 backgroundWebView.evaluateJavascript(javascript, null);
@@ -97,7 +93,6 @@ public class HtmlHelper {
         backgroundWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                // 这一步能让你在 Android Studio 的 Logcat 中直接看到网页内部的 console.log 和报错信息！
                 Log.d(LogTags.SHARE_WEB_VIEW.n(), consoleMessage.message() + " -- Line "
                         + consoleMessage.lineNumber() + " of " + consoleMessage.sourceId());
                 return true;
@@ -137,13 +132,16 @@ public class HtmlHelper {
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (backgroundWebView == null) return;
 
-                // 网页里的 DOM 已经渲染完毕，开始后台截图
-                Bitmap bitmap = captureWebView(backgroundWebView);
+                //网页里的 DOM 已经渲染完毕，开始后台截图
+                float density = context.getResources().getDisplayMetrics().density;
+                Log.d(LogTags.HTML_HELPER.n(), "屏幕密度：" + density);
+                int contentHeight = backgroundWebView.getContentHeight();
+                Bitmap bitmap = captureWebView(backgroundWebView, (int) (contentHeight * density));
 
                 if (bitmap != null) {
-                    // 保存为文件并获取 Uri（复用之前写好的工具类方法）
+                    //保存为文件并获取 Uri（复用之前写好的工具类方法）
                     Uri imageUri = ImageHelper.saveBitmapToFile(context, bitmap);
-                    bitmap.recycle(); // 及时释放内存
+                    bitmap.recycle(); //及时释放内存
 
                     if (listener != null) {
                         listener.onShareReady(imageUri);
@@ -152,7 +150,7 @@ public class HtmlHelper {
                     if (listener != null) listener.onError("生成图片失败，内存不足");
                 }
 
-                // 【重要】过河拆桥：生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
+                //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
                 destroyWebView(backgroundWebView);
             });
         }
@@ -161,27 +159,16 @@ public class HtmlHelper {
          * 后台测绘并将 WebView 转换为全量长图
          */
         @Nullable
-        private Bitmap captureWebView(@NonNull WebView webView) {
+        private Bitmap captureWebView(@NonNull WebView webView, int realHeight) {
             try {
-                int width = webView.getWidth();
-                // 如果离线测量未就绪，强制兜底一个宽度
-                if (width <= 0) width = 1080;
-
-                // 获取 HTML 内容在缩放后的真实物理高度
-                float scale = webView.getScale();
-                int height = (int) (webView.getHeight() * scale);
-
-                if (height <= 0) height = 2000;
-
-                // 重新让离线 WebView 适配最终测出来的长图宽高
-                webView.measure(
-                        View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                        View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY)
-                );
-                webView.layout(0, 0, width, height);
+                int screenWidthPx = ViewEdgeHelper.getScreenWidth(webView.getContext());
+                webView.measure(screenWidthPx, realHeight);
+                webView.layout(0, 0, screenWidthPx, realHeight);
+                Log.d(LogTags.HTML_HELPER.n(), "宽度：" + screenWidthPx);
+                Log.d(LogTags.HTML_HELPER.n(), "高度：" + realHeight);
 
                 // 绘制到画布
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                Bitmap bitmap = Bitmap.createBitmap(screenWidthPx, realHeight, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bitmap);
                 webView.scrollTo(0, 0); //滚动到顶部
                 webView.draw(canvas);

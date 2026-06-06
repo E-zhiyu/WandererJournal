@@ -1,4 +1,6 @@
 body {
+    height: auto;
+    min-height: 0;
     background-color: #f5f6f9;
     font-family: 'Helvetica Neue', Arial, sans-serif;
     padding: 20px;
@@ -29,7 +31,6 @@ body {
     color: #222222;
     padding: 14px 16px;
     border-radius: 16px;
-    border-top-left-radius: 4px; /* 模拟微信气泡效果 */
     margin-bottom: 12px;
     line-height: 1.6;
     font-size: 16px;

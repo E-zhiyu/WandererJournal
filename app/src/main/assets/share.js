@@ -26,11 +26,10 @@ function initData(jsonString) {
 
     container.innerHTML = htmlContent;
 
-    // 【核心修复】不要马上回调！用 setTimeout 延迟 150 毫秒
     // 留给 WebView 足够的时间去把 HTML 渲染成可见的皮肤样式
     setTimeout(function() {
         if (window.AndroidShareBridge) {
             window.AndroidShareBridge.onRenderFinished();
         }
-    }, 150); // 150 毫秒对用户完全无感知，但对多核 CPU 来说时间非常充裕
+    }, 150);
 }
