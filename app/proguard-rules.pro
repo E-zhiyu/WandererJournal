@@ -23,3 +23,13 @@
 -keep class com.wanderer.journal.data.save.** { *; }            # 保护数据保存相关的类
 -keep class com.wanderer.journal.data.backup.** { *; }          # 保护POJO类
 -keep class com.wanderer.journal.auxiliary.classes.** { *; }    # 保护辅助类
+
+# 保持带有 @JavascriptInterface 注解的方法和类不被混淆
+-keepattributes *Annotation*
+-keepattributes JavascriptInterface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# 如果你的 Bridge 类是内部类，也要确保它所在的 Activity 或管理类不被混淆（或者单独提出来作为一个独立类）
+-keep class com.wanderer.journal.helpers.appearance.HtmlHelper { *; }

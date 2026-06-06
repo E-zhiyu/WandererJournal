@@ -2,92 +2,18 @@
 <html lang="zh-cn">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        body {
-            background-color: #f5f6f9;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            padding: 20px;
-            margin: 0;
-        }
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            color: #333;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        /* 日期分隔符样式 */
-        .date-divider {
-            text-align: center;
-            margin: 25px 0 15px 0;
-        }
-        .date-divider span {
-            background-color: #e0e3ea;
-            color: #666;
-            font-size: 12px;
-            padding: 4px 12px;
-            border-radius: 12px;
-        }
-        /* 日记段落消息气泡样式 */
-        .paragraph-bubble {
-            background-color: #ffffff;
-            color: #222222;
-            padding: 14px 16px;
-            border-radius: 16px;
-            border-top-left-radius: 4px; /* 模拟微信气泡效果 */
-            margin-bottom: 12px;
-            line-height: 1.6;
-            font-size: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            word-wrap: break-word;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #999;
-            font-size: 12px;
-            padding-bottom: 20px;
-        }
-    </style>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="share.css" rel="stylesheet">
     <title></title>
 </head>
 <body>
-
-<div class="header">我的日记分享</div>
+<div class="header">日记分享</div>
 
 <div id="diary-container"></div>
 
 <div class="footer">来自『漫游者日记』</div>
 
-<script>
-    /**
-     * 供 Android 端调用的原声 JS 方法
-     * @param jsonString 传递过来的日记段落 JSON 数组字符串
-     */
-    function initData(jsonString) {
-        const container = document.getElementById('diary-container');
-        const data = JSON.parse(jsonString);
-
-        let htmlContent = '';
-
-        data.forEach(item => {
-            if (item.type === 'date') {
-                // 插入日期分隔符
-                htmlContent += `<div class="date-divider"><span>${item.content}</span></div>`;
-            } else if (item.type === 'text') {
-                // 插入日记内容气泡
-                htmlContent += `<div class="paragraph-bubble">${item.content}</div>`;
-            }
-        });
-
-        container.innerHTML = htmlContent;
-
-        // 通知 Android 端：页面已经渲染完毕，可以截图了
-        if (window.AndroidShareBridge) {
-            window.AndroidShareBridge.onRenderFinished();
-        }
-    }
-</script>
+<script src="share.js"></script>
 </body>
 </html>

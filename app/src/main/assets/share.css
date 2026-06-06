@@ -1,0 +1,45 @@
+body {
+    background-color: #f5f6f9;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    padding: 20px;
+    margin: 0;
+}
+.header {
+    text-align: center;
+    padding: 20px 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: bold;
+}
+/* 日期分隔符样式 */
+.date-divider {
+    text-align: center;
+    margin: 25px 0 15px 0;
+}
+.date-divider span {
+    background-color: #e0e3ea;
+    color: #666;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+/* 日记段落消息气泡样式 */
+.paragraph-bubble {
+    background-color: #ffffff;
+    color: #222222;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border-top-left-radius: 4px; /* 模拟微信气泡效果 */
+    margin-bottom: 12px;
+    line-height: 1.6;
+    font-size: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    word-wrap: break-word;
+}
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #999;
+    font-size: 12px;
+    padding-bottom: 20px;
+}

@@ -3,6 +3,7 @@ package com.wanderer.journal.ui.pages;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import androidx.activity.EdgeToEdge;
@@ -14,6 +15,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -21,6 +23,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.HtmlHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -38,6 +41,7 @@ public class SharePreviewActivity extends AppCompatActivity {
     private ActivitySharePreviewBinding binding;    //绑定的 XML 布局
     private long[] sharedParagraphIds;              //分享的段落 ID 数组
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
+    private ParagraphListAdapter adapter;           //段落列表适配器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +87,6 @@ public class SharePreviewActivity extends AppCompatActivity {
             return;
         }
 
-        //TODO:完成分享成品图片的渲染
-
         //分享的段落 ID 数组
         sharedParagraphIds = bundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
     }
@@ -96,6 +98,31 @@ public class SharePreviewActivity extends AppCompatActivity {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
+        //导出按钮
+        binding.exportBtn.setOnClickListener(view -> {
+            String json = formatToJson();
+            HtmlHelper.generateAndShare(
+                    json,
+                    this,
+                    new HtmlHelper.OnShareListener() {
+                        @Override
+                        public void onLoadingStart() {
+                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
+                        }
+
+                        @Override
+                        public void onShareReady(Uri imageUri) {
+                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Uri:" + imageUri);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                        }
+                    }
+            );
+        });
+
         //段落列表
         initRecycler();
     }
@@ -105,7 +132,7 @@ public class SharePreviewActivity extends AppCompatActivity {
      */
     private void initRecycler() {
         //绑定适配器
-        ParagraphListAdapter adapter = new ParagraphListAdapter(
+        adapter = new ParagraphListAdapter(
                 (position, mediaView, mediaList) -> {
                     String[] uriStrArray = mediaList.stream()
                             .map(MediaEntity::getFileUri)
@@ -192,5 +219,45 @@ public class SharePreviewActivity extends AppCompatActivity {
         }
 
         return uiModelList;
+    }
+
+    /**
+     * 将列表中的内容格式化为 JSON，供 WebView 加载内容
+     *
+     * @return 转换得到的 JSON 字符串（结构为[{"type":***,"content":***},……]）
+     */
+    @NonNull
+    private String formatToJson() {
+        //获取数据
+        List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
+
+        //遍历转换为 JSON
+        StringBuilder builder = new StringBuilder("[");
+        int i = 0;
+        for (ParagraphUiModel model : uiModelList) {
+            builder.append("{");
+            if (model instanceof ParagraphUiModel.Separator) {
+                builder.append("\"type\":\"date\",\"content\":");
+                builder.append("\"");
+                String date = ((ParagraphUiModel.Separator) model).date;
+                builder.append(date);
+                builder.append("\"");
+            } else if (model instanceof ParagraphUiModel.Item) {
+                builder.append("\"type\":\"text\",\"content\":");
+                builder.append("\"");
+                String paragraphContent = ((ParagraphUiModel.Item) model).model.getParagraph().getContent();
+                builder.append(paragraphContent);
+                builder.append("\"");
+            }
+
+            builder.append("}");
+            if (i < uiModelList.size() - 1) {
+                builder.append(",");
+            }
+            i++;
+        }
+        builder.append("]");
+
+        return builder.toString();
     }
 }
