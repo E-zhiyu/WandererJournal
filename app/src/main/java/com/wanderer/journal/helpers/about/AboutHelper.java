@@ -14,7 +14,14 @@ import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.2.0\n" +
+    private final static String CHANGELOG = "# v1.2.1\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 优化图片生成逻辑，尽量避免界面卡顿\n" +
+            "- 分享图片底部添加项目仓库二维码\n" +
+            "\n" +
+            "# v1.2.0\n" +
             "### 新增内容\n" +
             "\n" +
             "- 新增选择日记段落并以图片形式分享的功能\n" +
