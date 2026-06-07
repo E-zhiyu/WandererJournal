@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.auxiliary.enums.LogTags;
@@ -25,7 +24,6 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.ViewTags;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
-import com.wanderer.journal.ui.others.listeners.RecyclerScrollHideShowListener;
 import com.wanderer.journal.ui.others.listeners.SpringAnimationOnTouchListener;
 import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;
 
@@ -35,26 +33,6 @@ import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;
 public class AppearanceAnimationHelper {
     public static final int SMALL_CARD_RADIUS = 5;     //小卡片圆角大小（dp）
     public static final int MEDIUM_CARD_RADIUS = 20;   //中等卡片圆角大小（dp）
-
-    /**
-     * 设置下滑隐藏浮动按钮
-     *
-     * @param recyclerView 待检测下滑行为的RecyclerView
-     * @param btn          需要隐藏的浮动按钮
-     */
-    public static void setupFloatingBtnBehaviour(@NonNull RecyclerView recyclerView, FloatingActionButton btn) {
-        recyclerView.addOnScrollListener(new RecyclerScrollHideShowListener() {
-            @Override
-            public void onHide() {
-                btn.hide();
-            }
-
-            @Override
-            public void onShow() {
-                btn.show();
-            }
-        });
-    }
 
     /**
      * 为任何实现了 Shapeable 接口的 View 添加圆角变形动画（按下的圆角为8dp）

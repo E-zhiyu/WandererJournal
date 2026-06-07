@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -23,7 +24,9 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
@@ -103,7 +106,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
         //导出按钮
-        binding.exportBtn.setOnClickListener(view -> {
+        binding.shareBtn.setOnClickListener(view -> {
             String json = formatToJson();
             HtmlHelper.generateAndShare(
                     json,
@@ -122,10 +125,13 @@ public class SharePreviewActivity extends AppCompatActivity {
                         @Override
                         public void onError(String message) {
                             Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
                         }
                     }
             );
         });
+        AppearanceAnimationHelper.attachMorphAnimation(binding.shareBtn);
+        ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, this);
 
         //段落列表
         initRecycler();

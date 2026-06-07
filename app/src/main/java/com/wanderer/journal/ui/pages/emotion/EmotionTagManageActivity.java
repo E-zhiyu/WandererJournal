@@ -73,7 +73,6 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
         AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
-        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.recycler, binding.addFab);
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
