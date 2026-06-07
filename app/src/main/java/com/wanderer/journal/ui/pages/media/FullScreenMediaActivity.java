@@ -29,6 +29,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
+import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.io.File;
 import java.util.Arrays;
@@ -161,7 +162,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
     private void savePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
         Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
-        disposable.add(FileHelper.saveMediaToGalleryObservable(this, currentUri)
+        disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(

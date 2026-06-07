@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.io.File;
 
@@ -141,7 +142,7 @@ public class HtmlHelper {
 
                 if (bitmap != null) {
                     //保存为文件并获取 Uri（复用之前写好的工具类方法）
-                    File imageFile = ImageHelper.saveBitmapToFile(context, bitmap);
+                    File imageFile = MediaHelper.saveBitmapToFile(context, bitmap);
                     bitmap.recycle(); //及时释放内存
 
                     if (listener != null) {

@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -121,10 +122,17 @@ public class SharePreviewActivity extends AppCompatActivity {
                         @Override
                         public void onShareReady(File imageFile) {
                             Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+
+                            // 根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
+                            Uri uri = Uri.fromFile(imageFile);
+                            String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+
+                            //调用系统分享 API
                             disposable.add(FileHelper.shareFileCompletable(
                                             SharePreviewActivity.this,
                                             imageFile,
-                                            "image/jpeg"
+                                            mimeType
                                     )
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
