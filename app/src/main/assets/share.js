@@ -23,7 +23,7 @@ function initData(jsonString) {
 
             // 判断当前段落是否有图片，且数组不为空
             if (item.imageUris && item.imageUris.length > 0) {
-                const imgCount = item.imageUris.length;
+                const imgCount = item.imageUris.length >= 3 ? 3 : item.imageUris.length;
                 let imgItemsHtml = '';
 
                 // 遍历数组生成所有的 <img> 标签
@@ -64,6 +64,7 @@ function initData(jsonString) {
         Array.from(images).forEach(img => {
             img.onload = img.onerror = function() {
                 loadedCount++;
+                //TODO:每加载一个就通知Java的进度条对话框
                 if (loadedCount === images.length && window.AndroidShareBridge) {
                     window.AndroidShareBridge.onRenderFinished();
                 }

@@ -26,7 +26,7 @@ body {
     color: #666;
     font-size: 12px;
     padding: 4px 12px;
-    border-radius: 12px;
+    border-radius: 20px;
 }
 
 /* 日记消息气泡基本样式（保持你之前的优雅气泡外观） */
@@ -34,7 +34,7 @@ body {
     background-color: #ffffff;
     color: #222222;
     padding: 16px;
-    border-radius: 16px;
+    border-radius: 20px;
     margin-bottom: 16px;
     line-height: 1.6;
     font-size: 16px;
@@ -59,15 +59,6 @@ body {
     justify-content: flex-start; /* 靠左对齐，顺应阅读习惯 */
 }
 
-/* 气泡内图片的具体样式 */
-.bubble-image-node {
-    max-width: 100%;         /* 撑满气泡内部的最大可用宽度 */
-    max-height: 450px;       /* 限制最大高度，防止图片过长拉碎视口 */
-    object-fit: cover;       /* 保持绝佳的裁剪比例 */
-    border-radius: 8px;      /* 比外层大框稍微小一点的圆角，套娃视觉上更精致 */
-    border: 1px solid rgba(0, 0, 0, 0.05); /* 防止纯白图片与气泡底色融为一体 */
-}
-
 /* 注脚样式 */
 .footer {
     text-align: center;
@@ -77,66 +68,55 @@ body {
     padding-bottom: 20px;
 }
 
-/* 文本与图片网格之间的间距 */
-.bubble-text + .bubble-image-grid {
-    margin-top: 12px;
-}
+/* ================= 智能网格数量控制（完美修复版） ================= */
 
 /* 通用网格基础配置 */
 .bubble-image-grid {
     display: grid;
-    gap: 8px; /* 图片之间的无缝间隙 */
+    gap: 8px; /* 图片之间的间隙为 8px */
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: border-box; /* 确保 padding 和 border 不会撑大容器 */
 }
 
 /* 统一控制气泡内图片的缩放表现 */
+.grid-image-item {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
 .bubble-image-node {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 保证图片在格子内不变形且完美裁剪 */
-    border-radius: 8px; /* 精致圆角 */
+    object-fit: cover;
+    border-radius: 10px;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: block; /* 消除图片下方的默认空白间隙 */
 }
 
-/* ================= 智能网格数量控制 ================= */
-
-/* 只有 1 张图 —— 大图显示，保留你之前的自然宽高比 */
+/* --- 只有 1 张图 --- */
 .images-count-1 {
     grid-template-columns: 1fr;
 }
-.images-count-1 .bubble-image-node {
-    max-height: 400px;
-    width: auto;
-    max-width: 100%;
+.images-count-1 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
 }
 
-/* 有 2 张图 —— 双列并排，正方形格子 */
+/* --- 有 2 张图（双列布局） --- */
+/* 核心修复：两列之间有 1 个 8px 的间隙，所以每列宽度是 (100% - 8px) / 2 */
 .images-count-2 {
-    grid-template-columns: repeat(2, 1fr);
-}
-.images-count-2 .grid-image-item {
-    width: 42vh
-    aspect-ratio: 1 / 1; /* 强制格子变成完美的正方形 */
+    grid-template-columns: repeat(2, calc((100% - 8px) / 2));
 }
 
-/* 3张及以上（如九宫格） —— 三列标准网格排列 */
-.images-count-3,
-.images-count-4,
-.images-count-5,
-.images-count-6,
-.images-count-7,
-.images-count-8,
-.images-count-9 {
-    grid-template-columns: repeat(3, 1fr);
+.images-count-2 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
 }
-.images-count-3 .grid-image-item,
-.images-count-4 .grid-image-item,
-.images-count-5 .grid-image-item,
-.images-count-6 .grid-image-item,
-.images-count-7 .grid-image-item,
-.images-count-8 .grid-image-item,
-.images-count-9 .grid-image-item {
-    width: 28vh
-    aspect-ratio: 1 / 1;
+
+/* --- 情况 C：3张、5张及以上（三列布局，如九宫格） --- */
+/* 核心修复：三列之间有 2 个 8px 的间隙，总共 16px。所以每列宽度是 (100% - 16px) / 3 */
+.images-count-3 {
+    grid-template-columns: repeat(3, calc((100% - 16px) / 3));
+}
+
+.images-count-3 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
 }
