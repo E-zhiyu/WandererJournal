@@ -2,8 +2,6 @@ package com.wanderer.journal.helpers.appearance;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -15,13 +13,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.helpers.file.MediaHelper;
 
-import java.io.File;
 import java.util.List;
 
 public class HtmlHelper {
@@ -42,11 +35,12 @@ public class HtmlHelper {
         void onLoading(int current, int total);
 
         /**
-         * 图片生成完毕回调
+         * DOM 完全加载完毕回调
          *
-         * @param imageFile 生成的图片文件
+         * @param bridge JS 桥梁
+         * @param total  总共的段落数
          */
-        void onFileReady(File imageFile);
+        void onDomFinished(AndroidBridge bridge, int total);
 
         /**
          * 图片生成错误回调
@@ -100,7 +94,7 @@ public class HtmlHelper {
         backgroundWebView.layout(0, 0, screenWidthPx, 20);
 
         //注入 JS 桥梁
-        bridge = new AndroidBridge(backgroundWebView, jsonData, context, listener);
+        bridge = new AndroidBridge(backgroundWebView, jsonData, listener);
         backgroundWebView.addJavascriptInterface(
                 bridge,
                 "AndroidShareBridge"
@@ -134,10 +128,9 @@ public class HtmlHelper {
     /**
      * JS 交互桥梁
      */
-    private static class AndroidBridge {
+    public static class AndroidBridge {
         private WebView backgroundWebView;
         private final List<String> jsonData;
-        private final Context context;
         private final ImageGenerateListener listener;
         private int currentPart;    //当前所处的分段的下标
 
@@ -145,14 +138,16 @@ public class HtmlHelper {
          * WebView 的 JS 代码桥梁
          *
          * @param backgroundWebView WebView实例
-         * @param context           上下文
          * @param listener          图片加载状态监听器
          */
-        public AndroidBridge(WebView backgroundWebView, List<String> jsonData, Context context, ImageGenerateListener listener) {
+        public AndroidBridge(WebView backgroundWebView, List<String> jsonData, ImageGenerateListener listener) {
             this.backgroundWebView = backgroundWebView;
             this.jsonData = jsonData;
-            this.context = context;
             this.listener = listener;
+        }
+
+        public WebView getBackgroundWebView() {
+            return backgroundWebView;
         }
 
         /**
@@ -179,29 +174,7 @@ public class HtmlHelper {
 
             //判断所有数据是否全部注入完毕
             if (currentPart >= jsonData.size()) {
-                new Handler(Looper.getMainLooper()).post(() -> {
-
-                    //网页里的 DOM 已经渲染完毕，开始后台截图
-                    float density = context.getResources().getDisplayMetrics().density;
-                    Log.d(LogTags.HTML_HELPER.n(), "屏幕密度：" + density);
-                    int contentHeight = backgroundWebView.getContentHeight();
-                    Bitmap bitmap = captureWebView(backgroundWebView, (int) (contentHeight * density));
-
-                    if (bitmap != null) {
-                        //保存为文件并获取 Uri（复用之前写好的工具类方法）
-                        File imageFile = MediaHelper.saveBitmapToFile(context, bitmap);
-                        bitmap.recycle(); //及时释放内存
-
-                        if (listener != null) {
-                            listener.onFileReady(imageFile);
-                        }
-                    } else {
-                        if (listener != null) listener.onError("生成图片失败，内存不足");
-                    }
-
-                    //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
-                    destroyWebView();
-                });
+                new Handler(Looper.getMainLooper()).post(() -> listener.onDomFinished(this, jsonData.size()));
             } else {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (listener != null) {
@@ -210,33 +183,8 @@ public class HtmlHelper {
                 });
                 new Handler(Looper.getMainLooper()).postDelayed(
                         this::processNextPart,
-                        100 //延迟再注入，间隔期间用于更新 Android 端的UI
+                        50 //延迟再注入，间隔期间用于更新 Android 端的UI
                 );
-            }
-        }
-
-        /**
-         * 后台测绘并将 WebView 转换为全量长图
-         */
-        @Nullable
-        private Bitmap captureWebView(@NonNull WebView webView, int realHeight) {
-            try {
-                int screenWidthPx = ViewEdgeHelper.getScreenWidth(webView.getContext());
-                webView.measure(screenWidthPx, realHeight);
-                webView.layout(0, 0, screenWidthPx, realHeight);
-                Log.d(LogTags.HTML_HELPER.n(), "宽度：" + screenWidthPx);
-                Log.d(LogTags.HTML_HELPER.n(), "高度：" + realHeight);
-
-                // 绘制到画布
-                Bitmap bitmap = Bitmap.createBitmap(screenWidthPx, realHeight, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bitmap);
-                webView.scrollTo(0, 0); //滚动到顶部
-                webView.draw(canvas);
-
-                return bitmap;
-            } catch (OutOfMemoryError e) {
-                Log.e(LogTags.HTML_HELPER.n(), "内存不足，无法转换为图片");
-                return null;
             }
         }
 

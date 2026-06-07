@@ -1,8 +1,11 @@
 package com.wanderer.journal.ui.pages;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
@@ -45,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -372,7 +376,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         ProgressDialogBuilder builder = new ProgressDialogBuilder(
                 this,
                 "分享日记",
-                "正在生成图片……"
+                "正在加载图片内容……"
         );
         builder.setNegativeButton("取消", (dialogInterface, i) -> {
             disposable.clear();
@@ -394,14 +398,59 @@ public class SharePreviewActivity extends AppCompatActivity {
                     @Override
                     public void onLoading(int current, int total) {
                         builder.setIndeterminate(false);
-                        builder.updateProgress(current, total, "正在生成图片……");
+                        builder.updateProgress(current, total, "正在加载图片内容……");
                     }
 
                     @Override
-                    public void onFileReady(File imageFile) {
-                        Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
-                        dialog.dismiss();
-                        listener.onImageGenerated(imageFile);
+                    public void onDomFinished(HtmlHelper.AndroidBridge bridge, int total) {
+                        builder.updateProgress(total, total, "正在保存图片……");
+
+                        //创建截屏任务
+                        Single<Bitmap> captureTask = Single.defer(() -> {
+                            Bitmap bitmap = MediaHelper.captureWebView(bridge.getBackgroundWebView());
+                            if (bitmap != null) {
+                                return Single.just(bitmap);
+                            } else {
+                                return Single.error(new RuntimeException("图片生成失败，内存不足"));
+                            }
+                        });
+
+                        //多线程执行任务
+                        disposable.add(captureTask
+                                .subscribeOn(AndroidSchedulers.mainThread())
+                                .flatMapCompletable(bitmap -> {
+                                    if (bitmap != null) {
+                                        //保存为文件并获取 Uri
+                                        File imageFile = MediaHelper.saveBitmapToFile(
+                                                SharePreviewActivity.this,
+                                                bitmap
+                                        );
+                                        bitmap.recycle(); //及时释放内存
+
+                                        Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                                        listener.onImageGenerated(imageFile);
+                                    } else {
+                                        return Completable.error(new RuntimeException("图片生成失败：内存不足"));
+                                    }
+
+                                    //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
+                                    new Handler(Looper.getMainLooper()).post(bridge::destroyWebView);
+
+                                    return Completable.complete();
+                                })
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        dialog::dismiss,
+                                        e -> {
+                                            ExceptionHelper.showExceptionDialog(
+                                                    SharePreviewActivity.this,
+                                                    e
+                                            );
+                                            dialog.dismiss();
+                                        }
+                                )
+                        );
                     }
 
                     @Override

@@ -15,7 +15,7 @@ public enum LogTags {
     DIARY_ALARM_RECEIVER("DiaryAlarmReceiver"),
     ALARM_HELPER("AlarmHelper"),
     HTML_HELPER("HtmlHelper"),
-    IMAGE_HELPER("ImageHelper"),
+    MEDIA_HELPER("MediaHelper"),
     SHARE_PREVIEW_ACTIVITY("SharePreviewActivity"),
     SHARE_WEB_VIEW("ShareWebView"),
     ZIP_HELPER("ZipHelper"),

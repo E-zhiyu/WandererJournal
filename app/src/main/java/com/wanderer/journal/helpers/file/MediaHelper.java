@@ -4,18 +4,21 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +30,39 @@ import java.io.OutputStream;
 import io.reactivex.rxjava3.core.Observable;
 
 public class MediaHelper {
+    /**
+     * 后台测绘并将 WebView 转换为全量长图
+     *
+     * @param webView 需要测绘的 WebView
+     */
+    @Nullable
+    public static Bitmap captureWebView(WebView webView) {
+        if (webView == null) return null;
+
+        try {
+            //对 WebView 进行布局
+            int screenWidthPx = ViewEdgeHelper.getScreenWidth(webView.getContext());
+            float density = webView.getContext().getResources().getDisplayMetrics().density;
+            Log.d(LogTags.MEDIA_HELPER.n(), "屏幕密度：" + density);
+            int realHeight = (int) (webView.getContentHeight() * density);
+            webView.measure(screenWidthPx, realHeight);
+            webView.layout(0, 0, screenWidthPx, realHeight);
+            Log.d(LogTags.MEDIA_HELPER.n(), "宽度：" + screenWidthPx);
+            Log.d(LogTags.MEDIA_HELPER.n(), "高度：" + realHeight);
+
+            //绘制到画布
+            Bitmap bitmap = Bitmap.createBitmap(screenWidthPx, realHeight, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            webView.scrollTo(0, 0); //滚动到顶部
+            webView.draw(canvas);
+
+            return bitmap;
+        } catch (OutOfMemoryError e) {
+            Log.e(LogTags.MEDIA_HELPER.n(), "内存不足，无法转换为图片");
+            return null;
+        }
+    }
+
     /**
      * 将 Bitmap 保存为文件
      *
@@ -51,7 +87,7 @@ public class MediaHelper {
 
             return imageFile;
         } catch (IOException e) {
-            Log.e(LogTags.IMAGE_HELPER.n(), "无法创建图片");
+            Log.e(LogTags.MEDIA_HELPER.n(), "无法创建图片");
             return null;
         }
     }
