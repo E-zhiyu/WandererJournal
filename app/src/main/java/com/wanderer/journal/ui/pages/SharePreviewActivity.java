@@ -52,6 +52,15 @@ public class SharePreviewActivity extends AppCompatActivity {
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphListAdapter adapter;           //段落列表适配器
 
+    private interface ImageGeneratedListener {
+        /**
+         * 图片生成完毕回调
+         *
+         * @param imageFile 生成的图片文件
+         */
+        void onImageGenerated(File imageFile);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,89 +125,47 @@ public class SharePreviewActivity extends AppCompatActivity {
                     new DiaryShareBottomSheet.OptionListener() {
                         @Override
                         public void onShareAsImage() {
-                            String json = formatToJson();
-                            HtmlHelper.generateAndShare(
-                                    json,
-                                    SharePreviewActivity.this,
-                                    new HtmlHelper.OnShareListener() {
-                                        @Override
-                                        public void onLoadingStart() {
-                                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
-                                        }
+                            generateImageAndDoAction(imageFile -> {
+                                //根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
+                                Uri uri = Uri.fromFile(imageFile);
+                                String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
 
-                                        @Override
-                                        public void onShareReady(File imageFile) {
-                                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
-
-                                            // 根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
-                                            Uri uri = Uri.fromFile(imageFile);
-                                            String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                                            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-
-                                            //调用系统分享 API
-                                            disposable.add(FileHelper.shareFileCompletable(
-                                                            SharePreviewActivity.this,
-                                                            imageFile,
-                                                            mimeType
-                                                    )
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .subscribeOn(Schedulers.io())
-                                                    .subscribe(
-                                                            () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
-                                                            e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
-                                                    ));
-                                        }
-
-                                        @Override
-                                        public void onError(String message) {
-                                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
-                                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                            );
+                                //调用系统分享 API
+                                disposable.add(FileHelper.shareFileCompletable(
+                                                SharePreviewActivity.this,
+                                                imageFile,
+                                                mimeType
+                                        )
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(
+                                                () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
+                                                e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
+                                        ));
+                            });
                         }
 
                         @Override
                         public void onSaveToAlbum() {
-                            String json = formatToJson();
-                            HtmlHelper.generateAndShare(
-                                    json,
-                                    SharePreviewActivity.this,
-                                    new HtmlHelper.OnShareListener() {
-                                        @Override
-                                        public void onLoadingStart() {
-                                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
-                                        }
-
-                                        @Override
-                                        public void onShareReady(File imageFile) {
-                                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
-
-                                            //保存至相册
-                                            Uri currentUri = Uri.fromFile(imageFile);
-                                            disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
-                                                    .observeOn(AndroidSchedulers.mainThread())
-                                                    .subscribeOn(Schedulers.io())
-                                                    .subscribe(
-                                                            uri -> Toast.makeText(
-                                                                    SharePreviewActivity.this,
-                                                                    "图片已保存至相册", Toast.LENGTH_SHORT
-                                                            ).show(),
-                                                            e -> ExceptionHelper.showExceptionDialog(
-                                                                    SharePreviewActivity.this,
-                                                                    e
-                                                            )
-                                                    )
-                                            );
-                                        }
-
-                                        @Override
-                                        public void onError(String message) {
-                                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
-                                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                            );
+                            generateImageAndDoAction(imageFile -> {
+                                //保存至相册
+                                Uri currentUri = Uri.fromFile(imageFile);
+                                disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(
+                                                uri -> Toast.makeText(
+                                                        SharePreviewActivity.this,
+                                                        "图片已保存至相册", Toast.LENGTH_SHORT
+                                                ).show(),
+                                                e -> ExceptionHelper.showExceptionDialog(
+                                                        SharePreviewActivity.this,
+                                                        e
+                                                )
+                                        )
+                                );
+                            });
                         }
                     }
             );
@@ -344,5 +311,36 @@ public class SharePreviewActivity extends AppCompatActivity {
         builder.append("]");
 
         return builder.toString();
+    }
+
+    /**
+     * 生成图片并执行指定的操作
+     *
+     * @param listener 生成图片后需要执行的操作
+     */
+    private void generateImageAndDoAction(ImageGeneratedListener listener) {
+        String json = formatToJson();
+        HtmlHelper.generateAndShare(
+                json,
+                SharePreviewActivity.this,
+                new HtmlHelper.OnShareListener() {
+                    @Override
+                    public void onLoadingStart() {
+                        Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
+                    }
+
+                    @Override
+                    public void onShareReady(File imageFile) {
+                        Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                        listener.onImageGenerated(imageFile);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                        Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 }
