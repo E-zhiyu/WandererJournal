@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.transition.Transition;
 import android.transition.TransitionListenerAdapter;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -24,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.databinding.ActivityMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -185,8 +187,11 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> Toast.makeText(FullScreenMediaActivity.this, "正在分享……", Toast.LENGTH_SHORT).show(),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                        () -> Log.i(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "调用分享API成功"),
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            Log.e(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "无法调用分享API");
+                        }
                 )
         );
     }

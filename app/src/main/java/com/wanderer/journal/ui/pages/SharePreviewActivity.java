@@ -147,8 +147,11 @@ public class SharePreviewActivity extends AppCompatActivity {
                                         .observeOn(AndroidSchedulers.mainThread())
                                         .subscribeOn(Schedulers.io())
                                         .subscribe(
-                                                () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
-                                                e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
+                                                () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
+                                                e -> {
+                                                    ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
+                                                    Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
+                                                }
                                         ));
                             });
                         }
@@ -359,8 +362,8 @@ public class SharePreviewActivity extends AppCompatActivity {
      * @param listener 生成图片后需要执行的操作
      */
     private void generateImageAndDoAction(ImageGeneratedListener listener) {
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(this,"分享日记","正在生成图片……");
-        builder.setNegativeButton("取消",(dialogInterface, i) -> {
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "分享日记", "正在生成图片……");
+        builder.setNegativeButton("取消", (dialogInterface, i) -> {
             disposable.clear();
             htmlHelper.cancelGenerateImage();
         });
