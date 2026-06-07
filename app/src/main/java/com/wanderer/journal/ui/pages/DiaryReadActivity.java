@@ -172,30 +172,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
         binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
 
-        //分享按钮
-        binding.shareBtn.setOnClickListener(view -> {
-            //判空
-            if (!selectionTracker.hasSelection()) {
-                Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            //获取所有选择的段落 ID
-            long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
-                    .mapToLong(Long::longValue)
-                    .toArray();
-
-            //创建 Intent
-            Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
-            skip2SharePreview.putExtras(bundle);
-
-            //跳转界面
-            startActivity(skip2SharePreview);
-        });
-        ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, 25, this);
-
         //日记段落列表
         initRecyclerView();
 
@@ -343,8 +319,30 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
-                setShareSelectMode(true);
+                if (!adapter.getSelectMode()) {
+                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                    setShareSelectMode(true);
+                } else {
+                    //判空
+                    if (!selectionTracker.hasSelection()) {
+                        Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
 
+                    //获取所有选择的段落 ID
+                    long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
+                            .mapToLong(Long::longValue)
+                            .toArray();
+
+                    //创建 Intent
+                    Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
+                    skip2SharePreview.putExtras(bundle);
+
+                    //跳转界面
+                    startActivity(skip2SharePreview);
+                }
                 return true;
             }
 
@@ -905,25 +903,12 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void setShareSelectMode(boolean isSelectMode) {
         if (isSelectMode == adapter.getSelectMode()) return;
 
-        //定义过渡动画
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.START))
-                .addTransition(new Fade())
-                .addTarget(binding.shareBtn)
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250);
-
-        //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
         //更新 UI
         adapter.setSelectMode(isSelectMode);
         if (isSelectMode) {
             backHelper.registerHandler(shareChoiceBackHandler);
-            binding.shareBtn.setVisibility(View.VISIBLE);
         } else {
             backHelper.unregisterHandler(shareChoiceBackHandler);
-            binding.shareBtn.setVisibility(View.GONE);
 
             selectionTracker.clearSelection();  //清空多选
         }

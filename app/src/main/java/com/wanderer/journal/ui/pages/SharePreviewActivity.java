@@ -24,6 +24,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -75,6 +76,9 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
+
+        //清空临时媒体目录
+        FileHelper.clearMediaTempDir(this);
     }
 
     /**
