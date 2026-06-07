@@ -12,7 +12,7 @@ body {
     text-align: center;
     padding: 20px 0;
     color: #333;
-    font-size: 25px;
+    font-size: 30px;
     font-weight: bold;
 }
 
@@ -90,13 +90,46 @@ body {
     justify-content: flex-start; /* 靠左对齐，顺应阅读习惯 */
 }
 
-/* 注脚样式 */
+/* --- 底部页脚样式 --- */
 .footer {
-    text-align: center;
-    margin-top: 40px;
-    color: #999;
+    display: flex;
+    justify-content: space-between; /* 左右两端对齐 */
+    align-items: center;            /* 垂直居中对齐 */
+    margin-top: 24px;
+    padding: 16px 20px;
+    background-color: #fcfcfc;      /* 给底部一个极淡的独立背景色底栏 */
+    border-top: 1px solid #eeeeee;   /* 一条精致的分隔线 */
+    border-radius: 20px;
+    box-sizing: border-box;
+}
+
+/* 页脚左侧文字区域 */
+.footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.app-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333333;
+}
+
+.app-slogan {
     font-size: 12px;
-    padding-bottom: 20px;
+    color: #999999;
+}
+
+/* 页脚右侧二维码样式 */
+.project-qrcode {
+    width: 64px;               /* 严格控制二维码尺寸，不能太大，64px~80px 视觉效果最好 */
+    height: 64px;
+    border-radius: 6px;        /* 微微的圆角 */
+    border: 3px solid #ffffff; /* 高级感的白边相框 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 淡淡的阴影，让二维码浮现出来 */
+    background-color: #ffffff;
+    display: block;
 }
 
 /* ================= 智能网格数量控制（完美修复版） ================= */
