@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -21,6 +20,8 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.LogTags;
 
+import java.io.File;
+
 public class HtmlHelper {
     public interface OnShareListener {
         /**
@@ -31,9 +32,9 @@ public class HtmlHelper {
         /**
          * 图片生成完毕回调
          *
-         * @param imageUri 生成的图片文件的 Uri
+         * @param imageFile 生成的图片文件
          */
-        void onShareReady(Uri imageUri);
+        void onShareReady(File imageFile);
 
         /**
          * 图片生成错误回调
@@ -140,11 +141,11 @@ public class HtmlHelper {
 
                 if (bitmap != null) {
                     //保存为文件并获取 Uri（复用之前写好的工具类方法）
-                    Uri imageUri = ImageHelper.saveBitmapToFile(context, bitmap);
+                    File imageFile = ImageHelper.saveBitmapToFile(context, bitmap);
                     bitmap.recycle(); //及时释放内存
 
                     if (listener != null) {
-                        listener.onShareReady(imageUri);
+                        listener.onShareReady(imageFile);
                     }
                 } else {
                     if (listener != null) listener.onError("生成图片失败，内存不足");

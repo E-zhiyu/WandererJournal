@@ -31,6 +31,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -118,8 +119,19 @@ public class SharePreviewActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onShareReady(Uri imageUri) {
-                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Uri:" + imageUri);
+                        public void onShareReady(File imageFile) {
+                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                            disposable.add(FileHelper.shareFileCompletable(
+                                            SharePreviewActivity.this,
+                                            imageFile,
+                                            "image/jpeg"
+                                    )
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
+                                            e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
+                                    ));
                         }
 
                         @Override

@@ -184,7 +184,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> Toast.makeText(FullScreenMediaActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
+                        () -> Toast.makeText(FullScreenMediaActivity.this, "正在分享……", Toast.LENGTH_SHORT).show(),
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
