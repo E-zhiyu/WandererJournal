@@ -22,6 +22,7 @@ import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.io.File;
+import java.util.List;
 
 public class HtmlHelper {
     private AndroidBridge bridge;
@@ -33,11 +34,19 @@ public class HtmlHelper {
         void onLoadingStart();
 
         /**
+         * DOM 正在注入回调
+         *
+         * @param current 注入完成的分段数量
+         * @param total   总共需要注入的分段数量
+         */
+        void onLoading(int current, int total);
+
+        /**
          * 图片生成完毕回调
          *
          * @param imageFile 生成的图片文件
          */
-        void onReady(File imageFile);
+        void onFileReady(File imageFile);
 
         /**
          * 图片生成错误回调
@@ -48,11 +57,23 @@ public class HtmlHelper {
     }
 
     /**
-     * 外部调用的主入口
+     * 生成图片
+     *
+     * @param jsonData 分好段的 JSON 字符串列表
+     * @param context  上下文
+     * @param listener 图片生成状态监听器
      */
     @SuppressLint("SetJavaScriptEnabled")
-    public void generateAndShare(String jsonData, Context context, ImageGenerateListener listener) {
-        if (listener != null) listener.onLoadingStart();
+    public void generateImage(List<String> jsonData, Context context, ImageGenerateListener listener) {
+        if (listener == null) throw new IllegalArgumentException("监听器不能为空");
+
+        //判空
+        if (jsonData.isEmpty()) {
+            listener.onError("JSON数据为空");
+            return;
+        } else {
+            listener.onLoadingStart();
+        }
 
         WebView.enableSlowWholeDocumentDraw();
 
@@ -79,7 +100,7 @@ public class HtmlHelper {
         backgroundWebView.layout(0, 0, screenWidthPx, 20);
 
         //注入 JS 桥梁
-        bridge = new AndroidBridge(backgroundWebView, context, listener);
+        bridge = new AndroidBridge(backgroundWebView, jsonData, context, listener);
         backgroundWebView.addJavascriptInterface(
                 bridge,
                 "AndroidShareBridge"
@@ -90,10 +111,9 @@ public class HtmlHelper {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                // 使用 Base64 编码解决换行和引号问题
-                String base64Data = Base64.encodeToString(jsonData.getBytes(), Base64.NO_WRAP);
-                String javascript = "javascript:initDataFromBase64('" + base64Data + "')";
-                backgroundWebView.evaluateJavascript(javascript, null);
+                if (bridge != null) {
+                    bridge.processNextPart();
+                }
             }
         });
 
@@ -116,8 +136,10 @@ public class HtmlHelper {
      */
     private static class AndroidBridge {
         private WebView backgroundWebView;
+        private final List<String> jsonData;
         private final Context context;
         private final ImageGenerateListener listener;
+        private int currentPart;    //当前所处的分段的下标
 
         /**
          * WebView 的 JS 代码桥梁
@@ -126,10 +148,26 @@ public class HtmlHelper {
          * @param context           上下文
          * @param listener          图片加载状态监听器
          */
-        public AndroidBridge(WebView backgroundWebView, Context context, ImageGenerateListener listener) {
+        public AndroidBridge(WebView backgroundWebView, List<String> jsonData, Context context, ImageGenerateListener listener) {
             this.backgroundWebView = backgroundWebView;
+            this.jsonData = jsonData;
             this.context = context;
             this.listener = listener;
+        }
+
+        /**
+         * 注入下一个分段的 DOM 数据
+         */
+        public void processNextPart() {
+            //判空
+            if (backgroundWebView == null) return;
+
+            // 使用 Base64 编码解决换行和引号问题
+            String base64Data = Base64.encodeToString(jsonData.get(currentPart).getBytes(), Base64.NO_WRAP);
+            String javascript = "javascript:initDataFromBase64('" + base64Data + "')";
+            backgroundWebView.evaluateJavascript(javascript, null);
+
+            currentPart++;
         }
 
         /**
@@ -137,30 +175,44 @@ public class HtmlHelper {
          */
         @JavascriptInterface
         public void onRenderFinished() {
-            new Handler(Looper.getMainLooper()).post(() -> {
-                if (backgroundWebView == null) return;
+            if (backgroundWebView == null) return;
 
-                //网页里的 DOM 已经渲染完毕，开始后台截图
-                float density = context.getResources().getDisplayMetrics().density;
-                Log.d(LogTags.HTML_HELPER.n(), "屏幕密度：" + density);
-                int contentHeight = backgroundWebView.getContentHeight();
-                Bitmap bitmap = captureWebView(backgroundWebView, (int) (contentHeight * density));
+            //判断所有数据是否全部注入完毕
+            if (currentPart >= jsonData.size()) {
+                new Handler(Looper.getMainLooper()).post(() -> {
 
-                if (bitmap != null) {
-                    //保存为文件并获取 Uri（复用之前写好的工具类方法）
-                    File imageFile = MediaHelper.saveBitmapToFile(context, bitmap);
-                    bitmap.recycle(); //及时释放内存
+                    //网页里的 DOM 已经渲染完毕，开始后台截图
+                    float density = context.getResources().getDisplayMetrics().density;
+                    Log.d(LogTags.HTML_HELPER.n(), "屏幕密度：" + density);
+                    int contentHeight = backgroundWebView.getContentHeight();
+                    Bitmap bitmap = captureWebView(backgroundWebView, (int) (contentHeight * density));
 
-                    if (listener != null) {
-                        listener.onReady(imageFile);
+                    if (bitmap != null) {
+                        //保存为文件并获取 Uri（复用之前写好的工具类方法）
+                        File imageFile = MediaHelper.saveBitmapToFile(context, bitmap);
+                        bitmap.recycle(); //及时释放内存
+
+                        if (listener != null) {
+                            listener.onFileReady(imageFile);
+                        }
+                    } else {
+                        if (listener != null) listener.onError("生成图片失败，内存不足");
                     }
-                } else {
-                    if (listener != null) listener.onError("生成图片失败，内存不足");
-                }
 
-                //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
-                destroyWebView();
-            });
+                    //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
+                    destroyWebView();
+                });
+            } else {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    if (listener != null) {
+                        listener.onLoading(currentPart, jsonData.size());
+                    }
+                });
+                new Handler(Looper.getMainLooper()).postDelayed(
+                        this::processNextPart,
+                        100 //延迟再注入，间隔期间用于更新 Android 端的UI
+                );
+            }
         }
 
         /**

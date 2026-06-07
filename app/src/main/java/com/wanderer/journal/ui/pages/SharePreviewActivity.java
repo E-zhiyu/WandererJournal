@@ -284,76 +284,83 @@ public class SharePreviewActivity extends AppCompatActivity {
     /**
      * 将列表中的内容格式化为 JSON，供 WebView 加载内容
      *
-     * @return 转换得到的 JSON 字符串，结构为[{"type":***,"content":***,"imageUris":***,"time":***},……]，其中 imageUris 和 time 字段只有段落才有
+     * @return 转换得到的分段 JSON 字符串列表，结构为[{"type":***,"content":***,"imageUris":***,"time":***},……]，其中 imageUris 和 time 字段只有段落才有
      */
     @NonNull
-    private String formatToJson() {
+    private List<String> formatToJson() {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");   //日期转换器
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");             //时间转换器
 
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
-        //遍历转换为 JSON
-        StringBuilder builder = new StringBuilder("[");
-        int i = 0;
-        for (ParagraphUiModel model : uiModelList) {
-            builder.append("{");
-            if (model instanceof ParagraphUiModel.Separator) {
-                builder.append("\"type\":\"date\",\"content\":");
-                builder.append("\"");
-                String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
-                builder.append(date);
-                builder.append("\"");
-            } else if (model instanceof ParagraphUiModel.Item) {
-                ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
-                ParagraphEntity paragraph = entityModel.getParagraph();
+        //分段并转换为 JSON 字符串列表
+        final int STEP = 1;
+        List<String> jsonList = new ArrayList<>();
+        for (int currentStart = 0; currentStart < uiModelList.size(); currentStart += STEP) {
+            int end = Math.min(currentStart + STEP, uiModelList.size());
+            List<ParagraphUiModel> subList = uiModelList.subList(currentStart, end);
+            StringBuilder builder = new StringBuilder("[");
+            int i = 0;
+            for (ParagraphUiModel model : subList) {
+                builder.append("{");
+                if (model instanceof ParagraphUiModel.Separator) {
+                    builder.append("\"type\":\"date\",\"content\":");
+                    builder.append("\"");
+                    String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
+                    builder.append(date);
+                    builder.append("\"");
+                } else if (model instanceof ParagraphUiModel.Item) {
+                    ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
+                    ParagraphEntity paragraph = entityModel.getParagraph();
 
-                //添加段落内容字段
-                builder.append("\"type\":\"text\",\"content\":");
-                builder.append("\"");
-                String paragraphContent = paragraph.getContent();
-                builder.append(paragraphContent);
-                builder.append("\"");
+                    //添加段落内容字段
+                    builder.append("\"type\":\"text\",\"content\":");
+                    builder.append("\"");
+                    String paragraphContent = paragraph.getContent();
+                    builder.append(paragraphContent);
+                    builder.append("\"");
 
-                //添加图片字段
-                List<MediaEntity> mediaList = entityModel.getMediaList();
-                if (!mediaList.isEmpty()) {
-                    builder.append(",");
-                    builder.append("\"imageUris\":[");
+                    //添加图片字段
+                    List<MediaEntity> mediaList = entityModel.getMediaList();
+                    if (!mediaList.isEmpty()) {
+                        builder.append(",");
+                        builder.append("\"imageUris\":[");
 
-                    int mediaIndex = 0;
-                    for (MediaEntity media : mediaList) {
-                        builder.append("\"");
-                        builder.append(media.getFileUri().toString());
-                        builder.append("\"");
+                        int mediaIndex = 0;
+                        for (MediaEntity media : mediaList) {
+                            builder.append("\"");
+                            builder.append(media.getFileUri().toString());
+                            builder.append("\"");
 
-                        if (mediaIndex < mediaList.size() - 1) {
-                            builder.append(",");
+                            if (mediaIndex < mediaList.size() - 1) {
+                                builder.append(",");
+                            }
+                            mediaIndex++;
                         }
-                        mediaIndex++;
+                        builder.append("]");
                     }
-                    builder.append("]");
+
+                    //添加时间字段
+                    String time = paragraph.getCreateTime().format(timeFormatter);
+                    builder.append(",");
+                    builder.append("\"time\":");
+                    builder.append("\"");
+                    builder.append(time);
+                    builder.append("\"");
                 }
 
-                //添加时间字段
-                String time = paragraph.getCreateTime().format(timeFormatter);
-                builder.append(",");
-                builder.append("\"time\":");
-                builder.append("\"");
-                builder.append(time);
-                builder.append("\"");
+                builder.append("}");
+                if (i < subList.size() - 1) {
+                    builder.append(",");
+                }
+                i++;
             }
-
-            builder.append("}");
-            if (i < uiModelList.size() - 1) {
-                builder.append(",");
-            }
-            i++;
+            builder.append("]");
+            jsonList.add(builder.toString());
         }
-        builder.append("]");
 
-        return builder.toString();
+        return jsonList;
     }
 
     /**
@@ -362,16 +369,21 @@ public class SharePreviewActivity extends AppCompatActivity {
      * @param listener 生成图片后需要执行的操作
      */
     private void generateImageAndDoAction(ImageGeneratedListener listener) {
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "分享日记", "正在生成图片……");
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(
+                this,
+                "分享日记",
+                "正在生成图片……"
+        );
         builder.setNegativeButton("取消", (dialogInterface, i) -> {
             disposable.clear();
             htmlHelper.cancelGenerateImage();
+            Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
         });
         AlertDialog dialog = builder.show();
 
-        String json = formatToJson();
-        htmlHelper.generateAndShare(
-                json,
+        List<String> jsonList = formatToJson();
+        htmlHelper.generateImage(
+                jsonList,
                 SharePreviewActivity.this,
                 new HtmlHelper.ImageGenerateListener() {
                     @Override
@@ -380,7 +392,13 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onReady(File imageFile) {
+                    public void onLoading(int current, int total) {
+                        builder.setIndeterminate(false);
+                        builder.updateProgress(current, total, "正在生成图片……");
+                    }
+
+                    @Override
+                    public void onFileReady(File imageFile) {
                         Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
                         dialog.dismiss();
                         listener.onImageGenerated(imageFile);
