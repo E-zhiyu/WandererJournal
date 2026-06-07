@@ -427,6 +427,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                 new SelectionTracker.SelectionPredicate<>() {
                     @Override
                     public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
+                        if (key < 0) return false;
+
                         boolean isItem = false;
                         List<ParagraphUiModel> snapshot = adapter.snapshot().getItems();
                         for (int i = 0; i < snapshot.size(); i++) {
@@ -445,9 +447,13 @@ public class DiaryReadActivity extends AppCompatActivity {
                             return false;
                         }
 
-                        boolean isSelectMode = adapter.getSelectMode();
-                        boolean isItem = adapter.peek(position) instanceof ParagraphUiModel.Item;
-                        return isSelectMode && isItem;
+                        try {
+                            boolean isSelectMode = adapter.getSelectMode();
+                            boolean isItem = adapter.peek(position) instanceof ParagraphUiModel.Item;
+                            return isSelectMode && isItem;
+                        } catch (IndexOutOfBoundsException e) {
+                            return false;
+                        }
                     }
 
                     @Override

@@ -23,6 +23,7 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -37,9 +38,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
                 return oldParagraph.getParagraphId() == newParagraph.getParagraphId();
             } else if (oldItem instanceof ParagraphUiModel.Separator && newItem instanceof ParagraphUiModel.Separator) {
-                String oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
-                String newDateStr = ((ParagraphUiModel.Separator) newItem).date;
-                return oldDateStr.equals(newDateStr);
+                LocalDate oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
+                LocalDate newDateStr = ((ParagraphUiModel.Separator) newItem).date;
+                return oldDateStr.isEqual(newDateStr);
             } else {
                 return false;
             }
@@ -66,6 +67,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
 
     public interface OnMediaClickedListener {
         /**
@@ -99,7 +101,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     /**
      * 段落适配器构造方法
      *
-     * @param mediaClickedListener   媒体预览图点击监听
+     * @param mediaClickedListener 媒体预览图点击监听
      */
     public ParagraphListAdapter(
             ParagraphListAdapter.OnMediaClickedListener mediaClickedListener
@@ -186,7 +188,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本
             String content = paragraph.getContent();
-                itemHolder.binding.contentText.setText(content);
+            itemHolder.binding.contentText.setText(content);
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
@@ -221,7 +223,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         } else if (holder instanceof ParagraphListAdapter.DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
             separatorViewHolder.binding.dateText.setText(dateStr);
         }
     }
@@ -229,8 +231,8 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     /**
      * 获取情绪标签 Chip 视图
      *
-     * @param context   上下文
-     * @param title     情绪标签名称
+     * @param context 上下文
+     * @param title   情绪标签名称
      * @return 显示情绪标签名称的{@link Chip}实例
      */
     @NonNull

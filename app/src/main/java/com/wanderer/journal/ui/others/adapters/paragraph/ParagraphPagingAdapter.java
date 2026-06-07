@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -34,6 +35,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -46,6 +48,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
     private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
     private boolean isSelectMode = false;                               //是否是选择模式
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -54,9 +57,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
                 return oldParagraph.getParagraphId() == newParagraph.getParagraphId();
             } else if (oldItem instanceof ParagraphUiModel.Separator && newItem instanceof ParagraphUiModel.Separator) {
-                String oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
-                String newDateStr = ((ParagraphUiModel.Separator) newItem).date;
-                return oldDateStr.equals(newDateStr);
+                LocalDate oldDateStr = ((ParagraphUiModel.Separator) oldItem).date;
+                LocalDate newDateStr = ((ParagraphUiModel.Separator) newItem).date;
+                return oldDateStr.isEqual(newDateStr);
             } else {
                 return false;
             }
@@ -126,6 +129,41 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             super(binding.getRoot());
             this.binding = binding;
         }
+
+        /**
+         * 为 Selection 库提供信息
+         *
+         * @return Selection 库的 Item 信息
+         */
+        public ItemDetailsLookup.ItemDetails<Long> getItemDetails() {
+            return new ItemDetailsLookup.ItemDetails<>() {
+                @Override
+                public int getPosition() {
+                    return getBindingAdapterPosition();
+                }
+
+                @Nullable
+                @Override
+                public Long getSelectionKey() {
+                    int pos = getBindingAdapterPosition();
+                    if (pos == RecyclerView.NO_POSITION) return null;
+
+                    // 通过 adapter.peek 检查当前项是不是占位符
+                    ParagraphPagingAdapter adapter = (ParagraphPagingAdapter) getBindingAdapter();
+                    ParagraphUiModel item = null;
+                    if (adapter != null) {
+                        item = adapter.peek(pos);
+                    }
+                    if (!(item instanceof ParagraphUiModel.Separator)) {
+                        return null;
+                    }
+
+                    //转换为时间戳并返回负数 Key
+                    Long timeMillis = DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
+                    return -timeMillis;
+                }
+            };
+        }
     }
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
@@ -186,7 +224,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                         item = adapter.peek(pos);
                     }
                     if (!(item instanceof ParagraphUiModel.Item)) {
-                        return null; // 如果是占位符，返回 null 拒绝激活多选
+                        return null;
                     }
                     return ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId();
                 }
@@ -404,7 +442,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
             separatorViewHolder.binding.dateText.setText(dateStr);
             separatorViewHolder.binding.getRoot().setVisibility(View.VISIBLE);
         }

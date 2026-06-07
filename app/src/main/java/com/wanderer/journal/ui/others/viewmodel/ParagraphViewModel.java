@@ -18,7 +18,6 @@ import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -55,9 +54,8 @@ public class ParagraphViewModel extends ViewModel {
                     if (after == null) return null;
 
                     if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
                         return new ParagraphUiModel.Separator(
-                                after.model.getParagraph().getCreateTime().format(formatter)
+                                after.model.getParagraph().getCreateTime().toLocalDate()
                         );
                     }
                     return null;

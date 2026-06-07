@@ -198,9 +198,8 @@ public class SharePreviewActivity extends AppCompatActivity {
         }
 
         //第一个位置插入日期分隔符
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
         uiModelList.add(new ParagraphUiModel.Separator(
-                paragraphList.get(0).getParagraph().getCreateTime().format(formatter))
+                paragraphList.get(0).getParagraph().getCreateTime().toLocalDate())
         );
 
         //遍历插入段落和剩下的分隔符
@@ -218,7 +217,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
             //比较日期并判断是否需要插入分隔符
             if (nextTime != null && !currentTime.toLocalDate().isEqual(nextTime.toLocalDate())) {
-                uiModelList.add(new ParagraphUiModel.Separator(nextTime.format(formatter)));
+                uiModelList.add(new ParagraphUiModel.Separator(nextTime.toLocalDate()));
             }
         }
 
@@ -232,6 +231,8 @@ public class SharePreviewActivity extends AppCompatActivity {
      */
     @NonNull
     private String formatToJson() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
@@ -243,7 +244,7 @@ public class SharePreviewActivity extends AppCompatActivity {
             if (model instanceof ParagraphUiModel.Separator) {
                 builder.append("\"type\":\"date\",\"content\":");
                 builder.append("\"");
-                String date = ((ParagraphUiModel.Separator) model).date;
+                String date = ((ParagraphUiModel.Separator) model).date.format(formatter);
                 builder.append(date);
                 builder.append("\"");
             } else if (model instanceof ParagraphUiModel.Item) {

@@ -24,6 +24,8 @@ public class ParagraphLookup extends ItemDetailsLookup<Long> {
             RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(view);
             if (holder instanceof ParagraphPagingAdapter.ParagraphViewHolder) {
                 return ((ParagraphPagingAdapter.ParagraphViewHolder) holder).getItemDetails();
+            } else if (holder instanceof ParagraphPagingAdapter.DateSeparatorViewHolder) {
+                return ((ParagraphPagingAdapter.DateSeparatorViewHolder) holder).getItemDetails();
             }
         }
         return null;
