@@ -125,6 +125,9 @@ public class DiaryReadActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        //移除待滚动的任务
+        binding.contentRecycler.removeCallbacks(scrollToInit);
+
         binding = null;
         disposable.dispose();
     }
