@@ -29,17 +29,43 @@ body {
     border-radius: 12px;
 }
 
-/* 日记段落消息气泡样式 */
+/* 日记消息气泡基本样式（保持你之前的优雅气泡外观） */
 .paragraph-bubble {
     background-color: #ffffff;
     color: #222222;
-    padding: 14px 16px;
+    padding: 16px;
     border-radius: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     line-height: 1.6;
     font-size: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     word-wrap: break-word;
+}
+
+/* 气泡内部的纯文字区域 */
+.bubble-text {
+    margin-bottom: 0; /* 默认如果没有图片，文字居底 */
+}
+
+/* 当文字下方有图片时，动态通过相邻兄弟选择器给文字下方拉开一些间距 */
+.bubble-text + .bubble-image-container {
+    margin-top: 12px;
+}
+
+/* 气泡内部图片容器 */
+.bubble-image-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start; /* 靠左对齐，顺应阅读习惯 */
+}
+
+/* 气泡内图片的具体样式 */
+.bubble-image-node {
+    max-width: 100%;         /* 撑满气泡内部的最大可用宽度 */
+    max-height: 450px;       /* 限制最大高度，防止图片过长拉碎视口 */
+    object-fit: cover;       /* 保持绝佳的裁剪比例 */
+    border-radius: 8px;      /* 比外层大框稍微小一点的圆角，套娃视觉上更精致 */
+    border: 1px solid rgba(0, 0, 0, 0.05); /* 防止纯白图片与气泡底色融为一体 */
 }
 
 /* 注脚样式 */
@@ -49,4 +75,68 @@ body {
     color: #999;
     font-size: 12px;
     padding-bottom: 20px;
+}
+
+/* 文本与图片网格之间的间距 */
+.bubble-text + .bubble-image-grid {
+    margin-top: 12px;
+}
+
+/* 通用网格基础配置 */
+.bubble-image-grid {
+    display: grid;
+    gap: 8px; /* 图片之间的无缝间隙 */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 统一控制气泡内图片的缩放表现 */
+.bubble-image-node {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 保证图片在格子内不变形且完美裁剪 */
+    border-radius: 8px; /* 精致圆角 */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ================= 智能网格数量控制 ================= */
+
+/* 只有 1 张图 —— 大图显示，保留你之前的自然宽高比 */
+.images-count-1 {
+    grid-template-columns: 1fr;
+}
+.images-count-1 .bubble-image-node {
+    max-height: 400px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* 有 2 张图 —— 双列并排，正方形格子 */
+.images-count-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+.images-count-2 .grid-image-item {
+    width: 42vh
+    aspect-ratio: 1 / 1; /* 强制格子变成完美的正方形 */
+}
+
+/* 3张及以上（如九宫格） —— 三列标准网格排列 */
+.images-count-3,
+.images-count-4,
+.images-count-5,
+.images-count-6,
+.images-count-7,
+.images-count-8,
+.images-count-9 {
+    grid-template-columns: repeat(3, 1fr);
+}
+.images-count-3 .grid-image-item,
+.images-count-4 .grid-image-item,
+.images-count-5 .grid-image-item,
+.images-count-6 .grid-image-item,
+.images-count-7 .grid-image-item,
+.images-count-8 .grid-image-item,
+.images-count-9 .grid-image-item {
+    width: 28vh
+    aspect-ratio: 1 / 1;
 }

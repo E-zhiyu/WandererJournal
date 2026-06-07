@@ -16,20 +16,58 @@ function initData(jsonString) {
 
     data.forEach(item => {
         if (item.type === 'date') {
-            // 插入日期分隔符
             htmlContent += `<div class="date-divider"><span>${item.content}</span></div>`;
-        } else if (item.type === 'text') {
-            // 插入日记内容气泡
-            htmlContent += `<div class="paragraph-bubble">${item.content}</div>`;
+        }
+        else if (item.type === 'text') {
+            let innerImgHtml = '';
+
+            // 判断当前段落是否有图片，且数组不为空
+            if (item.imageUris && item.imageUris.length > 0) {
+                const imgCount = item.imageUris.length;
+                let imgItemsHtml = '';
+
+                // 遍历数组生成所有的 <img> 标签
+                item.imageUris.forEach(uri => {
+                    imgItemsHtml += `
+                        <div class="grid-image-item">
+                            <img src="${uri}" class="bubble-image-node" alt="日记配图" />
+                        </div>
+                    `;
+                });
+
+                // 根据图片数量动态赋予类名（如 media-grid images-count-3）
+                innerImgHtml = `
+                    <div class="bubble-image-grid images-count-${imgCount}">
+                        ${imgItemsHtml}
+                    </div>
+                `;
+            }
+
+            // 图文完美融合在同一个气泡中
+            htmlContent += `
+                <div class="paragraph-bubble">
+                    <div class="bubble-text">${item.content}</div>
+                    ${innerImgHtml}
+                </div>
+            `;
         }
     });
 
     container.innerHTML = htmlContent;
 
-    // 留给 WebView 足够的时间去把 HTML 渲染成可见的皮肤样式
-    setTimeout(function() {
-        if (window.AndroidShareBridge) {
-            window.AndroidShareBridge.onRenderFinished();
-        }
-    }, 150);
+    // 多图高度拦截判定：必须等气泡内所有的图片全部加载完毕，再通知 Android 截图
+    const images = container.getElementsByTagName('img');
+    if (images.length === 0) {
+        triggerRenderFinished();
+    } else {
+        let loadedCount = 0;
+        Array.from(images).forEach(img => {
+            img.onload = img.onerror = function() {
+                loadedCount++;
+                if (loadedCount === images.length && window.AndroidShareBridge) {
+                    window.AndroidShareBridge.onRenderFinished();
+                }
+            };
+        });
+    }
 }

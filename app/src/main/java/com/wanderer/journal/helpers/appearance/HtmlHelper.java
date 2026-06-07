@@ -61,7 +61,10 @@ public class HtmlHelper {
         backgroundWebView.getSettings().setJavaScriptEnabled(true);
         backgroundWebView.getSettings().setUseWideViewPort(true);
         backgroundWebView.getSettings().setLoadWithOverviewMode(true);
-        backgroundWebView.getSettings().setSupportZoom(false); // 禁用缩放
+        backgroundWebView.getSettings().setSupportZoom(false);      //禁用缩放
+        backgroundWebView.getSettings().setAllowFileAccess(true);   //允许加载本地文件
+        backgroundWebView.getSettings().setAllowFileAccessFromFileURLs(true);
+        backgroundWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
 
         //动态获取当前手机屏幕的真实物理像素宽度 (px)
         int screenWidthPx = ViewEdgeHelper.getScreenWidth(context);

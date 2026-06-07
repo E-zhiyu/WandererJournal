@@ -295,11 +295,32 @@ public class SharePreviewActivity extends AppCompatActivity {
                 builder.append(date);
                 builder.append("\"");
             } else if (model instanceof ParagraphUiModel.Item) {
+                //添加段落内容
                 builder.append("\"type\":\"text\",\"content\":");
                 builder.append("\"");
                 String paragraphContent = ((ParagraphUiModel.Item) model).model.getParagraph().getContent();
                 builder.append(paragraphContent);
                 builder.append("\"");
+
+                //添加图片内容
+                List<MediaEntity> mediaList = ((ParagraphUiModel.Item) model).model.getMediaList();
+                if (!mediaList.isEmpty()) {
+                    builder.append(",");
+                    builder.append("\"imageUris\":[");
+
+                    int mediaIndex = 0;
+                    for (MediaEntity media : mediaList) {
+                        builder.append("\"");
+                        builder.append(media.getFileUri().toString());
+                        builder.append("\"");
+
+                        if (mediaIndex < mediaList.size() - 1) {
+                            builder.append(",");
+                        }
+                        mediaIndex++;
+                    }
+                    builder.append("]");
+                }
             }
 
             builder.append("}");
