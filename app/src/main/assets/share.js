@@ -1,14 +1,14 @@
 function initDataFromBase64(base64String) {
     // web 端的 window.atob 可以解码 base64，再通过 decodeURIComponent 解决中文乱码
     const jsonString = decodeURIComponent(escape(window.atob(base64String)));
-    initData(jsonString); // 调用原本的解析方法
+    addData(jsonString); // 调用原本的解析方法
 }
 
 /**
  * 供 Android 端调用的原生 JS 方法
  * @param jsonString 传递过来的日记段落 JSON 数组字符串
  */
-function initData(jsonString) {
+function addData(jsonString) {
     const container = document.getElementById('diary-container');
     const data = JSON.parse(jsonString);
 
@@ -63,7 +63,7 @@ function initData(jsonString) {
     });
 
     //注入到 DOM 中
-    container.innerHTML = htmlContent;
+    container.innerHTML += htmlContent;
 
     //多图高度拦截判定：必须等气泡内所有的图片全部加载完毕，再通知 Android 截图
     const images = container.getElementsByTagName('img');
