@@ -22,6 +22,7 @@ import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
@@ -274,11 +275,12 @@ public class SharePreviewActivity extends AppCompatActivity {
     /**
      * 将列表中的内容格式化为 JSON，供 WebView 加载内容
      *
-     * @return 转换得到的 JSON 字符串（结构为[{"type":***,"content":***},……]）
+     * @return 转换得到的 JSON 字符串，结构为[{"type":***,"content":***,"imageUris":***,"time":***},……]，其中 imageUris 和 time 字段只有段落才有
      */
     @NonNull
     private String formatToJson() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");   //日期转换器
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");             //时间转换器
 
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
@@ -291,19 +293,22 @@ public class SharePreviewActivity extends AppCompatActivity {
             if (model instanceof ParagraphUiModel.Separator) {
                 builder.append("\"type\":\"date\",\"content\":");
                 builder.append("\"");
-                String date = ((ParagraphUiModel.Separator) model).date.format(formatter);
+                String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
                 builder.append(date);
                 builder.append("\"");
             } else if (model instanceof ParagraphUiModel.Item) {
-                //添加段落内容
+                ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
+                ParagraphEntity paragraph = entityModel.getParagraph();
+
+                //添加段落内容字段
                 builder.append("\"type\":\"text\",\"content\":");
                 builder.append("\"");
-                String paragraphContent = ((ParagraphUiModel.Item) model).model.getParagraph().getContent();
+                String paragraphContent = paragraph.getContent();
                 builder.append(paragraphContent);
                 builder.append("\"");
 
-                //添加图片内容
-                List<MediaEntity> mediaList = ((ParagraphUiModel.Item) model).model.getMediaList();
+                //添加图片字段
+                List<MediaEntity> mediaList = entityModel.getMediaList();
                 if (!mediaList.isEmpty()) {
                     builder.append(",");
                     builder.append("\"imageUris\":[");
@@ -321,6 +326,14 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
                     builder.append("]");
                 }
+
+                //添加时间字段
+                String time = paragraph.getCreateTime().format(timeFormatter);
+                builder.append(",");
+                builder.append("\"time\":");
+                builder.append("\"");
+                builder.append(time);
+                builder.append("\"");
             }
 
             builder.append("}");

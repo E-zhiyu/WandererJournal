@@ -29,6 +29,37 @@ body {
     border-radius: 20px;
 }
 
+/* 气泡内部容器，开启相对定位，方便整体排版控制 */
+.bubble-content-wrapper {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+
+/* 时间戳的精致样式 */
+.bubble-time {
+    float: right;            /* 【核心属性】让时间戳向右浮动 */
+    font-size: 12px;         /* 字体小巧 */
+    color: #aaaaaa;          /* 淡淡的灰色，高级感 */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 选用无衬线西文字体，数字更好看 */
+    margin-top: 8px;         /* 与上方内容拉开轻微距离 */
+    margin-left: 12px;        /* 留出左侧间距，防止文字和它贴太近 */
+    line-height: 12px;
+    user-select: none;
+}
+
+/* 【黑魔法清除浮动】防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
+.bubble-content-wrapper::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+/* --- 细节微调：如果时间戳紧跟在多图网格后面，微调它的间距 --- */
+.bubble-image-grid + .bubble-time {
+    margin-top: 10px;
+}
+
 /* 日记消息气泡基本样式（保持你之前的优雅气泡外观） */
 .paragraph-bubble {
     background-color: #ffffff;

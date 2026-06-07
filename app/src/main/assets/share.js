@@ -43,11 +43,21 @@ function initData(jsonString) {
                 `;
             }
 
-            // 图文完美融合在同一个气泡中
+            // 2. 处理时间戳（如果没有传时间，给一个保底空标签）
+            let timeHtml = '';
+            if (item.time && item.time.trim() !== '') {
+                timeHtml = `<span class="bubble-time">${item.time}</span>`;
+            }
+
+            // 3. 【核心修改】将时间戳拼接在内容最后。
+            // 如果有图片，时间戳会顺延到图片右下方；如果是纯文本，时间戳会在文本右下方。
             htmlContent += `
                 <div class="paragraph-bubble">
-                    <div class="bubble-text">${item.content}</div>
-                    ${innerImgHtml}
+                    <div class="bubble-content-wrapper">
+                        <div class="bubble-text">${item.content}</div>
+                        ${innerImgHtml}
+                        ${timeHtml}
+                    </div>
                 </div>
             `;
         }
@@ -65,10 +75,21 @@ function initData(jsonString) {
             img.onload = img.onerror = function() {
                 loadedCount++;
                 //TODO:每加载一个就通知Java的进度条对话框
-                if (loadedCount === images.length && window.AndroidShareBridge) {
-                    window.AndroidShareBridge.onRenderFinished();
+                if (loadedCount === images.length) {
+                    triggerRenderFinished();
                 }
             };
         });
     }
+}
+
+/**
+ * 通知 Java 端网页已加载完毕
+ */
+function triggerRenderFinished() {
+    setTimeout(function() {
+        if (window.AndroidShareBridge) {
+            window.AndroidShareBridge.onRenderFinished();
+        }
+    }, 150);
 }
