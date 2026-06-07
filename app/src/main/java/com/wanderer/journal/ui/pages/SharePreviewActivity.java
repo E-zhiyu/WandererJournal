@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -29,7 +30,9 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
+import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
+import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -109,46 +112,97 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //导出按钮
         binding.shareBtn.setOnClickListener(view -> {
-            String json = formatToJson();
-            HtmlHelper.generateAndShare(
-                    json,
-                    this,
-                    new HtmlHelper.OnShareListener() {
+            DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet(
+                    new DiaryShareBottomSheet.OptionListener() {
                         @Override
-                        public void onLoadingStart() {
-                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
+                        public void onShareAsImage() {
+                            String json = formatToJson();
+                            HtmlHelper.generateAndShare(
+                                    json,
+                                    SharePreviewActivity.this,
+                                    new HtmlHelper.OnShareListener() {
+                                        @Override
+                                        public void onLoadingStart() {
+                                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
+                                        }
+
+                                        @Override
+                                        public void onShareReady(File imageFile) {
+                                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+
+                                            // 根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
+                                            Uri uri = Uri.fromFile(imageFile);
+                                            String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                                            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+
+                                            //调用系统分享 API
+                                            disposable.add(FileHelper.shareFileCompletable(
+                                                            SharePreviewActivity.this,
+                                                            imageFile,
+                                                            mimeType
+                                                    )
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .subscribeOn(Schedulers.io())
+                                                    .subscribe(
+                                                            () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
+                                                            e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
+                                                    ));
+                                        }
+
+                                        @Override
+                                        public void onError(String message) {
+                                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                            );
                         }
 
                         @Override
-                        public void onShareReady(File imageFile) {
-                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                        public void onSaveToAlbum() {
+                            String json = formatToJson();
+                            HtmlHelper.generateAndShare(
+                                    json,
+                                    SharePreviewActivity.this,
+                                    new HtmlHelper.OnShareListener() {
+                                        @Override
+                                        public void onLoadingStart() {
+                                            Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
+                                        }
 
-                            // 根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
-                            Uri uri = Uri.fromFile(imageFile);
-                            String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+                                        @Override
+                                        public void onShareReady(File imageFile) {
+                                            Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
 
-                            //调用系统分享 API
-                            disposable.add(FileHelper.shareFileCompletable(
-                                            SharePreviewActivity.this,
-                                            imageFile,
-                                            mimeType
-                                    )
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(
-                                            () -> Toast.makeText(SharePreviewActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
-                                            e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
-                                    ));
-                        }
+                                            //保存至相册
+                                            Uri currentUri = Uri.fromFile(imageFile);
+                                            disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .subscribeOn(Schedulers.io())
+                                                    .subscribe(
+                                                            uri -> Toast.makeText(
+                                                                    SharePreviewActivity.this,
+                                                                    "图片已保存至相册", Toast.LENGTH_SHORT
+                                                            ).show(),
+                                                            e -> ExceptionHelper.showExceptionDialog(
+                                                                    SharePreviewActivity.this,
+                                                                    e
+                                                            )
+                                                    )
+                                            );
+                                        }
 
-                        @Override
-                        public void onError(String message) {
-                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
-                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        @Override
+                                        public void onError(String message) {
+                                            Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                                            Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                            );
                         }
                     }
             );
+            bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.getTag());
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.shareBtn);
         ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, this);
