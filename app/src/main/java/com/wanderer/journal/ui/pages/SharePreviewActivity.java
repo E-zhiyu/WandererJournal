@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
@@ -34,6 +35,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
+import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -52,6 +54,7 @@ public class SharePreviewActivity extends AppCompatActivity {
     private long[] sharedParagraphIds;              //分享的段落 ID 数组
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphListAdapter adapter;           //段落列表适配器
+    private final HtmlHelper htmlHelper = new HtmlHelper(); // HTML 网页生成器
 
     private interface ImageGeneratedListener {
         /**
@@ -92,11 +95,14 @@ public class SharePreviewActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        binding = null;
-        disposable.dispose();
+        //取消图片生成
+        htmlHelper.cancelGenerateImage();
 
         //清空临时媒体目录
         FileHelper.clearMediaTempDir(this);
+
+        binding = null;
+        disposable.dispose();
     }
 
     /**
@@ -353,25 +359,34 @@ public class SharePreviewActivity extends AppCompatActivity {
      * @param listener 生成图片后需要执行的操作
      */
     private void generateImageAndDoAction(ImageGeneratedListener listener) {
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(this,"分享日记","正在生成图片……");
+        builder.setNegativeButton("取消",(dialogInterface, i) -> {
+            disposable.clear();
+            htmlHelper.cancelGenerateImage();
+        });
+        AlertDialog dialog = builder.show();
+
         String json = formatToJson();
-        HtmlHelper.generateAndShare(
+        htmlHelper.generateAndShare(
                 json,
                 SharePreviewActivity.this,
-                new HtmlHelper.OnShareListener() {
+                new HtmlHelper.ImageGenerateListener() {
                     @Override
                     public void onLoadingStart() {
                         Log.d(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "开始加载WebView");
                     }
 
                     @Override
-                    public void onShareReady(File imageFile) {
+                    public void onReady(File imageFile) {
                         Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                        dialog.dismiss();
                         listener.onImageGenerated(imageFile);
                     }
 
                     @Override
                     public void onError(String message) {
                         Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), message);
+                        dialog.dismiss();
                         Toast.makeText(SharePreviewActivity.this, message, Toast.LENGTH_SHORT).show();
                     }
                 }

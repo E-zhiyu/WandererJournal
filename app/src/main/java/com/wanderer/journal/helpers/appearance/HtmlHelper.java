@@ -24,7 +24,9 @@ import com.wanderer.journal.helpers.file.MediaHelper;
 import java.io.File;
 
 public class HtmlHelper {
-    public interface OnShareListener {
+    private AndroidBridge bridge;
+
+    public interface ImageGenerateListener {
         /**
          * 开始生成图片回调
          */
@@ -35,7 +37,7 @@ public class HtmlHelper {
          *
          * @param imageFile 生成的图片文件
          */
-        void onShareReady(File imageFile);
+        void onReady(File imageFile);
 
         /**
          * 图片生成错误回调
@@ -49,7 +51,7 @@ public class HtmlHelper {
      * 外部调用的主入口
      */
     @SuppressLint("SetJavaScriptEnabled")
-    public static void generateAndShare(String jsonData, Context context, OnShareListener listener) {
+    public void generateAndShare(String jsonData, Context context, ImageGenerateListener listener) {
         if (listener != null) listener.onLoadingStart();
 
         WebView.enableSlowWholeDocumentDraw();
@@ -77,8 +79,9 @@ public class HtmlHelper {
         backgroundWebView.layout(0, 0, screenWidthPx, 20);
 
         //注入 JS 桥梁
+        bridge = new AndroidBridge(backgroundWebView, context, listener);
         backgroundWebView.addJavascriptInterface(
-                new AndroidBridge(backgroundWebView, context, listener),
+                bridge,
                 "AndroidShareBridge"
         );
 
@@ -112,9 +115,9 @@ public class HtmlHelper {
      * JS 交互桥梁
      */
     private static class AndroidBridge {
-        private final WebView backgroundWebView;
+        private WebView backgroundWebView;
         private final Context context;
-        private final OnShareListener listener;
+        private final ImageGenerateListener listener;
 
         /**
          * WebView 的 JS 代码桥梁
@@ -123,7 +126,7 @@ public class HtmlHelper {
          * @param context           上下文
          * @param listener          图片加载状态监听器
          */
-        public AndroidBridge(WebView backgroundWebView, Context context, OnShareListener listener) {
+        public AndroidBridge(WebView backgroundWebView, Context context, ImageGenerateListener listener) {
             this.backgroundWebView = backgroundWebView;
             this.context = context;
             this.listener = listener;
@@ -149,14 +152,14 @@ public class HtmlHelper {
                     bitmap.recycle(); //及时释放内存
 
                     if (listener != null) {
-                        listener.onShareReady(imageFile);
+                        listener.onReady(imageFile);
                     }
                 } else {
                     if (listener != null) listener.onError("生成图片失败，内存不足");
                 }
 
                 //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
-                destroyWebView(backgroundWebView);
+                destroyWebView();
             });
         }
 
@@ -187,16 +190,25 @@ public class HtmlHelper {
 
         /**
          * 销毁 WebView
-         *
-         * @param backgroundWebView 待销毁的 WebView
          */
-        private void destroyWebView(WebView backgroundWebView) {
+        public void destroyWebView() {
             if (backgroundWebView != null) {
                 backgroundWebView.loadUrl("about:blank");
                 backgroundWebView.clearHistory();
                 backgroundWebView.removeAllViews();
                 backgroundWebView.destroy();
+                backgroundWebView = null;
             }
+        }
+    }
+
+    /**
+     * 取消图片生成
+     */
+    public void cancelGenerateImage() {
+        if (bridge != null) {
+            bridge.destroyWebView();
+            bridge = null;
         }
     }
 }

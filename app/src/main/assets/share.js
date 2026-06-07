@@ -74,7 +74,6 @@ function initData(jsonString) {
         Array.from(images).forEach(img => {
             img.onload = img.onerror = function() {
                 loadedCount++;
-                //TODO:每加载一个就通知Java的进度条对话框
                 if (loadedCount === images.length) {
                     triggerRenderFinished();
                 }
