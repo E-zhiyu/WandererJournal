@@ -46,14 +46,22 @@
             android:paddingTop="5dp"
             android:paddingBottom="5dp">
 
+            <!-- 相机 -->
             <include
                 android:id="@+id/camera_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 通知 -->
             <include
                 android:id="@+id/notification_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 自启动 -->
+            <include
+                android:id="@+id/auto_start_option"
+                layout="@layout/view_setting_option" />
+
+            <!-- 精确闹钟 -->
             <include
                 android:id="@+id/alarm_option"
                 layout="@layout/view_setting_option" />

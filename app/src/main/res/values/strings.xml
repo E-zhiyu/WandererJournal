@@ -107,6 +107,7 @@
     <string name="btn_share_diary">日记分享按钮</string>
     <string name="share_as_image">分享为图片</string>
     <string name="save_to_album">保存到相册</string>
+    <string name="auto_start_permission">自启动权限</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>
