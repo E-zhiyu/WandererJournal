@@ -43,7 +43,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             binding.recycler.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
             return insets;
         });
@@ -73,7 +73,6 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
         AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
-        AppearanceAnimationHelper.setupFloatingBtnBehaviour(binding.recycler, binding.addFab);
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(

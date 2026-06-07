@@ -1,0 +1,153 @@
+body {
+    height: auto;
+    min-height: 0;
+    background-color: #f5f6f9;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    padding: 20px;
+    margin: 0;
+}
+
+/* 抬头标题样式 */
+.header {
+    text-align: center;
+    padding: 20px 0;
+    color: #333;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+/* 日期分隔符样式 */
+.date-divider {
+    text-align: center;
+    margin: 17px 0 17px 0;
+}
+.date-divider span {
+    background-color: #e0e3ea;
+    color: #666;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+/* 气泡内部容器，开启相对定位，方便整体排版控制 */
+.bubble-content-wrapper {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+
+/* 时间戳的精致样式 */
+.bubble-time {
+    float: right;            /* 【核心属性】让时间戳向右浮动 */
+    font-size: 12px;         /* 字体小巧 */
+    color: #aaaaaa;          /* 淡淡的灰色，高级感 */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 选用无衬线西文字体，数字更好看 */
+    margin-top: 8px;         /* 与上方内容拉开轻微距离 */
+    margin-left: 12px;        /* 留出左侧间距，防止文字和它贴太近 */
+    line-height: 12px;
+    user-select: none;
+}
+
+/* 【黑魔法清除浮动】防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
+.bubble-content-wrapper::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+/* --- 细节微调：如果时间戳紧跟在多图网格后面，微调它的间距 --- */
+.bubble-image-grid + .bubble-time {
+    margin-top: 10px;
+}
+
+/* 日记消息气泡基本样式（保持你之前的优雅气泡外观） */
+.paragraph-bubble {
+    background-color: #ffffff;
+    color: #222222;
+    padding: 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    word-wrap: break-word;
+}
+
+/* 气泡内部的纯文字区域 */
+.bubble-text {
+    margin-bottom: 0; /* 默认如果没有图片，文字居底 */
+}
+
+/* 当文字下方有图片时，动态通过相邻兄弟选择器给文字下方拉开一些间距 */
+.bubble-text + .bubble-image-container {
+    margin-top: 12px;
+}
+
+/* 气泡内部图片容器 */
+.bubble-image-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start; /* 靠左对齐，顺应阅读习惯 */
+}
+
+/* 注脚样式 */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #999;
+    font-size: 12px;
+    padding-bottom: 20px;
+}
+
+/* ================= 智能网格数量控制（完美修复版） ================= */
+
+/* 通用网格基础配置 */
+.bubble-image-grid {
+    display: grid;
+    gap: 8px; /* 图片之间的间隙为 8px */
+    width: 100%;
+    box-sizing: border-box; /* 确保 padding 和 border 不会撑大容器 */
+}
+
+/* 统一控制气泡内图片的缩放表现 */
+.grid-image-item {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.bubble-image-node {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: block; /* 消除图片下方的默认空白间隙 */
+}
+
+/* --- 只有 1 张图 --- */
+.images-count-1 {
+    grid-template-columns: 1fr;
+}
+.images-count-1 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
+}
+
+/* --- 有 2 张图（双列布局） --- */
+/* 核心修复：两列之间有 1 个 8px 的间隙，所以每列宽度是 (100% - 8px) / 2 */
+.images-count-2 {
+    grid-template-columns: repeat(2, calc((100% - 8px) / 2));
+}
+
+.images-count-2 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
+}
+
+/* --- 情况 C：3张、5张及以上（三列布局，如九宫格） --- */
+/* 核心修复：三列之间有 2 个 8px 的间隙，总共 16px。所以每列宽度是 (100% - 16px) / 3 */
+.images-count-3 {
+    grid-template-columns: repeat(3, calc((100% - 16px) / 3));
+}
+
+.images-count-3 .grid-image-item {
+    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
+}

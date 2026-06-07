@@ -68,7 +68,7 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
@@ -126,7 +126,7 @@ public class WriteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //底部输入框卡片
             binding.contentInputLayout.setPadding(
@@ -536,7 +536,7 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initParagraphRecycler() {
         //设置适配器
-        ParagraphAdapter adapter = new ParagraphAdapter(
+        ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
                 (dataModel, view) -> {
                     ParagraphEntity paragraph = dataModel.getParagraph();
 
@@ -1240,9 +1240,9 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 设置媒体删除按钮的可见性
+     * 设置媒体多选模式是否启用
      *
-     * @param isSelectMode 是否可见
+     * @param isSelectMode 是否在媒体多选模式
      */
     private void setSelectMode(boolean isSelectMode) {
         if (isSelectMode && binding.mediaDeleteBtn.getVisibility() == View.VISIBLE ||
@@ -1259,12 +1259,13 @@ public class WriteActivity extends AppCompatActivity {
         //定义过渡动画
         TransitionSet set = new TransitionSet()
                 .addTransition(new Fade())
+                .addTarget(binding.mediaDeleteBtn)
+                .addTarget(binding.mediaAddBtn)
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
         TransitionManager.beginDelayedTransition(binding.contentInputCard, set);
-        TransitionManager.beginDelayedTransition(binding.mediaRecycler, set);   //通知媒体RecyclerView，让复选框也有动画
 
         //切换视图可见性
         if (isSelectMode) {

@@ -26,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
 import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 
 import java.util.ArrayList;
@@ -257,6 +258,11 @@ public class PermissionHelper {
                         isProcessing = false;    //未直接调用processNextSpecial()，需要标记为未处理
 
                         LifecycleManager.startExternalActivity(activity, type.getIntent(activity));
+
+                        //如果是自启动权限，则下次不再提醒
+                        if (request.permission == SpecialPermissionType.AUTO_START) {
+                            AppSettingsPreference.setHintAutoStart(activity, true);
+                        }
                     })
                     .setNegativeButton("取消", (d, w) -> processNextSpecial())
                     .setCancelable(false)
@@ -342,8 +348,7 @@ public class PermissionHelper {
      * @return 是否提醒了需要开启自启动权限
      */
     public static boolean isAutoStartHinted(Context context) {
-        return true;
-//        return !isAutoStartDefined() || AutoBookKeepingPreference.getHintAutoStart(context);
+        return !isAutoStartDefined() || AppSettingsPreference.getHintAutoStart(context);
     }
 
     /**

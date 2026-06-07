@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -54,7 +55,7 @@ public class PermissionManageActivity extends AppCompatActivity {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             binding.scrollView.setPadding(
                     0,
                     0,
@@ -140,6 +141,30 @@ public class PermissionManageActivity extends AppCompatActivity {
             startActivity(skip2Settings);
             return true;
         });
+
+        //自启动权限
+        if (PermissionHelper.isAutoStartDefined()) {
+            SettingClickableTextView autoStart = new SettingClickableTextView(
+                    this,
+                    binding.autoStartOption,
+                    R.string.auto_start_permission,
+                    "允许在后台启动服务",
+                    R.drawable.outline_autorenew_24,
+                    RadiusStyle.MIDDLE
+            );
+            autoStart.setFunctionListener(v -> showExplanationDialog(
+                            R.string.auto_start_permission,
+                            "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
+                                    "- 在退出应用后自动启动通知监听服务，确保自动记账功能能够运行\n",
+                            () -> {
+                                Intent skip2AutoStartPermission = PermissionHelper.buildAutoStartPermissionIntent(this);
+                                LifecycleManager.startExternalActivity(this, skip2AutoStartPermission);
+                            }
+                    )
+            );
+        } else {
+            binding.autoStartOption.getRoot().setVisibility(View.GONE);
+        }
 
         //精确闹钟权限
         alarm = new SettingClickableTextView(

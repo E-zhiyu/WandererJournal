@@ -4,6 +4,8 @@ package com.wanderer.journal.ui.pages;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -23,6 +25,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
@@ -39,6 +43,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
@@ -52,8 +57,10 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
+import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
+import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
-import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphAdapter;
+import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
@@ -66,6 +73,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -76,13 +84,15 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private LocalDate initDiaryDate = null;                                 //初始页的日期
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
-    private ParagraphAdapter adapter;                                       //段落列表适配器
+    private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
+    private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
+    private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +103,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //列表视图
             binding.contentRecycler.setPadding(
@@ -113,6 +124,9 @@ public class DiaryReadActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        //移除待滚动的任务
+        binding.contentRecycler.removeCallbacks(scrollToInit);
 
         binding = null;
         disposable.dispose();
@@ -200,6 +214,20 @@ public class DiaryReadActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 setSearchMode(false);
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 2;
+            }
+        };
+
+        //多选模式返回处理器
+        shareChoiceBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                setShareSelectMode(false);
                 return true;
             }
 
@@ -293,6 +321,32 @@ public class DiaryReadActivity extends AppCompatActivity {
                 bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
 
                 return true;
+            } else if (item.getItemId() == R.id.action_share) {
+                if (!adapter.getSelectMode()) {
+                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                    setShareSelectMode(true);
+                } else {
+                    //判空
+                    if (!selectionTracker.hasSelection()) {
+                        Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
+                        return false;
+                    }
+
+                    //获取所有选择的段落 ID
+                    long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
+                            .mapToLong(Long::longValue)
+                            .toArray();
+
+                    //创建 Intent
+                    Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
+                    skip2SharePreview.putExtras(bundle);
+
+                    //跳转界面
+                    startActivity(skip2SharePreview);
+                }
+                return true;
             }
 
             return false;
@@ -304,7 +358,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         //设置适配器
-        adapter = new ParagraphAdapter(
+        adapter = new ParagraphPagingAdapter(
                 (model, view) -> {
                     ParagraphEntity paragraph = model.getParagraph();
 
@@ -360,6 +414,72 @@ public class DiaryReadActivity extends AppCompatActivity {
                     startActivity(skip2FullScreen, options.toBundle());
                 }
         );
+        binding.contentRecycler.setAdapter(adapter);
+
+        //为适配器绑定选择追踪器
+        selectionTracker = new SelectionTracker.Builder<>(
+                TagStrings.PARAGRAPH_SELECTION.getTag(),
+                binding.contentRecycler,
+                new ParagraphKeyProvider(adapter),
+                new ParagraphLookup(binding.contentRecycler),
+                StorageStrategy.createLongStorage()
+        ).withSelectionPredicate(
+                new SelectionTracker.SelectionPredicate<>() {
+                    @Override
+                    public boolean canSetStateForKey(@NonNull Long key, boolean nextState) {
+                        if (key < 0) return false;
+
+                        boolean isItem = false;
+                        List<ParagraphUiModel> snapshot = adapter.snapshot().getItems();
+                        for (int i = 0; i < snapshot.size(); i++) {
+                            ParagraphUiModel item = snapshot.get(i);
+                            if ((item instanceof ParagraphUiModel.Item) && ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId() == key) {
+                                isItem = true;
+                                break;
+                            }
+                        }
+                        return adapter != null && adapter.getSelectMode() && isItem;
+                    }
+
+                    @Override
+                    public boolean canSetStateAtPosition(int position, boolean nextState) {
+                        if (adapter == null) {
+                            return false;
+                        }
+
+                        try {
+                            boolean isSelectMode = adapter.getSelectMode();
+                            boolean isItem = adapter.peek(position) instanceof ParagraphUiModel.Item;
+                            return isSelectMode && isItem;
+                        } catch (IndexOutOfBoundsException e) {
+                            return false;
+                        }
+                    }
+
+                    @Override
+                    public boolean canSelectMultiple() {
+                        return true;
+                    }
+                }
+        ).build();
+        adapter.setSelectionTracker(selectionTracker);
+
+        //设置多选追踪器选择监听
+        selectionTracker.addObserver(new SelectionTracker.SelectionObserver<>() {
+            @Override
+            public void onSelectionChanged() {
+                super.onSelectionChanged();
+                if (selectionTracker.hasSelection()) {
+                    new Handler(Looper.getMainLooper()).post(() -> setShareSelectMode(true));
+
+                    int size = selectionTracker.getSelection().size();
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "已选择：" + size);
+                } else {
+                    new Handler(Looper.getMainLooper()).post(() -> setShareSelectMode(false));
+                    Log.d(LogTags.WRITE_ACTIVITY.n(), "选择已清除");
+                }
+            }
+        });
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
@@ -388,7 +508,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             }
             return Unit.INSTANCE;
         });
-        binding.contentRecycler.setAdapter(adapter);
     }
 
     /**
@@ -763,11 +882,12 @@ public class DiaryReadActivity extends AppCompatActivity {
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.END))
                 .addTransition(new Fade())
+                .addTarget(binding.searchSkipLayout)
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.searchSkipLayout, set);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
         if (!isSearchMode) {
             binding.contentSearchBar.setText(null);
@@ -781,6 +901,25 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
             backHelper.registerHandler(searchBackHandler);
+        }
+    }
+
+    /**
+     * 设置分享时的段落多选模式是否开启
+     *
+     * @param isSelectMode 是否开启段落多选模式
+     */
+    private void setShareSelectMode(boolean isSelectMode) {
+        if (isSelectMode == adapter.getSelectMode()) return;
+
+        //更新 UI
+        adapter.setSelectMode(isSelectMode);
+        if (isSelectMode) {
+            backHelper.registerHandler(shareChoiceBackHandler);
+        } else {
+            backHelper.unregisterHandler(shareChoiceBackHandler);
+
+            selectionTracker.clearSelection();  //清空多选
         }
     }
 

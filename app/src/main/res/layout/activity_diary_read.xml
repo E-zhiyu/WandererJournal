@@ -36,8 +36,18 @@
             android:paddingEnd="20dp"
             android:paddingBottom="10dp"
             android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_scrollFlags="scroll|enterAlways|snap" />
     </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- 段落列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/content_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
     <!-- 加载指示器和空状态文本 -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -71,15 +81,6 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 段落列表 -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/content_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
     <!-- 跳转搜索结果的按钮布局 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/search_skip_layout"
@@ -95,9 +96,14 @@
         <!-- 匹配项数量指示器 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/matched_items_counter"
-            style="@style/MediumRadiusCardStyle"
+            style="@style/Widget.Material3.CardView.Outlined"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="20dp"
             app:layout_constraintBottom_toTopOf="@id/up_fab"
             app:layout_constraintEnd_toEndOf="@id/down_fab"
             app:layout_constraintStart_toStartOf="@id/down_fab"

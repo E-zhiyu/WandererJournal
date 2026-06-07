@@ -1,7 +1,6 @@
 package com.wanderer.journal.helpers.about;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
@@ -11,12 +10,29 @@ import androidx.annotation.NonNull;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
-import com.wanderer.journal.helpers.ExceptionHelper;
 
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.1.0\n" +
+    private final static String CHANGELOG = "# v1.2.0\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增选择日记段落并以图片形式分享的功能\n" +
+            "- 权限管理界面添加自启动选项\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复搜索历史Chip可以点击切换选择状态的BUG\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 优化读日记界面日期分隔符的样式\n" +
+            "- 读日记界面段落列表加载时不再显示占位符，使得加载数据时更清爽\n" +
+            "- 读日记界面段落加载指示器不再会被列表内容遮挡\n" +
+            "- 读日记界面的情绪标签显示现在会随搜索栏一同隐藏\n" +
+            "- 修改部分界面的标题栏样式\n" +
+            "\n" +
+            "# v1.1.0\n" +
             "\n" +
             "### 新增功能\n" +
             "\n" +
@@ -98,28 +114,6 @@ public class AboutHelper {
         PackageInfo packageInfo = context.getPackageManager()
                 .getPackageInfo(context.getPackageName(), 0);
         return packageInfo.versionName;
-    }
-
-    /**
-     * 获取应用名称
-     *
-     * @param context 上下文
-     * @return 应用名称
-     */
-    @NonNull
-    public static String getAppName(@NonNull Context context) {
-        PackageManager packageManager = context.getPackageManager();
-        ApplicationInfo applicationInfo;
-        try {
-            applicationInfo = packageManager.getApplicationInfo(
-                    context.getPackageName(),
-                    PackageManager.GET_META_DATA
-            );
-            return packageManager.getApplicationLabel(applicationInfo).toString();
-        } catch (PackageManager.NameNotFoundException e) {
-            ExceptionHelper.showExceptionDialog(context, e);
-            return "ManagerAssistant";
-        }
     }
 
     /**

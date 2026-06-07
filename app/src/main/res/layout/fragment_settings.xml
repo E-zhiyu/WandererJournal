@@ -10,13 +10,20 @@
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            style="@style/CollapsingToolbarLayoutStyle"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:layout_constraintTop_toTopOf="parent"
-            app:navigationIcon="@null"
-            app:title="@string/settings" />
+            android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+            app:toolbarId="@id/toolbar">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:navigationIcon="@null"
+                app:title="@string/settings" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -67,9 +74,9 @@
                 android:id="@+id/diary_alarm_option"
                 layout="@layout/view_setting_option"
                 android:layout_width="match_parent"
-                android:layout_marginTop="20dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginEnd="10dp" />
 
             <!-- 身份验证开关 -->

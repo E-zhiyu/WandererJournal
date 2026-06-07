@@ -182,12 +182,22 @@ public class DiaryAlarmActivity extends AppCompatActivity {
     private void addPermissions() {
         permissionHelper = new PermissionHelper(this);
 
+        //通知权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionHelper.addPermission(
                     Manifest.permission.POST_NOTIFICATIONS,
                     "通知权限：允许应用发送通知提醒"
             );
         }
+
+        //自启动权限
+        permissionHelper.addPermission(
+                PermissionHelper.SpecialPermissionType.AUTO_START,
+                "自启动权限",
+                "请授予自启动权限以允许在后台触发定时任务"
+        );
+
+        //精确闹钟权限
         permissionHelper.addPermission(
                 PermissionHelper.SpecialPermissionType.ALARM,
                 "精确闹钟权限",

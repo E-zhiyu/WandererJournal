@@ -9,14 +9,22 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            style="@style/CollapsingToolbarLayoutStyle"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
-            app:title="@string/emotion_tag" />
+            android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+            app:toolbarId="@id/toolbar">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:title="@string/emotion_tag" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -42,5 +50,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:contentDescription="@string/button_to_add" />
+        android:contentDescription="@string/button_to_add"
+        app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

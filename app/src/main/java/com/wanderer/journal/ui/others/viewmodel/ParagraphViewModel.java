@@ -18,7 +18,6 @@ import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -53,8 +52,11 @@ public class ParagraphViewModel extends ViewModel {
         return PagingDataTransforms.insertSeparators(
                 itemPagingData, executor, (before, after) -> {
                     if (after == null) return null;
+
                     if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
-                        return new ParagraphUiModel.Separator(formatDate(after.model.getParagraph().getCreateTime()));
+                        return new ParagraphUiModel.Separator(
+                                after.model.getParagraph().getCreateTime().toLocalDate()
+                        );
                     }
                     return null;
                 });
@@ -85,7 +87,7 @@ public class ParagraphViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceInRange(start, end)
+                            () -> db.paragraphDao().getParagraphPagingSourceByDate(start, end)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
@@ -131,18 +133,6 @@ public class ParagraphViewModel extends ViewModel {
     }
 
     /**
-     * 将{@link LocalDateTime}转换为yyyy-MM-dd日期字符串
-     *
-     * @param datetime 需要转换的时间类
-     * @return 转换得到的日期字符串
-     */
-    @NonNull
-    private String formatDate(@NonNull LocalDateTime datetime) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
-        return datetime.format(formatter);
-    }
-
-    /**
      * 判断两个时间是否在同一天
      *
      * @param t1 时间实例
@@ -152,7 +142,7 @@ public class ParagraphViewModel extends ViewModel {
     private boolean isSameDay(@NonNull LocalDateTime t1, @NonNull LocalDateTime t2) {
         LocalDate d1 = t1.toLocalDate();
         LocalDate d2 = t2.toLocalDate();
-        return d1.equals(d2);
+        return d1.isEqual(d2);
     }
 
     /**

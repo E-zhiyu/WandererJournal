@@ -14,7 +14,12 @@ public enum LogTags {
     BOOT_RECEIVER("BootReceiver"),
     DIARY_ALARM_RECEIVER("DiaryAlarmReceiver"),
     ALARM_HELPER("AlarmHelper"),
-    ZIP_HELPER("ZipHelper");
+    HTML_HELPER("HtmlHelper"),
+    IMAGE_HELPER("ImageHelper"),
+    SHARE_PREVIEW_ACTIVITY("SharePreviewActivity"),
+    SHARE_WEB_VIEW("ShareWebView"),
+    ZIP_HELPER("ZipHelper"),
+    FULL_SCREEN_MEDIA_ACTIVITY("FullScreenMediaActivity");
     private final String tagName;
 
     LogTags(String tagName) {

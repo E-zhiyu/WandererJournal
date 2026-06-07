@@ -10,8 +10,9 @@ import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
 
 public class AppSettingsPreference {
     private static final String PREF_NAME = "ThemePreference";
-    private static final String KEY_THEME_MODE = "theme_mode";          //主题模式
-    private static final String KEY_DYNAMIC_COLOR = "dynamic_color";    //动态色彩
+    private static final String KEY_THEME_MODE = "theme_mode";              //主题模式
+    private static final String KEY_DYNAMIC_COLOR = "dynamic_color";        //动态色彩
+    private static final String KEY_HINT_AUTO_START = "hint_auto_start";    //是否提醒自启动权限
 
     public static void setThemeMode(@NonNull Context context, int themeMode) {
         SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -31,5 +32,15 @@ public class AppSettingsPreference {
     public static boolean getDynamicColorStat(@NonNull Context context) {
         SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return pref.getBoolean(KEY_DYNAMIC_COLOR, true);
+    }
+
+    public static void setHintAutoStart(@NonNull Context context, boolean isHinted) {
+        SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        pref.edit().putBoolean(KEY_HINT_AUTO_START, isHinted).apply();
+    }
+
+    public static boolean getHintAutoStart(@NonNull Context context) {
+        SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return pref.getBoolean(KEY_HINT_AUTO_START, false);
     }
 }

@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.transition.Transition;
 import android.transition.TransitionListenerAdapter;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -24,11 +25,13 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.databinding.ActivityMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
+import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.io.File;
 import java.util.Arrays;
@@ -161,7 +164,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
     private void savePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
         Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
-        disposable.add(FileHelper.saveMediaToGalleryObservable(this, currentUri)
+        disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -184,8 +187,11 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        () -> Toast.makeText(FullScreenMediaActivity.this, "正在分享图片……", Toast.LENGTH_SHORT).show(),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                        () -> Log.i(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "调用分享API成功"),
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            Log.e(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "无法调用分享API");
+                        }
                 )
         );
     }
