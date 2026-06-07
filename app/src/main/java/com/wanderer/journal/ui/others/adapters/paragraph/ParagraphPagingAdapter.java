@@ -270,12 +270,10 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
-            if (holder instanceof ParagraphViewHolder) {
-                ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
-                itemHolder.binding.contentText.setText("正在加载段落内容……");
-                itemHolder.binding.dateTimeText.setText("未知");
-            }
+            holder.itemView.setVisibility(View.GONE);       //不显示占位符，防止加载时遮挡加载指示器
             return;
+        } else {
+            holder.itemView.setVisibility(View.VISIBLE);    //不是占位符时才显示
         }
 
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
@@ -408,6 +406,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date;
             separatorViewHolder.binding.dateText.setText(dateStr);
+            separatorViewHolder.binding.getRoot().setVisibility(View.VISIBLE);
         }
     }
 
