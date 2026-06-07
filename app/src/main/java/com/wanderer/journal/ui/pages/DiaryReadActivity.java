@@ -323,7 +323,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
                 if (!adapter.getSelectMode()) {
-                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "选择完毕后点击按钮分享日记", Toast.LENGTH_SHORT).show();
                     setShareSelectMode(true);
                 } else {
                     //判空

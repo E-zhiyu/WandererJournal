@@ -1,8 +1,11 @@
 package com.wanderer.journal.ui.pages;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
@@ -45,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -284,76 +288,83 @@ public class SharePreviewActivity extends AppCompatActivity {
     /**
      * 将列表中的内容格式化为 JSON，供 WebView 加载内容
      *
-     * @return 转换得到的 JSON 字符串，结构为[{"type":***,"content":***,"imageUris":***,"time":***},……]，其中 imageUris 和 time 字段只有段落才有
+     * @return 转换得到的分段 JSON 字符串列表，结构为[{"type":***,"content":***,"imageUris":***,"time":***},……]，其中 imageUris 和 time 字段只有段落才有
      */
     @NonNull
-    private String formatToJson() {
+    private List<String> formatToJson() {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");   //日期转换器
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");             //时间转换器
 
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
-        //遍历转换为 JSON
-        StringBuilder builder = new StringBuilder("[");
-        int i = 0;
-        for (ParagraphUiModel model : uiModelList) {
-            builder.append("{");
-            if (model instanceof ParagraphUiModel.Separator) {
-                builder.append("\"type\":\"date\",\"content\":");
-                builder.append("\"");
-                String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
-                builder.append(date);
-                builder.append("\"");
-            } else if (model instanceof ParagraphUiModel.Item) {
-                ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
-                ParagraphEntity paragraph = entityModel.getParagraph();
+        //分段并转换为 JSON 字符串列表
+        final int STEP = 1;
+        List<String> jsonList = new ArrayList<>();
+        for (int currentStart = 0; currentStart < uiModelList.size(); currentStart += STEP) {
+            int end = Math.min(currentStart + STEP, uiModelList.size());
+            List<ParagraphUiModel> subList = uiModelList.subList(currentStart, end);
+            StringBuilder builder = new StringBuilder("[");
+            int i = 0;
+            for (ParagraphUiModel model : subList) {
+                builder.append("{");
+                if (model instanceof ParagraphUiModel.Separator) {
+                    builder.append("\"type\":\"date\",\"content\":");
+                    builder.append("\"");
+                    String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
+                    builder.append(date);
+                    builder.append("\"");
+                } else if (model instanceof ParagraphUiModel.Item) {
+                    ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
+                    ParagraphEntity paragraph = entityModel.getParagraph();
 
-                //添加段落内容字段
-                builder.append("\"type\":\"text\",\"content\":");
-                builder.append("\"");
-                String paragraphContent = paragraph.getContent();
-                builder.append(paragraphContent);
-                builder.append("\"");
+                    //添加段落内容字段
+                    builder.append("\"type\":\"text\",\"content\":");
+                    builder.append("\"");
+                    String paragraphContent = paragraph.getContent();
+                    builder.append(paragraphContent);
+                    builder.append("\"");
 
-                //添加图片字段
-                List<MediaEntity> mediaList = entityModel.getMediaList();
-                if (!mediaList.isEmpty()) {
-                    builder.append(",");
-                    builder.append("\"imageUris\":[");
+                    //添加图片字段
+                    List<MediaEntity> mediaList = entityModel.getMediaList();
+                    if (!mediaList.isEmpty()) {
+                        builder.append(",");
+                        builder.append("\"imageUris\":[");
 
-                    int mediaIndex = 0;
-                    for (MediaEntity media : mediaList) {
-                        builder.append("\"");
-                        builder.append(media.getFileUri().toString());
-                        builder.append("\"");
+                        int mediaIndex = 0;
+                        for (MediaEntity media : mediaList) {
+                            builder.append("\"");
+                            builder.append(media.getFileUri().toString());
+                            builder.append("\"");
 
-                        if (mediaIndex < mediaList.size() - 1) {
-                            builder.append(",");
+                            if (mediaIndex < mediaList.size() - 1) {
+                                builder.append(",");
+                            }
+                            mediaIndex++;
                         }
-                        mediaIndex++;
+                        builder.append("]");
                     }
-                    builder.append("]");
+
+                    //添加时间字段
+                    String time = paragraph.getCreateTime().format(timeFormatter);
+                    builder.append(",");
+                    builder.append("\"time\":");
+                    builder.append("\"");
+                    builder.append(time);
+                    builder.append("\"");
                 }
 
-                //添加时间字段
-                String time = paragraph.getCreateTime().format(timeFormatter);
-                builder.append(",");
-                builder.append("\"time\":");
-                builder.append("\"");
-                builder.append(time);
-                builder.append("\"");
+                builder.append("}");
+                if (i < subList.size() - 1) {
+                    builder.append(",");
+                }
+                i++;
             }
-
-            builder.append("}");
-            if (i < uiModelList.size() - 1) {
-                builder.append(",");
-            }
-            i++;
+            builder.append("]");
+            jsonList.add(builder.toString());
         }
-        builder.append("]");
 
-        return builder.toString();
+        return jsonList;
     }
 
     /**
@@ -362,16 +373,21 @@ public class SharePreviewActivity extends AppCompatActivity {
      * @param listener 生成图片后需要执行的操作
      */
     private void generateImageAndDoAction(ImageGeneratedListener listener) {
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "分享日记", "正在生成图片……");
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(
+                this,
+                "分享日记",
+                "正在加载图片内容……"
+        );
         builder.setNegativeButton("取消", (dialogInterface, i) -> {
             disposable.clear();
             htmlHelper.cancelGenerateImage();
+            Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
         });
         AlertDialog dialog = builder.show();
 
-        String json = formatToJson();
-        htmlHelper.generateAndShare(
-                json,
+        List<String> jsonList = formatToJson();
+        htmlHelper.generateImage(
+                jsonList,
                 SharePreviewActivity.this,
                 new HtmlHelper.ImageGenerateListener() {
                     @Override
@@ -380,10 +396,61 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onReady(File imageFile) {
-                        Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
-                        dialog.dismiss();
-                        listener.onImageGenerated(imageFile);
+                    public void onLoading(int current, int total) {
+                        builder.setIndeterminate(false);
+                        builder.updateProgress(current, total, "正在加载图片内容……");
+                    }
+
+                    @Override
+                    public void onDomFinished(HtmlHelper.AndroidBridge bridge, int total) {
+                        builder.updateProgress(total, total, "正在保存图片……");
+
+                        //创建截屏任务
+                        Single<Bitmap> captureTask = Single.defer(() -> {
+                            Bitmap bitmap = MediaHelper.captureWebView(bridge.getBackgroundWebView());
+                            if (bitmap != null) {
+                                return Single.just(bitmap);
+                            } else {
+                                return Single.error(new RuntimeException("图片生成失败，内存不足"));
+                            }
+                        });
+
+                        //多线程执行任务
+                        disposable.add(captureTask
+                                .subscribeOn(AndroidSchedulers.mainThread())
+                                .flatMapCompletable(bitmap -> {
+                                    if (bitmap != null) {
+                                        //保存为文件并获取 Uri
+                                        File imageFile = MediaHelper.saveBitmapToFile(
+                                                SharePreviewActivity.this,
+                                                bitmap
+                                        );
+                                        bitmap.recycle(); //及时释放内存
+
+                                        Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "图片已生成，Path:" + imageFile);
+                                        listener.onImageGenerated(imageFile);
+                                    } else {
+                                        return Completable.error(new RuntimeException("图片生成失败：内存不足"));
+                                    }
+
+                                    //生成完图片后，彻底销毁内存中的 WebView 防止内存泄漏
+                                    new Handler(Looper.getMainLooper()).post(bridge::destroyWebView);
+
+                                    return Completable.complete();
+                                })
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        dialog::dismiss,
+                                        e -> {
+                                            ExceptionHelper.showExceptionDialog(
+                                                    SharePreviewActivity.this,
+                                                    e
+                                            );
+                                            dialog.dismiss();
+                                        }
+                                )
+                        );
                     }
 
                     @Override
