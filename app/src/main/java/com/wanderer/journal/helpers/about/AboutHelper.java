@@ -1,7 +1,6 @@
 package com.wanderer.journal.helpers.about;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
@@ -11,7 +10,6 @@ import androidx.annotation.NonNull;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
-import com.wanderer.journal.helpers.ExceptionHelper;
 
 import io.noties.markwon.Markwon;
 
@@ -20,6 +18,7 @@ public class AboutHelper {
             "### 新增内容\n" +
             "\n" +
             "- 新增选择日记段落并以图片形式分享的功能\n" +
+            "- 权限管理界面添加自启动选项\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
@@ -115,28 +114,6 @@ public class AboutHelper {
         PackageInfo packageInfo = context.getPackageManager()
                 .getPackageInfo(context.getPackageName(), 0);
         return packageInfo.versionName;
-    }
-
-    /**
-     * 获取应用名称
-     *
-     * @param context 上下文
-     * @return 应用名称
-     */
-    @NonNull
-    public static String getAppName(@NonNull Context context) {
-        PackageManager packageManager = context.getPackageManager();
-        ApplicationInfo applicationInfo;
-        try {
-            applicationInfo = packageManager.getApplicationInfo(
-                    context.getPackageName(),
-                    PackageManager.GET_META_DATA
-            );
-            return packageManager.getApplicationLabel(applicationInfo).toString();
-        } catch (PackageManager.NameNotFoundException e) {
-            ExceptionHelper.showExceptionDialog(context, e);
-            return "ManagerAssistant";
-        }
     }
 
     /**
