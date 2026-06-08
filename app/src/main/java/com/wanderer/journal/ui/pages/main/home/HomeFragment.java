@@ -104,8 +104,8 @@ public class HomeFragment extends Fragment {
                 .subscribe(dateOptional -> {
                     LocalDate date = dateOptional.orElse(null);
                     if (date == null) {
-                        binding.startDateText.setText(R.string.cant_get);
-                        binding.dateDifferenceText.setText(R.string.unknown);
+                        binding.startDateText.setText(R.string.not_applicable);
+                        binding.dateDifferenceText.setText(R.string.not_applicable);
                     } else {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE");
                         binding.startDateText.setText(date.format(formatter));
