@@ -357,7 +357,7 @@ public class PermissionHelper {
      * @return 是否定义了自启动权限
      */
     public static boolean isAutoStartDefined() {
-        //如果能被识别但是没有自启动权限，返回false
+        //如果能识别到系统名称但是没有自启动权限，返回false
         if (DeviceOs.isOneUi() || DeviceOs.isMyOs() || DeviceOs.isZuxOs() || DeviceOs.isZui()) {
             return false;
         }
