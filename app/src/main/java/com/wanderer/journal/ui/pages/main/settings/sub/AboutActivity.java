@@ -13,7 +13,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.databinding.ActivityAboutBinding;
-import com.wanderer.journal.helpers.about.AboutHelper;
+import com.wanderer.journal.helpers.AboutHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 
 

@@ -3,6 +3,7 @@ package com.wanderer.journal.helpers.time;
 import android.content.Context;
 import android.util.TypedValue;
 
+import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 import androidx.fragment.app.FragmentManager;
 
@@ -108,7 +109,7 @@ public class DateTimePickerHelper {
      * @param listener        确定监听器
      */
     public static void selectDate(
-            LocalDate initDate,
+            @Nullable LocalDate initDate,
             FragmentManager fragmentManager,
             MaterialPickerOnPositiveButtonClickListener<Long> listener
     ) {
@@ -124,7 +125,7 @@ public class DateTimePickerHelper {
      * @param listener        确定监听器
      */
     public static void selectDate(
-            LocalDate initDate,
+            @Nullable LocalDate initDate,
             FragmentManager fragmentManager,
             String title,
             MaterialPickerOnPositiveButtonClickListener<Long> listener

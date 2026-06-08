@@ -51,6 +51,7 @@
         android:id="@+id/empty_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="?attr/actionBarSize"
         android:text="@string/no_paragraph"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         app:layout_constraintBottom_toTopOf="@id/bottom_cards_barrier"

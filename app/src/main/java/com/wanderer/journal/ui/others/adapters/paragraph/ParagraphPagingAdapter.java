@@ -34,6 +34,7 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,7 +43,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
+public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
+        implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
     private String currentKeyword = "";                                 //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
@@ -95,6 +97,24 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      */
     public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
         this.selectionTracker = selectionTracker;
+    }
+
+    @Override
+    public boolean isHeader(int position) {
+        ParagraphUiModel model = getItem(position);
+        return model instanceof ParagraphUiModel.Separator;
+    }
+
+    @Override
+    public String getHeaderData(int position) {
+        ParagraphUiModel model = getItem(position);
+        if (model instanceof ParagraphUiModel.Separator) {
+            return ((ParagraphUiModel.Separator) model).date.format(formatter);
+        } else if (model instanceof ParagraphUiModel.Item) {
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
+        } else {
+            return "N/A";
+        }
     }
 
     public interface ViewHolderListener {

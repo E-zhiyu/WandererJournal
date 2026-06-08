@@ -30,6 +30,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
+import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
@@ -38,6 +39,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -219,6 +221,19 @@ public class SharePreviewActivity extends AppCompatActivity {
                 }
         );
         binding.previewRecycler.setAdapter(adapter);
+
+        //添加粘性头部适配器
+        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+                adapter,
+                (inflater, parent, attachToRoot) ->
+                        ViewHolderDateSeparatorBinding.inflate(
+                                inflater,
+                                parent,
+                                false
+                        ),
+                (binding, data) -> binding.dateText.setText(data)
+        );
+        binding.previewRecycler.addItemDecoration(decoration);
 
         //获取数据源
         DiaryDatabase db = DiaryDatabase.getInstance(this);

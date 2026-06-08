@@ -19,8 +19,8 @@ import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingSwitchView;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -106,6 +106,10 @@ public class DiaryAlarmActivity extends AppCompatActivity {
 
             //安排提醒闹钟
             if (b) {
+                //有自启动权限的系统弹出提示
+                if (PermissionHelper.isAutoStartDefined()) {
+                    Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
+                }
                 AlarmHelper.setDiaryAlarm(this);
             } else {
                 AlarmHelper.cancelDiaryAlarm(this);

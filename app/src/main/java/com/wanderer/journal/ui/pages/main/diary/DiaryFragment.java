@@ -98,7 +98,7 @@ public class DiaryFragment extends Fragment {
                 selection -> {
                     LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
                     DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
-                    disposable.add(dao.getDiaryCountSingle(selectedDate)
+                    disposable.add(dao.getDiaryCountBeforeDateSingle(selectedDate)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
@@ -166,7 +166,7 @@ public class DiaryFragment extends Fragment {
                 DiaryWithSummaryUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
                 LocalDate exactDate = diaryModel.getDiary().getDiaryDate();
                 if (!exactDate.isEqual(targetDate)) {
-                    Toast.makeText(requireContext(), "目标日期没有日记，已跳转至相邻日记", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "未找到日记，已跳转至相邻日记", Toast.LENGTH_SHORT).show();
                 }
             }
         }

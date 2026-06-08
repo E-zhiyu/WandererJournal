@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.main.settings.setting_option_views;
+package com.wanderer.journal.ui.pages.main.settings.components;
 
 import android.content.Context;
 import android.view.View;

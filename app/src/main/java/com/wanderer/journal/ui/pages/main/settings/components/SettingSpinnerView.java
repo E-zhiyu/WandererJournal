@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.main.settings.setting_option_views;
+package com.wanderer.journal.ui.pages.main.settings.components;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -18,10 +18,9 @@ import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.appearance.ColorHelper;
 
-
-public class SettingClickableTextView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
+public class SettingSpinnerView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
     /**
-     * 点击式设置项构造方法
+     * 下拉框设置项构造方法
      *
      * @param context     上下文
      * @param binding     对应于XML文件中的databinding
@@ -30,20 +29,20 @@ public class SettingClickableTextView extends SettingOptionViewBase<MaterialText
      * @param iconId      左侧图标资源
      * @param radiusStyle 圆角类型
      */
-    public SettingClickableTextView(
-            Context context,
-            ViewSettingOptionBinding binding,
-            @StringRes int title,
-            String description,
-            @DrawableRes int iconId,
-            RadiusStyle radiusStyle
+    public SettingSpinnerView(Context context,
+                              ViewSettingOptionBinding binding,
+                              @StringRes int title,
+                              String description,
+                              @DrawableRes int iconId,
+                              RadiusStyle radiusStyle
     ) {
         super(context, binding, title, description, iconId, radiusStyle);
     }
 
     @Override
     protected void initView(Context context) {
-        Drawable endDrawable = AppCompatResources.getDrawable(context, R.drawable.outline_keyboard_arrow_right_24);
+        Drawable endDrawable = AppCompatResources.getDrawable(context, R.drawable.outline_unfold_more_24);
+
         functionComponent = new MaterialTextView(context);
         functionComponent.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -59,5 +58,23 @@ public class SettingClickableTextView extends SettingOptionViewBase<MaterialText
     @Override
     public void setFunctionListener(View.OnClickListener listener) {
         binding.getRoot().setOnClickListener(listener);
+    }
+
+    /**
+     * 设置右侧文本
+     *
+     * @param text 目标文本
+     */
+    public void setSpinnerText(CharSequence text) {
+        functionComponent.setText(text);
+    }
+
+    /**
+     * 设置右侧文本
+     *
+     * @param text 目标文本的ID
+     */
+    public void setSpinnerText(@StringRes int text) {
+        functionComponent.setText(text);
     }
 }

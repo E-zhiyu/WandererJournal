@@ -29,6 +29,10 @@ import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ParagraphDao {
+    /**
+     * 获取段落总数
+     * @return 段落总数
+     */
     @Query("SELECT COUNT(*) FROM paragraphs")
     Flowable<Integer> getParagraphCountFlowable();
 
@@ -97,25 +101,29 @@ public interface ParagraphDao {
             "SELECT (pure_paragraph_position + date_separator_count) " +
                     "FROM (" +
                     "    SELECT " +
-                    "        p.paragraphId, " +
-                    "        p.content, " +
+                    "        paragraphId, " +
+                    "        content, " +
                     "        -- 1. 计算纯段落的绝对位置（从 0 开始）\n" +
-                    "        (ROW_NUMBER() OVER(ORDER BY p.createTime ASC) - 1) AS pure_paragraph_position," +
+                    "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
                     "        -- 2. 统计当前段落前的日期分隔符数量\n" +
                     "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= d.diaryDate) AS date_separator_count" +
-                    "    FROM paragraphs p" +
-                    "    INNER JOIN diaries d ON p.parentDiaryId = d.diaryId" +
+                    "    FROM paragraphs " +
+                    "    INNER JOIN diaries d ON parentDiaryId = d.diaryId" +
                     ") " +
                     "WHERE (:useContentFilter = 0 OR (content LIKE '%' || :keyword || '%' ESCAPE '/')) " +
                     "  AND (:useEmotionFilter = 0 OR paragraphId IN (" +
                     "      SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (:emotionIds)" +
+                    "  )) " +
+                    "  AND (:useMediaFilter = 0 OR paragraphId IN (" +
+                    "      SELECT parentParagraphId FROM medias" +
                     "  ))"
     )
     Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
             String keyword,
             List<Long> emotionIds,
             int useContentFilter,
-            int useEmotionFilter
+            int useEmotionFilter,
+            int useMediaFilter
     );
 
     /**

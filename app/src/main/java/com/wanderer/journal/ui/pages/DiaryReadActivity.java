@@ -38,6 +38,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -50,6 +51,7 @@ import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -57,12 +59,13 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.DiaryParagraphFilterBottomSheet;
+import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -91,6 +94,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
+    private boolean filterMedia = false;                                    //搜索时是否只显示带有媒体的段落
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
 
@@ -301,29 +305,12 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置 SearchBar 的菜单按钮点击监听
         binding.contentSearchBar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_emotion_select) {
-                EmotionTagFilterBottomSheet bottomSheet = new EmotionTagFilterBottomSheet(
-                        checkedEmotionTagIdList,
-                        (emotionTag, isChecked) -> {
-                            long emotionId = emotionTag.getEmotionId();
-                            if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
-                                checkedEmotionTagIdList.add(emotionId);
-                            } else if (!isChecked) {
-                                checkedEmotionTagIdList.remove(emotionId);
-                            }
-                        },
-                        checkedEmotionTagIdList::clear
-                );
-                bottomSheet.setOnDismissListener(() -> {
-                    String keyword = (String) binding.contentSearchBar.getText();
-                    refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
-                    executeSearch(keyword);
-                });
-                bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
+                showFilterBottomSheet();
 
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
                 if (!adapter.getSelectMode()) {
-                    Toast.makeText(this, "选择完毕后点击按钮分享日记", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
                     setShareSelectMode(true);
                 } else {
                     //判空
@@ -347,10 +334,107 @@ public class DiaryReadActivity extends AppCompatActivity {
                     startActivity(skip2SharePreview);
                 }
                 return true;
+            } else if (item.getItemId() == R.id.action_skip_date) {
+                LocalDate currentDate;  //当前正在显示的段落的日期
+                LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
+                if (layoutManager != null) {
+                    int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+                    ParagraphUiModel model = adapter.peek(firstVisiblePosition);
+                    if (model instanceof ParagraphUiModel.Separator) {
+                        currentDate = ((ParagraphUiModel.Separator) model).date;
+                    } else if (model instanceof ParagraphUiModel.Item) {
+                        currentDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
+                    } else {
+                        currentDate = LocalDate.now();
+                    }
+                } else {
+                    currentDate = LocalDate.now();
+                }
+                DateTimePickerHelper.selectDate(
+                        currentDate,
+                        getSupportFragmentManager(),
+                        selection -> {
+                            LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+
+                            //跳转到对应位置
+                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            DiaryDao diaryDao = db.diaryDao();
+                            disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            position -> scrollContentRecycler(
+                                                    position,
+                                                    true,
+                                                    new PagingRecyclerScrollListener() {
+                                                        @Override
+                                                        public void onSucceed() {
+                                                            //判断跳转到的日期是否为选择的日期
+                                                            ParagraphUiModel model = adapter.peek(position);
+                                                            LocalDate resultDate;
+                                                            if (model instanceof ParagraphUiModel.Separator) {
+                                                                resultDate = ((ParagraphUiModel.Separator) model).date;
+                                                            } else if (model instanceof ParagraphUiModel.Item) {
+                                                                resultDate = ((ParagraphUiModel.Item) model).model
+                                                                        .getParagraph()
+                                                                        .getCreateTime()
+                                                                        .toLocalDate();
+                                                            } else {
+                                                                resultDate = null;
+                                                            }
+                                                            if (!selectedDate.equals(resultDate)) {
+                                                                Toast.makeText(
+                                                                        DiaryReadActivity.this,
+                                                                        "未找到内容，已跳转至相邻日记",
+                                                                        Toast.LENGTH_SHORT
+                                                                ).show();
+                                                            }
+                                                        }
+
+                                                        @Override
+                                                        public void onRetry(int failCount) {
+                                                        }
+
+                                                        @Override
+                                                        public void onFailed() {
+                                                        }
+                                                    }
+                                            ),
+                                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                                    )
+                            );
+                        }
+                );
             }
 
             return false;
         });
+    }
+
+    /**
+     * 显示过滤选项对话框
+     */
+    private void showFilterBottomSheet() {
+        DiaryParagraphFilterBottomSheet bottomSheet = new DiaryParagraphFilterBottomSheet(
+                checkedEmotionTagIdList,
+                filterMedia,
+                (emotionTag, isChecked) -> {
+                    long emotionId = emotionTag.getEmotionId();
+                    if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
+                        checkedEmotionTagIdList.add(emotionId);
+                    } else if (!isChecked) {
+                        checkedEmotionTagIdList.remove(emotionId);
+                    }
+                },
+                checkedEmotionTagIdList::clear,
+                isFiltered -> filterMedia = isFiltered
+        );
+        bottomSheet.setOnDismissListener(() -> {
+            refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
+            String keyword = (String) binding.contentSearchBar.getText();
+            executeSearch(keyword);
+        });
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
     }
 
     /**
@@ -415,6 +499,19 @@ public class DiaryReadActivity extends AppCompatActivity {
                 }
         );
         binding.contentRecycler.setAdapter(adapter);
+
+        //应用粘性头部装饰器
+        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+                adapter,
+                (inflater, parent, attachToRoot) ->
+                        ViewHolderDateSeparatorBinding.inflate(
+                                inflater,
+                                parent,
+                                false
+                        ),
+                (binding, data) -> binding.dateText.setText(data)
+        );
+        binding.contentRecycler.addItemDecoration(decoration);
 
         //为适配器绑定选择追踪器
         selectionTracker = new SelectionTracker.Builder<>(
@@ -689,9 +786,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                             listener.onFailed();
                         }
 
-                        if (dialog.isShowing()) {
-                            Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
+
                         dialog.dismiss();
                         Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
                     }
@@ -707,7 +803,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void executeSearch(String keyword) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
+        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -896,6 +992,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             backHelper.unregisterHandler(searchBackHandler);
             adapter.clearHighlight();           //清除文本高亮
             checkedEmotionTagIdList.clear();    //清空选择的情绪标签
+            filterMedia = false;                //不再过滤媒体
             refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);

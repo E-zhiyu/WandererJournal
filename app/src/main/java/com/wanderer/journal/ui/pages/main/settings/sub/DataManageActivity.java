@@ -35,7 +35,7 @@ import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
 import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

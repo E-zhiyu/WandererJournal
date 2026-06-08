@@ -78,18 +78,6 @@ body {
     margin-bottom: 0; /* 默认如果没有图片，文字居底 */
 }
 
-/* 当文字下方有图片时，动态通过相邻兄弟选择器给文字下方拉开一些间距 */
-.bubble-text + .bubble-image-container {
-    margin-top: 12px;
-}
-
-/* 气泡内部图片容器 */
-.bubble-image-container {
-    width: 100%;
-    display: flex;
-    justify-content: flex-start; /* 靠左对齐，顺应阅读习惯 */
-}
-
 /* --- 底部页脚样式 --- */
 .footer {
     display: flex;
@@ -106,21 +94,21 @@ body {
 /* 页脚左侧文字区域 */
 .footer-left {
     display: flex;
+    max-width: 60%;
     flex-direction: column;
     gap: 4px;
 }
-
+/* 页脚应用名称 */
 .app-name {
     font-size: 16px;
     font-weight: bold;
     color: #333333;
 }
-
+/* 页脚应用名称下方的文字 */
 .app-slogan {
     font-size: 12px;
     color: #999999;
 }
-
 /* 页脚右侧二维码样式 */
 .project-qrcode {
     width: 64px;               /* 严格控制二维码尺寸，不能太大，64px~80px 视觉效果最好 */
@@ -132,7 +120,7 @@ body {
     display: block;
 }
 
-/* ================= 智能网格数量控制（完美修复版） ================= */
+/* ================= 智能网格数量控制 ================= */
 
 /* 通用网格基础配置 */
 .bubble-image-grid {
@@ -142,12 +130,12 @@ body {
     box-sizing: border-box; /* 确保 padding 和 border 不会撑大容器 */
 }
 
-/* 统一控制气泡内图片的缩放表现 */
+/* img标签容器 */
 .grid-image-item {
     overflow: hidden;
     box-sizing: border-box;
 }
-
+/* 段落的img标签 */
 .bubble-image-node {
     width: 100%;
     height: 100%;
@@ -155,6 +143,10 @@ body {
     border-radius: 10px;
     border: 1px solid rgba(0, 0, 0, 0.05);
     display: block; /* 消除图片下方的默认空白间隙 */
+}
+/* 文本下方的图片与文本隔开一段距离 */
+.bubble-text + .bubble-image-grid {
+    margin-top: 10px
 }
 
 /* --- 只有 1 张图 --- */

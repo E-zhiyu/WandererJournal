@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.statistics;
+package com.wanderer.journal.ui.others.decoration;
 
 import android.content.Context;
 import android.graphics.Canvas;
