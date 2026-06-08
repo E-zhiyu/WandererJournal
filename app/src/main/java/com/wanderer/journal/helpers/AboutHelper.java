@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers.about;
+package com.wanderer.journal.helpers;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
@@ -14,7 +14,14 @@ import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.2.1\n" +
+    private final static String CHANGELOG = "# v1.2.2\n" +
+            "\n" +
+            "### 修改内容\n" +
+            "\n" +
+            "- 分享图片底部的二维码添加中心图标\n" +
+            "- 修改分享图片底部的文本\n" +
+            "\n" +
+            "# v1.2.1\n" +
             "\n" +
             "### 优化和修改的内容\n" +
             "\n" +

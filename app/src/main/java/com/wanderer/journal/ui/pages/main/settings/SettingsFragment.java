@@ -23,7 +23,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.options.AuthOpportunity;
 import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
-import com.wanderer.journal.helpers.about.AboutHelper;
+import com.wanderer.journal.helpers.AboutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSpinnerView;
