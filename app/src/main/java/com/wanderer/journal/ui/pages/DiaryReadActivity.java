@@ -38,6 +38,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -307,7 +308,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
                 if (!adapter.getSelectMode()) {
-                    Toast.makeText(this, "选择完毕后点击按钮分享日记", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
                     setShareSelectMode(true);
                 } else {
                     //判空
@@ -331,6 +332,77 @@ public class DiaryReadActivity extends AppCompatActivity {
                     startActivity(skip2SharePreview);
                 }
                 return true;
+            } else if (item.getItemId() == R.id.action_skip_date) {
+                LocalDate currentDate;  //当前正在显示的段落的日期
+                LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
+                if (layoutManager != null) {
+                    int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+                    ParagraphUiModel model = adapter.peek(firstVisiblePosition);
+                    if (model instanceof ParagraphUiModel.Separator) {
+                        currentDate = ((ParagraphUiModel.Separator) model).date;
+                    } else if (model instanceof ParagraphUiModel.Item) {
+                        currentDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
+                    } else {
+                        currentDate = LocalDate.now();
+                    }
+                } else {
+                    currentDate = LocalDate.now();
+                }
+                DateTimePickerHelper.selectDate(
+                        currentDate,
+                        getSupportFragmentManager(),
+                        selection -> {
+                            LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+
+                            //跳转到对应位置
+                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            DiaryDao diaryDao = db.diaryDao();
+                            disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            position -> scrollContentRecycler(
+                                                    position,
+                                                    true,
+                                                    new PagingRecyclerScrollListener() {
+                                                        @Override
+                                                        public void onSucceed() {
+                                                            //判断跳转到的日期是否为选择的日期
+                                                            ParagraphUiModel model = adapter.peek(position);
+                                                            LocalDate resultDate;
+                                                            if (model instanceof ParagraphUiModel.Separator) {
+                                                                resultDate = ((ParagraphUiModel.Separator) model).date;
+                                                            } else if (model instanceof ParagraphUiModel.Item) {
+                                                                resultDate = ((ParagraphUiModel.Item) model).model
+                                                                        .getParagraph()
+                                                                        .getCreateTime()
+                                                                        .toLocalDate();
+                                                            } else {
+                                                                resultDate = null;
+                                                            }
+                                                            if (!selectedDate.equals(resultDate)) {
+                                                                Toast.makeText(
+                                                                        DiaryReadActivity.this,
+                                                                        "未找到内容，已跳转至相邻日记",
+                                                                        Toast.LENGTH_SHORT
+                                                                ).show();
+                                                            }
+                                                        }
+
+                                                        @Override
+                                                        public void onRetry(int failCount) {
+                                                        }
+
+                                                        @Override
+                                                        public void onFailed() {
+                                                        }
+                                                    }
+                                            ),
+                                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                                    )
+                            );
+                        }
+                );
             }
 
             return false;
@@ -699,9 +771,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                             listener.onFailed();
                         }
 
-                        if (dialog.isShowing()) {
-                            Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
+
                         dialog.dismiss();
                         Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
                     }

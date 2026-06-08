@@ -29,6 +29,10 @@ import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ParagraphDao {
+    /**
+     * 获取段落总数
+     * @return 段落总数
+     */
     @Query("SELECT COUNT(*) FROM paragraphs")
     Flowable<Integer> getParagraphCountFlowable();
 
