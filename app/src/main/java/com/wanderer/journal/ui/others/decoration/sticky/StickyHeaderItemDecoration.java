@@ -59,6 +59,9 @@ public class StickyHeaderItemDecoration<VB extends ViewBinding> extends Recycler
         // 3. 计算粘性头部的 Y 轴坐标（处理“推开”效果）
         int headerTop = getHeaderTop(parent);
 
+        // 控制列表中真实分隔符的显示与隐藏
+        processChildVisibility(parent);
+
         // 4. 绘制头部
         canvas.save();
         canvas.translate(0, headerTop);
@@ -68,6 +71,9 @@ public class StickyHeaderItemDecoration<VB extends ViewBinding> extends Recycler
 
     /**
      * 确保 HeaderView 被正确创建和测量大小
+     *
+     * @param parent 宿主 RecyclerView
+     * @param data   新的头部数据
      */
     private void ensureHeaderView(RecyclerView parent, Object data) {
         if (binding == null) {
@@ -95,6 +101,8 @@ public class StickyHeaderItemDecoration<VB extends ViewBinding> extends Recycler
 
     /**
      * 计算 Top 坐标，实现下一个 Header 顶起当前 Header 的动画效果
+     *
+     * @param parent 宿主 RecyclerView
      */
     private int getHeaderTop(@NonNull RecyclerView parent) {
         int headerHeight = binding.getRoot().getHeight();
@@ -115,5 +123,31 @@ public class StickyHeaderItemDecoration<VB extends ViewBinding> extends Recycler
             }
         }
         return maxTop;
+    }
+
+    /**
+     * 动态控制真实分隔符的透明度，避免出现两个相同的分隔符视图
+     *
+     * @param parent 宿主 RecyclerView
+     */
+    private void processChildVisibility(@NonNull RecyclerView parent) {
+        int headerHeight = binding.getRoot().getHeight();
+
+        // 遍历当前屏幕上所有可见的子 View
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            View child = parent.getChildAt(i);
+            int position = parent.getChildAdapterPosition(child);
+
+            if (position != RecyclerView.NO_POSITION && adapter.isHeader(position)) {
+                // 如果这个真实的分隔符的底部，已经进入或穿过了粘性头部的覆盖区域
+                if (child.getBottom() < headerHeight) {
+                    // 将其设为完全透明
+                    child.setAlpha(0f);
+                } else {
+                    // 底部在粘性头部以下时恢复正常显示
+                    child.setAlpha(1f);
+                }
+            }
+        }
     }
 }
