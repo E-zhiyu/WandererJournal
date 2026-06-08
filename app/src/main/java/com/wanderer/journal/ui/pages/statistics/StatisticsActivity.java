@@ -25,6 +25,7 @@ import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

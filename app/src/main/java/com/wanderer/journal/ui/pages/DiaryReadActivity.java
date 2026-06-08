@@ -58,6 +58,7 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
@@ -497,6 +498,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                 }
         );
         binding.contentRecycler.setAdapter(adapter);
+
+        //应用粘性头部装饰器
+        StickyHeaderItemDecoration decoration = new StickyHeaderItemDecoration(adapter);
+        binding.contentRecycler.addItemDecoration(decoration);
 
         //为适配器绑定选择追踪器
         selectionTracker = new SelectionTracker.Builder<>(

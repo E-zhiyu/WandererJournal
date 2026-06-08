@@ -22,6 +22,7 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +30,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
-public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder> {
+public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
+ implements StickyHeaderAdapter {
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -68,6 +70,24 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+
+    @Override
+    public boolean isHeader(int position) {
+        ParagraphUiModel model = getItem(position);
+        return model instanceof ParagraphUiModel.Separator;
+    }
+
+    @Override
+    public String getHeaderTitle(int position) {
+        ParagraphUiModel model = getItem(position);
+        if (model instanceof ParagraphUiModel.Separator) {
+            return ((ParagraphUiModel.Separator) model).date.format(formatter);
+        } else if (model instanceof ParagraphUiModel.Item) {
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
+        } else {
+            return "N/A";
+        }
+    }
 
     public interface OnMediaClickedListener {
         /**
