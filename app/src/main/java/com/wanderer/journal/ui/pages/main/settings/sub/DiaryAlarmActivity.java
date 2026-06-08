@@ -101,16 +101,15 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 return;
             }
 
-            //有自启动权限的系统弹出提示
-            if (PermissionHelper.isAutoStartDefined()) {
-                Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
-            }
-
             //保存开关状态
             DiaryAlarmPreference.setSwitchStat(this, b);
 
             //安排提醒闹钟
             if (b) {
+                //有自启动权限的系统弹出提示
+                if (PermissionHelper.isAutoStartDefined()) {
+                    Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
+                }
                 AlarmHelper.setDiaryAlarm(this);
             } else {
                 AlarmHelper.cancelDiaryAlarm(this);
