@@ -158,11 +158,21 @@ public class ParagraphViewModel extends ViewModel {
      *
      * @param keyword       搜索关键词
      * @param emotionIdList 用户选择的情绪标签 ID
+     * @param filterMedia   是否需要由媒体文件
+     * @param db            数据库实例
      * @return 从数据库中获取符合搜索条件的下标
      */
-    public Flowable<List<Integer>> executeSearch(String keyword, List<Long> emotionIdList, DiaryDatabase db) {
-        //判断关键词是否为空
-        if ((keyword == null || keyword.isEmpty()) && (emotionIdList == null || emotionIdList.isEmpty())) {
+    public Flowable<List<Integer>> executeSearch(
+            String keyword,
+            List<Long> emotionIdList,
+            boolean filterMedia,
+            DiaryDatabase db
+    ) {
+        //判断是否没有过滤选项
+        if ((keyword == null || keyword.isEmpty()) &&
+                (emotionIdList == null || emotionIdList.isEmpty()) &&
+                !filterMedia
+        ) {
             return Flowable.empty();
         }
 
@@ -180,7 +190,12 @@ public class ParagraphViewModel extends ViewModel {
         }
 
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
-        return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(safeKeyword, emotionIdList, db)
+        return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
+                        safeKeyword,
+                        emotionIdList,
+                        filterMedia,
+                        db
+                )
                 .doOnNext(positionList -> {
                     // 每次收到新数据时更新 UI 状态
                     matchedPositions.postValue(positionList);

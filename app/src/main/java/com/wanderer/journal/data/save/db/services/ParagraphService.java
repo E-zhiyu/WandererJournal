@@ -107,24 +107,29 @@ public class ParagraphService {
     /**
      * 获取匹配搜索的段落的位置
      *
-     * @param keyword    搜索关键词
-     * @param emotionIds 情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
+     * @param keyword     搜索关键词
+     * @param emotionIds  情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
+     * @param filterMedia 是否需要由媒体文件
+     * @param db          数据库实例
      * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
      */
     @NonNull
     public static Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
             String keyword,
             List<Long> emotionIds,
+            boolean filterMedia,
             @NonNull DiaryDatabase db
     ) {
         ParagraphDao paragraphDao = db.paragraphDao();
         int useEmotionFilter = (emotionIds == null || emotionIds.isEmpty()) ? 0 : 1;
         int useContentFilter = (keyword == null || keyword.isEmpty()) ? 0 : 1;
+        int useMediaFilter = filterMedia ? 1 : 0;
         return paragraphDao.getSearchMatchedParagraphPositionsFlowableInternal(
                 keyword,
                 emotionIds,
                 useContentFilter,
-                useEmotionFilter
+                useEmotionFilter,
+                useMediaFilter
         );
     }
 }

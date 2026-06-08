@@ -61,8 +61,8 @@ import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagFilterBottomSheet;
-import com.wanderer.journal.ui.others.bottom.emotion.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.DiaryParagraphFilterBottomSheet;
+import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
@@ -91,6 +91,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
     private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
+    private boolean filterMedia = false;                                    //搜索时是否只显示带有媒体的段落
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
 
@@ -301,24 +302,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         //设置 SearchBar 的菜单按钮点击监听
         binding.contentSearchBar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_emotion_select) {
-                EmotionTagFilterBottomSheet bottomSheet = new EmotionTagFilterBottomSheet(
-                        checkedEmotionTagIdList,
-                        (emotionTag, isChecked) -> {
-                            long emotionId = emotionTag.getEmotionId();
-                            if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
-                                checkedEmotionTagIdList.add(emotionId);
-                            } else if (!isChecked) {
-                                checkedEmotionTagIdList.remove(emotionId);
-                            }
-                        },
-                        checkedEmotionTagIdList::clear
-                );
-                bottomSheet.setOnDismissListener(() -> {
-                    String keyword = (String) binding.contentSearchBar.getText();
-                    refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
-                    executeSearch(keyword);
-                });
-                bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
+                showFilterBottomSheet();
 
                 return true;
             } else if (item.getItemId() == R.id.action_share) {
@@ -351,6 +335,32 @@ public class DiaryReadActivity extends AppCompatActivity {
 
             return false;
         });
+    }
+
+    /**
+     * 显示过滤选项对话框
+     */
+    private void showFilterBottomSheet() {
+        DiaryParagraphFilterBottomSheet bottomSheet = new DiaryParagraphFilterBottomSheet(
+                checkedEmotionTagIdList,
+                filterMedia,
+                (emotionTag, isChecked) -> {
+                    long emotionId = emotionTag.getEmotionId();
+                    if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
+                        checkedEmotionTagIdList.add(emotionId);
+                    } else if (!isChecked) {
+                        checkedEmotionTagIdList.remove(emotionId);
+                    }
+                },
+                checkedEmotionTagIdList::clear,
+                isFiltered -> filterMedia = isFiltered
+        );
+        bottomSheet.setOnDismissListener(() -> {
+            refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
+            String keyword = (String) binding.contentSearchBar.getText();
+            executeSearch(keyword);
+        });
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
     }
 
     /**
@@ -707,7 +717,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void executeSearch(String keyword) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, db)
+        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -896,6 +906,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             backHelper.unregisterHandler(searchBackHandler);
             adapter.clearHighlight();           //清除文本高亮
             checkedEmotionTagIdList.clear();    //清空选择的情绪标签
+            filterMedia = false;                //不再过滤媒体
             refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);

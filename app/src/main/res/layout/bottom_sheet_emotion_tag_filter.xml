@@ -14,12 +14,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed" />
 
+    <!-- 标题文本 -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="@string/filter_emotion_tag"
+        android:text="@string/filter_diary_paragraph"
         android:textAppearance="?attr/textAppearanceTitleLarge"
         app:layout_constraintBottom_toTopOf="@id/clear_btn"
         app:layout_constraintEnd_toEndOf="parent"
@@ -27,6 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/drag_handle"
         app:layout_constraintVertical_chainStyle="packed" />
 
+    <!-- 清除筛选按钮 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/clear_btn"
         style="@style/TextBtnStyle"
@@ -34,18 +36,62 @@
         android:layout_height="wrap_content"
         android:text="@string/clear_filter"
         app:icon="@drawable/baseline_clear_24"
-        app:layout_constraintBottom_toTopOf="@id/recycler"
+        app:layout_constraintBottom_toTopOf="@id/emotion_tag_recycler"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title_text" />
 
+    <!-- 情绪标签列表标题 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/emotion_recycler_title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/emotion_tag"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        app:layout_constraintBottom_toTopOf="@id/emotion_tag_recycler"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/clear_btn" />
+
+    <!-- 情绪标签列表 -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler"
+        android:id="@+id/emotion_tag_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="10dp"
         android:orientation="horizontal"
         app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/clear_btn" />
+        app:layout_constraintTop_toBottomOf="@id/emotion_recycler_title_text" />
+
+    <!-- 其他筛选条件标题 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/other_title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/others"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/emotion_tag_recycler" />
+
+    <!-- 其他筛选条件开关 -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/others_filter_options_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        app:layout_constraintTop_toBottomOf="@id/other_title_text">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/media_filter_chip"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/include_media" />
+    </com.google.android.flexbox.FlexboxLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

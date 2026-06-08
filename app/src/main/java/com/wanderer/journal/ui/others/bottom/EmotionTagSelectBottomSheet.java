@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.bottom.emotion;
+package com.wanderer.journal.ui.others.bottom;
 
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +21,6 @@ import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagSelectAdapter;
-import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagAddModifyActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
