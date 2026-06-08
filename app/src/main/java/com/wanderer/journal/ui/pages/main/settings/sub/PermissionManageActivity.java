@@ -26,7 +26,7 @@ import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
 import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
 import io.noties.markwon.Markwon;
 

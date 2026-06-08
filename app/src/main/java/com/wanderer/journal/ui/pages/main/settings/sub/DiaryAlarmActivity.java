@@ -19,8 +19,8 @@ import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingClickableTextView;
-import com.wanderer.journal.ui.pages.main.settings.setting_option_views.SettingSwitchView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingSwitchView;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
