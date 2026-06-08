@@ -15,6 +15,9 @@ import io.noties.markwon.Markwon;
 
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.2.2\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 读日记界面的过滤器支持过滤带有媒体的段落\n" +
             "\n" +
             "### 修改内容\n" +
             "\n" +
