@@ -106,6 +106,7 @@ body {
 /* 页脚左侧文字区域 */
 .footer-left {
     display: flex;
+    max-width: 60%;
     flex-direction: column;
     gap: 4px;
 }
