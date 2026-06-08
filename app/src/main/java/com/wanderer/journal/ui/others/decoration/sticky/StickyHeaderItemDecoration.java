@@ -3,19 +3,41 @@ package com.wanderer.journal.ui.others.decoration.sticky;
 import android.graphics.Canvas;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewbinding.ViewBinding;
 
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+public class StickyHeaderItemDecoration<VB extends ViewBinding> extends RecyclerView.ItemDecoration {
+    private final StickyHeaderAdapter<?> adapter;
+    private final BindingInflater<VB> inflater;
+    private final HeaderBinder<VB, Object> binder;
 
-public class StickyHeaderItemDecoration extends RecyclerView.ItemDecoration {
-    private final StickyHeaderAdapter adapter;
-    private ViewHolderDateSeparatorBinding separatorBinding;
-    private String lastTitle = "";  //上次显示的日期文本
+    private VB binding;
+    private Object lastData = null;
 
-    public StickyHeaderItemDecoration(StickyHeaderAdapter adapter) {
+    public interface HeaderBinder<VB extends ViewBinding, T> {
+        void bind(VB binding, T data);
+    }
+
+    public interface BindingInflater<VB extends ViewBinding> {
+        VB inflate(LayoutInflater inflater, ViewGroup parent, boolean attachToRoot);
+    }
+
+    /**
+     * @param adapter  数据适配器接口
+     * @param inflater ViewBinding 的 inflate 方法引用 (例如 ItemDateSeparatorBinding::inflate)
+     * @param binder   如何将数据绑定到 ViewBinding 上的回调
+     */
+    @SuppressWarnings("unchecked")
+    public <T> StickyHeaderItemDecoration(
+            StickyHeaderAdapter<T> adapter,
+            BindingInflater<VB> inflater,
+            HeaderBinder<VB, T> binder) {
         this.adapter = adapter;
+        this.inflater = inflater;
+        this.binder = (HeaderBinder<VB, Object>) binder;
     }
 
     @Override
@@ -30,56 +52,52 @@ public class StickyHeaderItemDecoration extends RecyclerView.ItemDecoration {
         if (firstVisiblePosition == RecyclerView.NO_POSITION) return;
 
         // 2. 创建或更新头部 View
-        String title = adapter.getHeaderTitle(firstVisiblePosition);
-        if (title.isEmpty()) return;
-
-        ensureHeaderView(parent, title);
+        Object data = adapter.getHeaderData(firstVisiblePosition);
+        if (data == null || (data instanceof String && ((String) data).isEmpty())) return;
+        ensureHeaderView(parent, data);
 
         // 3. 计算粘性头部的 Y 轴坐标（处理“推开”效果）
-        int headerTop = getHeaderTop(parent, firstChild, firstVisiblePosition);
+        int headerTop = getHeaderTop(parent);
 
         // 4. 绘制头部
         canvas.save();
         canvas.translate(0, headerTop);
-        separatorBinding.getRoot().draw(canvas);
+        binding.getRoot().draw(canvas);
         canvas.restore();
     }
 
     /**
      * 确保 HeaderView 被正确创建和测量大小
      */
-    private void ensureHeaderView(RecyclerView parent, String title) {
-        if (separatorBinding == null) {
+    private void ensureHeaderView(RecyclerView parent, Object data) {
+        if (binding == null) {
             // 实例化你自定义的日期分隔符布局（请替换为你自己的 layout id 和 view id）
-            separatorBinding = ViewHolderDateSeparatorBinding.inflate(
-                    LayoutInflater.from(parent.getContext())
-            );
+            binding = inflater.inflate(LayoutInflater.from(parent.getContext()), parent, false);
         }
 
         //两次文本不一样时重新渲染并测量布局
-        if (!title.equals(lastTitle)) {
-            lastTitle = title;
-            separatorBinding.dateText.setText(title);
+        // 2. 如果数据发生变化，重新绑定数据并触发测量
+        if (!data.equals(lastData)) {
+            lastData = data;
 
-            // 必须手动测量和布局，因为它是脱离 RecyclerView 渲染树独立绘制的
+            // 调用外部传入的逻辑去更新 UI
+            binder.bind(binding, data);
+
+            // 核心：用父布局（RecyclerView）的当前宽度来约束 Header 的宽度
             int widthSpec = View.MeasureSpec.makeMeasureSpec(parent.getWidth(), View.MeasureSpec.EXACTLY);
             int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-            separatorBinding.getRoot().measure(widthSpec, heightSpec);
-            separatorBinding.getRoot().layout(
-                    0,
-                    0,
-                    separatorBinding.getRoot().getMeasuredWidth(),
-                    separatorBinding.getRoot().getMeasuredHeight()
-            );
-        }
 
+            View headerRoot = binding.getRoot();
+            headerRoot.measure(widthSpec, heightSpec);
+            headerRoot.layout(0, 0, headerRoot.getMeasuredWidth(), headerRoot.getMeasuredHeight());
+        }
     }
 
     /**
      * 计算 Top 坐标，实现下一个 Header 顶起当前 Header 的动画效果
      */
-    private int getHeaderTop(@NonNull RecyclerView parent, View firstChild, int firstVisiblePosition) {
-        int headerHeight = separatorBinding.getRoot().getHeight();
+    private int getHeaderTop(@NonNull RecyclerView parent) {
+        int headerHeight = binding.getRoot().getHeight();
         int maxTop = 0;
 
         // 遍历当前屏幕上可见的 View，寻找下一个分隔符

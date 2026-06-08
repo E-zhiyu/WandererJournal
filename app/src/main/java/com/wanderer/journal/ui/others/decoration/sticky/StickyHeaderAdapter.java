@@ -1,6 +1,6 @@
 package com.wanderer.journal.ui.others.decoration.sticky;
 
-public interface StickyHeaderAdapter {
+public interface StickyHeaderAdapter<T> {
     /**
      * 判断指定的位置是否为粘性头部视图
      *
@@ -15,5 +15,5 @@ public interface StickyHeaderAdapter {
      * @param position 视图位置
      * @return 粘性头部视图的文本
      */
-    String getHeaderTitle(int position);
+    T getHeaderData(int position);
 }
