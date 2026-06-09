@@ -90,7 +90,6 @@ body {
     border-radius: 20px;
     box-sizing: border-box;
 }
-
 /* 页脚左侧文字区域 */
 .footer-left {
     display: flex;
@@ -141,7 +140,6 @@ body {
     height: 100%;
     object-fit: cover;
     border-radius: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
     display: block; /* 消除图片下方的默认空白间隙 */
 }
 /* 文本下方的图片与文本隔开一段距离 */
