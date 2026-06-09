@@ -36,6 +36,7 @@ jobs:
       - name: Build Signed APK
         run: |
           ./gradlew assembleRelease \
+            --no-daemon \
             -Pandroid.injected.signing.store.file=$(pwd)/app/release.jks \
             -Pandroid.injected.signing.store.password=${{ secrets.KEY_STORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.ALIAS }} \
