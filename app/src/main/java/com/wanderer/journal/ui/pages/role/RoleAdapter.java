@@ -196,6 +196,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                 i++;
             }
             itemHolder.binding.aliasText.setText(aliasBuilder.toString());
+
+            //身份描述
+            itemHolder.binding.identityText.setText(itemModel.model.getRole().getIdentity());
         }
     }
 }

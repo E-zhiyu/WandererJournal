@@ -19,8 +19,8 @@
             android:layout_height="wrap_content"
             android:text="@string/role"
             android:textAppearance="?attr/textAppearanceBodyLarge"
+            app:layout_constraintBottom_toTopOf="@id/alias_text"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/alias_text"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed" />
 
@@ -30,13 +30,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:maxLength="20"
             android:maxLines="1"
             android:text="@string/role"
-            android:maxLength="20"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOutline"
+            app:layout_constraintBottom_toTopOf="@id/identity_text"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/name_text"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <!-- 身份文本 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/identity_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/role"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOutline"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/name_text" />
+            app:layout_constraintTop_toBottomOf="@id/alias_text" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
