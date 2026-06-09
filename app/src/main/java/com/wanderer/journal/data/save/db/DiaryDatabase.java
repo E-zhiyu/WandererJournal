@@ -13,11 +13,14 @@ import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
 
 @Database(
         entities = {
@@ -25,9 +28,11 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
                 ParagraphEntity.class,
                 MediaEntity.class,
                 EmotionTagEntity.class,
-                EmotionParagraphRefEntity.class
+                EmotionParagraphRefEntity.class,
+                RoleEntity.class,
+                RoleAliaEntity.class
         },
-        version = 4
+        version = 5
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -54,7 +59,8 @@ public abstract class DiaryDatabase extends RoomDatabase {
                             .addMigrations(
                                     DatabaseMigrations.MIGRATION_1_2,
                                     DatabaseMigrations.MIGRATION_2_3,
-                                    DatabaseMigrations.MIGRATION_3_4
+                                    DatabaseMigrations.MIGRATION_3_4,
+                                    DatabaseMigrations.MIGRATION_4_5
                             )
                             .build();
                 }
@@ -71,4 +77,5 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public abstract MediaDao mediaDao();
 
     public abstract EmotionTagDao emotionTagDao();
+    public abstract RoleDao roleDao();
 }
