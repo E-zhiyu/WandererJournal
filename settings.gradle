@@ -1,5 +1,7 @@
 pluginManagement {
     repositories {
+        mavenCentral()
+        gradlePluginPortal()
         maven { url 'https://maven.aliyun.com/repository/public' } // 阿里云公共仓库
         google {
             content {
@@ -8,8 +10,6 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
-        mavenCentral()
-        gradlePluginPortal()
     }
 }
 plugins {
@@ -18,10 +18,10 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/public' } // 阿里云公共仓库
-        maven { url "https://www.jitpack.io" }
         google()
         mavenCentral()
+        maven { url 'https://maven.aliyun.com/repository/public' } // 阿里云公共仓库
+        maven { url "https://www.jitpack.io" }
     }
 }
 
