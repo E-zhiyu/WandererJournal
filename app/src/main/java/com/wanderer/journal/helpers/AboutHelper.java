@@ -14,7 +14,13 @@ import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.2.2\n" +
+    private final static String CHANGELOG = "# v1.2.3\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复分享图片中若带有媒体预览图可能产生不规则的线段的BUG\n" +
+            "\n" +
+            "# v1.2.2\n" +
             "### 新增内容\n" +
             "\n" +
             "- 读日记界面的过滤器支持过滤带有媒体的段落\n" +
