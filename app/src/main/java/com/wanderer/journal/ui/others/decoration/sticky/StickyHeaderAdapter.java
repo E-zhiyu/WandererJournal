@@ -1,5 +1,11 @@
 package com.wanderer.journal.ui.others.decoration.sticky;
 
+import android.content.Context;
+
+/**
+ * 粘性头部适配器
+ * @param <T> 粘性头部显示的数据类型
+ */
 public interface StickyHeaderAdapter<T> {
     /**
      * 判断指定的位置是否为粘性头部视图
@@ -15,5 +21,5 @@ public interface StickyHeaderAdapter<T> {
      * @param position 视图位置
      * @return 粘性头部视图的文本
      */
-    T getHeaderData(int position);
+    T getHeaderData(int position, Context context);
 }

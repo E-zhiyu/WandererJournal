@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
+import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -106,14 +107,14 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public String getHeaderData(int position) {
+    public String getHeaderData(int position,Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
         } else if (model instanceof ParagraphUiModel.Item) {
             return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
         } else {
-            return "N/A";
+            return context.getString(R.string.not_applicable);
         }
     }
 

@@ -17,12 +17,14 @@ public class RoleEntity {
     @PrimaryKey(autoGenerate = true)
     private long roleId;            //自增主键
     private String name;            //名称
+    private String identity;        //身份描述
     private String impression;      //印象描述
     @ColumnInfo(defaultValue = "2")
     private int relationship = 2;   //关系程度
 
-    public RoleEntity(String name, String impression, int relationship) {
+    public RoleEntity(String name, String identity, String impression, int relationship) {
         this.name = name;
+        this.identity = identity;
         this.impression = impression;
         this.relationship = relationship;
     }
@@ -41,6 +43,14 @@ public class RoleEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(String identity) {
+        this.identity = identity;
     }
 
     public String getImpression() {

@@ -503,12 +503,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         //应用粘性头部装饰器
         StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                (inflater, parent, attachToRoot) ->
-                        ViewHolderDateSeparatorBinding.inflate(
-                                inflater,
-                                parent,
-                                false
-                        ),
+                ViewHolderDateSeparatorBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);

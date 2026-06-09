@@ -21,7 +21,7 @@
             style="@style/Widget.Material3Expressive.SearchBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/search_for_diary_content"
+            android:hint="@string/diary_read_search_hint"
             app:layout_scrollFlags="scroll|enterAlways|snap"
             app:menu="@menu/menu_diary_read_search_bar" />
 
@@ -160,7 +160,7 @@
         android:id="@+id/diary_content_search_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="@string/search_for_diary_content"
+        android:hint="@string/diary_read_search_hint"
         app:layout_anchor="@id/content_search_bar">
 
         <LinearLayout

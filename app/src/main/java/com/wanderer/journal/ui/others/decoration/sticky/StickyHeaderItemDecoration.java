@@ -52,7 +52,7 @@ public class StickyHeaderItemDecoration<VB extends ViewBinding> extends Recycler
         if (firstVisiblePosition == RecyclerView.NO_POSITION) return;
 
         // 2. 创建或更新头部 View
-        Object data = adapter.getHeaderData(firstVisiblePosition);
+        Object data = adapter.getHeaderData(firstVisiblePosition, parent.getContext());
         if (data == null || (data instanceof String && ((String) data).isEmpty())) return;
         ensureHeaderView(parent, data);
 

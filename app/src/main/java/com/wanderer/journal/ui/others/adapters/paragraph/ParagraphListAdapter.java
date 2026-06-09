@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -78,14 +79,14 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public String getHeaderData(int position) {
+    public String getHeaderData(int position,Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
         } else if (model instanceof ParagraphUiModel.Item) {
             return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
         } else {
-            return "N/A";
+            return context.getString(R.string.not_applicable);
         }
     }
 

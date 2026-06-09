@@ -225,12 +225,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         //添加粘性头部适配器
         StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                (inflater, parent, attachToRoot) ->
-                        ViewHolderDateSeparatorBinding.inflate(
-                                inflater,
-                                parent,
-                                false
-                        ),
+                ViewHolderDateSeparatorBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.previewRecycler.addItemDecoration(decoration);

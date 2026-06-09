@@ -22,6 +22,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.role.RoleManageActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
 import java.time.LocalDate;
@@ -261,7 +262,8 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.roleCountCard.setOnClickListener(view -> {
-            //TODO:角色管理入口
+            Intent skip2RoleManage = new Intent(requireContext(), RoleManageActivity.class);
+            startActivity(skip2RoleManage);
         });
 
         RoleDao roleDao = DiaryDatabase.getInstance(requireContext()).roleDao();
