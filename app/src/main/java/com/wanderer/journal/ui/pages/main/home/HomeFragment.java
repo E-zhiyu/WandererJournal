@@ -16,7 +16,9 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
+import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
@@ -71,6 +73,7 @@ public class HomeFragment extends Fragment {
         initDiaryCountCard();
         initParagraphCountCard();
         initEmotionTagCountCard();
+        initRoleCountCard();
     }
 
     /**
@@ -101,24 +104,31 @@ public class HomeFragment extends Fragment {
         disposable.add(diaryDao.getEarliestDiaryDateFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(dateOptional -> {
-                    LocalDate date = dateOptional.orElse(null);
-                    if (date == null) {
-                        binding.startDateText.setText(R.string.not_applicable);
-                        binding.dateDifferenceText.setText(R.string.not_applicable);
-                    } else {
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE");
-                        binding.startDateText.setText(date.format(formatter));
+                .subscribe(
+                        dateOptional -> {
+                            LocalDate date = dateOptional.orElse(null);
+                            if (date == null) {
+                                binding.startDateText.setText(R.string.not_applicable);
+                                binding.dateDifferenceText.setText(R.string.not_applicable);
+                            } else {
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE");
+                                binding.startDateText.setText(date.format(formatter));
 
-                        //计算时间差
-                        long difference = ChronoUnit.DAYS.between(date, LocalDate.now());
-                        binding.dateDifferenceText.setText(String.format(
-                                Locale.getDefault(),
-                                "%d天",
-                                difference
-                        ));
-                    }
-                })
+                                //计算时间差
+                                long difference = ChronoUnit.DAYS.between(date, LocalDate.now());
+                                binding.dateDifferenceText.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%d天",
+                                        difference
+                                ));
+                            }
+                        },
+                        e -> {
+                            binding.startDateText.setText(R.string.not_applicable);
+                            binding.dateDifferenceText.setText(R.string.not_applicable);
+                            ExceptionHelper.showExceptionDialog(requireContext(), e);
+                        }
+                )
         );
     }
 
@@ -132,7 +142,7 @@ public class HomeFragment extends Fragment {
                 binding.diaryCountCard,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
 
@@ -150,7 +160,13 @@ public class HomeFragment extends Fragment {
         disposable.add(diaryDao.getDiaryCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(count -> binding.diaryCountText.setText(String.valueOf(count)))
+                .subscribe(
+                        count -> binding.diaryCountText.setText(String.valueOf(count)),
+                        e -> {
+                            binding.diaryCountText.setText(R.string.not_applicable);
+                            ExceptionHelper.showExceptionDialog(requireContext(), e);
+                        }
+                )
         );
     }
 
@@ -181,7 +197,13 @@ public class HomeFragment extends Fragment {
         disposable.add(paragraphDao.getParagraphCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(count -> binding.paragraphCountText.setText(String.valueOf(count)))
+                .subscribe(
+                        count -> binding.paragraphCountText.setText(String.valueOf(count)),
+                        e -> {
+                            binding.paragraphCountText.setText(R.string.not_applicable);
+                            ExceptionHelper.showExceptionDialog(requireContext(), e);
+                        }
+                )
         );
     }
 
@@ -195,8 +217,8 @@ public class HomeFragment extends Fragment {
                 binding.emotionTagCountCard,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
                 AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS
         );
         AppearanceAnimationHelper.attachMorphAnimation(binding.emotionTagCountCard);
 
@@ -212,7 +234,47 @@ public class HomeFragment extends Fragment {
         disposable.add(emotionTagDao.getEmotionTagCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(count -> binding.emotionTagCountText.setText(String.valueOf(count)))
+                .subscribe(
+                        count -> binding.emotionTagCountText.setText(String.valueOf(count)),
+                        e -> {
+                            binding.emotionTagCountText.setText(R.string.not_applicable);
+                            ExceptionHelper.showExceptionDialog(requireContext(), e);
+                        }
+                )
+        );
+    }
+
+    /**
+     * 初始化角色计数卡片
+     */
+    private void initRoleCountCard() {
+        //设置圆角
+        AppearanceAnimationHelper.setRadius(
+                requireContext(),
+                binding.roleCountCard,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
+                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+        );
+        AppearanceAnimationHelper.attachMorphAnimation(binding.roleCountCard);
+
+        //设置点击监听
+        binding.roleCountCard.setOnClickListener(view -> {
+            //TODO:角色管理入口
+        });
+
+        RoleDao roleDao = DiaryDatabase.getInstance(requireContext()).roleDao();
+        disposable.add(roleDao.getRoleCountFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> binding.roleCountText.setText(String.valueOf(count)),
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(requireContext(), e);
+                            binding.roleCountText.setText(R.string.not_applicable);
+                        }
+                )
         );
     }
 

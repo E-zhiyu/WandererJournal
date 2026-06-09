@@ -109,6 +109,7 @@
     <string name="others">其他</string>
     <string name="include_media">包含媒体</string>
     <string name="skip_date">日期跳转</string>
+    <string name="role">角色</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>
