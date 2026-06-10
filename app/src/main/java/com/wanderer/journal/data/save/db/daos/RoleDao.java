@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteException;
 
 import androidx.annotation.NonNull;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -17,6 +18,7 @@ import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 
 @Dao
@@ -104,4 +106,13 @@ public interface RoleDao {
                 .collect(Collectors.toList());
         insertRoleAlias(aliaEntityList);
     }
+
+    /**
+     * 删除角色
+     *
+     * @param role 待删除的角色
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteRole(RoleEntity role);
 }

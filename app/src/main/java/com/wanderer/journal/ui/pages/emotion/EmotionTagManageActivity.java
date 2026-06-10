@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.pages.emotion;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
@@ -148,7 +149,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
      * @param view       PopupMenu绑定的视图
      */
     private void showEmotionTagPopupMenu(EmotionTagEntity emotionTag, View view) {
-        PopupMenu popupMenu = new PopupMenu(this, view);
+        PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_emotion_tag_edit, popupMenu.getMenu());
 
         //设置监听
