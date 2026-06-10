@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 
@@ -47,7 +48,16 @@ public class RoleInputActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+
+            binding.linearLayout.setPadding(
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+            );
+
             return insets;
         });
 
@@ -63,8 +73,8 @@ public class RoleInputActivity extends AppCompatActivity {
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
-                int keyboardHeight = Math.max(systemBars.bottom, imeInsets.bottom);
-                binding.getRoot().setPadding(systemBars.left, 0, systemBars.right, keyboardHeight);
+                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
+                binding.bottomBtnGroup.setTranslationY(-keyboardHeight);
 
                 return insets;
             }
