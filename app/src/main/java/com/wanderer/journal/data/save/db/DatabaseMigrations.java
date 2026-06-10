@@ -29,15 +29,15 @@ public class DatabaseMigrations {
         }
     };
 
-    //添加角色表和角色称呼表
+    //添加角色表和角色别名表
     public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
-            db.execSQL("CREATE TABLE IF NOT EXISTS `roles` (`roleId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `impression` TEXT, `relationship` INTEGER NOT NULL DEFAULT 2)");
+            db.execSQL("CREATE TABLE IF NOT EXISTS `roles` (`roleId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `identity` TEXT, `impression` TEXT, `relationship` INTEGER NOT NULL DEFAULT 2)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_roleId` ON `roles` (`roleId`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_name` ON `roles` (`name`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_relationship` ON `roles` (`relationship`)");
-            db.execSQL("CREATE TABLE IF NOT EXISTS `roleAlias` (`roleId` INTEGER NOT NULL, `alia` TEXT, PRIMARY KEY(`roleId`), FOREIGN KEY(`roleId`) REFERENCES `roles`(`roleId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
+            db.execSQL("CREATE TABLE IF NOT EXISTS `roleAlias` (`roleId` INTEGER NOT NULL, `aliaId` INTEGER NOT NULL, `alia` TEXT, PRIMARY KEY(`roleId`, `aliaId`), FOREIGN KEY(`roleId`) REFERENCES `roles`(`roleId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roleAlias_roleId` ON `roleAlias` (`roleId`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roleAlias_alia` ON `roleAlias` (`alia`)");
         }
