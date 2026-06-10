@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
 import com.wanderer.journal.helpers.file.backup.DiaryBackupHelper;
+import com.wanderer.journal.helpers.file.backup.RoleBackupHelper;
 
 import java.util.function.Function;
 
@@ -17,6 +18,11 @@ public enum BackupDataType {
             "日记数据",
             "diary.json",
             DiaryBackupHelper::new
+    ),
+    ROLE(
+            "角色数据",
+            "role.json",
+            RoleBackupHelper::new
     );
     private final String title;
     private final String fileName;

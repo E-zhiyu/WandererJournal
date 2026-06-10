@@ -25,14 +25,14 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
     protected String tempDataFileName;  //临时数据文件名称
 
     public BackupHelperBase(Context context) {
-        db = createHelper(context);
+        db = getDatabase(context);
         mapClass = getMapClass();
         tempDataFileName = getTempDataFileName();
     }
 
     protected abstract Class<M> getMapClass();
 
-    protected abstract D createHelper(Context context); //子类需要实现的生成数据库实例的方法
+    protected abstract D getDatabase(Context context); //子类需要实现的生成数据库实例的方法
 
     protected abstract M getAllDataInMap();             //获取数据字典的方法
 

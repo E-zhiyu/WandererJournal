@@ -115,4 +115,48 @@ public interface RoleDao {
      */
     @Delete
     Completable deleteRole(RoleEntity role);
+
+    /**
+     * 导出角色数据
+     *
+     * @return 角色列表
+     */
+    @Query("SELECT * FROM roles")
+    List<RoleEntity> exportRoleData();
+
+    /**
+     * 导出角色别称数据
+     *
+     * @return 角色别称列表
+     */
+    @Query("SELECT * FROM roleAlias")
+    List<RoleAliaEntity> exportRoleAliaData();
+
+    /**
+     * 清空角色表
+     */
+    @Query("DELETE FROM roles")
+    void clearRole();
+
+    /**
+     * 清空角色别名表
+     */
+    @Query("DELETE FROM roleAlias")
+    void clearRoleAlia();
+
+    /**
+     * 导入角色数据
+     *
+     * @param roleList 角色列表
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void importRoleData(List<RoleEntity> roleList);
+
+    /**
+     * 导入角色别名数据
+     *
+     * @param roleAliaEntityList 角色别名列表
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void importRoleAliaList(List<RoleAliaEntity> roleAliaEntityList);
 }

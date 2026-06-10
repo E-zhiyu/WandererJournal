@@ -32,7 +32,7 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
     }
 
     @Override
-    protected DiaryDatabase createHelper(Context context) {
+    protected DiaryDatabase getDatabase(Context context) {
         return DiaryDatabase.getInstance(context);
     }
 
