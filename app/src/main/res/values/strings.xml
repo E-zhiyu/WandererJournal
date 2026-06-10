@@ -111,6 +111,15 @@
     <string name="role_search_hint">搜索名称、别名……</string>
     <string name="no_role">无角色</string>
     <string name="relationship">关系</string>
+    <string name="add_role">新建角色</string>
+    <string name="identity">身份</string>
+    <string name="role_name_helper">该角色的通用称呼，建议填真实名称</string>
+    <string name="role_identity_helper">该角色相对于您的身份描述（如：同学、老师）</string>
+    <string name="impression">印象</string>
+    <string name="role_impression_helper">您对该角色的印象和评价</string>
+    <string name="role_relationship_helper">您与该角色的关系好坏程度</string>
+    <string name="add_alia">添加别名</string>
+    <string name="modify_role">修改角色</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>

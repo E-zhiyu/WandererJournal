@@ -1,6 +1,12 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
+    ROLE_ID("role_id"),                                 //角色 ID
+    ROLE_NAME("role_name"),                             //角色名称
+    ROLE_IDENTITY("role_identity"),                     //角色身份
+    ROLE_IMPRESSION("role_impression"),                 //角色印象
+    ROLE_RELATIONSHIP("role_relationship"),             //角色关系
+    ROLE_ALIAS("role_alias"),                           //角色别名
     EMOTION_TAG_ID("emotion_tag_id"),                   //情绪标签的 ID
     EMOTION_TAG_TYPE("emotion_tag_type"),               //情绪标签种类
     EMOTION_TAG_NAME("emotion_tag_name"),               //情绪标签名称

@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.role;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -59,7 +60,8 @@ public class RoleManageActivity extends AppCompatActivity {
     private void initViews() {
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
-            //TODO:添加监听器
+            Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);
+            startActivity(skip2RoleInput);
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
         AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);

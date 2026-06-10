@@ -24,7 +24,7 @@ import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagSelectAdapter;
-import com.wanderer.journal.ui.pages.emotion.EmotionTagAddModifyActivity;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -104,7 +104,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
                 (model, view) -> {
                     if (model == null) {
-                        Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagAddModifyActivity.class);
+                        Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
                         startActivity(skip2EmotionAdd);
                         return;
                     }

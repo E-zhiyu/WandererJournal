@@ -42,7 +42,7 @@
             android:name=".ui.pages.statistics.StatisticsActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.pages.emotion.EmotionTagAddModifyActivity"
+            android:name=".ui.pages.emotion.EmotionTagInputActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.emotion.EmotionTagManageActivity" />
         <activity
@@ -106,6 +106,10 @@
         </receiver> <!-- 开机广播接收器 -->
         <activity
             android:name=".ui.pages.role.RoleManageActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.pages.role.RoleInputActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

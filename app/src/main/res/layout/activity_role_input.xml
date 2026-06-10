@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.emotion.EmotionTagAddModifyActivity">
+    tools:context=".ui.pages.role.RoleInputActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     app:layout_collapseMode="pin"
-                    app:title="@string/add_emotion_tag" />
+                    app:title="@string/add_role" />
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -53,52 +53,81 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/name"
-                    android:nextFocusDown="@id/description_layout"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="10"
-                    app:helperText="@string/emotion_tag_name_helper">
+                    app:helperText="@string/role_name_helper">
+
+                    <requestFocus />
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/name_input"
                         style="@style/UserInputEditTextStyle"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:maxLength="10"
-                        android:maxLines="1" />
+                        android:layout_height="wrap_content" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- 描述 -->
+                <!-- 身份 -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/description_layout"
+                    android:id="@+id/identity_layout"
                     style="@style/CommonTextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/description"
-                    app:helperText="@string/emotion_tag_description_helper">
+                    android:hint="@string/identity"
+                    app:helperText="@string/role_identity_helper">
 
                     <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/description_input"
+                        android:id="@+id/identity_input"
+                        style="@style/UserInputEditTextStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- 印象 -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/impression_layout"
+                    style="@style/CommonTextInputLayoutStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/impression"
+                    app:helperText="@string/role_impression_helper">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/impression_input"
                         style="@style/UserInputEditTextStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:maxLines="1" />
+                        android:inputType="textMultiLine"
+                        android:maxLines="5" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- 类型 -->
+                <!-- 关系 -->
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/type_layout"
+                    android:id="@+id/relationship_layout"
                     style="@style/DropdownMenuTextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="@string/emotion_type"
-                    app:helperText="@string/emotion_type_helper">
+                    android:hint="@string/relationship"
+                    app:helperText="@string/role_relationship_helper">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/type_input"
+                        android:id="@+id/relationship_input"
                         style="@style/UneditableAutoCompleteTextViewStyle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- 添加别名 Chip -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/add_alia_chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/add_alia" />
+
+                <!-- 别名列表 -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/alia_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

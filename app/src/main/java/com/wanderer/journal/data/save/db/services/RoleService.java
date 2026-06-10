@@ -5,12 +5,14 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 
 public class RoleService {
@@ -33,9 +35,9 @@ public class RoleService {
                     String firstSeparator = RoleRelationship.values()[rawList.get(0).getRole().getRelationship()].getTitle();
                     resultList.add(new RoleUiModel.Separator(firstSeparator));
 
-                    for (int i = 0; i < rawList.size() - 1; i++) {
+                    for (int i = 0; i < rawList.size(); i++) {
                         RoleEntityModel currentModel = rawList.get(i);
-                        RoleEntityModel nextModel = i < rawList.size() - 2 ? rawList.get(i + 1) : null;
+                        RoleEntityModel nextModel = i < rawList.size() - 1 ? rawList.get(i + 1) : null;
 
                         //添加角色数据
                         resultList.add(new RoleUiModel.Item(currentModel));
@@ -53,5 +55,37 @@ public class RoleService {
 
                     return resultList;
                 });
+    }
+
+    /**
+     * 添加角色
+     *
+     * @param db       数据库实例
+     * @param role     新角色
+     * @param aliaList 角色别名列表
+     * @return 是否完成
+     */
+    public static Completable addRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
+        RoleDao roleDao = db.roleDao();
+        return Completable.defer(() -> {
+            roleDao.addRole(role, aliaList);
+            return Completable.complete();
+        });
+    }
+
+    /**
+     * 更新角色
+     *
+     * @param db       数据库实例
+     * @param role     新角色
+     * @param aliaList 角色别名列表
+     * @return 是否完成
+     */
+    public static Completable updateRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
+        RoleDao roleDao = db.roleDao();
+        return Completable.defer(() -> {
+            roleDao.updateRole(role, aliaList);
+            return Completable.complete();
+        });
     }
 }

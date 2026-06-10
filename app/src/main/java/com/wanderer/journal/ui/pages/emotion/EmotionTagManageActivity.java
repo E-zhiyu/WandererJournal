@@ -68,7 +68,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
 
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
-            Intent skip2EmotionTagAdd = new Intent(this, EmotionTagAddModifyActivity.class);
+            Intent skip2EmotionTagAdd = new Intent(this, EmotionTagInputActivity.class);
             startActivity(skip2EmotionTagAdd);
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
@@ -77,7 +77,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
                 emotionTag -> {
-                    Intent skip2EmotionTagModify = new Intent(this, EmotionTagAddModifyActivity.class);
+                    Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
                     Bundle bundle = getEmotionTagModifyBundle(emotionTag);
                     skip2EmotionTagModify.putExtras(bundle);
                     startActivity(skip2EmotionTagModify);
