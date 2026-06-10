@@ -14,7 +14,13 @@ import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import io.noties.markwon.Markwon;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.2.3\n" +
+    private final static String CHANGELOG = "# v1.3.0\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增角色保存功能，用于保存日记中出现的人物\n" +
+            "\n" +
+            "# v1.2.3\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
