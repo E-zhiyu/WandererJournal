@@ -18,7 +18,7 @@ public class ProgressDialogBuilder
         DialogInterface.OnClickListener,
         DialogInterface.OnClickListener
         > {
-    private final String originSubTitle;                //对话框底部副标题
+    private final String originSubTitle;    //对话框底部副标题
 
     public ProgressDialogBuilder(Context context, String dialogTitle, @Nullable String originSubTitle) {
         super(context, dialogTitle);
@@ -48,6 +48,7 @@ public class ProgressDialogBuilder
     @Override
     public AlertDialog show() {
         binding.subTitleText.setText(originSubTitle);
+        setIndeterminate(true);    //默认不确定进度模式
         return super.show();
     }
 
