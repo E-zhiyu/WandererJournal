@@ -128,6 +128,7 @@ public class WriteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //底部输入框卡片
@@ -136,6 +137,14 @@ public class WriteActivity extends AppCompatActivity {
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     systemBars.bottom
+            );
+
+            //内容 RecyclerView 额外增加5dp的底部内边距
+            binding.contentRecycler.setPadding(
+                    systemBars.left,
+                    0,
+                    systemBars.right,
+                    imeInsets.bottom + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
@@ -157,15 +166,7 @@ public class WriteActivity extends AppCompatActivity {
                 binding.contentInputCard.setTranslationY(-keyboardHeight);
                 binding.contentEditCard.setTranslationY(-keyboardHeight);
                 binding.mediaCard.setTranslationY(-keyboardHeight);
-                binding.emptyText.setTranslationY(-keyboardHeight / 2f);
-
-                //内容 RecyclerView 额外增加5dp的底部内边距
-                binding.contentRecycler.setPadding(
-                        systemBars.left,
-                        0,
-                        systemBars.right,
-                        keyboardHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
-                );
+                binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
                 return insets;
             }
@@ -207,14 +208,9 @@ public class WriteActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
                     (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) {
-                            return;
-                        }
-
                         binding.contentInputCard
                                 .animate()
                                 .translationY(-currentHeight)
