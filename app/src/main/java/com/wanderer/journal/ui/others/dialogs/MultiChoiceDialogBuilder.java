@@ -12,7 +12,8 @@ import com.wanderer.journal.ui.others.adapters.MultiChoiceDialogAdapter;
 import java.util.List;
 
 public class MultiChoiceDialogBuilder
-        extends CustomDialogBuilderBase<MultiChoiceDialogBuilder.OnConfirmedListener, MultiChoiceDialogBuilder.OnConfirmedListener> {
+        extends CustomDialogBuilderBase<MultiChoiceDialogBuilder.OnClickedListener,
+        MultiChoiceDialogBuilder.OnClickedListener> {
     private final MultiChoiceDialogAdapter adapter; //多选列表适配器
     private RecyclerView itemListRecycler;          //选项列表视图
 
@@ -40,7 +41,7 @@ public class MultiChoiceDialogBuilder
         }
     }
 
-    public interface OnConfirmedListener {
+    public interface OnClickedListener {
         /**
          * 确认按钮点击回调
          *
@@ -67,7 +68,7 @@ public class MultiChoiceDialogBuilder
     }
 
     @Override
-    protected View getView() {
+    protected View getCustomView() {
         DialogMultichoiceBinding binding = DialogMultichoiceBinding.inflate(
                 LayoutInflater.from(builder.getContext())
         );
@@ -79,7 +80,7 @@ public class MultiChoiceDialogBuilder
     }
 
     @Override
-    public CustomDialogBuilderBase<OnConfirmedListener, OnConfirmedListener> setPositiveButton(String btnTitle, OnConfirmedListener callback) {
+    public CustomDialogBuilderBase<OnClickedListener, OnClickedListener> setPositiveButton(String btnTitle, OnClickedListener callback) {
         if (callback != null) {
             builder.setPositiveButton(btnTitle, (dialogInterface, i) ->
                     callback.onConfirmed(adapter.getCheckedStatList())
@@ -91,7 +92,7 @@ public class MultiChoiceDialogBuilder
     }
 
     @Override
-    public CustomDialogBuilderBase<OnConfirmedListener, OnConfirmedListener> setNegativeButton(String btnTitle, OnConfirmedListener callback) {
+    public CustomDialogBuilderBase<OnClickedListener, OnClickedListener> setNegativeButton(String btnTitle, OnClickedListener callback) {
         if (callback != null) {
             builder.setNegativeButton(btnTitle, (dialogInterface, i) ->
                     callback.onConfirmed(adapter.getCheckedStatList())

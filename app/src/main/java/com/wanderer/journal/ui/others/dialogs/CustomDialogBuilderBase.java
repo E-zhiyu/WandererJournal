@@ -28,7 +28,7 @@ public abstract class CustomDialogBuilderBase<P, N> {
         builder.setTitle(dialogTitle);
 
         //设置自定义视图
-        View customView = getView();
+        View customView = getCustomView();
         builder.setView(customView);
     }
 
@@ -37,7 +37,7 @@ public abstract class CustomDialogBuilderBase<P, N> {
      *
      * @return 通过LayoutInflater获取的对话框视图
      */
-    abstract protected View getView();
+    abstract protected View getCustomView();
 
     /**
      * 设置确认按钮

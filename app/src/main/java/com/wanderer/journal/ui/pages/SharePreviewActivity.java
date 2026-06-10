@@ -394,6 +394,7 @@ public class SharePreviewActivity extends AppCompatActivity {
             Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
         });
         AlertDialog dialog = builder.show();
+        dialog.setCancelable(false);    //不可取消
 
         List<String> jsonList = formatToJson();
         htmlHelper.generateImage(

@@ -27,7 +27,7 @@ public class ProgressDialogBuilder
     }
 
     @Override
-    protected View getView() {
+    protected View getCustomView() {
         //创建自定义布局
         DialogProgressBinding binding = DialogProgressBinding.inflate(
                 LayoutInflater.from(builder.getContext())

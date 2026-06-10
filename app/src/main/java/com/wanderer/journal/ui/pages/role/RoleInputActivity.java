@@ -20,8 +20,8 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
+import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +37,6 @@ public class RoleInputActivity extends AppCompatActivity {
     private Bundle initBundle;                  //包含初始化数据的数据包
     private RoleRelationship relationship;      //角色关系程度
     private final CompositeDisposable disposable = new CompositeDisposable();
-    private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,29 +77,6 @@ public class RoleInputActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
-
-        //实例化失去焦点时的键盘监听器
-        keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) {
-                            return;
-                        }
-
-                        binding.bottomBtnGroup.animate()
-                                .translationY(-currentHeight)
-                                .setDuration(250)
-                                .start();
-                    }
-            );
-        }
     }
 
     @Override
@@ -111,21 +87,12 @@ public class RoleInputActivity extends AppCompatActivity {
         disposable.dispose();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.stopTracking();
-        }
-    }
-
     /**
      * 初始化视图
      */
     private void initViews() {
         //工具栏
-        if (initBundle!=null) {
+        if (initBundle != null) {
             binding.toolbar.setTitle(R.string.modify_role);
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
@@ -169,9 +136,26 @@ public class RoleInputActivity extends AppCompatActivity {
         });
 
         //添加别名
-        binding.addAliaChip.setOnClickListener(view -> {
-            //TODO:显示输入框对话框，记得去重
-        });
+        binding.addAliaChip.setOnClickListener(view -> new EditTextDialogBuilder(this, "输入别名", "别名")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确定", inputStr -> {
+                    if (inputStr.trim().isEmpty()) {
+                        Toast.makeText(this, "输入的内容不能为空", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
+                        RoleAliasAdapter aliasAdapter = (RoleAliasAdapter) binding.aliaRecycler.getAdapter();
+                        List<String> aliaList = new ArrayList<>(aliasAdapter.getCurrentList());
+                        aliaList.add(inputStr);
+                        aliasAdapter.submitList(aliaList);
+                        Toast.makeText(this, "别名添加成功", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "别名添加失败", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show()
+        );
 
         //别名列表
         RoleAliasAdapter aliasAdapter = new RoleAliasAdapter();

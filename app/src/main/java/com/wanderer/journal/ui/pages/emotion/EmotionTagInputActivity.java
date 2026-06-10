@@ -23,7 +23,6 @@ import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
 import java.util.Arrays;
@@ -40,7 +39,6 @@ public class EmotionTagInputActivity extends AppCompatActivity {
     private long emotionTagId = 0;                          //正在编辑的情绪标签的 ID
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
-    private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,38 +79,6 @@ public class EmotionTagInputActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
-
-        //实例化失去焦点时的键盘监听器
-        keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) {
-                            return;
-                        }
-
-                        binding.bottomBtnGroup.animate()
-                                .translationY(-currentHeight)
-                                .setDuration(250)
-                                .start();
-                    }
-            );
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.stopTracking();
-        }
     }
 
     @Override
