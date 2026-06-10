@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
@@ -229,9 +230,11 @@ public class RoleInputActivity extends AppCompatActivity {
 
             onConfirm();
         });
+        AppearanceAnimationHelper.attachMorphAnimation(binding.confirmButton);
 
         //取消按钮
         binding.cancelButton.setOnClickListener(view -> finish());
+        AppearanceAnimationHelper.attachMorphAnimation(binding.cancelButton);
     }
 
     /**
