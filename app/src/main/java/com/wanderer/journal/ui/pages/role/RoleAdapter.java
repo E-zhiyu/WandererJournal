@@ -195,10 +195,11 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                 }
                 i++;
             }
-            itemHolder.binding.aliasText.setText(aliasBuilder.toString());
+            itemHolder.binding.aliasText.setText(aliasBuilder.toString().isEmpty() ? "<无别名>" : aliasBuilder.toString());
 
             //身份描述
-            itemHolder.binding.identityText.setText(itemModel.model.getRole().getIdentity());
+            String identity = itemModel.model.getRole().getIdentity();
+            itemHolder.binding.identityText.setText(identity.isEmpty() ? "<未指明身份>" : identity);
         }
     }
 }
