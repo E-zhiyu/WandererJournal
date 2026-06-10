@@ -10,7 +10,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
+import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
@@ -76,7 +80,35 @@ public class RoleManageActivity extends AppCompatActivity {
     private void initRecyclerView() {
         RoleAdapter adapter = new RoleAdapter(
                 model -> {
-                    //TODO:点击监听
+                    if (!(model instanceof RoleUiModel.Item)) {
+                        return;
+                    }
+
+                    //解析数据
+                    RoleUiModel.Item item = (RoleUiModel.Item) model;
+                    RoleEntity role = item.model.getRole();
+                    long roleId = role.getRoleId();
+                    String roleName = role.getName();
+                    String identity = role.getIdentity();
+                    String impression = role.getImpression();
+                    int relationship = role.getRelationship();
+                    String[] alias = item.model.getRoleAliaList().stream()
+                            .map(RoleAliaEntity::getAlia)
+                            .toArray(String[]::new);
+
+                    //生成数据包
+                    Bundle bundle = new Bundle();
+                    bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
+                    bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
+                    bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
+                    bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
+                    bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);
+                    bundle.putStringArray(KeyStrings.ROLE_ALIAS.getS(), alias);
+
+                    //跳转界面
+                    Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);
+                    skip2RoleInput.putExtras(bundle);
+                    startActivity(skip2RoleInput);
                 },
                 (model, anchor) -> {
                     //TODO:长按监听

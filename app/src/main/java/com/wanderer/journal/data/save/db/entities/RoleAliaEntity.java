@@ -3,10 +3,10 @@ package com.wanderer.journal.data.save.db.entities;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
+import androidx.room.PrimaryKey;
 
 @Entity(
         tableName = "roleAlias",
-        primaryKeys = {"roleId", "aliaId"},
         foreignKeys = @ForeignKey(
                 entity = RoleEntity.class,
                 parentColumns = "roleId",
@@ -19,8 +19,9 @@ import androidx.room.Index;
         }
 )
 public class RoleAliaEntity {
-    private long roleId;    //角色 ID
+    @PrimaryKey(autoGenerate = true)
     private long aliaId;    //别名 ID
+    private long roleId;    //角色 ID
     private String alia;    //称呼
 
     public RoleAliaEntity(String alia, long roleId) {

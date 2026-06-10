@@ -49,7 +49,8 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                 RoleEntityModel oldModel = ((RoleUiModel.Item) oldItem).model;
                 RoleEntityModel newModel = ((RoleUiModel.Item) newItem).model;
                 return oldModel.getRole().getName().equals(newModel.getRole().getName()) &&
-                        oldModel.getRoleAliaList().equals(newModel.getRoleAliaList());
+                        oldModel.getRoleAliaList().equals(newModel.getRoleAliaList()) &&
+                        oldModel.getRole().getIdentity().equals(newModel.getRole().getIdentity());
             } else
                 return oldItem instanceof RoleUiModel.Separator && newItem instanceof RoleUiModel.Separator;
         }
