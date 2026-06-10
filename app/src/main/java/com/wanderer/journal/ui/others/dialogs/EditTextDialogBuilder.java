@@ -3,16 +3,17 @@ package com.wanderer.journal.ui.others.dialogs;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.databinding.DialogEdittextBinding;
 
 public class EditTextDialogBuilder
-        extends CustomDialogBuilderBase<EditTextDialogBuilder.OnClickedListener, DialogInterface.OnClickListener> {
-    private DialogEdittextBinding binding;
-
+        extends CustomDialogBuilderBase<
+        DialogEdittextBinding,
+        EditTextDialogBuilder.OnClickedListener,
+        DialogInterface.OnClickListener
+        > {
     /**
      * 文本框对话框构造方法
      *
@@ -26,16 +27,14 @@ public class EditTextDialogBuilder
     }
 
     @Override
-    protected View getCustomView() {
-        binding = DialogEdittextBinding.inflate(
+    protected DialogEdittextBinding getCustomView() {
+        return DialogEdittextBinding.inflate(
                 LayoutInflater.from(builder.getContext())
         );
-
-        return binding.getRoot();
     }
 
     @Override
-    public CustomDialogBuilderBase<OnClickedListener, DialogInterface.OnClickListener> setPositiveButton(
+    public CustomDialogBuilderBase<DialogEdittextBinding, OnClickedListener, DialogInterface.OnClickListener> setPositiveButton(
             String btnTitle,
             OnClickedListener callback
     ) {
@@ -51,7 +50,7 @@ public class EditTextDialogBuilder
     }
 
     @Override
-    public CustomDialogBuilderBase<OnClickedListener, DialogInterface.OnClickListener> setNegativeButton(String btnTitle, DialogInterface.OnClickListener callback) {
+    public CustomDialogBuilderBase<DialogEdittextBinding, OnClickedListener, DialogInterface.OnClickListener> setNegativeButton(String btnTitle, DialogInterface.OnClickListener callback) {
         builder.setNegativeButton(btnTitle, callback);
         return this;
     }
