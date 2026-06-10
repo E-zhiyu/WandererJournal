@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
@@ -108,6 +109,21 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         super(ITEM_CALLBACK);
         this.clickedListener = clickedListener;
         this.longClickedListener = longClickedListener;
+
+        //注册数据变更监听器，用于自动更新圆角
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                notifyItemChanged(positionStart - 1);           //更新前面的
+                notifyItemChanged(positionStart + itemCount);   //更新后面的
+            }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                notifyItemChanged(positionStart - 1);   //更新前面的
+                notifyItemChanged(positionStart);               //更新后面的
+            }
+        });
     }
 
     @Override
@@ -200,6 +216,43 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             //身份描述
             String identity = itemModel.model.getRole().getIdentity();
             itemHolder.binding.identityText.setText(identity.isEmpty() ? "<未指明身份>" : identity);
+
+            //设置圆角
+            setRadius(itemHolder.binding.getRoot(), position);
+        }
+    }
+
+    /**
+     * 设置圆角
+     *
+     * @param view     需要设置圆角的视图
+     * @param position 该视图所处的位置
+     */
+    private void setRadius(View view, int position) {
+        if (position == 0) {    //第0个不参与圆角设置，因为它是日期分隔视图
+            return;
+        }
+
+        //不需要考虑当前是分隔视图的情况，因为不是Shapable不会执行任何操作
+        RoleUiModel front = getItem(position - 1);
+        if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
+            if (front instanceof RoleUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+            } else {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+            }
+        } else {
+            RoleUiModel behind = getItem(position + 1);
+
+            if (front instanceof RoleUiModel.Separator && behind instanceof RoleUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+            } else if (front instanceof RoleUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+            } else if (behind instanceof RoleUiModel.Separator) {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+            } else {
+                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+            }
         }
     }
 }
