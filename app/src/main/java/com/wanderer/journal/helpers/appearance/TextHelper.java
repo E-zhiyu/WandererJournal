@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.text.Annotation;
+import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -20,6 +21,9 @@ import androidx.annotation.Nullable;
 import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
+import com.wanderer.journal.auxiliary.interfaces.EditableFlattenListener;
+
+import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -147,14 +151,13 @@ public class TextHelper {
      */
     @NonNull
     public static SpannableString createRoleTag(Context context, String display, String key, String value) {
-        // 展现给用户的文本
         SpannableString spannable = new SpannableString(display);
 
         //贴纸元数据绑定
-        Annotation idAnnotation = new Annotation(key, String.valueOf(value));
-        spannable.setSpan(idAnnotation, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        Annotation annotation = new Annotation(key, String.valueOf(value));
+        spannable.setSpan(annotation, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        // --- 贴纸 2：视觉样式（画出圆角气泡背景） ---
+        //绘制展示样式
         ReplacementSpan roundedBackgroundSpan = new ReplacementSpan() {
             @Override
             public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
@@ -209,5 +212,39 @@ public class TextHelper {
         }
 
         return count;
+    }
+
+    /**
+     * 将{@link Editable}中的{@link Annotation}对象扁平化
+     *
+     * @param editable {@link Editable}对象
+     * @return 扁平化后的字符串
+     */
+    @NonNull
+    @Contract(pure = true)
+    public static String flattenEditable(@Nullable Editable editable, EditableFlattenListener listener) {
+        if (editable == null) return "";
+
+        SpannableString spannableString = new SpannableString(editable);
+
+        //找出所有Annotation
+        Annotation[] annotations = spannableString.getSpans(0, spannableString.length(), Annotation.class);
+
+        //倒序扁平化，防止下标变化
+        SpannableStringBuilder builder = new SpannableStringBuilder(editable);
+        for (int i = annotations.length - 1; i >= 0; i--) {
+            Annotation annotation = annotations[i];
+
+            //获取扁平化后的字符串
+            int start = spannableString.getSpanStart(annotation);
+            int end = spannableString.getSpanEnd(annotation);
+            String raw = editable.subSequence(start, end).toString();
+            String flattenedText = listener.getFlattenedText(annotation, raw);
+
+            //添加到builder中
+            builder.replace(start, end, flattenedText);
+        }
+
+        return builder.toString();
     }
 }

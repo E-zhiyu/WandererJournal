@@ -410,7 +410,7 @@ public class WriteActivity extends AppCompatActivity {
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
             //获取输入内容
-            String content = String.valueOf(binding.contentTextInput.getText());
+            String content = flattenInput();
             if (content.trim().isEmpty()) {
                 return;
             }
@@ -533,7 +533,7 @@ public class WriteActivity extends AppCompatActivity {
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
                     RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
-                        // 生成包装好的富文本标签块
+                        //生成包装好的富文本标签块
                         String display = "@" + name;
                         String value = String.valueOf(roleId);
                         SpannableString roleTag = TextHelper.createRoleTag(
@@ -1324,8 +1324,35 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void saveDraft() {
         if (binding != null) {
-            String content = String.valueOf(binding.contentTextInput.getText());
+            String content = flattenInput();
             DraftPreference.setDraft(this, content);
         }
+    }
+
+    /**
+     * 将输入的文本扁平化
+     *
+     * @return 扁平化后的文本
+     */
+    @NonNull
+    private String flattenInput() {
+        Editable editable = binding.contentTextInput.getEditableText();
+        return TextHelper.flattenEditable(
+                editable,
+                (annotation, raw) -> {
+                    String key = annotation.getKey();
+                    if (key.equals(KeyStrings.ROLE_ID.getS())) {
+                        String roleIdStr = annotation.getValue();
+                        String roleName = raw.trim().replace("@", "");
+                        return String.format(
+                                Locale.getDefault(),
+                                "[role_ref:@%s](%s)",
+                                roleName, roleIdStr
+                        );
+                    } else {
+                        return "";
+                    }
+                }
+        );
     }
 }

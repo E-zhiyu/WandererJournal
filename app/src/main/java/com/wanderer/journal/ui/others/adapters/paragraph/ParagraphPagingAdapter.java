@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.FormatedString;
+import com.wanderer.journal.auxiliary.enums.RichTextConverter;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
@@ -385,7 +385,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            Pattern rolePattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+            Pattern rolePattern = RichTextConverter.ROLE_REF.getPattern();
             CharSequence renderedRoleText = TextHelper.renderClickableText(
                     rolePattern,
                     rawContent,

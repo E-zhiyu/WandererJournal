@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.FormatedString;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.RichTextConverter;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -229,7 +229,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent();
-            Pattern rolePattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+            Pattern rolePattern = RichTextConverter.ROLE_REF.getPattern();
             CharSequence richText = TextHelper.renderClickableText(
                     rolePattern,
                     rawContent,
