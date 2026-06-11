@@ -64,12 +64,14 @@ import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
+import com.wanderer.journal.helpers.appearance.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
+import com.wanderer.journal.ui.others.bottom.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
@@ -500,11 +502,13 @@ public class WriteActivity extends AppCompatActivity {
                     isChanging = true;
 
                     //将所有换行符替换为空字符串
+                    int selectionStart = binding.contentTextInput.getSelectionStart();
+                    int replacedCount = TextHelper.getKeywordCount(s.toString(), "\n"); //计算换行符的数量
                     String cleanString = s.toString().replace("\n", "");
 
                     //重新设置文本并移动光标
                     binding.contentTextInput.setText(cleanString);
-                    binding.contentTextInput.setSelection(cleanString.length());
+                    binding.contentTextInput.setSelection(selectionStart - replacedCount);
 
                     isChanging = false;
                 }
@@ -517,11 +521,17 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                //清空旧任务
+                //处理草稿保存任务
                 draftSavingHandler.removeCallbacks(draftSavingRunnable);
-
-                //添加新任务
                 draftSavingHandler.postDelayed(draftSavingRunnable, DRAFT_SAVING_DELAY);
+
+                //当输入“@”时弹出角色选择对话框
+                if (i2 == 1 && charSequence.charAt(i) == '@') {
+                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
+                        //TODO:角色选择回调
+                    });
+                    bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
+                }
             }
         });
 
@@ -584,7 +594,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> Toast.makeText(WriteActivity.this,String.valueOf(roleId),Toast.LENGTH_SHORT).show()
+                roleId -> Toast.makeText(WriteActivity.this, String.valueOf(roleId), Toast.LENGTH_SHORT).show()
         );
 
         //添加粘性头部适配器

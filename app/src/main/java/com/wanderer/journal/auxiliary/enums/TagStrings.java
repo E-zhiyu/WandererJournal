@@ -1,6 +1,7 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum TagStrings {
+    ROLE_SELECT_BOTTOM_SHEET("role_select_bottom_select"),      //角色选择对话框
     EMOTION_SELECT_BOTTOM_SHEET("emotion_select_bottom_sheet"), //情绪标签选择对话框
     EMOTION_FILTER_BOTTOM_SHEET("emotion_filter_bottom_sheet"), //情绪标签过滤对话框
     MEDIA_ADD_BOTTOM_SHEET("media_add_bottom_sheet"),           //媒体添加对话框

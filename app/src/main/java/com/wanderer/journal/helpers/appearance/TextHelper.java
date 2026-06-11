@@ -134,4 +134,26 @@ public class TextHelper {
 
         return builder;
     }
+
+    /**
+     * 获取字符串中出现的关键词个数
+     * @param str 原始字符串
+     * @param keyword 需要查找次数的关键词
+     * @return 关键词出现次数
+     */
+    public static int getKeywordCount(String str,String keyword) {
+        if (str == null || keyword == null || keyword.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        int index = 0;
+
+        while ((index = str.indexOf(keyword, index)) != -1) {
+            count++;
+            index += keyword.length(); // 跳过已匹配的子串
+        }
+
+        return count;
+    }
 }
