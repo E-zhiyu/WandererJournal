@@ -121,6 +121,7 @@
     <string name="add_alia">添加别名</string>
     <string name="modify_role">修改角色</string>
     <string name="delete_role">删除角色</string>
+    <string name="select_role">选择角色</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>
