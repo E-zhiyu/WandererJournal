@@ -496,6 +496,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
+                },
+                roleId -> {
+                    //TODO:角色点击监听
+                    Toast.makeText(this, String.valueOf(roleId), Toast.LENGTH_SHORT).show();
                 }
         );
         binding.contentRecycler.setAdapter(adapter);

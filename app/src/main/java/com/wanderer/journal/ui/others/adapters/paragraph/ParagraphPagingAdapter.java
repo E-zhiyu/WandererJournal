@@ -5,6 +5,9 @@ import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -24,6 +27,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.FormatedString;
+import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -43,6 +48,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -90,6 +98,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
     private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private final OnRoleClickListener roleClickListener;            //角色富文本点击监听
 
     /**
      * 设置多选追踪器
@@ -107,7 +116,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public String getHeaderData(int position,Context context) {
+    public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
@@ -261,11 +270,13 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      */
     public ParagraphPagingAdapter(
             @Nullable OnParagraphClickListener paragraphClickListener,
-            OnMediaClickedListener mediaClickedListener
+            OnMediaClickedListener mediaClickedListener,
+            OnRoleClickListener roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.paragraphClickListener = paragraphClickListener;
         this.mediaClickedListener = mediaClickedListener;
+        this.roleClickListener = roleClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -369,31 +380,11 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             }
 
             //内容文本
-            String content = paragraph.getContent();
-            if (currentKeyword != null && !currentKeyword.isEmpty() && positionList.contains(position)) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(content);
-                int startIndex = content.indexOf(currentKeyword);
-
-                //循环高亮文本
-                while (startIndex >= 0) {
-                    int endIndex = startIndex + currentKeyword.length();
-                    // 设置文字颜色为橘红色
-                    builder.setSpan(
-                            new ForegroundColorSpan(MaterialColors.getColor(
-                                    context,
-                                    android.R.attr.colorFocusedHighlight,
-                                    Color.parseColor("#FF5722")
-                            )),
-                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    );
-
-                    // 循环查找，防止一句话里有多个相同的关键词
-                    startIndex = content.indexOf(currentKeyword, endIndex);
-                }
-                itemHolder.binding.contentText.setText(builder);
-            } else {
-                itemHolder.binding.contentText.setText(content);
-            }
+            String rawContent = paragraph.getContent(); //数据库中的原始数据
+            CharSequence richText = render(context, rawContent, currentKeyword, itemHolder.itemView, dataModel);
+            itemHolder.binding.contentText.setText(richText);
+            itemHolder.binding.contentText.setMovementMethod(LinkMovementMethod.getInstance());
+            itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
 
             //选择状态
             if (isSelectMode) {
@@ -587,5 +578,155 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             notifyItemChanged(position);
         }
         positionList.clear();
+    }
+
+    /**
+     * 将数据库中的普通文本渲染为富文本
+     *
+     * @param context        上下文
+     * @param rawContent     数据库拿出来的原始文本，如 "今天和[@张三](101)去吃火锅"
+     * @param currentKeyword 当前搜索的关键词（如果没有则传 null 或空串）
+     */
+    @NonNull
+    private CharSequence render(
+            Context context,
+            @Nullable String rawContent,
+            @Nullable String currentKeyword,
+            View anchor,
+            ParagraphEntityModel model
+    ) {
+        if (rawContent == null) return "";
+
+        // 最终要塞给 TextView 的富文本容器
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        Pattern pattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+        Matcher matcher = pattern.matcher(rawContent);
+        int lastIndex = 0; // 记录上一次匹配结束的位置
+
+        // ==================== 阶段一：解析角色引用 ====================
+        while (matcher.find()) {
+            // ======= 1. 处理暗号前方的普通文本（例如 "今天和"） =======
+            String normalText = rawContent.substring(lastIndex, matcher.start());
+            if (!normalText.isEmpty()) {
+                int startNormal = builder.length();
+                builder.append(normalText);
+                int endNormal = builder.length();
+
+                // 给普通文本贴上“隐形贴纸”
+                builder.setSpan(
+                        new ClickableSpan() {
+                            @Override
+                            public void onClick(@NonNull View widget) {
+                                if (paragraphClickListener != null)
+                                    paragraphClickListener.onClicked(model, anchor); // 触发代理点击
+                            }
+
+                            @Override
+                            public void updateDrawState(@NonNull TextPaint ds) {
+                                // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
+                            }
+                        },
+                        startNormal,
+                        endNormal,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            // ======= 2. 处理角色高亮文本（例如 "@张三"） =======
+            String roleName = "@" + matcher.group(1);
+            final long roleId = Long.parseLong(Objects.requireNonNull(matcher.group(2)));
+
+            int startRole = builder.length();
+            builder.append(roleName);
+            int endRole = builder.length();
+
+            // 给角色贴上“专属贴纸”
+            int roleColor = MaterialColors.getColor(
+                    context,
+                    android.R.attr.colorPrimary,
+                    Color.parseColor("#FFFFFF")
+            );
+            builder.setSpan(
+                    new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            roleClickListener.onRoleClicked(roleId);
+                        }
+
+                        @Override
+                        public void updateDrawState(@NonNull TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(roleColor);
+                            ds.setUnderlineText(false);
+                            ds.setFakeBoldText(true);
+                        }
+                    },
+                    startRole,
+                    endRole,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+
+            lastIndex = matcher.end();
+        }
+
+        // ======= 3. 处理最后剩下的普通文本 =======
+        if (lastIndex < rawContent.length()) {
+            String tailText = rawContent.substring(lastIndex);
+            int startTail = builder.length();
+            builder.append(tailText);
+            int endTail = builder.length();
+
+            // 给尾部普通文本也贴上“隐形贴纸”
+            builder.setSpan(
+                    new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            if (paragraphClickListener != null)
+                                paragraphClickListener.onClicked(model, anchor); // 触发代理点击
+                        }
+
+                        @Override
+                        public void updateDrawState(@NonNull TextPaint ds) {
+                            // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
+                        }
+                    },
+                    startTail,
+                    endTail,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        // ==================== 阶段二：叠加搜索高亮 ====================
+        // 此时的 builder 已经是解析富文本后的状态
+        if (currentKeyword != null && !currentKeyword.isEmpty()) {
+            String cleanText = builder.toString(); // 转换为普通字符串用于查找索引
+            int searchIndex = cleanText.indexOf(currentKeyword);
+
+            // 获取你的橘红色
+            int searchHighlightColor = MaterialColors.getColor(
+                    context,
+                    android.R.attr.colorFocusedHighlight,
+                    Color.parseColor("#FF5722")
+            );
+
+            while (searchIndex >= 0) {
+                int endSearchIndex = searchIndex + currentKeyword.length();
+
+                // 叠加一层颜色 Span。同一个区间如果同时有 ClickableSpan 和 ForegroundColorSpan，
+                // 后者（搜索色）会覆盖前者的颜色，但点击事件依然保留！
+                builder.setSpan(
+                        new ForegroundColorSpan(searchHighlightColor),
+                        searchIndex,
+                        endSearchIndex,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+
+                // 继续找下一个关键词（防止一句话里有多个相同关键词）
+                searchIndex = cleanText.indexOf(currentKeyword, endSearchIndex);
+            }
+        }
+
+        return builder;
     }
 }

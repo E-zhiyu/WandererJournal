@@ -583,7 +583,8 @@ public class WriteActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
-                }
+                },
+                roleId -> Toast.makeText(WriteActivity.this,String.valueOf(roleId),Toast.LENGTH_SHORT).show()
         );
 
         //添加粘性头部适配器

@@ -218,7 +218,8 @@ public class SharePreviewActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
-                }
+                },
+                roleId -> Toast.makeText(SharePreviewActivity.this,String.valueOf(roleId),Toast.LENGTH_SHORT).show()
         );
         binding.previewRecycler.setAdapter(adapter);
 

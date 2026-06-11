@@ -1,19 +1,29 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.FormatedString;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -30,9 +40,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
- implements StickyHeaderAdapter<String> {
+        implements StickyHeaderAdapter<String> {
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -69,7 +82,8 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;     //媒体点击监听
+    private final OnRoleClickListener roleClickListener;                                //角色富文本点击监听
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
 
     @Override
@@ -79,7 +93,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public String getHeaderData(int position,Context context) {
+    public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
@@ -125,10 +139,12 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
      * @param mediaClickedListener 媒体预览图点击监听
      */
     public ParagraphListAdapter(
-            ParagraphListAdapter.OnMediaClickedListener mediaClickedListener
+            ParagraphListAdapter.OnMediaClickedListener mediaClickedListener,
+            OnRoleClickListener roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.mediaClickedListener = mediaClickedListener;
+        this.roleClickListener = roleClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -208,8 +224,11 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             }
 
             //内容文本
-            String content = paragraph.getContent();
-            itemHolder.binding.contentText.setText(content);
+            String rawContent = paragraph.getContent();
+            CharSequence richText = render(context, rawContent);
+            itemHolder.binding.contentText.setText(richText);
+            itemHolder.binding.contentText.setMovementMethod(LinkMovementMethod.getInstance());
+            itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
@@ -305,5 +324,117 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
+    }
+
+    /**
+     * 将数据库中的普通文本渲染为富文本
+     *
+     * @param context    上下文
+     * @param rawContent 数据库拿出来的原始文本，如 "今天和[@张三](101)去吃火锅"
+     */
+    @NonNull
+    private CharSequence render(
+            Context context,
+            @Nullable String rawContent
+    ) {
+        if (rawContent == null) return "";
+
+        // 最终要塞给 TextView 的富文本容器
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+
+        Pattern pattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+        Matcher matcher = pattern.matcher(rawContent);
+        int lastIndex = 0; // 记录上一次匹配结束的位置
+
+        // ==================== 阶段一：解析角色引用 ====================
+        while (matcher.find()) {
+            // ======= 1. 处理暗号前方的普通文本（例如 "今天和"） =======
+            String normalText = rawContent.substring(lastIndex, matcher.start());
+            if (!normalText.isEmpty()) {
+                int startNormal = builder.length();
+                builder.append(normalText);
+                int endNormal = builder.length();
+
+                // 给普通文本贴上“隐形贴纸”
+                builder.setSpan(
+                        new ClickableSpan() {
+                            @Override
+                            public void onClick(@NonNull View widget) {
+                            }
+
+                            @Override
+                            public void updateDrawState(@NonNull TextPaint ds) {
+                                // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
+                            }
+                        },
+                        startNormal,
+                        endNormal,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                );
+            }
+
+            // ======= 2. 处理角色高亮文本（例如 "@张三"） =======
+            String roleName = "@" + matcher.group(1);
+            final long roleId = Long.parseLong(Objects.requireNonNull(matcher.group(2)));
+
+            int startRole = builder.length();
+            builder.append(roleName);
+            int endRole = builder.length();
+
+            // 给角色贴上“专属贴纸”
+            int roleColor = MaterialColors.getColor(
+                    context,
+                    android.R.attr.colorPrimary,
+                    Color.parseColor("#FFFFFF")
+            );
+            builder.setSpan(
+                    new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                            roleClickListener.onRoleClicked(roleId);
+                        }
+
+                        @Override
+                        public void updateDrawState(@NonNull TextPaint ds) {
+                            super.updateDrawState(ds);
+                            ds.setColor(roleColor);
+                            ds.setUnderlineText(false);
+                            ds.setFakeBoldText(true);
+                        }
+                    },
+                    startRole,
+                    endRole,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+
+            lastIndex = matcher.end();
+        }
+
+        // ======= 3. 处理最后剩下的普通文本 =======
+        if (lastIndex < rawContent.length()) {
+            String tailText = rawContent.substring(lastIndex);
+            int startTail = builder.length();
+            builder.append(tailText);
+            int endTail = builder.length();
+
+            // 给尾部普通文本也贴上“隐形贴纸”
+            builder.setSpan(
+                    new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View widget) {
+                        }
+
+                        @Override
+                        public void updateDrawState(@NonNull TextPaint ds) {
+                            // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
+                        }
+                    },
+                    startTail,
+                    endTail,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
+        }
+
+        return builder;
     }
 }
