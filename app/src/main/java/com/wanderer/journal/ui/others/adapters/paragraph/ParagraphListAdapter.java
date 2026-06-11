@@ -1,28 +1,24 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.FormatedString;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -33,6 +29,7 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.time.LocalDate;
@@ -190,7 +187,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         ParagraphUiModel uiModel = getItem(position);
 
         if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
@@ -224,11 +221,32 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             }
 
             //内容文本
-            String rawContent = paragraph.getContent();
-            CharSequence richText = render(context, rawContent);
-            itemHolder.binding.contentText.setText(richText);
             itemHolder.binding.contentText.setMovementMethod(LinkMovementMethod.getInstance());
             itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
+            String rawContent = paragraph.getContent();
+            Pattern rolePattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+            CharSequence richText = TextHelper.renderClickableText(
+                    rolePattern,
+                    rawContent,
+                    context,
+                    new ClickableSpanListener<Long>() {
+                        @Override
+                        public String parseString(Matcher matcher) {
+                            return "@" + matcher.group(1);
+                        }
+
+                        @Override
+                        public Long getClickData(Matcher matcher) {
+                            return Long.parseLong(Objects.requireNonNull(matcher.group(2)));
+                        }
+
+                        @Override
+                        public void onClick(Long clickData) {
+                            roleClickListener.onRoleClicked(clickData);
+                        }
+                    }
+            );
+            itemHolder.binding.contentText.setText(richText);
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
@@ -324,117 +342,5 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
-    }
-
-    /**
-     * 将数据库中的普通文本渲染为富文本
-     *
-     * @param context    上下文
-     * @param rawContent 数据库拿出来的原始文本，如 "今天和[@张三](101)去吃火锅"
-     */
-    @NonNull
-    private CharSequence render(
-            Context context,
-            @Nullable String rawContent
-    ) {
-        if (rawContent == null) return "";
-
-        // 最终要塞给 TextView 的富文本容器
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-
-        Pattern pattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
-        Matcher matcher = pattern.matcher(rawContent);
-        int lastIndex = 0; // 记录上一次匹配结束的位置
-
-        // ==================== 阶段一：解析角色引用 ====================
-        while (matcher.find()) {
-            // ======= 1. 处理暗号前方的普通文本（例如 "今天和"） =======
-            String normalText = rawContent.substring(lastIndex, matcher.start());
-            if (!normalText.isEmpty()) {
-                int startNormal = builder.length();
-                builder.append(normalText);
-                int endNormal = builder.length();
-
-                // 给普通文本贴上“隐形贴纸”
-                builder.setSpan(
-                        new ClickableSpan() {
-                            @Override
-                            public void onClick(@NonNull View widget) {
-                            }
-
-                            @Override
-                            public void updateDrawState(@NonNull TextPaint ds) {
-                                // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
-                            }
-                        },
-                        startNormal,
-                        endNormal,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-
-            // ======= 2. 处理角色高亮文本（例如 "@张三"） =======
-            String roleName = "@" + matcher.group(1);
-            final long roleId = Long.parseLong(Objects.requireNonNull(matcher.group(2)));
-
-            int startRole = builder.length();
-            builder.append(roleName);
-            int endRole = builder.length();
-
-            // 给角色贴上“专属贴纸”
-            int roleColor = MaterialColors.getColor(
-                    context,
-                    android.R.attr.colorPrimary,
-                    Color.parseColor("#FFFFFF")
-            );
-            builder.setSpan(
-                    new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                            roleClickListener.onRoleClicked(roleId);
-                        }
-
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            super.updateDrawState(ds);
-                            ds.setColor(roleColor);
-                            ds.setUnderlineText(false);
-                            ds.setFakeBoldText(true);
-                        }
-                    },
-                    startRole,
-                    endRole,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-
-            lastIndex = matcher.end();
-        }
-
-        // ======= 3. 处理最后剩下的普通文本 =======
-        if (lastIndex < rawContent.length()) {
-            String tailText = rawContent.substring(lastIndex);
-            int startTail = builder.length();
-            builder.append(tailText);
-            int endTail = builder.length();
-
-            // 给尾部普通文本也贴上“隐形贴纸”
-            builder.setSpan(
-                    new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                        }
-
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
-                        }
-                    },
-                    startTail,
-                    endTail,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-        }
-
-        return builder;
     }
 }

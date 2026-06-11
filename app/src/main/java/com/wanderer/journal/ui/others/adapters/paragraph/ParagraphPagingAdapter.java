@@ -1,14 +1,10 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,9 +21,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.FormatedString;
+import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
@@ -40,6 +36,7 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.time.LocalDate;
@@ -337,7 +334,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
             holder.itemView.setVisibility(View.GONE);       //不显示占位符，防止加载时遮挡加载指示器
@@ -380,11 +377,41 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             }
 
             //内容文本
-            String rawContent = paragraph.getContent(); //数据库中的原始数据
-            CharSequence richText = render(context, rawContent, currentKeyword, itemHolder.itemView, dataModel);
-            itemHolder.binding.contentText.setText(richText);
             itemHolder.binding.contentText.setMovementMethod(LinkMovementMethod.getInstance());
             itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
+            String rawContent = paragraph.getContent(); //数据库中的原始数据
+            Pattern rolePattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
+            CharSequence renderedRoleText = TextHelper.renderClickableText(
+                    rolePattern,
+                    rawContent,
+                    context,
+                    new ClickableSpanListener<Long>() {
+                        @Override
+                        public String parseString(Matcher matcher) {
+                            return "@" + matcher.group(1);
+                        }
+
+                        @Override
+                        public Long getClickData(Matcher matcher) {
+                            return Long.parseLong(Objects.requireNonNull(matcher.group(2)));
+                        }
+
+                        @Override
+                        public void onClick(Long clickData) {
+                            roleClickListener.onRoleClicked(clickData);
+                        }
+                    }
+            );
+            if (!currentKeyword.isEmpty() && positionList.contains(position)) {
+                CharSequence heighLightedText = TextHelper.renderHighLightedText(
+                        currentKeyword,
+                        String.valueOf(renderedRoleText),
+                        context
+                );
+                itemHolder.binding.contentText.setText(heighLightedText);
+            } else {
+                itemHolder.binding.contentText.setText(renderedRoleText);
+            }
 
             //选择状态
             if (isSelectMode) {
@@ -578,155 +605,5 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             notifyItemChanged(position);
         }
         positionList.clear();
-    }
-
-    /**
-     * 将数据库中的普通文本渲染为富文本
-     *
-     * @param context        上下文
-     * @param rawContent     数据库拿出来的原始文本，如 "今天和[@张三](101)去吃火锅"
-     * @param currentKeyword 当前搜索的关键词（如果没有则传 null 或空串）
-     */
-    @NonNull
-    private CharSequence render(
-            Context context,
-            @Nullable String rawContent,
-            @Nullable String currentKeyword,
-            View anchor,
-            ParagraphEntityModel model
-    ) {
-        if (rawContent == null) return "";
-
-        // 最终要塞给 TextView 的富文本容器
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-
-        Pattern pattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
-        Matcher matcher = pattern.matcher(rawContent);
-        int lastIndex = 0; // 记录上一次匹配结束的位置
-
-        // ==================== 阶段一：解析角色引用 ====================
-        while (matcher.find()) {
-            // ======= 1. 处理暗号前方的普通文本（例如 "今天和"） =======
-            String normalText = rawContent.substring(lastIndex, matcher.start());
-            if (!normalText.isEmpty()) {
-                int startNormal = builder.length();
-                builder.append(normalText);
-                int endNormal = builder.length();
-
-                // 给普通文本贴上“隐形贴纸”
-                builder.setSpan(
-                        new ClickableSpan() {
-                            @Override
-                            public void onClick(@NonNull View widget) {
-                                if (paragraphClickListener != null)
-                                    paragraphClickListener.onClicked(model, anchor); // 触发代理点击
-                            }
-
-                            @Override
-                            public void updateDrawState(@NonNull TextPaint ds) {
-                                // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
-                            }
-                        },
-                        startNormal,
-                        endNormal,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-            }
-
-            // ======= 2. 处理角色高亮文本（例如 "@张三"） =======
-            String roleName = "@" + matcher.group(1);
-            final long roleId = Long.parseLong(Objects.requireNonNull(matcher.group(2)));
-
-            int startRole = builder.length();
-            builder.append(roleName);
-            int endRole = builder.length();
-
-            // 给角色贴上“专属贴纸”
-            int roleColor = MaterialColors.getColor(
-                    context,
-                    android.R.attr.colorPrimary,
-                    Color.parseColor("#FFFFFF")
-            );
-            builder.setSpan(
-                    new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                            roleClickListener.onRoleClicked(roleId);
-                        }
-
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            super.updateDrawState(ds);
-                            ds.setColor(roleColor);
-                            ds.setUnderlineText(false);
-                            ds.setFakeBoldText(true);
-                        }
-                    },
-                    startRole,
-                    endRole,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-
-            lastIndex = matcher.end();
-        }
-
-        // ======= 3. 处理最后剩下的普通文本 =======
-        if (lastIndex < rawContent.length()) {
-            String tailText = rawContent.substring(lastIndex);
-            int startTail = builder.length();
-            builder.append(tailText);
-            int endTail = builder.length();
-
-            // 给尾部普通文本也贴上“隐形贴纸”
-            builder.setSpan(
-                    new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View widget) {
-                            if (paragraphClickListener != null)
-                                paragraphClickListener.onClicked(model, anchor); // 触发代理点击
-                        }
-
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            // 【核心】不调用 super.updateDrawState(ds)，这样就不会改变文字颜色，也没有下划线
-                        }
-                    },
-                    startTail,
-                    endTail,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-        }
-
-        // ==================== 阶段二：叠加搜索高亮 ====================
-        // 此时的 builder 已经是解析富文本后的状态
-        if (currentKeyword != null && !currentKeyword.isEmpty()) {
-            String cleanText = builder.toString(); // 转换为普通字符串用于查找索引
-            int searchIndex = cleanText.indexOf(currentKeyword);
-
-            // 获取你的橘红色
-            int searchHighlightColor = MaterialColors.getColor(
-                    context,
-                    android.R.attr.colorFocusedHighlight,
-                    Color.parseColor("#FF5722")
-            );
-
-            while (searchIndex >= 0) {
-                int endSearchIndex = searchIndex + currentKeyword.length();
-
-                // 叠加一层颜色 Span。同一个区间如果同时有 ClickableSpan 和 ForegroundColorSpan，
-                // 后者（搜索色）会覆盖前者的颜色，但点击事件依然保留！
-                builder.setSpan(
-                        new ForegroundColorSpan(searchHighlightColor),
-                        searchIndex,
-                        endSearchIndex,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                );
-
-                // 继续找下一个关键词（防止一句话里有多个相同关键词）
-                searchIndex = cleanText.indexOf(currentKeyword, endSearchIndex);
-            }
-        }
-
-        return builder;
     }
 }
