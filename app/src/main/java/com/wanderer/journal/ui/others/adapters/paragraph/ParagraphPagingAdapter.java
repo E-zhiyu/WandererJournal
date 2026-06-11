@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.text.method.LinkMovementMethod;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +37,7 @@ import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
+import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -376,9 +376,14 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
             }
 
-            //内容文本
-            itemHolder.binding.contentText.setMovementMethod(LinkMovementMethod.getInstance());
+            //内容文本视图的属性设置
+            itemHolder.binding.contentText.setMovementMethod(FallbackLinkMovementMethod.getInstance());
+            itemHolder.binding.contentText.setFocusable(false);     //防止消费触摸监听
+            itemHolder.binding.contentText.setClickable(false);     //防止消费点击监听
+            itemHolder.binding.contentText.setLongClickable(false); //防止消费长按监听
             itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
+
+            //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
             Pattern rolePattern = Pattern.compile(FormatedString.ROLE_REF_PATTERN);
             CharSequence renderedRoleText = TextHelper.renderClickableText(
