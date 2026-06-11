@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface RoleDao {
@@ -39,6 +40,14 @@ public interface RoleDao {
     @Transaction
     @Query("SELECT * FROM roles ORDER BY relationship DESC")
     Flowable<List<RoleEntityModel>> getAllRoleFlowable();
+
+    /**
+     * 查询所有角色数据，并按照关系由近到远排序
+     *
+     * @return 所有角色组成的列表
+     */
+    @Query("SELECT * FROM roles ORDER BY relationship DESC")
+    Single<List<RoleEntity>> getAllRoleSingle();
 
     /**
      * 插入一条角色记录
