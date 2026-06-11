@@ -1,17 +1,24 @@
 package com.wanderer.journal.helpers.appearance;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.text.Annotation;
 import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.ReplacementSpan;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.material.color.MaterialColors;
+import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 
 import java.util.regex.Matcher;
@@ -42,7 +49,7 @@ public class TextHelper {
         int clickableColor = MaterialColors.getColor(
                 context,
                 android.R.attr.colorPrimary,
-                Color.parseColor("#FFFFFF")
+                context.getColor(R.color.color_primary)
         );
 
         //循环渲染富文本
@@ -136,12 +143,59 @@ public class TextHelper {
     }
 
     /**
+     * 生成一个在输入框里显示的高亮角色标签块
+     */
+    @NonNull
+    public static SpannableString createRoleTag(Context context, String display, String key, String value) {
+        // 展现给用户的文本
+        SpannableString spannable = new SpannableString(display);
+
+        //贴纸元数据绑定
+        Annotation idAnnotation = new Annotation(key, String.valueOf(value));
+        spannable.setSpan(idAnnotation, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // --- 贴纸 2：视觉样式（画出圆角气泡背景） ---
+        ReplacementSpan roundedBackgroundSpan = new ReplacementSpan() {
+            @Override
+            public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
+                // 计算文本的宽度，并额外加上左右的内边距（Padding）
+                return Math.round(paint.measureText(text, start, end) + 20);
+            }
+
+            @Override
+            public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
+                int originalColor = paint.getColor();
+
+                //绘制文字
+                int clickableColor = MaterialColors.getColor(
+                        context,
+                        android.R.attr.colorPrimary,
+                        context.getColor(R.color.color_primary)
+                );
+                paint.setColor(clickableColor);
+                paint.setFakeBoldText(true); //加粗
+                canvas.drawText(text, start, end, x, y, paint);
+
+                //还原 Paint 的颜色，避免污染后续绘制
+                paint.setColor(originalColor);
+                paint.setFakeBoldText(false);
+            }
+        };
+
+        spannable.setSpan(roundedBackgroundSpan, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        return spannable;
+    }
+
+    /**
      * 获取字符串中出现的关键词个数
-     * @param str 原始字符串
+     *
+     * @param str     原始字符串
+     * @param end     结束计数的下标
      * @param keyword 需要查找次数的关键词
      * @return 关键词出现次数
      */
-    public static int getKeywordCount(String str,String keyword) {
+    public static int getKeywordCount(String str, int end, String keyword) {
         if (str == null || keyword == null || keyword.isEmpty()) {
             return 0;
         }
@@ -149,7 +203,7 @@ public class TextHelper {
         int count = 0;
         int index = 0;
 
-        while ((index = str.indexOf(keyword, index)) != -1) {
+        while ((index = str.indexOf(keyword, index)) != -1 && index <= end) {
             count++;
             index += keyword.length(); // 跳过已匹配的子串
         }

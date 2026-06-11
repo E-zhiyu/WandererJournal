@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
@@ -503,7 +504,11 @@ public class WriteActivity extends AppCompatActivity {
 
                     //将所有换行符替换为空字符串
                     int selectionStart = binding.contentTextInput.getSelectionStart();
-                    int replacedCount = TextHelper.getKeywordCount(s.toString(), "\n"); //计算换行符的数量
+                    int replacedCount = TextHelper.getKeywordCount(
+                            s.toString(),
+                            selectionStart,
+                            "\n"
+                    ); //计算换行符的数量（只计算在光标前面的）
                     String cleanString = s.toString().replace("\n", "");
 
                     //重新设置文本并移动光标
@@ -528,7 +533,25 @@ public class WriteActivity extends AppCompatActivity {
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
                     RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
-                        //TODO:角色选择回调
+                        // 生成包装好的富文本标签块
+                        String display = "@" + name;
+                        String value = String.valueOf(roleId);
+                        SpannableString roleTag = TextHelper.createRoleTag(
+                                WriteActivity.this,
+                                display,
+                                KeyStrings.ROLE_ID.getS(),
+                                value
+                        );
+
+                        //把刚才打出"@"替换成高亮的标签块
+                        Editable editable = binding.contentTextInput.getText();
+                        int selectionStart = binding.contentTextInput.getSelectionStart();
+                        if (editable != null) {
+                            editable.replace(selectionStart - 1, selectionStart, roleTag);
+                        }
+
+                        //让光标跳到这个标签块的后面
+                        binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
                     });
                     bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
                 }
