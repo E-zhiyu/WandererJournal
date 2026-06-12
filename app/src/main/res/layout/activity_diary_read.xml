@@ -49,37 +49,31 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
-    <!-- 加载指示器和空状态文本 -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/center_layout"
+    <!-- 空状态提示文本 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/empty_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:text="@string/no_paragraph"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 空状态提示文本 -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/empty_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_paragraph"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- 列表加载指示器 -->
-        <com.google.android.material.loadingindicator.LoadingIndicator
-            android:id="@+id/recycler_loading_indicator"
-            style="@style/Widget.Material3.LoadingIndicator.Contained"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- 列表加载指示器 -->
+    <com.google.android.material.loadingindicator.LoadingIndicator
+        android:id="@+id/recycler_loading_indicator"
+        style="@style/Widget.Material3.LoadingIndicator.Contained"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 跳转搜索结果的按钮布局 -->
     <androidx.constraintlayout.widget.ConstraintLayout

@@ -610,61 +610,47 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 将段落内容列表滚动到初始位置
      */
     private void scrollRecyclerToInitPosition() {
-        if (binding.contentRecycler.getLayoutManager() != null) {
-            if (initScrollPosition.get() != -1) {
-                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+        //创建动画
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .addTarget(binding.recyclerLoadingIndicator)
+                .setDuration(250);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
-                scrollContentRecycler(
-                        initScrollPosition.get(),
-                        false,
-                        new PagingRecyclerScrollListener() {
-                            @Override
-                            public void onSucceed() {
-                                TransitionSet set = new TransitionSet()
-                                        .addTransition(new Fade())
-                                        .setInterpolator(new FastOutSlowInInterpolator())
-                                        .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
-
-                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
-                                if (adapter.getItemCount() == 0) {
-                                    binding.emptyText.setVisibility(View.VISIBLE);
-                                } else {
-                                    binding.emptyText.setVisibility(View.GONE);
-                                }
-
-                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
-                                initScrollPosition.set(-1);
-                            }
-
-                            @Override
-                            public void onRetry(int failCount) {
-                                Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
-                            }
-
-                            @Override
-                            public void onFailed() {
-                                TransitionSet set = new TransitionSet()
-                                        .addTransition(new Fade())
-                                        .setInterpolator(new FastOutSlowInInterpolator())
-                                        .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
-
-                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
-                                if (adapter.getItemCount() == 0) {
-                                    binding.emptyText.setVisibility(View.VISIBLE);
-                                } else {
-                                    binding.emptyText.setVisibility(View.GONE);
-                                }
-
-                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
-                                initScrollPosition.set(-1);
-                            }
-                        }
-                );
-            }
+        //控制视图显示
+        binding.recyclerLoadingIndicator.setVisibility(View.GONE);
+        if (adapter.getItemCount() == 0) {
+            binding.emptyText.setVisibility(View.VISIBLE);
+        } else {
+            binding.emptyText.setVisibility(View.GONE);
         }
+
+        //执行滚动操作
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+        scrollContentRecycler(
+                initScrollPosition.get(),
+                false,
+                new PagingRecyclerScrollListener() {
+                    @Override
+                    public void onSucceed() {
+                        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
+                        initScrollPosition.set(-1);
+                    }
+
+                    @Override
+                    public void onRetry(int failCount) {
+                        Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
+                        initScrollPosition.set(-1);
+                    }
+                }
+        );
     }
 
     /**
