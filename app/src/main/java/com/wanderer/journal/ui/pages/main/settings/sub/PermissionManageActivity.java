@@ -27,6 +27,8 @@ import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
+import java.util.Objects;
+
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
     private final ActivityResultLauncher<String> runtimeLauncher =  //申请运行时权限的启动器
@@ -162,6 +164,37 @@ public class PermissionManageActivity extends AppCompatActivity {
         } else {
             binding.autoStartOption.getRoot().setVisibility(View.GONE);
         }
+
+        //电池优化策略
+        SettingClickableTextView batteryOptimizations = new SettingClickableTextView(
+                this,
+                binding.batteryOption,
+                R.string.ignore_battery_optimization,
+                "设置安卓原生的电池优化策略",
+                R.drawable.outline_battery_android_4_24,
+                RadiusStyle.MIDDLE
+        );
+        batteryOptimizations.setFunctionListener(v -> showExplanationDialog(
+                R.string.ignore_battery_optimization,
+                "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。",
+                () -> {
+                    if (PermissionHelper.isIgnoringBatteryOptimizations(this)) {
+                        Toast.makeText(this, "已忽略电池优化，长按强制跳转电池优化界面", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Intent intent = PermissionHelper.buildIgnoringBatteryOptimizationsIntent(this);
+                    if (Objects.equals(intent.getAction(), Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) {
+                        Toast.makeText(this, "请找到本应用并设置电池优化策略为“无限制”", Toast.LENGTH_SHORT).show();
+                    }
+                    LifecycleManager.startExternalActivity(this, intent);
+                }
+        ));
+        batteryOptimizations.setOnLongClickListener(view -> {
+            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            LifecycleManager.startExternalActivity(this, intent);
+            return true;
+        });
 
         //精确闹钟权限
         alarm = new SettingClickableTextView(

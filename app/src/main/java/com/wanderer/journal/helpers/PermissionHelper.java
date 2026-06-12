@@ -56,7 +56,7 @@ public class PermissionHelper {
                 PermissionHelper::buildExactAlarmIntent
         ),
         //电池优化
-        @SuppressLint("BatteryLife") BATTERY(
+        BATTERY(
                 PermissionHelper::isIgnoringBatteryOptimizations,
                 PermissionHelper::buildIgnoringBatteryOptimizationsIntent
         ),
@@ -397,7 +397,10 @@ public class PermissionHelper {
      * @return 是否能跳转原生界面
      */
     public static boolean canSkip2ProtogeneticBatteryOptimizationsPage() {
-        return !DeviceOs.isHyperOs() && !DeviceOs.isMiui(); //目前测试只有米米的系统无法跳转，会被拦截至魔改界面
+        if (DeviceOs.isHyperOs() || DeviceOs.isMiui()) return false;    //小米系统无法弹出允许电池优化对话框
+
+        int osVersionCode = Build.VERSION.SDK_INT;
+        return !DeviceOs.isColorOs() || osVersionCode < Build.VERSION_CODES.BAKLAVA; //ColorOS 16 无法弹出允许电池优化对话框
     }
 
     /**
