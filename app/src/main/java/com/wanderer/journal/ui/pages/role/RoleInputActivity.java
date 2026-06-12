@@ -201,9 +201,13 @@ public class RoleInputActivity extends AppCompatActivity {
                     if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
                         RoleAliasAdapter aliasAdapter = (RoleAliasAdapter) binding.aliaRecycler.getAdapter();
                         List<String> aliaList = new ArrayList<>(aliasAdapter.getCurrentList());
-                        aliaList.add(inputStr);
-                        aliasAdapter.submitList(aliaList);
-                        Toast.makeText(this, "别名添加成功", Toast.LENGTH_SHORT).show();
+                        if (!aliaList.contains(inputStr.trim())) {
+                            aliaList.add(inputStr.trim());
+                            aliasAdapter.submitList(aliaList);
+                            Toast.makeText(this, "别名添加成功", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(this, "无法添加相同的别名", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
                         Toast.makeText(this, "别名添加失败", Toast.LENGTH_SHORT).show();
                     }
