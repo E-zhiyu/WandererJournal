@@ -234,23 +234,20 @@ public class TextHelper {
     public static String flattenEditable(@Nullable Editable editable, EditableFlattenListener listener) {
         if (editable == null || editable.toString().isEmpty()) return "";
 
-        SpannableString spannableString = new SpannableString(editable);
-
-        //找出所有Annotation
-        Annotation[] annotations = spannableString.getSpans(0, spannableString.length(), Annotation.class);
-
-        //倒序扁平化，防止下标变化
+        //获取 Annotation 并扁平化
         SpannableStringBuilder builder = new SpannableStringBuilder(editable);
-        for (int i = annotations.length - 1; i >= 0; i--) {
-            Annotation annotation = annotations[i];
+        Annotation[] annotations = builder.getSpans(0, builder.length(), Annotation.class);
+        for (Annotation annotation : annotations) {
+            //获取 annotation 的起止位置
+            int start = builder.getSpanStart(annotation);
+            int end = builder.getSpanEnd(annotation);
+            if (start == -1 || end == -1) continue;
 
-            //获取扁平化后的字符串
-            int start = spannableString.getSpanStart(annotation);
-            int end = spannableString.getSpanEnd(annotation);
-            String raw = editable.subSequence(start, end).toString();
+            //生成扁平化文本
+            String raw = builder.subSequence(start, end).toString();
             String flattenedText = listener.getFlattenedText(annotation, raw);
 
-            //添加到builder中
+            //添加到 builder 中
             builder.replace(start, end, flattenedText);
         }
 
