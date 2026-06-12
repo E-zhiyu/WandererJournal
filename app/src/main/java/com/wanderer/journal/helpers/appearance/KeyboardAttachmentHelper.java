@@ -8,6 +8,7 @@ public class KeyboardAttachmentHelper {
 
     private final View rootView;
     private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
+    private Runnable runnable = null;   // rootView.postDelayed() 执行的 Runnable 对象
     private int previousHeightDiff = 0;
 
     public KeyboardAttachmentHelper(View rootView) {
@@ -21,30 +22,11 @@ public class KeyboardAttachmentHelper {
         if (globalLayoutListener != null) return;
 
         globalLayoutListener = () -> {
-            Rect r = new Rect();
-            // 获取当前窗口在屏幕上的实际可视区域
-            rootView.getWindowVisibleDisplayFrame(r);
-
-            // 获取屏幕总高度
-            int screenHeight = rootView.getRootView().getHeight();
-
-            // 计算键盘（或其他遮挡物）占据的高度
-            int heightDiff = screenHeight - r.bottom;
-
-            // 设定一个阈值（比如100dp），排除系统导航栏等微小变化
-            int threshold = (int) (100 * rootView.getContext().getResources().getDisplayMetrics().density);
-
-            if (heightDiff < threshold) {
-                heightDiff = 0; // 键盘收起
+            if (runnable != null) {
+                rootView.removeCallbacks(runnable);
             }
-
-            // 如果高度发生变化，通知回调
-            if (heightDiff != previousHeightDiff) {
-                if (listener != null) {
-                    listener.onHeightChanged(heightDiff, previousHeightDiff);
-                }
-                previousHeightDiff = heightDiff;
-            }
+            runnable = () -> notifyUi(listener);
+            rootView.postDelayed(runnable, 100);
         };
 
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(globalLayoutListener);
@@ -58,6 +40,40 @@ public class KeyboardAttachmentHelper {
             rootView.getViewTreeObserver().removeOnGlobalLayoutListener(globalLayoutListener);
             globalLayoutListener = null;
         }
+    }
+
+    /**
+     * 通知界面更新布局
+     *
+     * @param listener 布局更新监听器
+     */
+    private void notifyUi(OnKeyboardHeightChangedListener listener) {
+        Rect r = new Rect();
+        // 获取当前窗口在屏幕上的实际可视区域
+        rootView.getWindowVisibleDisplayFrame(r);
+
+        // 获取屏幕总高度
+        int screenHeight = rootView.getRootView().getHeight();
+
+        // 计算键盘（或其他遮挡物）占据的高度
+        int heightDiff = screenHeight - r.bottom;
+
+        // 设定一个阈值（比如100dp），排除系统导航栏等微小变化
+        int threshold = (int) (100 * rootView.getContext().getResources().getDisplayMetrics().density);
+
+        if (heightDiff < threshold) {
+            heightDiff = 0; // 键盘收起
+        }
+
+        // 如果高度发生变化，通知回调
+        if (heightDiff != previousHeightDiff) {
+            if (listener != null) {
+                listener.onHeightChanged(heightDiff, previousHeightDiff);
+            }
+            previousHeightDiff = heightDiff;
+        }
+
+        runnable = null;
     }
 
     public interface OnKeyboardHeightChangedListener {
