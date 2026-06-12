@@ -31,7 +31,7 @@ import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
-import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
+import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
