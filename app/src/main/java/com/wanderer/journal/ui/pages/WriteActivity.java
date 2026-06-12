@@ -599,6 +599,7 @@ public class WriteActivity extends AppCompatActivity {
                             return true;
                         } else if (item.getItemId() == R.id.action_copy_paragraph) {
                             TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                             return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
