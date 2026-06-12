@@ -1230,6 +1230,7 @@ public class WriteActivity extends AppCompatActivity {
             CharSequence richText = ParagraphTextConverter.hierarchic(this, modifyingParagraph.getContent());
             binding.originText.setText(richText);        //显示原始文本
             binding.contentTextInput.setText(richText);  //填充原始文本到输入框
+            binding.contentTextInput.setSelection(richText.length());   //光标移动到末尾
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
