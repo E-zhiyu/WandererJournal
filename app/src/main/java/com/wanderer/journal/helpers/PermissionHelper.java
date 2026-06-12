@@ -27,7 +27,7 @@ import com.hjq.device.compat.DeviceOs;
 import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
-import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
-
-import io.noties.markwon.Markwon;
 
 /**
  * 在打开Activity时申请权限的工具类
@@ -287,17 +285,9 @@ public class PermissionHelper {
             }
         }
 
-        //显示为Markdown
-        //获取自定义弹窗视图
-        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(activity.getLayoutInflater());
-        Markwon markwon = Markwon.create(activity);
-        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, messageBuilder.toString());
-
         //显示对话框
-        new MaterialAlertDialogBuilder(activity)
-                .setTitle("需要权限")
-                .setView(markdownTextBinding.getRoot())
-                .setPositiveButton("确定", (dialog, which) -> runtimeLauncher.launch(permissions))
+        new MarkdownDialogBuilder(activity, "权限说明", messageBuilder.toString())
+                .setPositiveButton("去设置", (dialogInterface, i) -> runtimeLauncher.launch(permissions))
                 .setNegativeButton("取消", null)
                 .show();
     }

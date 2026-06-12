@@ -18,17 +18,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
-import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
-
-import io.noties.markwon.Markwon;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
@@ -194,17 +191,8 @@ public class PermissionManageActivity extends AppCompatActivity {
      * @param action  点击确定按钮后执行的操作
      */
     private void showExplanationDialog(@StringRes int title, String message, Runnable action) {
-        //获取自定义弹窗视图
-        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(getLayoutInflater());
-
-        // 渲染 Markdown 文本
-        Markwon markwon = Markwon.create(this);
-        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, message);
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(title)
-                .setView(markdownTextBinding.getRoot())
-                .setPositiveButton("前往设置", (dialog, which) -> action.run())
+        new MarkdownDialogBuilder(this, getString(title), message)
+                .setPositiveButton("前往设置", (dialogInterface, i) -> action.run())
                 .setNegativeButton("取消", null)
                 .show();
     }

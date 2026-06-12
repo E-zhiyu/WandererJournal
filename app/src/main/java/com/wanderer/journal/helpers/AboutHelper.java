@@ -3,15 +3,10 @@ package com.wanderer.journal.helpers;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.wanderer.journal.R;
-import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
-
-import io.noties.markwon.Markwon;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.3.0\n" +
@@ -157,18 +152,7 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        //获取自定义弹窗视图
-        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(
-                LayoutInflater.from(context)
-        );
-
-        //渲染 Markdown 文本
-        Markwon markwon = Markwon.create(context);
-        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, CHANGELOG);
-
-        new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.changelog)
-                .setView(markdownTextBinding.getRoot())
+        new MarkdownDialogBuilder(context, "更新日志", CHANGELOG)
                 .setPositiveButton("关闭", null)
                 .show();
     }
