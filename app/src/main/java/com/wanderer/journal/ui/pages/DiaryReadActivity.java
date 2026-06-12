@@ -56,6 +56,7 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
@@ -468,6 +469,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
+                            return true;
+                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
                             return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);

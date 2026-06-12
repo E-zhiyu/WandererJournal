@@ -597,6 +597,9 @@ public class WriteActivity extends AppCompatActivity {
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
                             return true;
+                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                            return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                             return true;

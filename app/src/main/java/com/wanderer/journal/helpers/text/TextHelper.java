@@ -1,5 +1,7 @@
 package com.wanderer.journal.helpers.text;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -336,6 +338,21 @@ public class TextHelper {
             this.rule = rule;
             this.key = key;
             this.matcher = matcher;
+        }
+    }
+
+    /**
+     * 复制文本到剪贴板
+     *
+     * @param context 上下文
+     * @param label   复制内容的标题
+     * @param value   复制的内容
+     */
+    public static void copyToClipBoard(@NonNull Context context, String label, String value) {
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clipData = ClipData.newPlainText(label, value);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(clipData);
         }
     }
 }
