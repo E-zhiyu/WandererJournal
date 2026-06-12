@@ -232,7 +232,7 @@ public class TextHelper {
     @NonNull
     @Contract(pure = true)
     public static String flattenEditable(@Nullable Editable editable, EditableFlattenListener listener) {
-        if (editable == null || editable.isEmpty()) return "";
+        if (editable == null || editable.toString().isEmpty()) return "";
 
         SpannableString spannableString = new SpannableString(editable);
 
