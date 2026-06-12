@@ -19,6 +19,7 @@ public enum LogTags {
     SHARE_PREVIEW_ACTIVITY("SharePreviewActivity"),
     SHARE_WEB_VIEW("ShareWebView"),
     ZIP_HELPER("ZipHelper"),
+    PARAGRAPH_INNER_MEDIA_ADAPTER("ParagraphInnerMediaAdapter"),
     FULL_SCREEN_MEDIA_ACTIVITY("FullScreenMediaActivity");
     private final String tagName;
 

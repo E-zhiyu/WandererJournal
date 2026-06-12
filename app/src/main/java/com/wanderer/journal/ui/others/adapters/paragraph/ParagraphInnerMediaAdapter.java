@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
@@ -119,10 +121,14 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             }
 
             //通过 Glide 显示图片
-            Glide.with(holder.itemView.getContext())
-                    .load(media.getFileUri())
-                    .apply(glideOptions)
-                    .into(holder.binding.imageView);
+            try {
+                Glide.with(holder.itemView.getContext())
+                        .load(media.getFileUri())
+                        .apply(glideOptions)
+                        .into(holder.binding.imageView);
+            } catch (IllegalArgumentException e) {
+                Log.e(LogTags.PARAGRAPH_INNER_MEDIA_ADAPTER.n(), "图片加载失败：Activity被回收");
+            }
         });
     }
 
