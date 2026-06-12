@@ -7,6 +7,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import com.wanderer.journal.data.backup.DataBackupDao;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -78,4 +79,5 @@ public abstract class DiaryDatabase extends RoomDatabase {
 
     public abstract EmotionTagDao emotionTagDao();
     public abstract RoleDao roleDao();
+    public abstract DataBackupDao dataBackupDao();
 }

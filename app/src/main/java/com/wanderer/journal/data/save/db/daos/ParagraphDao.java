@@ -290,28 +290,6 @@ public interface ParagraphDao {
     @Query("DELETE FROM paragraphs WHERE createTime >= :start AND createTime < :end")
     void deleteParagraphByDateRange(LocalDate start, LocalDate end);
 
-    /**
-     * 读取所有数据用于导出
-     *
-     * @return 段落实体列表
-     */
-    @Query("SELECT * FROM paragraphs")
-    List<ParagraphEntity> exportData();
-
-    /**
-     * 清空所有数据，准备导入新数据
-     */
-    @Query("DELETE FROM paragraphs")
-    void clear();
-
-    /**
-     * 导入新数据
-     *
-     * @param paragraphEntityList 待导入数据的实体列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importData(List<ParagraphEntity> paragraphEntityList);
-
     @Transaction
     default void insertDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
         DiaryDatabase db = DiaryDatabase.getInstance(context);

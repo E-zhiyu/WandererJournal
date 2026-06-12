@@ -201,26 +201,4 @@ public interface DiaryDao {
      */
     @Update
     void updateDiary(DiaryEntity diary);
-
-    /**
-     * 读取所有数据用于导出
-     *
-     * @return 日记实体列表
-     */
-    @Query("SELECT * FROM diaries")
-    List<DiaryEntity> exportData();
-
-    /**
-     * 批量导入数据
-     *
-     * @param diaryEntityList 待导入的日记数据列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importData(List<DiaryEntity> diaryEntityList);
-
-    /**
-     * 清空表，准备导入新数据
-     */
-    @Query("DELETE FROM diaries")
-    void clear();
 }
