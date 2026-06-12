@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
@@ -45,6 +46,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -65,6 +67,7 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
@@ -645,7 +648,28 @@ public class WriteActivity extends AppCompatActivity {
 
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    binding.contentRecycler.smoothScrollToPosition(itemCount - 1);
+                    AppearanceAnimationHelper.scrollPagingRecycler(
+                            binding.contentRecycler,
+                            (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                            adapter,
+                            itemCount - 1,
+                            63,
+                            10,
+                            750,
+                            new PagingRecyclerScrollListener() {
+                                @Override
+                                public void onSucceed() {
+                                }
+
+                                @Override
+                                public void onRetry(int failCount) {
+                                }
+
+                                @Override
+                                public void onFailed() {
+                                }
+                            }
+                    );
                 }
             }
 

@@ -733,6 +733,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                 adapter,
                 targetPosition,
+                ViewEdgeHelper.dpToPx(this, 63),
                 maxRetryCount,
                 750,
                 new PagingRecyclerScrollListener() {

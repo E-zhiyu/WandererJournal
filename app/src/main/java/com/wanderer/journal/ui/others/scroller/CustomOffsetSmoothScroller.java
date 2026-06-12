@@ -9,15 +9,6 @@ public class CustomOffsetSmoothScroller extends LinearSmoothScroller {
     private final int customOffsetPx;   //自定义的Offset值（像素）
 
     /**
-     * 自定义 Offset 平滑滚动器的构造方法
-     *
-     * @param context 上下文
-     */
-    public CustomOffsetSmoothScroller(Context context) {
-        this(context, 0);
-    }
-
-    /**
      * 指定 Offset 的自定义 Offset 平滑滚动器的构造方法
      *
      * @param context        上下文
@@ -40,7 +31,6 @@ public class CustomOffsetSmoothScroller extends LinearSmoothScroller {
         int dy = super.calculateDyToMakeVisible(view, snapPreference);
 
         // 加上我们自定义的偏移量
-        // 注意：根据滚动方向，这里是减去偏移量，让整个内容少往上滑一点，从而留出顶部的空隙
-        return dy - customOffsetPx;
+        return dy + customOffsetPx;
     }
 }
