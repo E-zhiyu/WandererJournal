@@ -43,6 +43,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
@@ -622,7 +623,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> Toast.makeText(WriteActivity.this, String.valueOf(roleId), Toast.LENGTH_SHORT).show()
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
 
         //添加粘性头部适配器

@@ -20,6 +20,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
@@ -219,7 +220,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> Toast.makeText(SharePreviewActivity.this,String.valueOf(roleId),Toast.LENGTH_SHORT).show()
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
         binding.previewRecycler.setAdapter(adapter);
 

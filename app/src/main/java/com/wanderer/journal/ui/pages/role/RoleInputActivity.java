@@ -102,6 +102,8 @@ public class RoleInputActivity extends AppCompatActivity {
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
                     (currentHeight, previousHeight) -> {
+                        if (hasWindowFocus()) return;
+
                         int moveDistance = Math.max(
                                 currentHeight - binding.getRoot().getPaddingBottom(),
                                 0

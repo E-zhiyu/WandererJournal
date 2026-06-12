@@ -16,6 +16,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -48,6 +49,16 @@ public interface RoleDao {
      */
     @Query("SELECT * FROM roles ORDER BY relationship DESC")
     Single<List<RoleEntity>> getAllRoleSingle();
+
+    /**
+     * 通过角色 ID 获取角色数据
+     *
+     * @param id 角色 ID
+     * @return 该 ID 对应的角色数据，可能为空
+     */
+    @Transaction
+    @Query("SELECT * FROM roles WHERE roleId = :id")
+    Single<Optional<RoleEntityModel>> getRoleAndAliasSingleById(long id);
 
     /**
      * 插入一条角色记录

@@ -35,6 +35,7 @@ import androidx.transition.TransitionSet;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -497,10 +498,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> {
-                    //TODO:角色点击监听
-                    Toast.makeText(this, String.valueOf(roleId), Toast.LENGTH_SHORT).show();
-                }
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
         binding.contentRecycler.setAdapter(adapter);
 
