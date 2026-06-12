@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.enums.RichTextConverter;
+import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -28,7 +28,7 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.TextHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
@@ -229,7 +229,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent();
-            Pattern rolePattern = RichTextConverter.ROLE_REF.getPattern();
+            Pattern rolePattern = RichTextRegex.ROLE_REF.getPattern();
             CharSequence richText = TextHelper.renderClickableText(
                     rolePattern,
                     rawContent,

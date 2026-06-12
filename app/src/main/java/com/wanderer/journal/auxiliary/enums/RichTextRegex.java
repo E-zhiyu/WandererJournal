@@ -4,14 +4,14 @@ import androidx.annotation.NonNull;
 
 import java.util.regex.Pattern;
 
-public enum RichTextConverter {
+public enum RichTextRegex {
     //角色引用正则表达式：[role_ref:@角色名](角色ID)
     ROLE_REF(
             "\\[role_ref:@([^\\]]+)\\]\\((\\d+)\\)"
     );
     private final String regexStr;
 
-    RichTextConverter(String regexStr) {
+    RichTextRegex(String regexStr) {
         this.regexStr = regexStr;
     }
 

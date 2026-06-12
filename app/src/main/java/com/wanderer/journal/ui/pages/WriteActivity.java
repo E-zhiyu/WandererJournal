@@ -65,7 +65,8 @@ import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
-import com.wanderer.journal.helpers.appearance.TextHelper;
+import com.wanderer.journal.helpers.text.ParagraphTextConverter;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -197,8 +198,9 @@ public class WriteActivity extends AppCompatActivity {
                         .setTitle("草稿恢复")
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
                         .setPositiveButton("恢复", (dialogInterface, i) -> {
-                            binding.contentTextInput.setText(draft.trim());
-                            binding.contentTextInput.setSelection(draft.trim().length());
+                            CharSequence richText = ParagraphTextConverter.hierarchic(this, draft);
+                            binding.contentTextInput.setText(richText);
+                            binding.contentTextInput.setSelection(richText.length());
                             ImmHelper.showImm(binding.contentTextInput);
                         })
                         .setNegativeButton("取消", null)
@@ -410,7 +412,7 @@ public class WriteActivity extends AppCompatActivity {
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
             //获取输入内容
-            String content = flattenInput();
+            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
             if (content.trim().isEmpty()) {
                 return;
             }
@@ -536,7 +538,7 @@ public class WriteActivity extends AppCompatActivity {
                         //生成包装好的富文本标签块
                         String display = "@" + name;
                         String value = String.valueOf(roleId);
-                        SpannableString roleTag = TextHelper.createRoleTag(
+                        SpannableString roleTag = TextHelper.createTextTag(
                                 WriteActivity.this,
                                 display,
                                 KeyStrings.ROLE_ID.getS(),
@@ -1221,8 +1223,9 @@ public class WriteActivity extends AppCompatActivity {
         //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本
-            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
+            CharSequence richText = ParagraphTextConverter.hierarchic(this, modifyingParagraph.getContent());
+            binding.originText.setText(richText);        //显示原始文本
+            binding.contentTextInput.setText(richText);  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
@@ -1324,35 +1327,8 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void saveDraft() {
         if (binding != null) {
-            String content = flattenInput();
+            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
             DraftPreference.setDraft(this, content);
         }
-    }
-
-    /**
-     * 将输入的文本扁平化
-     *
-     * @return 扁平化后的文本
-     */
-    @NonNull
-    private String flattenInput() {
-        Editable editable = binding.contentTextInput.getEditableText();
-        return TextHelper.flattenEditable(
-                editable,
-                (annotation, raw) -> {
-                    String key = annotation.getKey();
-                    if (key.equals(KeyStrings.ROLE_ID.getS())) {
-                        String roleIdStr = annotation.getValue();
-                        String roleName = raw.trim().replace("@", "");
-                        return String.format(
-                                Locale.getDefault(),
-                                "[role_ref:@%s](%s)",
-                                roleName, roleIdStr
-                        );
-                    } else {
-                        return "";
-                    }
-                }
-        );
     }
 }

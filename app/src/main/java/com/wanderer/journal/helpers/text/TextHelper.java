@@ -1,4 +1,4 @@
-package com.wanderer.journal.helpers.appearance;
+package com.wanderer.journal.helpers.text;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -19,9 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.textfield.TextInputEditText;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.EditableFlattenListener;
+import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 
 import org.jetbrains.annotations.Contract;
 
@@ -47,7 +49,7 @@ public class TextHelper {
             ClickableSpanListener<T> listener
     ) {
         //判空
-        if (raw == null) return "";
+        if (raw == null || raw.isEmpty()) return "";
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
         int clickableColor = MaterialColors.getColor(
@@ -147,10 +149,15 @@ public class TextHelper {
     }
 
     /**
-     * 生成一个在输入框里显示的高亮角色标签块
+     * 生成文本块
+     *
+     * @param context 上下文
+     * @param display 文本块显示的文本
+     * @param key     文本块保存数据的关键字
+     * @param value   文本块保存的数据
      */
     @NonNull
-    public static SpannableString createRoleTag(Context context, String display, String key, String value) {
+    public static SpannableString createTextTag(Context context, String display, String key, String value) {
         SpannableString spannable = new SpannableString(display);
 
         //贴纸元数据绑定
@@ -223,7 +230,7 @@ public class TextHelper {
     @NonNull
     @Contract(pure = true)
     public static String flattenEditable(@Nullable Editable editable, EditableFlattenListener listener) {
-        if (editable == null) return "";
+        if (editable == null || editable.isEmpty()) return "";
 
         SpannableString spannableString = new SpannableString(editable);
 
@@ -246,5 +253,89 @@ public class TextHelper {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * 将普通文本立体化
+     *
+     * @param context 上下文
+     * @param raw     原始文本
+     * @param rules   用于立体化的转换规则
+     * @return 能够直接显示在{@link TextInputEditText}中的富文本，已将特定格式的文本转换为文本块
+     */
+    @NonNull
+    public static CharSequence hierarchicInEditable(Context context, String raw, RichTextRule<?>... rules) {
+        if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) {
+            return raw == null ? "" : raw;
+        }
+
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        int cursor = 0; // 当前流水线扫描到的字符指针位置
+        int textLength = raw.length();
+
+        while (cursor < textLength) {
+            MatchResultSnapshot closestMatch = null;
+
+            // 遍历所有规则，看看在当前光标往后的文本里，谁留在最前面（start最小）
+            for (RichTextRule<?> rule : rules) {
+                Matcher matcher = rule.getPattern().matcher(raw);
+
+                // 从当前指针位置往后探测
+                if (matcher.find(cursor)) {
+                    // 如果这是第一个找到的，或者它比之前其他正则找到的更靠前
+                    if (closestMatch == null || matcher.start() < closestMatch.start) {
+                        String key = rule.getKey();
+                        closestMatch = new MatchResultSnapshot(matcher.start(), matcher.end(), rule, key, matcher);
+                    }
+                }
+            }
+
+            // 情况 A：后面再也没有任何规则能匹配上了，把剩下的文本作为普通文本追加，直接结束
+            if (closestMatch == null) {
+                builder.append(raw.substring(cursor));
+                break;
+            }
+
+            // 情况 B：在后面找到了匹配项，但匹配项前面有一段普通文本（如 "今天和"）
+            if (closestMatch.start > cursor) {
+                builder.append(raw.substring(cursor, closestMatch.start));
+            }
+
+            // 情况 C：精准命中规则，开始调用该规则的自定义立体化包装
+            RichTextRule<?> matchedRule = closestMatch.rule;
+            Matcher matchedMatcher = closestMatch.matcher;
+
+            // 提取 UI 显示文案和绑定的数据
+            String displayText = matchedRule.getDisplayText(matchedMatcher);
+            String clickData = String.valueOf(matchedRule.getTextTagData(matchedMatcher));
+
+            // 立体化组装：生成带有输入框专用的 Annotation 和 ReplacementSpan 的标签
+            // 这里我们需要动态识别不同的 Key，确保保存时能够区分出谁是谁
+            String key = closestMatch.key;
+            SpannableString richTag = createTextTag(context, displayText, key, clickData);
+            builder.append(richTag);
+
+            // 将光标指针强行推进到当前匹配完的暗号末尾，准备下一轮轮巡
+            cursor = closestMatch.end;
+        }
+
+        return builder;
+    }
+
+    //内部类：用于记录某一次精准匹配的结果快照
+    private static class MatchResultSnapshot {
+        int start;              //匹配成功的起始下标
+        int end;                //匹配成功的结束下标
+        RichTextRule<?> rule;   //富文本转换规则
+        String key;             //文本块保存数据的关键字
+        Matcher matcher;        //正则表达式匹配对象
+
+        public MatchResultSnapshot(int start, int end, RichTextRule<?> rule, String key, Matcher matcher) {
+            this.start = start;
+            this.end = end;
+            this.rule = rule;
+            this.key = key;
+            this.matcher = matcher;
+        }
     }
 }
