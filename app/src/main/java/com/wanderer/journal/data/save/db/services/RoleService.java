@@ -88,4 +88,18 @@ public class RoleService {
             return Completable.complete();
         });
     }
+
+    /**
+     * 删除角色并将角色引用文本冲刷为普通文本
+     *
+     * @param role 需要删除的角色
+     * @return 是否完成
+     */
+    public static Completable deleteRole(RoleEntity role, @NonNull DiaryDatabase db) {
+        RoleDao roleDao = db.roleDao();
+        return Completable.defer(() -> {
+            roleDao.deleteRoleAndWash(role);
+            return Completable.complete();
+        });
+    }
 }

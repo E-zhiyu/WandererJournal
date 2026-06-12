@@ -17,7 +17,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
@@ -169,11 +168,10 @@ public class RoleManageActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.action_delete_role) {
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.delete_role)
-                        .setMessage("即将删除该角色，确认继续吗？")
+                        .setMessage("即将删除该角色，所有引用该角色的段落内容都将发生不可逆的变化，确认继续吗？")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                             DiaryDatabase db = DiaryDatabase.getInstance(this);
-                            RoleDao roleDao = db.roleDao();
-                            disposable.add(roleDao.deleteRole(itemModel.model.getRole())
+                            disposable.add(RoleService.deleteRole(itemModel.model.getRole(), db)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(
