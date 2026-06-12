@@ -18,9 +18,10 @@
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/image_card"
-        style="@style/CardStyleBase"
+        style="@style/Widget.Material3.CardView.Outlined"
         android:layout_width="75dp"
         android:layout_height="75dp"
+        app:cardCornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
