@@ -216,24 +216,27 @@ public class WriteActivity extends AppCompatActivity {
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
                     (currentHeight, previousHeight) -> {
+                        if (hasWindowFocus()) return;
+
+                        int moveDistance = Math.max(0, currentHeight - binding.contentInputLayout.getPaddingBottom());
                         binding.contentInputCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.contentEditCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.mediaCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.emptyText
                                 .animate()
-                                .translationY(-currentHeight / 2f)
+                                .translationY(-moveDistance / 2f)
                                 .setDuration(250)
                                 .start();
 
