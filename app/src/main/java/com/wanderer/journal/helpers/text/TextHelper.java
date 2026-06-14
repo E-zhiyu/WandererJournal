@@ -34,6 +34,53 @@ import java.util.regex.Pattern;
 
 public class TextHelper {
     /**
+     * 获取字符串中出现的关键词个数
+     *
+     * @param str     原始字符串
+     * @param end     结束计数的下标
+     * @param keyword 需要查找次数的关键词
+     * @return 关键词出现次数
+     */
+    public static int getKeywordCount(String str, int end, String keyword) {
+        if (str == null || keyword == null || keyword.isEmpty()) {
+            return 0;
+        }
+
+        int count = 0;
+        int index = 0;
+
+        while ((index = str.indexOf(keyword, index)) != -1 && index <= end) {
+            count++;
+            index += keyword.length(); // 跳过已匹配的子串
+        }
+
+        return count;
+    }
+
+    /**
+     * 通过split方法统计文本的行数
+     *
+     * @param text 待统计行数的文本
+     * @return 行数
+     */
+    public static int countLinesSplit(String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        // 处理空字符串
+        String[] lines = text.split("\r\n|\n|\r", -1); // -1 保留尾部空字符串
+
+        // 如果最后一个是空字符串且原字符串以换行结尾，不算作一行
+        int count = lines.length;
+        if (text.endsWith("\n") || text.endsWith("\r")) {
+            count--;
+        }
+
+        return count;
+    }
+
+    /**
      * 将原始字符串渲染为可点击的字符串
      *
      * @param pattern  正则表达式，用于捕获可点击的字符串部分
@@ -197,53 +244,6 @@ public class TextHelper {
         spannable.setSpan(roundedBackgroundSpan, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         return spannable;
-    }
-
-    /**
-     * 获取字符串中出现的关键词个数
-     *
-     * @param str     原始字符串
-     * @param end     结束计数的下标
-     * @param keyword 需要查找次数的关键词
-     * @return 关键词出现次数
-     */
-    public static int getKeywordCount(String str, int end, String keyword) {
-        if (str == null || keyword == null || keyword.isEmpty()) {
-            return 0;
-        }
-
-        int count = 0;
-        int index = 0;
-
-        while ((index = str.indexOf(keyword, index)) != -1 && index <= end) {
-            count++;
-            index += keyword.length(); // 跳过已匹配的子串
-        }
-
-        return count;
-    }
-
-    /**
-     * 通过split方法统计文本的行数
-     *
-     * @param text 待统计行数的文本
-     * @return 行数
-     */
-    public static int countLinesSplit(String text) {
-        if (text == null || text.isEmpty()) {
-            return 0;
-        }
-
-        // 处理空字符串
-        String[] lines = text.split("\r\n|\n|\r", -1); // -1 保留尾部空字符串
-
-        // 如果最后一个是空字符串且原字符串以换行结尾，不算作一行
-        int count = lines.length;
-        if (text.endsWith("\n") || text.endsWith("\r")) {
-            count--;
-        }
-
-        return count;
     }
 
     /**
