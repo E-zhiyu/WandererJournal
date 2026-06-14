@@ -21,8 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
-import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
@@ -45,9 +44,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -385,37 +381,21 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            Pattern rolePattern = RichTextRegex.ROLE_REF.getPattern();
-            CharSequence renderedRoleText = TextHelper.renderClickableText(
-                    rolePattern,
-                    rawContent,
-                    context,
-                    new ClickableSpanListener<Long>() {
-                        @Override
-                        public String parseString(Matcher matcher) {
-                            return "@" + matcher.group(1);
-                        }
-
-                        @Override
-                        public Long getClickData(Matcher matcher) {
-                            return Long.parseLong(Objects.requireNonNull(matcher.group(2)));
-                        }
-
-                        @Override
-                        public void onClick(Long clickData) {
-                            roleClickListener.onRoleClicked(clickData);
-                        }
-                    }
-            );
+            CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
+                @Override
+                public void onClick(long clickData) {
+                    roleClickListener.onRoleClicked(clickData);
+                }
+            });
             if (!currentKeyword.isEmpty() && positionList.contains(position)) {
                 CharSequence heighLightedText = TextHelper.renderHighLightedText(
                         currentKeyword,
-                        String.valueOf(renderedRoleText),
+                        String.valueOf(richText),
                         context
                 );
                 itemHolder.binding.contentText.setText(heighLightedText);
             } else {
-                itemHolder.binding.contentText.setText(renderedRoleText);
+                itemHolder.binding.contentText.setText(richText);
             }
 
             //选择状态

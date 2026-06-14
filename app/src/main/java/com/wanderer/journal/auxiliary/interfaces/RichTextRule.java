@@ -5,9 +5,8 @@ import java.util.regex.Pattern;
 
 /**
  * 通用多规则拦截器接口
- * @param <T> 该规则点击时需要传递的数据类型
  */
-public interface RichTextRule<T> {
+public interface RichTextRule {
 
     //该规则对应的正则表达式（例如角色的正则、话题的正则）
     Pattern getPattern();
@@ -19,5 +18,9 @@ public interface RichTextRule<T> {
     String getKey();
 
     //匹配成功后，该标签塞进草稿箱的元数据对象（T 可以是 Long ID，也可以是 String 话题名）
-    T getTextTagData(Matcher matcher);
+    String getTextTagData(Matcher matcher);
+
+    void onClick(long clickData);
+
+    long transToClickData(String tagData);
 }

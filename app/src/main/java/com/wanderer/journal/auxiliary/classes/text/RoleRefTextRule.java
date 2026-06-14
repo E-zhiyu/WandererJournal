@@ -9,7 +9,7 @@ import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RoleRefTextRule implements RichTextRule<String> {
+public abstract class RoleRefTextRule implements RichTextRule {
     @Override
     public Pattern getPattern() {
         return RichTextRegex.ROLE_REF.getPattern();
@@ -28,5 +28,14 @@ public class RoleRefTextRule implements RichTextRule<String> {
     @Override
     public String getTextTagData(@NonNull Matcher matcher) {
         return matcher.group(2);
+    }
+
+    @Override
+    public long transToClickData(String tagData) {
+        try {
+            return Long.parseLong(tagData);
+        } catch (NumberFormatException e) {
+            return -1L;
+        }
     }
 }

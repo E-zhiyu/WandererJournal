@@ -51,11 +51,11 @@ public class ParagraphTextConverter {
      * @return 立体化后的富文本，能够直接显示在{@link MaterialTextView}和{@link TextInputEditText}中
      */
     @NonNull
-    public static CharSequence hierarchic(Context context, String raw) {
-        return TextHelper.hierarchic(
+    public static CharSequence hierarchic(Context context, String raw, RoleRefTextRule rule) {
+        return TextHelper.hierarchicFromString(
                 context,
                 raw,
-                new RoleRefTextRule()
+                rule
         );
     }
 }

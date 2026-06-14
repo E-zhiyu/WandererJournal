@@ -23,14 +23,12 @@ import androidx.annotation.Nullable;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.textfield.TextInputEditText;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.EditableFlattenListener;
 import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TextHelper {
     /**
@@ -80,82 +78,39 @@ public class TextHelper {
         return count;
     }
 
-    /**
-     * 将原始字符串渲染为可点击的字符串
-     *
-     * @param pattern  正则表达式，用于捕获可点击的字符串部分
-     * @param raw      原始字符串
-     * @param context  上下文
-     * @param listener 匹配的字符串的处理监听
-     * @param <T>      富文本点击事件需要传递的数据类型
-     * @return 渲染后的文本
-     */
-    @NonNull
-    public static <T> CharSequence renderClickableText(
-            Pattern pattern,
-            String raw,
+    public static void addClickListener(
             Context context,
-            ClickableSpanListener<T> listener
+            int start,
+            int end,
+            long clickData,
+            @NonNull SpannableStringBuilder builder,
+            @NonNull RichTextRule rule
     ) {
-        //判空
-        if (raw == null || raw.isEmpty()) return "";
-
-        SpannableStringBuilder builder = new SpannableStringBuilder();
         int clickableColor = MaterialColors.getColor(
                 context,
                 android.R.attr.colorPrimary,
                 context.getColor(R.color.color_primary)
         );
 
-        //循环渲染富文本
-        int lastIndex = 0;  //上次找到的匹配字符串的位置
-        Matcher matcher = pattern.matcher(raw);
-        while (matcher.find()) {
-            //处理匹配串前方的普通文本
-            String normalText = raw.substring(lastIndex, matcher.start());
-            if (!normalText.isEmpty()) {
-                builder.append(normalText);
-            }
+        builder.setSpan(
+                new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View view) {
+                        rule.onClick(clickData);
+                    }
 
-            //添加匹配的文本
-            String parsedText = listener.parseString(matcher);
-            int startParsed = builder.length();
-            builder.append(parsedText);
-            int endParsed = builder.length();
-
-            //添加点击监听
-            T clickData = listener.getClickData(matcher);
-            builder.setSpan(
-                    new ClickableSpan() {
-                        @Override
-                        public void onClick(@NonNull View view) {
-                            listener.onClick(clickData);
-                        }
-
-                        @Override
-                        public void updateDrawState(@NonNull TextPaint ds) {
-                            super.updateDrawState(ds);
-                            ds.setColor(clickableColor);    //设置颜色
-                            ds.setUnderlineText(false);     //无需下划线
-                            ds.setFakeBoldText(true);       //加粗
-                        }
-                    },
-                    startParsed,
-                    endParsed,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-
-            //更新最后的下标
-            lastIndex = matcher.end();
-        }
-
-        //处理剩下的文本
-        if (lastIndex < raw.length()) {
-            String tailText = raw.substring(lastIndex);
-            builder.append(tailText);
-        }
-
-        return builder;
+                    @Override
+                    public void updateDrawState(@NonNull TextPaint ds) {
+                        super.updateDrawState(ds);
+                        ds.setColor(clickableColor);    //设置颜色
+                        ds.setUnderlineText(false);     //无需下划线
+                        ds.setFakeBoldText(true);       //加粗
+                    }
+                },
+                start,
+                end,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        );
     }
 
     /**
@@ -286,7 +241,7 @@ public class TextHelper {
      * @return 能够直接显示在{@link TextInputEditText}中的富文本，已将特定格式的文本转换为文本块
      */
     @NonNull
-    public static CharSequence hierarchic(Context context, String raw, RichTextRule<?>... rules) {
+    public static CharSequence hierarchicFromString(Context context, String raw, RichTextRule... rules) {
         if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) {
             return raw == null ? "" : raw;
         }
@@ -298,7 +253,7 @@ public class TextHelper {
             MatchResultSnapshot closestMatch = null;
 
             // 遍历所有规则，看看在当前光标往后的文本里，谁留在最前面（start最小）
-            for (RichTextRule<?> rule : rules) {
+            for (RichTextRule rule : rules) {
                 Matcher matcher = rule.getPattern().matcher(raw);
 
                 // 从当前指针位置往后探测
@@ -322,18 +277,27 @@ public class TextHelper {
             }
 
             // 情况 C：精准命中规则，开始调用该规则的自定义立体化包装
-            RichTextRule<?> matchedRule = closestMatch.rule;
+            RichTextRule matchedRule = closestMatch.rule;
             Matcher matchedMatcher = closestMatch.matcher;
 
             // 提取 UI 显示文案和绑定的数据
             String displayText = matchedRule.getDisplayText(matchedMatcher);
-            String clickData = String.valueOf(matchedRule.getTextTagData(matchedMatcher));
+            String tagData = matchedRule.getTextTagData(matchedMatcher);
 
             // 立体化组装：生成带有输入框专用的 Annotation 和 ReplacementSpan 的标签
             // 这里我们需要动态识别不同的 Key，确保保存时能够区分出谁是谁
             String key = matchedRule.getKey();
-            SpannableString richTag = createTextTag(context, displayText, key, clickData);
+            SpannableString richTag = createTextTag(context, displayText, key, tagData);
             builder.append(richTag);
+
+            addClickListener(
+                    context,
+                    closestMatch.start,
+                    closestMatch.start + displayText.length(),
+                    matchedRule.transToClickData(tagData),
+                    builder,
+                    matchedRule
+            );
 
             // 将光标指针强行推进到当前匹配完的暗号末尾，准备下一轮轮巡
             cursor = closestMatch.end;
@@ -350,11 +314,9 @@ public class TextHelper {
      * @param rules    富文本化的规则
      */
     @NonNull
-    public static CharSequence hierarchicEditable(Context context, Editable editable, RichTextRule<?>... rules) {
+    public static CharSequence hierarchicFromEditable(Context context, Editable editable, RichTextRule... rules) {
         if (editable == null || rules == null || rules.length == 0) return "";
 
-        // 注意：因为直接修改 Editable 会导致其长度发生动态改变，
-        // 这里的算法必须极其严密地控制 cursor 指针
         int cursor = 0;
         SpannableStringBuilder result = new SpannableStringBuilder(editable);
         while (cursor < result.length()) {
@@ -362,7 +324,7 @@ public class TextHelper {
             MatchResultSnapshot closestMatch = null;
 
             // 遍历所有注册的规则，寻找当前光标后最先出现的暗号
-            for (RichTextRule<?> rule : rules) {
+            for (RichTextRule rule : rules) {
                 Matcher matcher = rule.getPattern().matcher(currentText);
                 if (matcher.find(cursor)) {
                     if (closestMatch == null || matcher.start() < closestMatch.start) {
@@ -377,7 +339,7 @@ public class TextHelper {
             }
 
             // 命中规则，开始原位金蝉脱壳
-            RichTextRule<?> matchedRule = closestMatch.rule;
+            RichTextRule matchedRule = closestMatch.rule;
             Matcher matchedMatcher = closestMatch.matcher;
 
             String displayText = matchedRule.getDisplayText(matchedMatcher);
@@ -409,7 +371,7 @@ public class TextHelper {
      * @return 立体化后的普通文本
      */
     @NonNull
-    public static String hierarchicButNormalText(String raw, RichTextRule<?>... rules) {
+    public static String hierarchicButNormalText(String raw, RichTextRule... rules) {
         if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) return "";
 
         StringBuilder builder = new StringBuilder();
@@ -418,7 +380,7 @@ public class TextHelper {
             MatchResultSnapshot closestMatch = null;
 
             // 遍历所有规则，看看在当前光标往后的文本里，谁留在最前面（start最小）
-            for (RichTextRule<?> rule : rules) {
+            for (RichTextRule rule : rules) {
                 Matcher matcher = rule.getPattern().matcher(raw);
 
                 // 从当前指针位置往后探测
@@ -442,7 +404,7 @@ public class TextHelper {
             }
 
             // 情况 C：精准命中规则，开始调用该规则的自定义立体化包装
-            RichTextRule<?> matchedRule = closestMatch.rule;
+            RichTextRule matchedRule = closestMatch.rule;
             Matcher matchedMatcher = closestMatch.matcher;
 
             // 提取显示文案
@@ -460,10 +422,10 @@ public class TextHelper {
     private static class MatchResultSnapshot {
         int start;              //匹配成功的起始下标
         int end;                //匹配成功的结束下标
-        RichTextRule<?> rule;   //富文本转换规则
+        RichTextRule rule;   //富文本转换规则
         Matcher matcher;        //正则表达式匹配对象
 
-        public MatchResultSnapshot(int start, int end, RichTextRule<?> rule, Matcher matcher) {
+        public MatchResultSnapshot(int start, int end, RichTextRule rule, Matcher matcher) {
             this.start = start;
             this.end = end;
             this.rule = rule;

@@ -325,7 +325,11 @@ public class SharePreviewActivity extends AppCompatActivity {
                     builder.append("\"type\":\"text\",\"content\":");
                     builder.append("\"");
                     String paragraphContent = paragraph.getContent();
-                    builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule()));
+                    builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
+                        @Override
+                        public void onClick(long clickData) {
+                        }
+                    }));
                     builder.append("\"");
 
                     //添加图片字段

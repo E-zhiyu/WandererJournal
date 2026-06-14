@@ -574,10 +574,14 @@ public class WriteActivity extends AppCompatActivity {
 
                     //开始富文本化
                     isChanging = true;
-                    CharSequence richText = TextHelper.hierarchicEditable(
+                    CharSequence richText = TextHelper.hierarchicFromEditable(
                             WriteActivity.this,
                             editable,
-                            new RoleRefTextRule()
+                            new RoleRefTextRule() {
+                                @Override
+                                public void onClick(long clickData) {
+                                }
+                            }
                     );
                     binding.contentTextInput.setText(richText);
                     isChanging = false;
@@ -1284,7 +1288,15 @@ public class WriteActivity extends AppCompatActivity {
         //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            CharSequence richText = ParagraphTextConverter.hierarchic(this, modifyingParagraph.getContent());
+            CharSequence richText = ParagraphTextConverter.hierarchic(
+                    this,
+                    modifyingParagraph.getContent(),
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(long clickData) {
+                        }
+                    }
+            );
             binding.originText.setText(richText);                               //显示原始文本的富文本
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);

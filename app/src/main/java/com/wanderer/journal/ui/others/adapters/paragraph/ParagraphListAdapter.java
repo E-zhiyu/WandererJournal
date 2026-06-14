@@ -15,9 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
-import com.wanderer.journal.auxiliary.interfaces.ClickableSpanListener;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -37,9 +36,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -229,28 +225,12 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent();
-            Pattern rolePattern = RichTextRegex.ROLE_REF.getPattern();
-            CharSequence richText = TextHelper.renderClickableText(
-                    rolePattern,
-                    rawContent,
-                    context,
-                    new ClickableSpanListener<Long>() {
-                        @Override
-                        public String parseString(Matcher matcher) {
-                            return "@" + matcher.group(1);
-                        }
-
-                        @Override
-                        public Long getClickData(Matcher matcher) {
-                            return Long.parseLong(Objects.requireNonNull(matcher.group(2)));
-                        }
-
-                        @Override
-                        public void onClick(Long clickData) {
-                            roleClickListener.onRoleClicked(clickData);
-                        }
-                    }
-            );
+            CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
+                @Override
+                public void onClick(long clickData) {
+                    roleClickListener.onRoleClicked(clickData);
+                }
+            });
             itemHolder.binding.contentText.setText(richText);
 
             //情绪标签
