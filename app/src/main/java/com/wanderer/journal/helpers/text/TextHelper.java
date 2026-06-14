@@ -82,7 +82,7 @@ public class TextHelper {
             Context context,
             int start,
             int end,
-            long clickData,
+            String clickData,
             @NonNull SpannableStringBuilder builder,
             @NonNull RichTextRule rule
     ) {
@@ -290,11 +290,12 @@ public class TextHelper {
             SpannableString richTag = createTextTag(context, displayText, key, tagData);
             builder.append(richTag);
 
+            //添加点击事件
             addClickListener(
                     context,
                     closestMatch.start,
                     closestMatch.start + displayText.length(),
-                    matchedRule.transToClickData(tagData),
+                    tagData,
                     builder,
                     matchedRule
             );
@@ -307,7 +308,7 @@ public class TextHelper {
     }
 
     /**
-     * 直接将{@link Editable}中的内容富文本化
+     * 直接将{@link Editable}中的内容富文本化，并且保持原有的富文本不被冲刷掉
      *
      * @param context  上下文
      * @param editable 需要富文本化的{@link Editable}对象

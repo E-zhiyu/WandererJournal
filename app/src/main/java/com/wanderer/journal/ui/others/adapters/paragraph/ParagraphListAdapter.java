@@ -227,8 +227,12 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             String rawContent = paragraph.getContent();
             CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
                 @Override
-                public void onClick(long clickData) {
-                    roleClickListener.onRoleClicked(clickData);
+                public void onClick(String clickData) {
+                    try {
+                        long roleId = Long.parseLong(clickData);
+                        roleClickListener.onRoleClicked(roleId);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             });
             itemHolder.binding.contentText.setText(richText);

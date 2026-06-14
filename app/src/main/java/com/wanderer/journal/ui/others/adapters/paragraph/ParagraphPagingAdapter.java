@@ -383,8 +383,12 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             String rawContent = paragraph.getContent(); //数据库中的原始数据
             CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
                 @Override
-                public void onClick(long clickData) {
-                    roleClickListener.onRoleClicked(clickData);
+                public void onClick(String clickData) {
+                    try {
+                        long roleId = Long.parseLong(clickData);
+                        roleClickListener.onRoleClicked(roleId);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
             });
             if (!currentKeyword.isEmpty() && positionList.contains(position)) {

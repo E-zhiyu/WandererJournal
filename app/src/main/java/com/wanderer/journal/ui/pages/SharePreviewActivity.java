@@ -327,7 +327,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     String paragraphContent = paragraph.getContent();
                     builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
                         @Override
-                        public void onClick(long clickData) {
+                        public void onClick(String clickData) {
                         }
                     }));
                     builder.append("\"");

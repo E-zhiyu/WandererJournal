@@ -579,7 +579,7 @@ public class WriteActivity extends AppCompatActivity {
                             editable,
                             new RoleRefTextRule() {
                                 @Override
-                                public void onClick(long clickData) {
+                                public void onClick(String clickData) {
                                 }
                             }
                     );
@@ -1293,7 +1293,7 @@ public class WriteActivity extends AppCompatActivity {
                     modifyingParagraph.getContent(),
                     new RoleRefTextRule() {
                         @Override
-                        public void onClick(long clickData) {
+                        public void onClick(String clickData) {
                         }
                     }
             );

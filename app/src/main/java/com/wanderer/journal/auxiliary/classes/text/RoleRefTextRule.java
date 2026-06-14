@@ -29,13 +29,4 @@ public abstract class RoleRefTextRule implements RichTextRule {
     public String getTextTagData(@NonNull Matcher matcher) {
         return matcher.group(2);
     }
-
-    @Override
-    public long transToClickData(String tagData) {
-        try {
-            return Long.parseLong(tagData);
-        } catch (NumberFormatException e) {
-            return -1L;
-        }
-    }
 }

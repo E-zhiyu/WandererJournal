@@ -20,7 +20,5 @@ public interface RichTextRule {
     //匹配成功后，该标签塞进草稿箱的元数据对象（T 可以是 Long ID，也可以是 String 话题名）
     String getTextTagData(Matcher matcher);
 
-    void onClick(long clickData);
-
-    long transToClickData(String tagData);
+    void onClick(String clickData);
 }

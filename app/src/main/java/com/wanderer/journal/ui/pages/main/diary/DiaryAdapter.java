@@ -185,7 +185,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
                 paragraphFragment,
                 new RoleRefTextRule() {
                     @Override
-                    public void onClick(long clickData) {
+                    public void onClick(String clickData) {
                     }
                 }
         );
