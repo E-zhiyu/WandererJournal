@@ -78,6 +78,16 @@ public class TextHelper {
         return count;
     }
 
+    /**
+     * 为特定区域的文本添加点击事件
+     *
+     * @param context   上下文
+     * @param start     开始下标
+     * @param end       结束下标
+     * @param clickData 点击后需要传递的字符串数据
+     * @param builder   富文本构建器
+     * @param rule      文本立体化规则
+     */
     public static void addClickListener(
             Context context,
             int start,
@@ -86,6 +96,9 @@ public class TextHelper {
             @NonNull SpannableStringBuilder builder,
             @NonNull RichTextRule rule
     ) {
+        if (start < 0) start = 0;
+        if (end >= builder.length()) end = builder.length() - 1;
+
         int clickableColor = MaterialColors.getColor(
                 context,
                 android.R.attr.colorPrimary,
@@ -293,8 +306,8 @@ public class TextHelper {
             //添加点击事件
             addClickListener(
                     context,
-                    closestMatch.start,
-                    closestMatch.start + displayText.length(),
+                    builder.length() - richTag.length(),
+                    builder.length(),
                     tagData,
                     builder,
                     matchedRule

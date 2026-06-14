@@ -25,11 +25,10 @@
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/content_preview_text"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
+            android:layout_marginEnd="20dp"
             android:ellipsize="end"
-            android:maxLength="20"
             android:maxLines="1"
             android:text="@string/diary_content"
             android:textAppearance="?attr/textAppearanceBodyMedium"
