@@ -95,7 +95,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -115,7 +114,7 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
-    private LocalDate diaryDate = LocalDate.now();          //父日记的日期
+    private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private boolean needScrollToBottom = false;             //是否需要在段落刷新的时候滚动到底部
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
@@ -285,23 +284,13 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void receiveIntent() {
         Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
+        initBundle = intent.getExtras();
+        if (initBundle == null) {
             return;
         }
 
-        //初始化日期数据
-        try {
-            long initDateTimestamp = bundle.getLong(KeyStrings.INIT_DATE.getS());
-            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
-            diaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
-        } catch (DateTimeParseException e) {
-            Log.e(LogTags.WRITE_ACTIVITY.n(), "无法读取传递的日期数据，已默认设置为当前日期");
-            diaryDate = LocalDate.now();
-        }
-
-        //待编辑的
-        long modifyParagraphId = bundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
+        //待编辑的段落的 ID
+        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
         ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -320,6 +309,18 @@ public class WriteActivity extends AppCompatActivity {
                         }
                 )
         );
+    }
+
+    /**
+     * 获取段落所属的日记的日期
+     *
+     * @return 段落所属日记的日期
+     */
+    private LocalDate getParentDiaryDate() {
+        if (initBundle == null) return LocalDate.now();
+
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        return initDateTimestamp == -1 ? LocalDate.now() : DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
     /**
@@ -643,8 +644,10 @@ public class WriteActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -717,6 +720,7 @@ public class WriteActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -1031,6 +1035,7 @@ public class WriteActivity extends AppCompatActivity {
     private void addParagraph(String content, List<Uri> newMediaList) {
         //执行写入操作
         DiaryDatabase db = DiaryDatabase.getInstance(this);
+        LocalDate diaryDate = getParentDiaryDate();
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMapCompletable(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(

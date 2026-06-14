@@ -87,7 +87,7 @@ import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
-    private LocalDate initDiaryDate = null;                                 //初始页的日期
+    private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
@@ -121,7 +121,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             return insets;
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
         observeLiveData();
         initBackHandlers();
@@ -136,22 +136,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
-    }
-
-    /**
-     * 接收 Intent 中传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //起始页日期
-        long initDateTimestamp = bundle.getLong(KeyStrings.INIT_DATE.getS());
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
-        initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
     /**
@@ -489,8 +473,10 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -580,6 +566,11 @@ public class DiaryReadActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+        LocalDate initDiaryDate = initDateTimestamp == -1 ?
+                LocalDate.now() :
+                DateTimeConverter.toLocalDate(initDateTimestamp);
         disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
                 .flatMapPublisher(
                         initPosition -> {

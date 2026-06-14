@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.media;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -34,6 +33,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -45,8 +45,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class FullScreenMediaActivity extends AppCompatActivity {
     private ActivityMediaBinding binding;   //绑定的 XML 布局
-    private String[] mediaUriStrings;       //媒体 Uri 字符串数组
-    private int startIndex;                 //媒体起始下标
+    private Bundle initBundle = null;       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
     @Override
@@ -62,7 +61,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             return insets;
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
         getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
             @Override
@@ -83,27 +82,25 @@ public class FullScreenMediaActivity extends AppCompatActivity {
     }
 
     /**
-     * 接收 Intent 中传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        mediaUriStrings = intent.getStringArrayExtra(KeyStrings.FILE_URIS.getS());
-        startIndex = intent.getIntExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), 0);
-    }
-
-    /**
      * 初始化视图
      */
     private void initViews() {
         //翻页视图
+        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
         FullScreenMediaAdapter adapter = new FullScreenMediaAdapter(mediaUriStrings);
         binding.viewPager2.setAdapter(adapter);
-        List<Uri> mediaUriList = Arrays.stream(mediaUriStrings)
-                .map(Uri::parse)
-                .collect(Collectors.toList());
+        List<Uri> mediaUriList;
+        if (mediaUriStrings != null) {
+            mediaUriList = Arrays.stream(mediaUriStrings)
+                    .map(Uri::parse)
+                    .collect(Collectors.toList());
+        } else {
+            mediaUriList = new ArrayList<>();
+        }
         adapter.submitList(mediaUriList);
 
         //设置初始位置
+        int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), 0);
         binding.viewPager2.setCurrentItem(startIndex, false);
 
         //保存媒体
@@ -163,15 +160,18 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void savePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
-        disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        uri -> Toast.makeText(this, "媒体文件已保存至相册", Toast.LENGTH_SHORT).show(),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
+        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
+        if (mediaUriStrings != null) {
+            Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
+            disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            uri -> Toast.makeText(this, "媒体文件已保存至相册", Toast.LENGTH_SHORT).show(),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
     }
 
     /**
@@ -179,20 +179,23 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void sharePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
-        File pictureFile = new File(Objects.requireNonNull(currentUri.getPath()));
-        String extension = MimeTypeMap.getFileExtensionFromUrl(currentUri.toString());
-        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-        disposable.add(FileHelper.shareFileCompletable(this, pictureFile, mimeType)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        () -> Log.i(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "调用分享API成功"),
-                        e -> {
-                            ExceptionHelper.showExceptionDialog(this, e);
-                            Log.e(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "无法调用分享API");
-                        }
-                )
-        );
+        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
+        if (mediaUriStrings != null) {
+            Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
+            File pictureFile = new File(Objects.requireNonNull(currentUri.getPath()));
+            String extension = MimeTypeMap.getFileExtensionFromUrl(currentUri.toString());
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+            disposable.add(FileHelper.shareFileCompletable(this, pictureFile, mimeType)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> Log.i(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "调用分享API成功"),
+                            e -> {
+                                ExceptionHelper.showExceptionDialog(this, e);
+                                Log.e(LogTags.FULL_SCREEN_MEDIA_ACTIVITY.n(), "无法调用分享API");
+                            }
+                    )
+            );
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.emotion;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -37,8 +36,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagInputActivity extends AppCompatActivity {
     private ActivityEmotionTagInputBinding binding;         //绑定的XML布局
-    private boolean isModifyMode = false;                   //是否为编辑模式
-    private long emotionTagId = 0;                          //正在编辑的情绪标签的 ID
+    private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
     private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
@@ -89,7 +87,7 @@ public class EmotionTagInputActivity extends AppCompatActivity {
             }
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
 
         keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
@@ -142,32 +140,20 @@ public class EmotionTagInputActivity extends AppCompatActivity {
     }
 
     /**
-     * 接收父界面传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //修改标题和修改标志位
-        binding.toolbar.setTitle(R.string.modify_emotion_tag);
-        isModifyMode = true;
-
-        emotionTagId = bundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());    //情绪标签 ID
-        String name = bundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
-        binding.nameInput.setText(name);                                    //名称
-        String description = bundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
-        binding.descriptionInput.setText(description);                      //描述
-        int emotionTypeOrdinal = bundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
-        emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
-    }
-
-    /**
      * 初始化视图
      */
     private void initViews() {
+        //初始化部分视图的内容
+        if (initBundle != null) {
+            binding.toolbar.setTitle(R.string.modify_emotion_tag);
+            String name = initBundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
+            binding.nameInput.setText(name);                                    //名称
+            String description = initBundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
+            binding.descriptionInput.setText(description);                      //描述
+            int emotionTypeOrdinal = initBundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
+            emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
+        }
+
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
@@ -243,7 +229,8 @@ public class EmotionTagInputActivity extends AppCompatActivity {
         EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
 
         //保存到数据库
-        if (isModifyMode) {
+        if (initBundle != null) {
+            long emotionTagId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
             emotionTag.setEmotionId(emotionTagId);
             disposable.add(dao.updateEmotionTagCompletable(emotionTag)
                     .observeOn(AndroidSchedulers.mainThread())

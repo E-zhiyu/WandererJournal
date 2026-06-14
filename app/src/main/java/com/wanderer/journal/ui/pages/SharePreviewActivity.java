@@ -58,7 +58,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class SharePreviewActivity extends AppCompatActivity {
     private ActivitySharePreviewBinding binding;    //绑定的 XML 布局
-    private long[] sharedParagraphIds;              //分享的段落 ID 数组
+    private Bundle initBundle = null;               //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphListAdapter adapter;           //段落列表适配器
     private final HtmlHelper htmlHelper = new HtmlHelper(); // HTML 网页生成器
@@ -94,7 +94,7 @@ public class SharePreviewActivity extends AppCompatActivity {
             return insets;
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
     }
 
@@ -110,20 +110,6 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
-    }
-
-    /**
-     * 接收 Intent 中传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //分享的段落 ID 数组
-        sharedParagraphIds = bundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
     }
 
     /**
@@ -209,8 +195,10 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -234,6 +222,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //获取数据源
         DiaryDatabase db = DiaryDatabase.getInstance(this);
+        long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
         disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
                 .flatMap(paragraphEntityModels ->
                         Single.just(insertDateSeparator(paragraphEntityModels))
