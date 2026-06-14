@@ -37,6 +37,8 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_roleId` ON `roles` (`roleId`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_name` ON `roles` (`name`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_relationship` ON `roles` (`relationship`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_identity` ON `roles` (`identity`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_impression` ON `roles` (`impression`)");
             db.execSQL("CREATE TABLE IF NOT EXISTS `roleAlias` (`aliaId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `roleId` INTEGER NOT NULL, `alia` TEXT, FOREIGN KEY(`roleId`) REFERENCES `roles`(`roleId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roleAlias_roleId` ON `roleAlias` (`roleId`)");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roleAlias_alia` ON `roleAlias` (`alia`)");

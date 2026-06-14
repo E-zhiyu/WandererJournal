@@ -10,7 +10,9 @@ import androidx.room.PrimaryKey;
         indices = {
                 @Index(value = "roleId"),
                 @Index(value = "name"),
-                @Index(value = "relationship")
+                @Index(value = "relationship"),
+                @Index(value = "identity"),
+                @Index(value = "impression")
         }
 )
 public class RoleEntity {
@@ -20,7 +22,7 @@ public class RoleEntity {
     private String identity;        //身份描述
     private String impression;      //印象描述
     @ColumnInfo(defaultValue = "2")
-    private int relationship = 2;   //关系程度
+    private int relationship;       //关系程度
 
     public RoleEntity(String name, String identity, String impression, int relationship) {
         this.name = name;

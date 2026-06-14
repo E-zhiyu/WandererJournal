@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
@@ -25,6 +26,7 @@ import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
+import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -39,6 +41,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class RoleManageActivity extends AppCompatActivity {
     private ActivityRoleManageBinding binding;  //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();
+    private BackPressedCallbackHelper backHelper;   //返回手势拦截器
+    private BackPressedCallbackHelper.BackHandler searchBackHandler;    //搜索返回处理器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +62,7 @@ public class RoleManageActivity extends AppCompatActivity {
         });
 
         initViews();
+        initBackHandlers();
     }
 
     @Override
@@ -85,8 +90,36 @@ public class RoleManageActivity extends AppCompatActivity {
 
         //初始化搜索视图
         initSearchComponents();
+    }
 
-        //TODO:加上搜索返回拦截
+    /**
+     * 初始化返回手势拦截器
+     */
+    private void initBackHandlers() {
+        OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(false) {
+            @Override
+            public void handleOnBackPressed() {
+                backHelper.dispatchBackPressed();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(backPressedCallback);
+        backHelper = new BackPressedCallbackHelper(backPressedCallback);
+
+        //搜索
+        searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
+            @Override
+            public boolean handleBack() {
+                setSearchMode(false);
+                RoleManageViewModel viewModel = new ViewModelProvider(RoleManageActivity.this).get(RoleManageViewModel.class);
+                viewModel.executeSearch("");
+                return true;
+            }
+
+            @Override
+            public int getPriority() {
+                return 1;
+            }
+        };
     }
 
     /**
@@ -142,8 +175,6 @@ public class RoleManageActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
         disposable.add(viewModel.getRoleListFlowable(db)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
                 .subscribe(
                         roleList -> {
                             if (roleList.isEmpty()) {
@@ -169,9 +200,9 @@ public class RoleManageActivity extends AppCompatActivity {
                 binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_ROLE_INFO,
                 keyword -> {
-                    //TODO:执行搜索
                     RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
                     viewModel.executeSearch(keyword);
+                    setSearchMode(true);
                 },
                 null
         );
@@ -218,5 +249,19 @@ public class RoleManageActivity extends AppCompatActivity {
         });
 
         popupMenu.show();
+    }
+
+    /**
+     * 设置搜索模式
+     *
+     * @param isSearchMode 是否为搜索模式
+     */
+    private void setSearchMode(boolean isSearchMode) {
+        if (!isSearchMode) {
+            binding.searchBar.setText("");
+            backHelper.unregisterHandler(searchBackHandler);
+        } else {
+            backHelper.registerHandler(searchBackHandler);
+        }
     }
 }

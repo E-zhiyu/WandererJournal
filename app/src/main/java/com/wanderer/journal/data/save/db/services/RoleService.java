@@ -12,58 +12,67 @@ import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleService {
     /**
-     * 获取所有角色
+     * 获取所有匹配搜索项的角色
      *
-     * @param db 数据库实例
-     * @return 所有角色的数据，包含分隔符，支持响应式更新
+     * @param db      数据库实例
+     * @param keyword 角色信息的搜索关键词，为空时表示不进行搜索
+     * @return 符合搜索结果的角色数据，包含分隔符，支持响应式更新
      */
     public static Flowable<List<RoleUiModel>> getAllRoleFlowable(@NonNull DiaryDatabase db, String keyword) {
         RoleDao roleDao = db.roleDao();
-        String safeKeyword;
-        if (keyword != null) {
+        String safeKeyword = "";
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
             safeKeyword = keyword.replace("/", "//")
                     .replace("%", "/%")
                     .replace("_", "/_");
-        } else {
-            safeKeyword = "";
         }
+
         int isSearchFilter = !safeKeyword.isEmpty() ? 1 : 0;
-        return roleDao.getAllRoleFlowable(keyword, isSearchFilter)
+
+        // 提前把枚举的 values 数组拿出来缓存，避免在 for 循环中高频触发内存抖动
+        final RoleRelationship[] relations = RoleRelationship.values();
+
+        return roleDao.getAllRoleFlowable(safeKeyword, isSearchFilter)
+                // 【核心优化】：将由于数据库变化触发的 map 集合重组逻辑，丢给计算线程，解放主线程
+                .observeOn(Schedulers.computation())
                 .map(rawList -> {
-                    List<RoleUiModel> resultList = new ArrayList<>();
+                    List<RoleUiModel> resultList = new ArrayList<>(rawList.size() + 5); // 给予合理的初始容量，减少 ArrayList 扩容开销
 
                     if (rawList.isEmpty()) {
                         return resultList;
                     }
 
-                    String firstSeparator = RoleRelationship.values()[rawList.get(0).getRole().getRelationship()].getTitle();
+                    // 利用缓存的数组获取 title
+                    String firstSeparator = relations[rawList.get(0).getRole().getRelationship()].getTitle();
                     resultList.add(new RoleUiModel.Separator(firstSeparator));
 
                     for (int i = 0; i < rawList.size(); i++) {
                         RoleEntityModel currentModel = rawList.get(i);
                         RoleEntityModel nextModel = i < rawList.size() - 1 ? rawList.get(i + 1) : null;
 
-                        //添加角色数据
                         resultList.add(new RoleUiModel.Item(currentModel));
 
-                        //判断关系是否一样
                         boolean isRelationshipSame = nextModel == null ||
                                 currentModel.getRole().getRelationship() == nextModel.getRole().getRelationship();
 
-                        //关系不一样时插入分隔符
                         if (!isRelationshipSame) {
-                            String separator = RoleRelationship.values()[nextModel.getRole().getRelationship()].getTitle();
+                            String separator = relations[nextModel.getRole().getRelationship()].getTitle();
                             resultList.add(new RoleUiModel.Separator(separator));
                         }
                     }
 
                     return resultList;
-                });
+                })
+                // 数据在后台组装完毕后，切回 Android 主线程供 RecyclerView 渲染
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     /**

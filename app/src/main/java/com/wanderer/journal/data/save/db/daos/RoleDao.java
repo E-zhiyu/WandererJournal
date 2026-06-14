@@ -35,17 +35,20 @@ public interface RoleDao {
     /**
      * 获取符合搜索内容的角色数据并按照关系由近到远排序
      *
+     * @param safeKeyword         搜索关键词
+     * @param filterSearchKeyword 是否启用搜索过滤
      * @return 排序后的角色数据
      */
     @Transaction
     @Query("SELECT * FROM roles " +
-            "WHERE :filterSearchKeyword = 0 OR " +
-            "name LIKE '%'||:keyword||'%' OR " +
-            "impression LIKE '%'||:keyword||'%' OR " +
-            "identity LIKE '%'||:keyword||'%' OR " +
-            "roleId IN (SELECT roleId FROM roleAlias WHERE alia LIKE '%'||:keyword||'%') " +
+            "WHERE :filterSearchKeyword = 0 " +
+            "OR name LIKE '%' || :safeKeyword || '%' ESCAPE '/' " +
+            "OR identity LIKE '%' || :safeKeyword || '%' ESCAPE '/' " +
+            "OR impression LIKE '%' || :safeKeyword || '%' ESCAPE '/' " +
+            // 将 IN 子查询改为高效的 EXISTS 关联查询，并在 SQL 层面指定转义符
+            "OR EXISTS (SELECT 1 FROM roleAlias WHERE roleAlias.roleId = roles.roleId AND alia LIKE '%' || :safeKeyword || '%' ESCAPE '/') " +
             "ORDER BY relationship DESC")
-    Flowable<List<RoleEntityModel>> getAllRoleFlowable(String keyword, int filterSearchKeyword);
+    Flowable<List<RoleEntityModel>> getAllRoleFlowable(String safeKeyword, int filterSearchKeyword);
 
     /**
      * 查询所有角色数据，并按照关系由近到远排序
