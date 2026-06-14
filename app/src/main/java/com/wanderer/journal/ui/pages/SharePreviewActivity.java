@@ -21,6 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
@@ -38,6 +39,7 @@ import com.wanderer.journal.helpers.appearance.HtmlHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
@@ -323,7 +325,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     builder.append("\"type\":\"text\",\"content\":");
                     builder.append("\"");
                     String paragraphContent = paragraph.getContent();
-                    builder.append(paragraphContent);
+                    builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule()));
                     builder.append("\"");
 
                     //添加图片字段

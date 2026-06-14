@@ -224,6 +224,29 @@ public class TextHelper {
     }
 
     /**
+     * 通过split方法统计文本的行数
+     *
+     * @param text 待统计行数的文本
+     * @return 行数
+     */
+    public static int countLinesSplit(String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        // 处理空字符串
+        String[] lines = text.split("\r\n|\n|\r", -1); // -1 保留尾部空字符串
+
+        // 如果最后一个是空字符串且原字符串以换行结尾，不算作一行
+        int count = lines.length;
+        if (text.endsWith("\n") || text.endsWith("\r")) {
+            count--;
+        }
+
+        return count;
+    }
+
+    /**
      * 将{@link Editable}中的{@link Annotation}对象扁平化
      *
      * @param editable {@link Editable}对象
@@ -270,9 +293,8 @@ public class TextHelper {
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
         int cursor = 0; // 当前流水线扫描到的字符指针位置
-        int textLength = raw.length();
 
-        while (cursor < textLength) {
+        while (cursor < raw.length()) {
             MatchResultSnapshot closestMatch = null;
 
             // 遍历所有规则，看看在当前光标往后的文本里，谁留在最前面（start最小）
@@ -331,11 +353,10 @@ public class TextHelper {
     public static CharSequence hierarchicEditable(Context context, Editable editable, RichTextRule<?>... rules) {
         if (editable == null || rules == null || rules.length == 0) return "";
 
-
         // 注意：因为直接修改 Editable 会导致其长度发生动态改变，
         // 这里的算法必须极其严密地控制 cursor 指针
         int cursor = 0;
-        Editable result = new SpannableStringBuilder(editable);
+        SpannableStringBuilder result = new SpannableStringBuilder(editable);
         while (cursor < result.length()) {
             String currentText = result.toString();
             MatchResultSnapshot closestMatch = null;
@@ -378,6 +399,61 @@ public class TextHelper {
         }
 
         return result;
+    }
+
+    /**
+     * 将扁平化的文本立体化，但是仍然返回普通文本
+     *
+     * @param raw   原始文本
+     * @param rules 立体化的规则
+     * @return 立体化后的普通文本
+     */
+    @NonNull
+    public static String hierarchicButNormalText(String raw, RichTextRule<?>... rules) {
+        if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) return "";
+
+        StringBuilder builder = new StringBuilder();
+        int cursor = 0; // 当前流水线扫描到的字符指针位置
+        while (cursor < raw.length()) {
+            MatchResultSnapshot closestMatch = null;
+
+            // 遍历所有规则，看看在当前光标往后的文本里，谁留在最前面（start最小）
+            for (RichTextRule<?> rule : rules) {
+                Matcher matcher = rule.getPattern().matcher(raw);
+
+                // 从当前指针位置往后探测
+                if (matcher.find(cursor)) {
+                    // 如果这是第一个找到的，或者它比之前其他正则找到的更靠前
+                    if (closestMatch == null || matcher.start() < closestMatch.start) {
+                        closestMatch = new MatchResultSnapshot(matcher.start(), matcher.end(), rule, matcher);
+                    }
+                }
+            }
+
+            // 情况 A：后面再也没有任何规则能匹配上了，把剩下的文本作为普通文本追加，直接结束
+            if (closestMatch == null) {
+                builder.append(raw.substring(cursor));
+                break;
+            }
+
+            // 情况 B：在后面找到了匹配项，但匹配项前面有一段普通文本（如 "今天和"）
+            if (closestMatch.start > cursor) {
+                builder.append(raw.substring(cursor, closestMatch.start));
+            }
+
+            // 情况 C：精准命中规则，开始调用该规则的自定义立体化包装
+            RichTextRule<?> matchedRule = closestMatch.rule;
+            Matcher matchedMatcher = closestMatch.matcher;
+
+            // 提取显示文案
+            String displayText = matchedRule.getDisplayText(matchedMatcher);
+            builder.append(displayText);
+
+            // 将光标指针强行推进到当前匹配完的暗号末尾，准备下一轮轮巡
+            cursor = closestMatch.end;
+        }
+
+        return builder.toString();
     }
 
     //内部类：用于记录某一次精准匹配的结果快照
