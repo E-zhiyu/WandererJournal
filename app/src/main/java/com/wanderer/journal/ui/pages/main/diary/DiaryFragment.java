@@ -20,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
@@ -34,7 +35,6 @@ import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -75,14 +75,10 @@ public class DiaryFragment extends Fragment {
                     LocalDate.now(),
                     getParentFragmentManager(),
                     selection -> {
-                        LocalDate date = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        String dateStr = date.format(formatter);
-
                         //跳转到写日记界面并传递选择的日期
                         Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
                         Bundle bundle = new Bundle();
-                        bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), dateStr);
+                        bundle.putLong(KeyStrings.INIT_DATE.getS(), selection);
                         skip2DiaryContent.putExtras(bundle);
                         startActivity(skip2DiaryContent);
                     }
@@ -91,23 +87,39 @@ public class DiaryFragment extends Fragment {
         });
 
         //日期跳转按钮
-        binding.dateSkipBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
-                null,
-                getParentFragmentManager(),
-                "选择跳转到的日期",
-                selection -> {
-                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
-                    disposable.add(dao.getDiaryCountBeforeDateSingle(selectedDate)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    count -> scrollToTargetPosition(count, selectedDate),
-                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
-                            )
-                    );
+        binding.dateSkipBtn.setOnClickListener(view -> {
+            //获取初始日期
+            LocalDate initDate = null;
+            if (binding.diaryRecycler.getLayoutManager() instanceof LinearLayoutManager) {
+                int firstViewPosition = ((LinearLayoutManager) binding.diaryRecycler.getLayoutManager())
+                        .findFirstVisibleItemPosition();
+                if (binding.diaryRecycler.getAdapter() instanceof DiaryAdapter &&
+                        firstViewPosition != RecyclerView.NO_POSITION) {
+                    DiaryWithSummaryUiModel model = ((DiaryAdapter) binding.diaryRecycler.getAdapter())
+                            .getCurrentList().get(firstViewPosition);
+                    initDate = model.getDiary().getDiaryDate();
                 }
-        ));
+            }
+
+            //弹出日期选择对话框
+            DateTimePickerHelper.selectDate(
+                    initDate,
+                    getParentFragmentManager(),
+                    "选择跳转到的日期",
+                    selection -> {
+                        LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                        DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                        disposable.add(dao.getDiaryCountBeforeDateSingle(selectedDate)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        count -> scrollToTargetPosition(count, selectedDate),
+                                        e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                                )
+                        );
+                    }
+            );
+        });
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
@@ -115,9 +127,7 @@ public class DiaryFragment extends Fragment {
                     Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
                     Bundle bundle = new Bundle();
 
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    String date = diary.getDiaryDate().format(formatter);
-                    bundle.putString(KeyStrings.INIT_DATE.getS(), date);
+                    bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDate(diary.getDiaryDate()));
 
                     skip2Read.putExtras(bundle);
                     startActivity(skip2Read);
@@ -171,15 +181,13 @@ public class DiaryFragment extends Fragment {
             }
         }
 
-        //获取布局管理器
-        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.diaryRecycler.getLayoutManager();
-
         //滚动列表视图
         AppearanceAnimationHelper.scrollRecycler(
                 binding.diaryRecycler,
-                layoutManager,
+                (LinearLayoutManager) binding.diaryRecycler.getLayoutManager(),
                 targetPosition,
                 15,
+                0,
                 new RecyclerViewScrollListener() {
                     @Override
                     public void onSucceed() {

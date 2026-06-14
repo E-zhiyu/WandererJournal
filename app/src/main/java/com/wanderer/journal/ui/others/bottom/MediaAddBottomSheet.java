@@ -33,7 +33,6 @@ public class MediaAddBottomSheet extends BaseBottomSheetDialogFragment {
         this.openAlbumListener = openAlbumListener;
     }
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         BottomSheetPictureAddOptionBinding binding = BottomSheetPictureAddOptionBinding.inflate(inflater, container, false);

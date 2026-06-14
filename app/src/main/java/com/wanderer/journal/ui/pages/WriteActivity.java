@@ -7,12 +7,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
@@ -42,8 +44,13 @@ import androidx.recyclerview.selection.StorageStrategy;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -63,13 +70,17 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
+import com.wanderer.journal.helpers.text.ParagraphTextConverter;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
+import com.wanderer.journal.ui.others.bottom.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
@@ -84,8 +95,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -105,7 +114,7 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
-    private LocalDate diaryDate = LocalDate.now();          //父日记的日期
+    private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private boolean needScrollToBottom = false;             //是否需要在段落刷新的时候滚动到底部
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
@@ -128,6 +137,7 @@ public class WriteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //底部输入框卡片
@@ -136,6 +146,14 @@ public class WriteActivity extends AppCompatActivity {
                     ViewEdgeHelper.dpToPx(this, 10),
                     ViewEdgeHelper.dpToPx(this, 10),
                     systemBars.bottom
+            );
+
+            //内容 RecyclerView 额外增加5dp的底部内边距
+            binding.contentRecycler.setPadding(
+                    systemBars.left,
+                    0,
+                    systemBars.right,
+                    imeInsets.bottom + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
@@ -157,15 +175,7 @@ public class WriteActivity extends AppCompatActivity {
                 binding.contentInputCard.setTranslationY(-keyboardHeight);
                 binding.contentEditCard.setTranslationY(-keyboardHeight);
                 binding.mediaCard.setTranslationY(-keyboardHeight);
-                binding.emptyText.setTranslationY(-keyboardHeight / 2f);
-
-                //内容 RecyclerView 额外增加5dp的底部内边距
-                binding.contentRecycler.setPadding(
-                        systemBars.left,
-                        0,
-                        systemBars.right,
-                        keyboardHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
-                );
+                binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
                 return insets;
             }
@@ -193,8 +203,7 @@ public class WriteActivity extends AppCompatActivity {
                         .setTitle("草稿恢复")
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
                         .setPositiveButton("恢复", (dialogInterface, i) -> {
-                            binding.contentTextInput.setText(draft.trim());
-                            binding.contentTextInput.setSelection(draft.trim().length());
+                            binding.contentTextInput.setText(draft);
                             ImmHelper.showImm(binding.contentTextInput);
                         })
                         .setNegativeButton("取消", null)
@@ -207,32 +216,30 @@ public class WriteActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
                     (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) {
-                            return;
-                        }
+                        if (hasWindowFocus()) return;
 
+                        int moveDistance = Math.max(0, currentHeight - binding.contentInputLayout.getPaddingBottom());
                         binding.contentInputCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.contentEditCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.mediaCard
                                 .animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
                         binding.emptyText
                                 .animate()
-                                .translationY(-currentHeight / 2f)
+                                .translationY(-moveDistance / 2f)
                                 .setDuration(250)
                                 .start();
 
@@ -277,23 +284,13 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void receiveIntent() {
         Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
+        initBundle = intent.getExtras();
+        if (initBundle == null) {
             return;
         }
 
-        //初始化日期数据
-        try {
-            String date = bundle.getString(KeyStrings.WRITE_DIARY_DATE.getS());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            diaryDate = LocalDate.parse(date, formatter);
-        } catch (DateTimeParseException e) {
-            Log.e(LogTags.WRITE_ACTIVITY.n(), "无法读取传递的日期数据，已默认设置为当前日期");
-            diaryDate = LocalDate.now();
-        }
-
-        //待编辑的
-        long modifyParagraphId = bundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
+        //待编辑的段落的 ID
+        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
         ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -312,6 +309,18 @@ public class WriteActivity extends AppCompatActivity {
                         }
                 )
         );
+    }
+
+    /**
+     * 获取段落所属的日记的日期
+     *
+     * @return 段落所属日记的日期
+     */
+    private LocalDate getParentDiaryDate() {
+        if (initBundle == null) return LocalDate.now();
+
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        return initDateTimestamp == -1 ? LocalDate.now() : DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
     /**
@@ -411,7 +420,7 @@ public class WriteActivity extends AppCompatActivity {
         //发送按钮
         binding.sendBtn.setOnClickListener(view -> {
             //获取输入内容
-            String content = String.valueOf(binding.contentTextInput.getText());
+            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
             if (content.trim().isEmpty()) {
                 return;
             }
@@ -504,11 +513,17 @@ public class WriteActivity extends AppCompatActivity {
                     isChanging = true;
 
                     //将所有换行符替换为空字符串
+                    int selectionStart = binding.contentTextInput.getSelectionStart();
+                    int replacedCount = TextHelper.getKeywordCount(
+                            s.toString(),
+                            selectionStart,
+                            "\n"
+                    ); //计算换行符的数量（只计算在光标前面的）
                     String cleanString = s.toString().replace("\n", "");
 
                     //重新设置文本并移动光标
                     binding.contentTextInput.setText(cleanString);
-                    binding.contentTextInput.setSelection(cleanString.length());
+                    binding.contentTextInput.setSelection(selectionStart - replacedCount);
 
                     isChanging = false;
                 }
@@ -521,11 +536,63 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                //清空旧任务
-                draftSavingHandler.removeCallbacks(draftSavingRunnable);
+                if (isChanging) return;
 
-                //添加新任务
+                //处理草稿保存任务
+                draftSavingHandler.removeCallbacks(draftSavingRunnable);
                 draftSavingHandler.postDelayed(draftSavingRunnable, DRAFT_SAVING_DELAY);
+
+                //当输入“@”时弹出角色选择对话框
+                if (i2 == 1 && charSequence.charAt(i) == '@') {
+                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
+                        //生成包装好的富文本标签块
+                        String display = "@" + name;
+                        String value = String.valueOf(roleId);
+                        SpannableString roleTag = TextHelper.createTextTag(
+                                WriteActivity.this,
+                                display,
+                                KeyStrings.ROLE_ID.getS(),
+                                value
+                        );
+
+                        //把刚才打出"@"替换成高亮的标签块
+                        Editable editable = binding.contentTextInput.getText();
+                        int selectionStart = binding.contentTextInput.getSelectionStart();
+                        if (editable != null) {
+                            editable.replace(selectionStart - 1, selectionStart, roleTag);
+                        }
+
+                        //让光标跳到这个标签块的后面
+                        binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
+                    });
+                    bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
+                } else if (i2 >= RichTextRegex.getShortestPatternLength()) {    //只有新增的文本大于最短正则表达式长度才富文本化
+                    //计算光标与文本末尾的距离
+                    Editable editable = binding.contentTextInput.getEditableText();
+                    int currentSelect = binding.contentTextInput.getSelectionStart();
+                    int toTail = editable.length() - currentSelect;
+
+                    //开始富文本化
+                    isChanging = true;
+                    CharSequence richText = TextHelper.hierarchicFromEditable(
+                            WriteActivity.this,
+                            editable,
+                            new RoleRefTextRule() {
+                                @Override
+                                public void onClick(String clickData) {
+                                }
+                            }
+                    );
+                    binding.contentTextInput.setText(richText);
+                    isChanging = false;
+
+                    //重定位光标位置
+                    int finalSelection = binding.contentTextInput.getEditableText().length() - toTail;
+                    if (finalSelection < 0) finalSelection = 0;
+                    else if (finalSelection > binding.contentTextInput.getEditableText().length())
+                        finalSelection = binding.contentTextInput.getEditableText().length();
+                    binding.contentTextInput.setSelection(finalSelection);
+                }
             }
         });
 
@@ -559,6 +626,10 @@ public class WriteActivity extends AppCompatActivity {
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
                             return true;
+                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
+                            return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                             return true;
@@ -577,8 +648,10 @@ public class WriteActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -587,18 +660,14 @@ public class WriteActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
-                }
+                },
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
 
         //添加粘性头部适配器
         StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                (inflater, parent, attachToRoot) ->
-                        ViewHolderDateSeparatorBinding.inflate(
-                                inflater,
-                                parent,
-                                false
-                        ),
+                ViewHolderDateSeparatorBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);
@@ -614,7 +683,28 @@ public class WriteActivity extends AppCompatActivity {
 
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    binding.contentRecycler.smoothScrollToPosition(itemCount - 1);
+                    AppearanceAnimationHelper.scrollPagingRecycler(
+                            binding.contentRecycler,
+                            (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                            adapter,
+                            itemCount - 1,
+                            63,
+                            10,
+                            750,
+                            new PagingRecyclerScrollListener() {
+                                @Override
+                                public void onSucceed() {
+                                }
+
+                                @Override
+                                public void onRetry(int failCount) {
+                                }
+
+                                @Override
+                                public void onFailed() {
+                                }
+                            }
+                    );
                 }
             }
 
@@ -634,6 +724,7 @@ public class WriteActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -948,6 +1039,7 @@ public class WriteActivity extends AppCompatActivity {
     private void addParagraph(String content, List<Uri> newMediaList) {
         //执行写入操作
         DiaryDatabase db = DiaryDatabase.getInstance(this);
+        LocalDate diaryDate = getParentDiaryDate();
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMapCompletable(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(
@@ -1196,7 +1288,16 @@ public class WriteActivity extends AppCompatActivity {
         //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本
+            CharSequence richText = ParagraphTextConverter.hierarchic(
+                    this,
+                    modifyingParagraph.getContent(),
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                        }
+                    }
+            );
+            binding.originText.setText(richText);                               //显示原始文本的富文本
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
@@ -1299,7 +1400,7 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void saveDraft() {
         if (binding != null) {
-            String content = String.valueOf(binding.contentTextInput.getText());
+            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
             DraftPreference.setDraft(this, content);
         }
     }

@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -35,9 +34,11 @@ import androidx.transition.TransitionSet;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -53,11 +54,12 @@ import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
+import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
@@ -71,7 +73,6 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -85,7 +86,7 @@ import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
-    private LocalDate initDiaryDate = null;                                 //初始页的日期
+    private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
@@ -119,7 +120,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             return insets;
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
         observeLiveData();
         initBackHandlers();
@@ -134,23 +135,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
-    }
-
-    /**
-     * 接收 Intent 中传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //起始页日期
-        String initDate = bundle.getString(KeyStrings.INIT_DATE.getS());
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDate);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        initDiaryDate = LocalDate.parse(initDate, formatter);
     }
 
     /**
@@ -246,169 +230,128 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化搜索组件
      */
     private void initSearchComponents() {
-        //搜索历史显示
-        SearchHistoryAdapter historyAdapter = new SearchHistoryAdapter(
+        SearchHelper.initSearchComponents(
+                binding.contentSearchBar,
+                binding.diaryContentSearchView,
+                binding.searchHistoryRecycler,
+                binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
-                    binding.diaryContentSearchView.hide();
-                    binding.contentSearchBar.setText(keyword);
-
-                    //执行搜索
-                    executeSearch(keyword);
-                }
-        );
-        List<String> initList = SearchHistoryPreference.getHistory(
-                SearchHistoryPreference.KEY_DIARY_CONTENT,
-                this
-        );
-        historyAdapter.submitList(new ArrayList<>(initList));
-        binding.searchHistoryRecycler.setAdapter(historyAdapter);
-
-        //设置清除搜索历史按钮点击监听
-        binding.clearHistoryBtn.setOnClickListener(v -> {
-            SearchHistoryPreference.clearHistory(
-                    SearchHistoryPreference.KEY_DIARY_CONTENT,
-                    this
-            );
-            historyAdapter.submitList(new ArrayList<>());
-        });
-
-        //设置搜索监听
-        binding.diaryContentSearchView.getEditText().setOnEditorActionListener((textView, i, keyEvent) -> {
-            if (i == EditorInfo.IME_ACTION_SEARCH) {
-                //收起搜索视图
-                String keyword = String.valueOf(binding.diaryContentSearchView.getEditText().getText());
-                binding.diaryContentSearchView.hide();
-
-                //根据搜索词和选中的情绪标签选择是否执行搜索操作
-                if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
-                    setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
-                } else {
-                    executeSearch(keyword);
-                    binding.contentSearchBar.setText(keyword);
-                }
-
-                //保存搜索历史
-                List<String> historyList = SearchHistoryPreference.addKeyword(
-                        keyword,
-                        SearchHistoryPreference.KEY_DIARY_CONTENT,
-                        this
-                );
-                historyAdapter.submitList(new ArrayList<>(historyList));
-
-                return true;
-            } else {
-                return false;
-            }
-        });
-
-        //设置 SearchBar 的菜单按钮点击监听
-        binding.contentSearchBar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_emotion_select) {
-                showFilterBottomSheet();
-
-                return true;
-            } else if (item.getItemId() == R.id.action_share) {
-                if (!adapter.getSelectMode()) {
-                    Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
-                    setShareSelectMode(true);
-                } else {
-                    //判空
-                    if (!selectionTracker.hasSelection()) {
-                        Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
-                        return false;
-                    }
-
-                    //获取所有选择的段落 ID
-                    long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
-                            .mapToLong(Long::longValue)
-                            .toArray();
-
-                    //创建 Intent
-                    Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
-                    skip2SharePreview.putExtras(bundle);
-
-                    //跳转界面
-                    startActivity(skip2SharePreview);
-                }
-                return true;
-            } else if (item.getItemId() == R.id.action_skip_date) {
-                LocalDate currentDate;  //当前正在显示的段落的日期
-                LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
-                if (layoutManager != null) {
-                    int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
-                    ParagraphUiModel model = adapter.peek(firstVisiblePosition);
-                    if (model instanceof ParagraphUiModel.Separator) {
-                        currentDate = ((ParagraphUiModel.Separator) model).date;
-                    } else if (model instanceof ParagraphUiModel.Item) {
-                        currentDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
+                    //根据搜索词和选中的情绪标签选择是否执行搜索操作
+                    if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
+                        setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
                     } else {
-                        currentDate = LocalDate.now();
+                        executeSearch(keyword);
+                        binding.contentSearchBar.setText(keyword);
                     }
-                } else {
-                    currentDate = LocalDate.now();
-                }
-                DateTimePickerHelper.selectDate(
-                        currentDate,
-                        getSupportFragmentManager(),
-                        selection -> {
-                            LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                },
+                item -> {
+                    if (item.getItemId() == R.id.action_emotion_select) {
+                        showFilterBottomSheet();
 
-                            //跳转到对应位置
-                            DiaryDatabase db = DiaryDatabase.getInstance(this);
-                            DiaryDao diaryDao = db.diaryDao();
-                            disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(
-                                            position -> scrollContentRecycler(
-                                                    position,
-                                                    true,
-                                                    new PagingRecyclerScrollListener() {
-                                                        @Override
-                                                        public void onSucceed() {
-                                                            //判断跳转到的日期是否为选择的日期
-                                                            ParagraphUiModel model = adapter.peek(position);
-                                                            LocalDate resultDate;
-                                                            if (model instanceof ParagraphUiModel.Separator) {
-                                                                resultDate = ((ParagraphUiModel.Separator) model).date;
-                                                            } else if (model instanceof ParagraphUiModel.Item) {
-                                                                resultDate = ((ParagraphUiModel.Item) model).model
-                                                                        .getParagraph()
-                                                                        .getCreateTime()
-                                                                        .toLocalDate();
-                                                            } else {
-                                                                resultDate = null;
-                                                            }
-                                                            if (!selectedDate.equals(resultDate)) {
-                                                                Toast.makeText(
-                                                                        DiaryReadActivity.this,
-                                                                        "未找到内容，已跳转至相邻日记",
-                                                                        Toast.LENGTH_SHORT
-                                                                ).show();
-                                                            }
-                                                        }
+                        return true;
+                    } else if (item.getItemId() == R.id.action_share) {
+                        if (!adapter.getSelectMode()) {
+                            Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                            setShareSelectMode(true);
+                        } else {
+                            //判空
+                            if (!selectionTracker.hasSelection()) {
+                                Toast.makeText(this, "请选择至少一条日记段落", Toast.LENGTH_SHORT).show();
+                                return false;
+                            }
 
-                                                        @Override
-                                                        public void onRetry(int failCount) {
-                                                        }
+                            //获取所有选择的段落 ID
+                            long[] selectedIds = StreamSupport.stream(selectionTracker.getSelection().spliterator(), false)
+                                    .mapToLong(Long::longValue)
+                                    .toArray();
 
-                                                        @Override
-                                                        public void onFailed() {
-                                                        }
-                                                    }
-                                            ),
-                                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                                    )
-                            );
+                            //创建 Intent
+                            Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
+                            Bundle bundle = new Bundle();
+                            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
+                            skip2SharePreview.putExtras(bundle);
+
+                            //跳转界面
+                            startActivity(skip2SharePreview);
                         }
-                );
-            }
+                        return true;
+                    } else if (item.getItemId() == R.id.action_skip_date) {
+                        LocalDate currentDate;  //当前正在显示的段落的日期
+                        LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
+                        if (layoutManager != null) {
+                            int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
+                            ParagraphUiModel model = adapter.peek(firstVisiblePosition);
+                            if (model instanceof ParagraphUiModel.Separator) {
+                                currentDate = ((ParagraphUiModel.Separator) model).date;
+                            } else if (model instanceof ParagraphUiModel.Item) {
+                                currentDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
+                            } else {
+                                currentDate = LocalDate.now();
+                            }
+                        } else {
+                            currentDate = LocalDate.now();
+                        }
+                        DateTimePickerHelper.selectDate(
+                                currentDate,
+                                getSupportFragmentManager(),
+                                selection -> {
+                                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
 
-            return false;
-        });
+                                    //跳转到对应位置
+                                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                                    DiaryDao diaryDao = db.diaryDao();
+                                    disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribeOn(Schedulers.io())
+                                            .subscribe(
+                                                    position -> scrollContentRecycler(
+                                                            position,
+                                                            true,
+                                                            new PagingRecyclerScrollListener() {
+                                                                @Override
+                                                                public void onSucceed() {
+                                                                    //判断跳转到的日期是否为选择的日期
+                                                                    ParagraphUiModel model = adapter.peek(position);
+                                                                    LocalDate resultDate;
+                                                                    if (model instanceof ParagraphUiModel.Separator) {
+                                                                        resultDate = ((ParagraphUiModel.Separator) model).date;
+                                                                    } else if (model instanceof ParagraphUiModel.Item) {
+                                                                        resultDate = ((ParagraphUiModel.Item) model).model
+                                                                                .getParagraph()
+                                                                                .getCreateTime()
+                                                                                .toLocalDate();
+                                                                    } else {
+                                                                        resultDate = null;
+                                                                    }
+                                                                    if (!selectedDate.equals(resultDate)) {
+                                                                        Toast.makeText(
+                                                                                DiaryReadActivity.this,
+                                                                                "未找到内容，已跳转至相邻日记",
+                                                                                Toast.LENGTH_SHORT
+                                                                        ).show();
+                                                                    }
+                                                                }
+
+                                                                @Override
+                                                                public void onRetry(int failCount) {
+                                                                }
+
+                                                                @Override
+                                                                public void onFailed() {
+                                                                }
+                                                            }
+                                                    ),
+                                                    e -> ExceptionHelper.showExceptionDialog(this, e)
+                                            )
+                                    );
+                                }
+                        );
+                    }
+
+                    return false;
+                }
+        );
     }
 
     /**
@@ -454,9 +397,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
                             Bundle bundle = new Bundle();
 
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                            String date = paragraph.getCreateTime().format(formatter);
-                            bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), date); //段落所在的日期
+                            bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
                             bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS(), paragraph.getParagraphId());    //段落 ID
 
                             skip2Write.putExtras(bundle);
@@ -467,6 +408,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
+                            return true;
+                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                             return true;
                         } else if (item.getItemId() == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
@@ -486,8 +431,10 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -496,19 +443,15 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
-                }
+                },
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
         binding.contentRecycler.setAdapter(adapter);
 
         //应用粘性头部装饰器
         StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                (inflater, parent, attachToRoot) ->
-                        ViewHolderDateSeparatorBinding.inflate(
-                                inflater,
-                                parent,
-                                false
-                        ),
+                ViewHolderDateSeparatorBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);
@@ -581,6 +524,11 @@ public class DiaryReadActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+        LocalDate initDiaryDate = initDateTimestamp == -1 ?
+                LocalDate.now() :
+                DateTimeConverter.toLocalDate(initDateTimestamp);
         disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
                 .flatMapPublisher(
                         initPosition -> {
@@ -611,61 +559,47 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 将段落内容列表滚动到初始位置
      */
     private void scrollRecyclerToInitPosition() {
-        if (binding.contentRecycler.getLayoutManager() != null) {
-            if (initScrollPosition.get() != -1) {
-                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+        //创建动画
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .addTarget(binding.recyclerLoadingIndicator)
+                .setDuration(250);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
-                scrollContentRecycler(
-                        initScrollPosition.get(),
-                        false,
-                        new PagingRecyclerScrollListener() {
-                            @Override
-                            public void onSucceed() {
-                                TransitionSet set = new TransitionSet()
-                                        .addTransition(new Fade())
-                                        .setInterpolator(new FastOutSlowInInterpolator())
-                                        .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
-
-                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
-                                if (adapter.getItemCount() == 0) {
-                                    binding.emptyText.setVisibility(View.VISIBLE);
-                                } else {
-                                    binding.emptyText.setVisibility(View.GONE);
-                                }
-
-                                Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
-                                initScrollPosition.set(-1);
-                            }
-
-                            @Override
-                            public void onRetry(int failCount) {
-                                Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
-                            }
-
-                            @Override
-                            public void onFailed() {
-                                TransitionSet set = new TransitionSet()
-                                        .addTransition(new Fade())
-                                        .setInterpolator(new FastOutSlowInInterpolator())
-                                        .setDuration(250);
-                                TransitionManager.beginDelayedTransition(binding.centerLayout, set);
-
-                                binding.recyclerLoadingIndicator.setVisibility(View.GONE);
-                                if (adapter.getItemCount() == 0) {
-                                    binding.emptyText.setVisibility(View.VISIBLE);
-                                } else {
-                                    binding.emptyText.setVisibility(View.GONE);
-                                }
-
-                                Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
-                                initScrollPosition.set(-1);
-                            }
-                        }
-                );
-            }
+        //控制视图显示
+        binding.recyclerLoadingIndicator.setVisibility(View.GONE);
+        if (adapter.getItemCount() == 0) {
+            binding.emptyText.setVisibility(View.VISIBLE);
+        } else {
+            binding.emptyText.setVisibility(View.GONE);
         }
+
+        //执行滚动操作
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+        scrollContentRecycler(
+                initScrollPosition.get(),
+                false,
+                new PagingRecyclerScrollListener() {
+                    @Override
+                    public void onSucceed() {
+                        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
+                        initScrollPosition.set(-1);
+                    }
+
+                    @Override
+                    public void onRetry(int failCount) {
+                        Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
+                        initScrollPosition.set(-1);
+                    }
+                }
+        );
     }
 
     /**
@@ -750,6 +684,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                 adapter,
                 targetPosition,
+                ViewEdgeHelper.dpToPx(this, 63),
                 maxRetryCount,
                 750,
                 new PagingRecyclerScrollListener() {

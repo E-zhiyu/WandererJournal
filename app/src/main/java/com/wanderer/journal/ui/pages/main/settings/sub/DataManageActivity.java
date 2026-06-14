@@ -26,12 +26,12 @@ import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.StringHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
-import com.wanderer.journal.helpers.file.backup.BackupHelperBase;
+import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
@@ -436,7 +436,7 @@ public class DataManageActivity extends AppCompatActivity {
                             //获取基本数据
                             String content = data.getContent();
                             LocalDateTime lastModifyTime = data.getLastModifyTime();
-                            int lineCount = StringHelper.countLinesSplit(content);
+                            int lineCount = TextHelper.countLinesSplit(content);
 
                             //判断删除空白字符后是否为空字符串
                             if (content.trim().isEmpty()) {

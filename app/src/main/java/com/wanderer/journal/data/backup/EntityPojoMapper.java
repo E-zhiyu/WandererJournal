@@ -7,6 +7,8 @@ import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
+import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
+import com.wanderer.journal.data.backup.pojo.RolePojo;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
@@ -14,6 +16,8 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -89,11 +93,34 @@ public interface EntityPojoMapper {
     }
 
     EmotionTagEntity toEmotionTagEntity(EmotionTagPojo pojo);
+
     List<EmotionTagEntity> toEmotionTagEntityList(List<EmotionTagPojo> pojoList);
+
     EmotionTagPojo toEmotionTagPojo(EmotionTagEntity entity);
+
     List<EmotionTagPojo> toEmotionTagPojoList(List<EmotionTagEntity> entityList);
+
     EmotionParagraphRefEntity toEmotionParagraphRefEntity(EmotionParagraphRefPojo pojo);
+
     List<EmotionParagraphRefEntity> toEmotionParagraphRefEntityList(List<EmotionParagraphRefPojo> pojoList);
+
     EmotionParagraphRefPojo toEmotionParagraphRefPojo(EmotionParagraphRefEntity entity);
+
     List<EmotionParagraphRefPojo> toEmotionParagraphRefPojoList(List<EmotionParagraphRefEntity> entityList);
+
+    RoleEntity toRoleEntity(RolePojo pojo);
+
+    List<RoleEntity> toRoleEntityList(List<RolePojo> pojoList);
+
+    RolePojo toRolePojo(RoleEntity entity);
+
+    List<RolePojo> toRolePojoList(List<RoleEntity> entityList);
+
+    RoleAliaEntity toRoleAliaEntity(RoleAliaPojo pojo);
+
+    List<RoleAliaEntity> toRoleAliaEntityList(List<RoleAliaPojo> pojoList);
+
+    RoleAliaPojo toRoleAliaPojo(RoleAliaEntity entity);
+
+    List<RoleAliaPojo> toRoleAliaPojoList(List<RoleAliaEntity> entityList);
 }

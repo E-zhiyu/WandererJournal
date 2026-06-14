@@ -61,6 +61,11 @@
                 android:id="@+id/auto_start_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 电池优化 -->
+            <include
+                android:id="@+id/battery_option"
+                layout="@layout/view_setting_option" />
+
             <!-- 精确闹钟 -->
             <include
                 android:id="@+id/alarm_option"

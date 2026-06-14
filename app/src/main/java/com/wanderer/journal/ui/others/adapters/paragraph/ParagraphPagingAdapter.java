@@ -1,11 +1,9 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +20,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
-import com.google.android.material.color.MaterialColors;
+import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -34,7 +34,9 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
+import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -89,6 +91,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
     private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private final OnRoleClickListener roleClickListener;            //角色富文本点击监听
 
     /**
      * 设置多选追踪器
@@ -106,14 +109,14 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public String getHeaderData(int position) {
+    public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
         } else if (model instanceof ParagraphUiModel.Item) {
             return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
         } else {
-            return "N/A";
+            return context.getString(R.string.not_applicable);
         }
     }
 
@@ -260,11 +263,13 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      */
     public ParagraphPagingAdapter(
             @Nullable OnParagraphClickListener paragraphClickListener,
-            OnMediaClickedListener mediaClickedListener
+            OnMediaClickedListener mediaClickedListener,
+            OnRoleClickListener roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.paragraphClickListener = paragraphClickListener;
         this.mediaClickedListener = mediaClickedListener;
+        this.roleClickListener = roleClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -325,7 +330,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
             holder.itemView.setVisibility(View.GONE);       //不显示占位符，防止加载时遮挡加载指示器
@@ -367,31 +372,34 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
             }
 
-            //内容文本
-            String content = paragraph.getContent();
-            if (currentKeyword != null && !currentKeyword.isEmpty() && positionList.contains(position)) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(content);
-                int startIndex = content.indexOf(currentKeyword);
+            //内容文本视图的属性设置
+            itemHolder.binding.contentText.setMovementMethod(FallbackLinkMovementMethod.getInstance());
+            itemHolder.binding.contentText.setFocusable(false);     //防止消费触摸监听
+            itemHolder.binding.contentText.setClickable(false);     //防止消费点击监听
+            itemHolder.binding.contentText.setLongClickable(false); //防止消费长按监听
+            itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
 
-                //循环高亮文本
-                while (startIndex >= 0) {
-                    int endIndex = startIndex + currentKeyword.length();
-                    // 设置文字颜色为橘红色
-                    builder.setSpan(
-                            new ForegroundColorSpan(MaterialColors.getColor(
-                                    context,
-                                    android.R.attr.colorFocusedHighlight,
-                                    Color.parseColor("#FF5722")
-                            )),
-                            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    );
-
-                    // 循环查找，防止一句话里有多个相同的关键词
-                    startIndex = content.indexOf(currentKeyword, endIndex);
+            //内容文本填充富文本
+            String rawContent = paragraph.getContent(); //数据库中的原始数据
+            CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
+                @Override
+                public void onClick(String clickData) {
+                    try {
+                        long roleId = Long.parseLong(clickData);
+                        roleClickListener.onRoleClicked(roleId);
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
-                itemHolder.binding.contentText.setText(builder);
+            });
+            if (!currentKeyword.isEmpty() && positionList.contains(position)) {
+                CharSequence heighLightedText = TextHelper.renderHighLightedText(
+                        currentKeyword,
+                        String.valueOf(richText),
+                        context
+                );
+                itemHolder.binding.contentText.setText(heighLightedText);
             } else {
-                itemHolder.binding.contentText.setText(content);
+                itemHolder.binding.contentText.setText(richText);
             }
 
             //选择状态

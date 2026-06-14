@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +14,10 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -22,7 +27,9 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
+import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +38,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
- implements StickyHeaderAdapter<String> {
+        implements StickyHeaderAdapter<String> {
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -68,7 +75,8 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;      //媒体点击监听
+    private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;     //媒体点击监听
+    private final OnRoleClickListener roleClickListener;                                //角色富文本点击监听
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
 
     @Override
@@ -78,14 +86,14 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public String getHeaderData(int position) {
+    public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
             return ((ParagraphUiModel.Separator) model).date.format(formatter);
         } else if (model instanceof ParagraphUiModel.Item) {
             return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
         } else {
-            return "N/A";
+            return context.getString(R.string.not_applicable);
         }
     }
 
@@ -124,10 +132,12 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
      * @param mediaClickedListener 媒体预览图点击监听
      */
     public ParagraphListAdapter(
-            ParagraphListAdapter.OnMediaClickedListener mediaClickedListener
+            ParagraphListAdapter.OnMediaClickedListener mediaClickedListener,
+            OnRoleClickListener roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.mediaClickedListener = mediaClickedListener;
+        this.roleClickListener = roleClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -173,7 +183,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         ParagraphUiModel uiModel = getItem(position);
 
         if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
@@ -206,9 +216,26 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
             }
 
-            //内容文本
-            String content = paragraph.getContent();
-            itemHolder.binding.contentText.setText(content);
+            //内容文本视图设置部分属性
+            itemHolder.binding.contentText.setMovementMethod(FallbackLinkMovementMethod.getInstance());
+            itemHolder.binding.contentText.setFocusable(false);     //防止消费触摸监听
+            itemHolder.binding.contentText.setClickable(false);     //防止消费点击监听
+            itemHolder.binding.contentText.setLongClickable(false); //防止消费长按监听
+            itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
+
+            //内容文本填充富文本
+            String rawContent = paragraph.getContent();
+            CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
+                @Override
+                public void onClick(String clickData) {
+                    try {
+                        long roleId = Long.parseLong(clickData);
+                        roleClickListener.onRoleClicked(roleId);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            });
+            itemHolder.binding.contentText.setText(richText);
 
             //情绪标签
             List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();

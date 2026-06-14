@@ -1,5 +1,7 @@
 package com.wanderer.journal.ui.pages.main.diary;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,10 +11,12 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -165,8 +169,9 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolderDiary holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolderDiary holder, @SuppressLint("RecyclerView") int position) {
         DiaryWithSummaryUiModel diaryWithSummaryUiModel = getItem(position);
+        Context context = holder.itemView.getContext();
 
         //日期
         LocalDate date = diaryWithSummaryUiModel.getDiary().getDiaryDate();
@@ -175,7 +180,16 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
 
         //片段摘要
         String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();
-        holder.binding.contentPreviewText.setText(paragraphFragment);
+        CharSequence richText = ParagraphTextConverter.hierarchic(
+                context,
+                paragraphFragment,
+                new RoleRefTextRule() {
+                    @Override
+                    public void onClick(String clickData) {
+                    }
+                }
+        );
+        holder.binding.contentPreviewText.setText(richText);
 
         //片段数量
         int paragraphCount = diaryWithSummaryUiModel.getParagraphCount();

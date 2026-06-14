@@ -2,9 +2,6 @@ package com.wanderer.journal.ui.others.dialogs;
 
 import android.content.Context;
 import android.view.LayoutInflater;
-import android.view.View;
-
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.databinding.DialogMultichoiceBinding;
 import com.wanderer.journal.ui.others.adapters.MultiChoiceDialogAdapter;
@@ -12,9 +9,12 @@ import com.wanderer.journal.ui.others.adapters.MultiChoiceDialogAdapter;
 import java.util.List;
 
 public class MultiChoiceDialogBuilder
-        extends CustomDialogBuilderBase<MultiChoiceDialogBuilder.OnConfirmedListener, MultiChoiceDialogBuilder.OnConfirmedListener> {
+        extends CustomDialogBuilderBase<
+        DialogMultichoiceBinding,
+        MultiChoiceDialogBuilder.OnClickedListener,
+        MultiChoiceDialogBuilder.OnClickedListener
+        > {
     private final MultiChoiceDialogAdapter adapter; //多选列表适配器
-    private RecyclerView itemListRecycler;          //选项列表视图
 
     public static class ChoiceItem {
         private final boolean initStat;   //初始状态
@@ -40,7 +40,7 @@ public class MultiChoiceDialogBuilder
         }
     }
 
-    public interface OnConfirmedListener {
+    public interface OnClickedListener {
         /**
          * 确认按钮点击回调
          *
@@ -63,23 +63,18 @@ public class MultiChoiceDialogBuilder
 
         //实例化多选列表的适配器
         adapter = new MultiChoiceDialogAdapter(itemList);
-        itemListRecycler.setAdapter(adapter);
+        binding.itemRecycler.setAdapter(adapter);
     }
 
     @Override
-    protected View getView() {
-        DialogMultichoiceBinding binding = DialogMultichoiceBinding.inflate(
+    protected DialogMultichoiceBinding getCustomView() {
+        return DialogMultichoiceBinding.inflate(
                 LayoutInflater.from(builder.getContext())
         );
-
-        //获取多选选项列表
-        itemListRecycler = binding.itemRecycler;
-
-        return binding.getRoot();
     }
 
     @Override
-    public CustomDialogBuilderBase<OnConfirmedListener, OnConfirmedListener> setPositiveButton(String btnTitle, OnConfirmedListener callback) {
+    public CustomDialogBuilderBase<DialogMultichoiceBinding,OnClickedListener, OnClickedListener> setPositiveButton(String btnTitle, OnClickedListener callback) {
         if (callback != null) {
             builder.setPositiveButton(btnTitle, (dialogInterface, i) ->
                     callback.onConfirmed(adapter.getCheckedStatList())
@@ -91,7 +86,7 @@ public class MultiChoiceDialogBuilder
     }
 
     @Override
-    public CustomDialogBuilderBase<OnConfirmedListener, OnConfirmedListener> setNegativeButton(String btnTitle, OnConfirmedListener callback) {
+    public CustomDialogBuilderBase<DialogMultichoiceBinding,OnClickedListener, OnClickedListener> setNegativeButton(String btnTitle, OnClickedListener callback) {
         if (callback != null) {
             builder.setNegativeButton(btnTitle, (dialogInterface, i) ->
                     callback.onConfirmed(adapter.getCheckedStatList())

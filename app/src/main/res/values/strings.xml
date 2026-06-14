@@ -7,7 +7,7 @@
     <string name="date">日期</string>
     <string name="paragraph">段落</string>
     <string name="diary_content">日记内容</string>
-    <string name="search_for_diary_content">搜索日记内容……</string>
+    <string name="diary_read_search_hint">搜索日记内容……</string>
     <string name="diary_paragraph">日记段落</string>
     <string name="date_time">日期和时间</string>
     <string name="send_btn">发送按钮</string>
@@ -45,9 +45,7 @@
     <string name="click_skip_to_repository">点击跳转至项目仓库</string>
     <string name="emotion_tag">情绪标签</string>
     <string name="modify_date">修改日期</string>
-    <string name="emotion_tag_name">情绪标签名称</string>
     <string name="name">名称</string>
-    <string name="emotion_tag_description">情绪标签描述</string>
     <string name="description">描述</string>
     <string name="no_emotion_tag">无情绪标签</string>
     <string name="delete_emotion_tag">删除情绪标签</string>
@@ -109,6 +107,24 @@
     <string name="others">其他</string>
     <string name="include_media">包含媒体</string>
     <string name="skip_date">日期跳转</string>
+    <string name="role">角色</string>
+    <string name="role_search_hint">搜索角色信息……</string>
+    <string name="no_role">无角色</string>
+    <string name="relationship">关系</string>
+    <string name="add_role">新建角色</string>
+    <string name="identity">身份</string>
+    <string name="role_name_helper">该角色的通用称呼，建议填真实名称</string>
+    <string name="role_identity_helper">该角色相对于您的身份描述（如：同学、老师）</string>
+    <string name="impression">印象</string>
+    <string name="role_impression_helper">您对该角色的印象和评价</string>
+    <string name="role_relationship_helper">您与该角色的关系好坏程度</string>
+    <string name="add_alia">添加别名</string>
+    <string name="modify_role">修改角色</string>
+    <string name="delete_role">删除角色</string>
+    <string name="select_role">选择角色</string>
+    <string name="ignore_battery_optimization">忽略电池优化</string>
+    <string name="copy_paragraph">复制段落内容</string>
+    <string name="check_diary">查看日记</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>

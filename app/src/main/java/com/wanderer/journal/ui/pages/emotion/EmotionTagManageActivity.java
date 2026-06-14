@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.pages.emotion;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
@@ -68,7 +69,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
 
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
-            Intent skip2EmotionTagAdd = new Intent(this, EmotionTagAddModifyActivity.class);
+            Intent skip2EmotionTagAdd = new Intent(this, EmotionTagInputActivity.class);
             startActivity(skip2EmotionTagAdd);
         });
         ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
@@ -77,7 +78,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
                 emotionTag -> {
-                    Intent skip2EmotionTagModify = new Intent(this, EmotionTagAddModifyActivity.class);
+                    Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
                     Bundle bundle = getEmotionTagModifyBundle(emotionTag);
                     skip2EmotionTagModify.putExtras(bundle);
                     startActivity(skip2EmotionTagModify);
@@ -148,7 +149,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
      * @param view       PopupMenu绑定的视图
      */
     private void showEmotionTagPopupMenu(EmotionTagEntity emotionTag, View view) {
-        PopupMenu popupMenu = new PopupMenu(this, view);
+        PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_emotion_tag_edit, popupMenu.getMenu());
 
         //设置监听

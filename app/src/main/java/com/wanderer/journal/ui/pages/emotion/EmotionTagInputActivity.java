@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.emotion;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -17,13 +16,14 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.databinding.ActivityEmotionTagAddModifyBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.dropdown.EmotionType;
+import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
+import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
 import java.util.Arrays;
@@ -34,10 +34,9 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class EmotionTagAddModifyActivity extends AppCompatActivity {
-    private ActivityEmotionTagAddModifyBinding binding;     //绑定的XML布局
-    private boolean isModifyMode = false;                   //是否为编辑模式
-    private long emotionTagId = 0;                          //正在编辑的情绪标签的 ID
+public class EmotionTagInputActivity extends AppCompatActivity {
+    private ActivityEmotionTagInputBinding binding;         //绑定的XML布局
+    private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
     private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
@@ -45,13 +44,22 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityEmotionTagAddModifyBinding.inflate(getLayoutInflater());
+        binding = ActivityEmotionTagInputBinding.inflate(getLayoutInflater());
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+
+            binding.linearLayout.setPadding(
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    ViewEdgeHelper.dpToPx(this, 10),
+                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+            );
+
             return insets;
         });
 
@@ -79,10 +87,9 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
             }
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
 
-        //实例化失去焦点时的键盘监听器
         keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
     }
 
@@ -93,14 +100,23 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
                     (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) {
-                            return;
-                        }
+                        if (hasWindowFocus()) return;
 
+                        int moveDistance = Math.max(
+                                currentHeight - binding.getRoot().getPaddingBottom(),
+                                0
+                        );
                         binding.bottomBtnGroup.animate()
-                                .translationY(-currentHeight)
+                                .translationY(-moveDistance)
                                 .setDuration(250)
                                 .start();
+
+                        binding.linearLayout.setPadding(
+                                ViewEdgeHelper.dpToPx(this, 10),
+                                ViewEdgeHelper.dpToPx(this, 10),
+                                ViewEdgeHelper.dpToPx(this, 10),
+                                currentHeight + ViewEdgeHelper.dpToPx(this, 10)
+                        );
                     }
             );
         }
@@ -124,32 +140,20 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
     }
 
     /**
-     * 接收父界面传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //修改标题和修改标志位
-        binding.toolbar.setTitle(R.string.modify_emotion_tag);
-        isModifyMode = true;
-
-        emotionTagId = bundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());    //情绪标签 ID
-        String name = bundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
-        binding.nameInput.setText(name);                                    //名称
-        String description = bundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
-        binding.descriptionInput.setText(description);                      //描述
-        int emotionTypeOrdinal = bundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
-        emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
-    }
-
-    /**
      * 初始化视图
      */
     private void initViews() {
+        //初始化部分视图的内容
+        if (initBundle != null) {
+            binding.toolbar.setTitle(R.string.modify_emotion_tag);
+            String name = initBundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
+            binding.nameInput.setText(name);                                    //名称
+            String description = initBundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
+            binding.descriptionInput.setText(description);                      //描述
+            int emotionTypeOrdinal = initBundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
+            emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
+        }
+
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
@@ -164,7 +168,6 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
                 }
             }
         });
-        binding.nameInput.setOnClickListener(view -> binding.nameLayout.setError(null));
         ImmHelper.showImm(binding.nameInput);   //弹出输入法
 
         //情绪类型
@@ -188,7 +191,6 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
             }
 
             onConfirm();
-            finish();
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.confirmButton);
 
@@ -227,13 +229,17 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
         EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
 
         //保存到数据库
-        if (isModifyMode) {
+        if (initBundle != null) {
+            long emotionTagId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
             emotionTag.setEmotionId(emotionTagId);
             disposable.add(dao.updateEmotionTagCompletable(emotionTag)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
-                            () -> Toast.makeText(this, "情绪标签修改成功", Toast.LENGTH_SHORT).show(),
+                            () -> {
+                                Toast.makeText(this, "情绪标签修改成功", Toast.LENGTH_SHORT).show();
+                                finish();
+                            },
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )
             );
@@ -242,7 +248,10 @@ public class EmotionTagAddModifyActivity extends AppCompatActivity {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
-                            () -> Toast.makeText(this, "成功添加情绪标签", Toast.LENGTH_SHORT).show(),
+                            () -> {
+                                Toast.makeText(this, "成功添加情绪标签", Toast.LENGTH_SHORT).show();
+                                finish();
+                            },
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )
             );

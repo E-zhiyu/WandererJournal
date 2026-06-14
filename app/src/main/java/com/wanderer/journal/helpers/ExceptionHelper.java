@@ -1,27 +1,27 @@
 package com.wanderer.journal.helpers;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.wanderer.journal.helpers.text.TextHelper;
+
+import java.util.Locale;
 
 public class ExceptionHelper {
     public static void showExceptionDialog(Context context, @NonNull Throwable e) {
-        String err_message = e.getMessage();
+        String errMessage = e.getMessage();
         new MaterialAlertDialogBuilder(context)
                 .setTitle("运行出错")
-                .setMessage(err_message)
+                .setMessage(errMessage)
                 .setPositiveButton("复制错误信息", (dialog, which) -> {
-                    copyToClipboard(context, err_message);
+                    copyToClipboard(context, errMessage);
                     Toast.makeText(context, "已将错误信息复制到剪贴板", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
                 })
                 .setCancelable(false)   //无法点击空白区域取消
-                .setNegativeButton("关闭", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton("关闭", null)
                 .show();
     }
 
@@ -32,15 +32,12 @@ public class ExceptionHelper {
      * @param text    要复制的文本
      */
     private static void copyToClipboard(@NonNull Context context, String text) {
-        //获取系统剪贴板服务
-        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-
         //创建 ClipData 对象
-        ClipData clip = ClipData.newPlainText("经理助手错误信息", text);
-
-        //设置剪贴板内容
-        if (clipboard != null) {
-            clipboard.setPrimaryClip(clip);
-        }
+        String label = String.format(
+                Locale.getDefault(),
+                "错误信息(%s)",
+                context.getPackageName()
+        );
+        TextHelper.copyToClipBoard(context, label, text);
     }
 }

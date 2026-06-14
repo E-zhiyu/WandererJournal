@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.statistics;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -16,7 +17,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -26,9 +29,11 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
+import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -215,10 +220,21 @@ public class StatisticsActivity extends AppCompatActivity {
                     );
 
                     //设置文本
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
                     windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
                     String lenStr = model.getDiaryLength() == 0 ? "无日记" : model.getDiaryLength() + "字符";
                     windowBinding.diaryLengthText.setText(lenStr);
+
+                    //设置查看日记按钮点击监听
+                    windowBinding.checkDiaryBtn.setOnClickListener(view1 -> {
+                        Intent skip2DiaryRead = new Intent(this, DiaryReadActivity.class);
+                        Bundle bundle = new Bundle();
+
+                        bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDate(model.getDiaryDate()));
+
+                        skip2DiaryRead.putExtras(bundle);
+                        startActivity(skip2DiaryRead);
+                    });
 
                     //设置背景以允许点击外部消失
                     popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));

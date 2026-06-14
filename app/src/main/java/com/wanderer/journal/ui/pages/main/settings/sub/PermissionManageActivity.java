@@ -18,17 +18,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
-import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
-import io.noties.markwon.Markwon;
+import java.util.Objects;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
@@ -166,6 +165,37 @@ public class PermissionManageActivity extends AppCompatActivity {
             binding.autoStartOption.getRoot().setVisibility(View.GONE);
         }
 
+        //电池优化策略
+        SettingClickableTextView batteryOptimizations = new SettingClickableTextView(
+                this,
+                binding.batteryOption,
+                R.string.ignore_battery_optimization,
+                "设置安卓原生的电池优化策略",
+                R.drawable.outline_battery_android_4_24,
+                RadiusStyle.MIDDLE
+        );
+        batteryOptimizations.setFunctionListener(v -> showExplanationDialog(
+                R.string.ignore_battery_optimization,
+                "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。",
+                () -> {
+                    if (PermissionHelper.isIgnoringBatteryOptimizations(this)) {
+                        Toast.makeText(this, "已忽略电池优化，长按强制跳转电池优化界面", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    Intent intent = PermissionHelper.buildIgnoringBatteryOptimizationsIntent(this);
+                    if (Objects.equals(intent.getAction(), Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) {
+                        Toast.makeText(this, "请找到本应用并设置电池优化策略为“无限制”", Toast.LENGTH_SHORT).show();
+                    }
+                    LifecycleManager.startExternalActivity(this, intent);
+                }
+        ));
+        batteryOptimizations.setOnLongClickListener(view -> {
+            Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+            LifecycleManager.startExternalActivity(this, intent);
+            return true;
+        });
+
         //精确闹钟权限
         alarm = new SettingClickableTextView(
                 this,
@@ -194,17 +224,8 @@ public class PermissionManageActivity extends AppCompatActivity {
      * @param action  点击确定按钮后执行的操作
      */
     private void showExplanationDialog(@StringRes int title, String message, Runnable action) {
-        //获取自定义弹窗视图
-        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(getLayoutInflater());
-
-        // 渲染 Markdown 文本
-        Markwon markwon = Markwon.create(this);
-        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, message);
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(title)
-                .setView(markdownTextBinding.getRoot())
-                .setPositiveButton("前往设置", (dialog, which) -> action.run())
+        new MarkdownDialogBuilder(this, getString(title), message)
+                .setPositiveButton("前往设置", (dialogInterface, i) -> action.run())
                 .setNegativeButton("取消", null)
                 .show();
     }

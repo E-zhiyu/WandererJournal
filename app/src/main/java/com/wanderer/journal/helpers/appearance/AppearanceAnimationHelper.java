@@ -232,6 +232,7 @@ public class AppearanceAnimationHelper {
      * @param layoutManager       RecyclerView 的布局管理器
      * @param targetPosition      需要滚动到的目标下标
      * @param distanceThresholder 最大平滑滚动的距离，超出该距离先闪现到附近再平滑滚动
+     * @param offset              滚动结束后目标视图与 RecyclerView顶部的距离(px)
      * @param listener            滚动结果监听器
      */
     public static void scrollRecycler(
@@ -239,6 +240,7 @@ public class AppearanceAnimationHelper {
             LinearLayoutManager layoutManager,
             int targetPosition,
             int distanceThresholder,
+            int offset,
             RecyclerViewScrollListener listener
     ) {
         //判断布局管理器
@@ -321,7 +323,10 @@ public class AppearanceAnimationHelper {
                 recyclerView.addOnScrollListener(scrollListener);
 
                 //开始平滑滚动
-                CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(recyclerView.getContext());
+                CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(
+                        recyclerView.getContext(),
+                        offset
+                );
                 scroller.setTargetPosition(targetPosition);
                 layoutManager.startSmoothScroll(scroller);
                 Log.d(LogTags.APPEARANCE_ANIMATION_HELPER.n(), "平滑滚动目标：" + targetPosition);
@@ -366,7 +371,10 @@ public class AppearanceAnimationHelper {
             recyclerView.addOnScrollListener(scrollListener);
 
             //开始平滑滚动
-            CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(recyclerView.getContext());
+            CustomOffsetSmoothScroller scroller = new CustomOffsetSmoothScroller(
+                    recyclerView.getContext(),
+                    offset
+            );
             scroller.setTargetPosition(targetPosition);
             layoutManager.startSmoothScroll(scroller);
         }
@@ -383,6 +391,7 @@ public class AppearanceAnimationHelper {
      * @param layoutManager    RecyclerView 的布局管理器
      * @param adapter          RecyclerView 的适配器
      * @param targetPosition   需要滚动到的位置
+     * @param offset           滚动结束后目标视图到 RecyclerView 顶部的距离
      * @param maxRetryCount    最大重试次数
      * @param retryDelayMillis 重试时间间隔（毫秒）
      * @param listener         滚动状态监听器
@@ -392,6 +401,7 @@ public class AppearanceAnimationHelper {
             LinearLayoutManager layoutManager,
             PagingDataAdapter<?, ?> adapter,
             int targetPosition,
+            int offset,
             int maxRetryCount,
             int retryDelayMillis,
             PagingRecyclerScrollListener listener
@@ -414,6 +424,7 @@ public class AppearanceAnimationHelper {
                                 layoutManager,
                                 targetPosition,
                                 10,
+                                offset,
                                 new RecyclerViewScrollListener() {
                                     @Override
                                     public void onSucceed() {
@@ -461,6 +472,7 @@ public class AppearanceAnimationHelper {
                                             layoutManager,
                                             targetPosition,
                                             10,
+                                            offset,
                                             new RecyclerViewScrollListener() {
                                                 @Override
                                                 public void onSucceed() {

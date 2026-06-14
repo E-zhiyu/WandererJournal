@@ -20,6 +20,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
@@ -37,6 +39,7 @@ import com.wanderer.journal.helpers.appearance.HtmlHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
+import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
@@ -57,7 +60,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class SharePreviewActivity extends AppCompatActivity {
     private ActivitySharePreviewBinding binding;    //绑定的 XML 布局
-    private long[] sharedParagraphIds;              //分享的段落 ID 数组
+    private Bundle initBundle = null;               //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphListAdapter adapter;           //段落列表适配器
     private final HtmlHelper htmlHelper = new HtmlHelper(); // HTML 网页生成器
@@ -93,7 +96,7 @@ public class SharePreviewActivity extends AppCompatActivity {
             return insets;
         });
 
-        receiveIntent();
+        initBundle = getIntent().getExtras();
         initViews();
     }
 
@@ -109,20 +112,6 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         binding = null;
         disposable.dispose();
-    }
-
-    /**
-     * 接收 Intent 中传递的数据
-     */
-    private void receiveIntent() {
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        if (bundle == null) {
-            return;
-        }
-
-        //分享的段落 ID 数组
-        sharedParagraphIds = bundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
     }
 
     /**
@@ -208,8 +197,10 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
-                    skip2FullScreen.putExtra(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    skip2FullScreen.putExtra(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
@@ -218,25 +209,22 @@ public class SharePreviewActivity extends AppCompatActivity {
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
-                }
+                },
+                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
         binding.previewRecycler.setAdapter(adapter);
 
         //添加粘性头部适配器
         StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                (inflater, parent, attachToRoot) ->
-                        ViewHolderDateSeparatorBinding.inflate(
-                                inflater,
-                                parent,
-                                false
-                        ),
+                ViewHolderDateSeparatorBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.previewRecycler.addItemDecoration(decoration);
 
         //获取数据源
         DiaryDatabase db = DiaryDatabase.getInstance(this);
+        long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
         disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
                 .flatMap(paragraphEntityModels ->
                         Single.just(insertDateSeparator(paragraphEntityModels))
@@ -337,7 +325,11 @@ public class SharePreviewActivity extends AppCompatActivity {
                     builder.append("\"type\":\"text\",\"content\":");
                     builder.append("\"");
                     String paragraphContent = paragraph.getContent();
-                    builder.append(paragraphContent);
+                    builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                        }
+                    }));
                     builder.append("\"");
 
                     //添加图片字段
@@ -399,6 +391,7 @@ public class SharePreviewActivity extends AppCompatActivity {
             Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
         });
         AlertDialog dialog = builder.show();
+        dialog.setCancelable(false);    //不可取消
 
         List<String> jsonList = formatToJson();
         htmlHelper.generateImage(

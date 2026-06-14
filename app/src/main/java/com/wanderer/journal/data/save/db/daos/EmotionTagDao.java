@@ -98,14 +98,6 @@ public interface EmotionTagDao {
     Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(List<Long> emotionIdList);
 
     /**
-     * 导出情绪标签数据
-     *
-     * @return 情绪标签实体列表
-     */
-    @Query("SELECT * FROM emotionTags")
-    List<EmotionTagEntity> exportEmotionData();
-
-    /**
      * 查询某个情绪标签绑定的段落数量
      *
      * @param emotionTagId 情绪标签的 ID
@@ -113,14 +105,6 @@ public interface EmotionTagDao {
      */
     @Query("SELECT COUNT(*) FROM emotionParagraphCrossRef WHERE emotionId == :emotionTagId")
     Single<Integer> getParagraphCountSingleByEmotionTagId(long emotionTagId);
-
-    /**
-     * 导出情绪标签与段落对应关系数据
-     *
-     * @return 映射实体列表
-     */
-    @Query("SELECT * FROM emotionParagraphCrossRef")
-    List<EmotionParagraphRefEntity> exportEmotionRefData();
 
     /**
      * 删除单个情绪标签
@@ -139,32 +123,4 @@ public interface EmotionTagDao {
      */
     @Delete
     Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
-
-    /**
-     * 清空情绪标签表
-     */
-    @Query("DELETE FROM emotionTags")
-    void clearEmotionTag();
-
-    /**
-     * 清空情绪标签与段落的关系表
-     */
-    @Query("DELETE FROM emotionParagraphCrossRef")
-    void clearEmotionParagraphRef();
-
-    /**
-     * 导入情绪标签数据
-     *
-     * @param emotionTagEntityList 情绪标签实体列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importEmotionTagData(List<EmotionTagEntity> emotionTagEntityList);
-
-    /**
-     * 导入情绪标签与日记段落关系的数据
-     *
-     * @param refList 关系列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importEmotionParagraphRefData(List<EmotionParagraphRefEntity> refList);
 }

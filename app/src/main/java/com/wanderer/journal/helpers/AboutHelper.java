@@ -3,18 +3,35 @@ package com.wanderer.journal.helpers;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.wanderer.journal.R;
-import com.wanderer.journal.databinding.ViewMarkdownTextBinding;
-
-import io.noties.markwon.Markwon;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.2.3\n" +
+    private final static String CHANGELOG = "# v1.3.0\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增角色保存功能，用于保存日记中出现的人物\n" +
+            "- 权限管理界面添加电池优化选项\n" +
+            "- 记忆像素点击后的浮窗可以跳转到当天的日记内容\n" +
+            "- 添加段落内容复制功能\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复写日记界面弹出键盘时切换到后台再切回来，输入框会隐藏到键盘底部的BUG\n" +
+            "- 修复极端情况下导入数据可能导致数据不一致的BUG\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 没有设置日记提醒时间时隐藏提醒时间列表\n" +
+            "- 添加图片时的图片列表预览图增加边框以提高对比度\n" +
+            "- 日记列表跳转日期选择对话框的初始日期与显示的第一个日记项的日期保持一致\n" +
+            "- 读日记时跳转的搜索结果会与列表顶部保持一段距离，防止内容被日期分隔符遮挡\n" +
+            "- 修复在读日记界面刚刚加载出段落就返回会导致崩溃的BUG\n" +
+            "\n" +
+            "# v1.2.3\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
@@ -151,18 +168,7 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        //获取自定义弹窗视图
-        ViewMarkdownTextBinding markdownTextBinding = ViewMarkdownTextBinding.inflate(
-                LayoutInflater.from(context)
-        );
-
-        //渲染 Markdown 文本
-        Markwon markwon = Markwon.create(context);
-        markwon.setMarkdown(markdownTextBinding.mdTextviewInDialog, CHANGELOG);
-
-        new MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.changelog)
-                .setView(markdownTextBinding.getRoot())
+        new MarkdownDialogBuilder(context, "更新日志", CHANGELOG)
                 .setPositiveButton("关闭", null)
                 .show();
     }
