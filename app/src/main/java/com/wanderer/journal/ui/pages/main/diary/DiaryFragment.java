@@ -20,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
@@ -34,7 +35,6 @@ import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.WriteActivity;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -75,14 +75,10 @@ public class DiaryFragment extends Fragment {
                     LocalDate.now(),
                     getParentFragmentManager(),
                     selection -> {
-                        LocalDate date = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                        String dateStr = date.format(formatter);
-
                         //跳转到写日记界面并传递选择的日期
                         Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
                         Bundle bundle = new Bundle();
-                        bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), dateStr);
+                        bundle.putLong(KeyStrings.INIT_DATE.getS(), selection);
                         skip2DiaryContent.putExtras(bundle);
                         startActivity(skip2DiaryContent);
                     }
@@ -131,9 +127,7 @@ public class DiaryFragment extends Fragment {
                     Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
                     Bundle bundle = new Bundle();
 
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    String date = diary.getDiaryDate().format(formatter);
-                    bundle.putString(KeyStrings.INIT_DATE.getS(), date);
+                    bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDate(diary.getDiaryDate()));
 
                     skip2Read.putExtras(bundle);
                     startActivity(skip2Read);

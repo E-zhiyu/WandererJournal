@@ -39,6 +39,7 @@ import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -73,7 +74,6 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -149,10 +149,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         }
 
         //起始页日期
-        String initDate = bundle.getString(KeyStrings.INIT_DATE.getS());
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDate);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        initDiaryDate = LocalDate.parse(initDate, formatter);
+        long initDateTimestamp = bundle.getLong(KeyStrings.INIT_DATE.getS());
+        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+        initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
     /**
@@ -456,9 +455,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
                             Bundle bundle = new Bundle();
 
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                            String date = paragraph.getCreateTime().format(formatter);
-                            bundle.putString(KeyStrings.WRITE_DIARY_DATE.getS(), date); //段落所在的日期
+                            bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
                             bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS(), paragraph.getParagraphId());    //段落 ID
 
                             skip2Write.putExtras(bundle);

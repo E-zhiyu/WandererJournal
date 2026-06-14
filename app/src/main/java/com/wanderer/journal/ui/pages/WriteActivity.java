@@ -50,6 +50,7 @@ import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -94,7 +95,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -292,9 +292,9 @@ public class WriteActivity extends AppCompatActivity {
 
         //初始化日期数据
         try {
-            String date = bundle.getString(KeyStrings.WRITE_DIARY_DATE.getS());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            diaryDate = LocalDate.parse(date, formatter);
+            long initDateTimestamp = bundle.getLong(KeyStrings.INIT_DATE.getS());
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+            diaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
         } catch (DateTimeParseException e) {
             Log.e(LogTags.WRITE_ACTIVITY.n(), "无法读取传递的日期数据，已默认设置为当前日期");
             diaryDate = LocalDate.now();
