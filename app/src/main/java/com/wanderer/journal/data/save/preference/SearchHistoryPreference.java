@@ -15,6 +15,7 @@ import java.util.List;
 public class SearchHistoryPreference {
     private static final String PREF_NAME = "SearchHistoryPreference";
     public static final String KEY_DIARY_CONTENT = "diary_content";     //日记内容
+    public static final String KEY_ROLE_INFO = "role_info";             //角色信息
 
     /**
      * 读取搜索历史
@@ -73,12 +74,14 @@ public class SearchHistoryPreference {
      */
     public static List<String> addKeyword(String keyword, String key, Context context) {
         List<String> historyList = getHistory(key, context);
+
+        //空关键词不保存
         if (keyword == null || keyword.isEmpty()) {
             return historyList;
         }
 
-        historyList.remove(keyword);
-        historyList.add(0, keyword);
+        historyList.remove(keyword.trim());
+        historyList.add(0, keyword.trim());
         setHistory(key, historyList, context);
 
         return historyList;
@@ -98,7 +101,7 @@ public class SearchHistoryPreference {
             return historyList;
         }
 
-        historyList.remove(keyword);
+        historyList.remove(keyword.trim());
         setHistory(key, historyList, context);
         return historyList;
     }

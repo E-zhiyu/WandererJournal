@@ -108,7 +108,7 @@
     <string name="include_media">包含媒体</string>
     <string name="skip_date">日期跳转</string>
     <string name="role">角色</string>
-    <string name="role_search_hint">搜索名称、别名……</string>
+    <string name="role_search_hint">搜索角色信息……</string>
     <string name="no_role">无角色</string>
     <string name="relationship">关系</string>
     <string name="add_role">新建角色</string>

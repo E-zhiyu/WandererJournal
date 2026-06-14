@@ -22,9 +22,18 @@ public class RoleService {
      * @param db 数据库实例
      * @return 所有角色的数据，包含分隔符，支持响应式更新
      */
-    public static Flowable<List<RoleUiModel>> getAllRoleFlowable(@NonNull DiaryDatabase db) {
+    public static Flowable<List<RoleUiModel>> getAllRoleFlowable(@NonNull DiaryDatabase db, String keyword) {
         RoleDao roleDao = db.roleDao();
-        return roleDao.getAllRoleFlowable()
+        String safeKeyword;
+        if (keyword != null) {
+            safeKeyword = keyword.replace("/", "//")
+                    .replace("%", "/%")
+                    .replace("_", "/_");
+        } else {
+            safeKeyword = "";
+        }
+        int isSearchFilter = !safeKeyword.isEmpty() ? 1 : 0;
+        return roleDao.getAllRoleFlowable(keyword, isSearchFilter)
                 .map(rawList -> {
                     List<RoleUiModel> resultList = new ArrayList<>();
 

@@ -12,6 +12,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -21,12 +22,15 @@ import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
+import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -78,6 +82,11 @@ public class RoleManageActivity extends AppCompatActivity {
 
         //初始化 RecyclerView
         initRecyclerView();
+
+        //初始化搜索视图
+        initSearchComponents();
+
+        //TODO:加上搜索返回拦截
     }
 
     /**
@@ -131,7 +140,8 @@ public class RoleManageActivity extends AppCompatActivity {
 
         //订阅数据
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        disposable.add(RoleService.getAllRoleFlowable(db)
+        RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+        disposable.add(viewModel.getRoleListFlowable(db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -145,6 +155,25 @@ public class RoleManageActivity extends AppCompatActivity {
                             adapter.submitList(roleList);
                         }
                 )
+        );
+    }
+
+    /**
+     * 初始化搜索视图
+     */
+    private void initSearchComponents() {
+        SearchHelper.initSearchComponents(
+                binding.searchBar,
+                binding.searchView,
+                binding.searchHistoryRecycler,
+                binding.clearHistoryBtn,
+                SearchHistoryPreference.KEY_ROLE_INFO,
+                keyword -> {
+                    //TODO:执行搜索
+                    RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+                    viewModel.executeSearch(keyword);
+                },
+                null
         );
     }
 

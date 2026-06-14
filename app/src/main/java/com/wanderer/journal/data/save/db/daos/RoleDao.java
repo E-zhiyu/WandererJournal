@@ -33,13 +33,19 @@ public interface RoleDao {
     Flowable<Integer> getRoleCountFlowable();
 
     /**
-     * 获取所有角色数据并按照关系由近到远排序
+     * 获取符合搜索内容的角色数据并按照关系由近到远排序
      *
      * @return 排序后的角色数据
      */
     @Transaction
-    @Query("SELECT * FROM roles ORDER BY relationship DESC")
-    Flowable<List<RoleEntityModel>> getAllRoleFlowable();
+    @Query("SELECT * FROM roles " +
+            "WHERE :filterSearchKeyword = 0 OR " +
+            "name LIKE '%'||:keyword||'%' OR " +
+            "impression LIKE '%'||:keyword||'%' OR " +
+            "identity LIKE '%'||:keyword||'%' OR " +
+            "roleId IN (SELECT roleId FROM roleAlias WHERE alia LIKE '%'||:keyword||'%') " +
+            "ORDER BY relationship DESC")
+    Flowable<List<RoleEntityModel>> getAllRoleFlowable(String keyword, int filterSearchKeyword);
 
     /**
      * 查询所有角色数据，并按照关系由近到远排序
