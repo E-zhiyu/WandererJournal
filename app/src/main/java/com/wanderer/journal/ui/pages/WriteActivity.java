@@ -45,6 +45,8 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -202,9 +204,7 @@ public class WriteActivity extends AppCompatActivity {
                         .setTitle("草稿恢复")
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
                         .setPositiveButton("恢复", (dialogInterface, i) -> {
-                            CharSequence richText = ParagraphTextConverter.hierarchic(this, draft);
-                            binding.contentTextInput.setText(richText);
-                            binding.contentTextInput.setSelection(richText.length());
+                            binding.contentTextInput.setText(draft);
                             ImmHelper.showImm(binding.contentTextInput);
                         })
                         .setNegativeButton("取消", null)
@@ -535,6 +535,8 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (isChanging) return;
+
                 //处理草稿保存任务
                 draftSavingHandler.removeCallbacks(draftSavingRunnable);
                 draftSavingHandler.postDelayed(draftSavingRunnable, DRAFT_SAVING_DELAY);
@@ -563,6 +565,28 @@ public class WriteActivity extends AppCompatActivity {
                         binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
                     });
                     bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
+                } else if (i2 >= RichTextRegex.getShortestPatternLength()) {    //只有新增的文本大于最短正则表达式长度才富文本化
+                    //计算光标与文本末尾的距离
+                    Editable editable = binding.contentTextInput.getEditableText();
+                    int currentSelect = binding.contentTextInput.getSelectionStart();
+                    int toTail = editable.length() - currentSelect;
+
+                    //开始富文本化
+                    isChanging = true;
+                    CharSequence richText = TextHelper.hierarchicEditable(
+                            WriteActivity.this,
+                            editable,
+                            new RoleRefTextRule()
+                    );
+                    binding.contentTextInput.setText(richText);
+                    isChanging = false;
+
+                    //重定位光标位置
+                    int finalSelection = binding.contentTextInput.getEditableText().length() - toTail;
+                    if (finalSelection < 0) finalSelection = 0;
+                    else if (finalSelection > binding.contentTextInput.getEditableText().length())
+                        finalSelection = binding.contentTextInput.getEditableText().length();
+                    binding.contentTextInput.setSelection(finalSelection);
                 }
             }
         });
@@ -1256,9 +1280,8 @@ public class WriteActivity extends AppCompatActivity {
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
             CharSequence richText = ParagraphTextConverter.hierarchic(this, modifyingParagraph.getContent());
-            binding.originText.setText(richText);        //显示原始文本
-            binding.contentTextInput.setText(richText);  //填充原始文本到输入框
-            binding.contentTextInput.setSelection(richText.length());   //光标移动到末尾
+            binding.originText.setText(richText);                               //显示原始文本的富文本
+            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法

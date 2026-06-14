@@ -263,7 +263,7 @@ public class TextHelper {
      * @return 能够直接显示在{@link TextInputEditText}中的富文本，已将特定格式的文本转换为文本块
      */
     @NonNull
-    public static CharSequence hierarchicInEditable(Context context, String raw, RichTextRule<?>... rules) {
+    public static CharSequence hierarchic(Context context, String raw, RichTextRule<?>... rules) {
         if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) {
             return raw == null ? "" : raw;
         }
@@ -283,8 +283,7 @@ public class TextHelper {
                 if (matcher.find(cursor)) {
                     // 如果这是第一个找到的，或者它比之前其他正则找到的更靠前
                     if (closestMatch == null || matcher.start() < closestMatch.start) {
-                        String key = rule.getKey();
-                        closestMatch = new MatchResultSnapshot(matcher.start(), matcher.end(), rule, key, matcher);
+                        closestMatch = new MatchResultSnapshot(matcher.start(), matcher.end(), rule, matcher);
                     }
                 }
             }
@@ -310,7 +309,7 @@ public class TextHelper {
 
             // 立体化组装：生成带有输入框专用的 Annotation 和 ReplacementSpan 的标签
             // 这里我们需要动态识别不同的 Key，确保保存时能够区分出谁是谁
-            String key = closestMatch.key;
+            String key = matchedRule.getKey();
             SpannableString richTag = createTextTag(context, displayText, key, clickData);
             builder.append(richTag);
 
@@ -321,19 +320,77 @@ public class TextHelper {
         return builder;
     }
 
+    /**
+     * 直接将{@link Editable}中的内容富文本化
+     *
+     * @param context  上下文
+     * @param editable 需要富文本化的{@link Editable}对象
+     * @param rules    富文本化的规则
+     */
+    @NonNull
+    public static CharSequence hierarchicEditable(Context context, Editable editable, RichTextRule<?>... rules) {
+        if (editable == null || rules == null || rules.length == 0) return "";
+
+
+        // 注意：因为直接修改 Editable 会导致其长度发生动态改变，
+        // 这里的算法必须极其严密地控制 cursor 指针
+        int cursor = 0;
+        Editable result = new SpannableStringBuilder(editable);
+        while (cursor < result.length()) {
+            String currentText = result.toString();
+            MatchResultSnapshot closestMatch = null;
+
+            // 遍历所有注册的规则，寻找当前光标后最先出现的暗号
+            for (RichTextRule<?> rule : rules) {
+                Matcher matcher = rule.getPattern().matcher(currentText);
+                if (matcher.find(cursor)) {
+                    if (closestMatch == null || matcher.start() < closestMatch.start) {
+                        closestMatch = new MatchResultSnapshot(matcher.start(), matcher.end(), rule, matcher);
+                    }
+                }
+            }
+
+            // 如果后面没有暗号了，直接收工
+            if (closestMatch == null) {
+                break;
+            }
+
+            // 命中规则，开始原位金蝉脱壳
+            RichTextRule<?> matchedRule = closestMatch.rule;
+            Matcher matchedMatcher = closestMatch.matcher;
+
+            String displayText = matchedRule.getDisplayText(matchedMatcher);
+            String clickData = String.valueOf(matchedRule.getTextTagData(matchedMatcher));
+
+            // 生成带圆角和 Annotation 的 SpannableString
+            SpannableString richTag = createTextTag(
+                    context,
+                    displayText,
+                    matchedRule.getKey(),
+                    clickData
+            );
+
+            // 直接在输入框的缓冲区里，用立体标签把扁平暗号给“顶替”掉
+            result.replace(closestMatch.start, closestMatch.end, richTag);
+
+            // 光标强行推进到新插入的富文本标签末尾
+            cursor = closestMatch.start + richTag.length();
+        }
+
+        return result;
+    }
+
     //内部类：用于记录某一次精准匹配的结果快照
     private static class MatchResultSnapshot {
         int start;              //匹配成功的起始下标
         int end;                //匹配成功的结束下标
         RichTextRule<?> rule;   //富文本转换规则
-        String key;             //文本块保存数据的关键字
         Matcher matcher;        //正则表达式匹配对象
 
-        public MatchResultSnapshot(int start, int end, RichTextRule<?> rule, String key, Matcher matcher) {
+        public MatchResultSnapshot(int start, int end, RichTextRule<?> rule, Matcher matcher) {
             this.start = start;
             this.end = end;
             this.rule = rule;
-            this.key = key;
             this.matcher = matcher;
         }
     }

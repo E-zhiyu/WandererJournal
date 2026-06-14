@@ -52,7 +52,7 @@ public class ParagraphTextConverter {
      */
     @NonNull
     public static CharSequence hierarchic(Context context, String raw) {
-        return TextHelper.hierarchicInEditable(
+        return TextHelper.hierarchic(
                 context,
                 raw,
                 new RoleRefTextRule()
