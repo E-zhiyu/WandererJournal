@@ -524,25 +524,35 @@ public class DiaryReadActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
-        LocalDate initDiaryDate = initDateTimestamp == -1 ?
-                LocalDate.now() :
-                DateTimeConverter.toLocalDate(initDateTimestamp);
-        disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
-                .flatMapPublisher(
-                        initPosition -> {
-                            initScrollPosition.set(initPosition);
-                            return viewModel.getPagingDataFlow(initPosition, db);
-                        }
-                )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
+        if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) != -1) {
+            long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+            LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
+            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
+                    .flatMapPublisher(
+                            initPosition -> {
+                                initScrollPosition.set(initPosition);
+                                return viewModel.getPagingDataFlow(initPosition, db);
+                            }
+                    )
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        } else {    //没有传递参数直接从最顶部开始
+            initScrollPosition.set(0);
+            disposable.add(viewModel.getPagingDataFlow(0, db)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
 
         //添加页面加载监听，用以滚动到初始位置
         adapter.addOnPagesUpdatedListener(() -> {
@@ -576,10 +586,14 @@ public class DiaryReadActivity extends AppCompatActivity {
         }
 
         //执行滚动操作
+        int position = initScrollPosition.get();
+        if (position >= adapter.getItemCount()) {
+            position = adapter.getItemCount() - 1;
+        }
         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
         scrollContentRecycler(
-                initScrollPosition.get(),
+                position,
                 false,
                 new PagingRecyclerScrollListener() {
                     @Override
