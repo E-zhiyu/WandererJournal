@@ -550,6 +550,7 @@ public class WriteActivity extends AppCompatActivity {
                         String value = String.valueOf(roleId);
                         SpannableString roleTag = TextHelper.createTextTag(
                                 WriteActivity.this,
+                                null,
                                 display,
                                 KeyStrings.ROLE_ID.getS(),
                                 value
@@ -1290,6 +1291,7 @@ public class WriteActivity extends AppCompatActivity {
             this.modifyingParagraph = modifyingParagraph;
             CharSequence richText = ParagraphTextConverter.hierarchic(
                     this,
+                    null,
                     modifyingParagraph.getContent(),
                     new RoleRefTextRule() {
                         @Override

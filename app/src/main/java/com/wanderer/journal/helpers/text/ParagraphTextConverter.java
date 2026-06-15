@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.Editable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -13,6 +14,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class ParagraphTextConverter {
     /**
@@ -46,14 +48,16 @@ public class ParagraphTextConverter {
     /**
      * 将段落文本立体化
      *
-     * @param context 上下文
-     * @param raw     扁平化后的段落文本
+     * @param context            上下文
+     * @param highlightedPattern 高亮文本正则表达式
+     * @param raw                扁平化后的段落文本
      * @return 立体化后的富文本，能够直接显示在{@link MaterialTextView}和{@link TextInputEditText}中
      */
     @NonNull
-    public static CharSequence hierarchic(Context context, String raw, RoleRefTextRule rule) {
+    public static CharSequence hierarchic(Context context, @Nullable Pattern highlightedPattern, String raw, RoleRefTextRule rule) {
         return TextHelper.hierarchicFromString(
                 context,
+                highlightedPattern,
                 raw,
                 rule
         );
