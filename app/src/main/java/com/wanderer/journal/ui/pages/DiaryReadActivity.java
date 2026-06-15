@@ -81,6 +81,7 @@ import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
@@ -88,6 +89,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
+    private Disposable searchDisposable;                                    //搜索模式下获取匹配项下标的 Disposable 对象
     private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
@@ -749,10 +751,16 @@ public class DiaryReadActivity extends AppCompatActivity {
      *
      * @param keyword 搜索关键词
      */
-    private void executeSearch(String keyword) {
+    private void executeSearch(@Nullable String keyword) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
+
+        if (searchDisposable != null) {
+            disposable.remove(searchDisposable);
+            searchDisposable = null;
+        }
+
+        disposable.add((searchDisposable = viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -765,7 +773,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             setSearchMode(true);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
+                ))
         );
     }
 
@@ -943,6 +951,8 @@ public class DiaryReadActivity extends AppCompatActivity {
             checkedEmotionTagIdList.clear();    //清空选择的情绪标签
             filterMedia = false;                //不再过滤媒体
             refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
+
+            disposable.remove(searchDisposable);
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
