@@ -97,7 +97,7 @@ public class TextHelper {
             @NonNull RichTextRule rule
     ) {
         if (start < 0) start = 0;
-        if (end >= builder.length()) end = builder.length() - 1;
+        if (end > builder.length()) end = builder.length();
 
         int clickableColor = MaterialColors.getColor(
                 context,
