@@ -225,7 +225,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent();
-            CharSequence richText = TextHelper.hierarchicFromString(context, rawContent, new RoleRefTextRule() {
+            CharSequence richText = TextHelper.hierarchicFromString(context, null, rawContent, new RoleRefTextRule() {
                 @Override
                 public void onClick(String clickData) {
                     try {

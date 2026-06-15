@@ -9,7 +9,18 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.3.0\n" +
+    private final static String CHANGELOG = "# v1.3.1" +
+            "# v1.3.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复点击主页日记日期统计卡片会崩溃的BUG\n" +
+            "- 修复角色输入界面关闭对话框后按钮无法复位到底部的BUG\n" +
+            "- 修复可点击的文本点击区域过短的BUG\n" +
+            "- 修复搜索高亮无法正确高亮角色引用文本的BUG\n" +
+            "- 修复退出搜索后修改段落内容会误进入搜索模式的BUG\n" +
+            "\n" +
+            "# v1.3.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.others.viewmodel;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -163,7 +164,7 @@ public class ParagraphViewModel extends ViewModel {
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(
-            String keyword,
+            @Nullable String keyword,
             List<Long> emotionIdList,
             boolean filterMedia,
             DiaryDatabase db

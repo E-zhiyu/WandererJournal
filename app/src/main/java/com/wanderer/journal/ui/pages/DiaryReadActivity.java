@@ -81,6 +81,7 @@ import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
@@ -88,6 +89,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
+    private Disposable searchDisposable;                                    //搜索模式下获取匹配项下标的 Disposable 对象
     private ParagraphPagingAdapter adapter;                                       //段落列表适配器
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
@@ -524,25 +526,35 @@ public class DiaryReadActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
-        LocalDate initDiaryDate = initDateTimestamp == -1 ?
-                LocalDate.now() :
-                DateTimeConverter.toLocalDate(initDateTimestamp);
-        disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
-                .flatMapPublisher(
-                        initPosition -> {
-                            initScrollPosition.set(initPosition);
-                            return viewModel.getPagingDataFlow(initPosition, db);
-                        }
-                )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        pagingData -> adapter.submitData(getLifecycle(), pagingData),
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
+        if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) != -1) {
+            long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
+            LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
+            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
+                    .flatMapPublisher(
+                            initPosition -> {
+                                initScrollPosition.set(initPosition);
+                                return viewModel.getPagingDataFlow(initPosition, db);
+                            }
+                    )
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        } else {    //没有传递参数直接从最顶部开始
+            initScrollPosition.set(0);
+            disposable.add(viewModel.getPagingDataFlow(0, db)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
 
         //添加页面加载监听，用以滚动到初始位置
         adapter.addOnPagesUpdatedListener(() -> {
@@ -576,10 +588,14 @@ public class DiaryReadActivity extends AppCompatActivity {
         }
 
         //执行滚动操作
+        int position = initScrollPosition.get();
+        if (position >= adapter.getItemCount()) {
+            position = adapter.getItemCount() - 1;
+        }
         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
         scrollContentRecycler(
-                initScrollPosition.get(),
+                position,
                 false,
                 new PagingRecyclerScrollListener() {
                     @Override
@@ -735,10 +751,16 @@ public class DiaryReadActivity extends AppCompatActivity {
      *
      * @param keyword 搜索关键词
      */
-    private void executeSearch(String keyword) {
+    private void executeSearch(@Nullable String keyword) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add(viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
+
+        if (searchDisposable != null) {
+            disposable.remove(searchDisposable);
+            searchDisposable = null;
+        }
+
+        disposable.add((searchDisposable = viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -751,7 +773,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             setSearchMode(true);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
+                ))
         );
     }
 
@@ -929,6 +951,8 @@ public class DiaryReadActivity extends AppCompatActivity {
             checkedEmotionTagIdList.clear();    //清空选择的情绪标签
             filterMedia = false;                //不再过滤媒体
             refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
+
+            disposable.remove(searchDisposable);
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 

@@ -22,7 +22,6 @@ import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
@@ -39,7 +38,6 @@ public class EmotionTagInputActivity extends AppCompatActivity {
     private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
-    private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,46 +87,6 @@ public class EmotionTagInputActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
-
-        keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> {
-                        if (hasWindowFocus()) return;
-
-                        int moveDistance = Math.max(
-                                currentHeight - binding.getRoot().getPaddingBottom(),
-                                0
-                        );
-                        binding.bottomBtnGroup.animate()
-                                .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-
-                        binding.linearLayout.setPadding(
-                                ViewEdgeHelper.dpToPx(this, 10),
-                                ViewEdgeHelper.dpToPx(this, 10),
-                                ViewEdgeHelper.dpToPx(this, 10),
-                                currentHeight + ViewEdgeHelper.dpToPx(this, 10)
-                        );
-                    }
-            );
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.stopTracking();
-        }
     }
 
     @Override

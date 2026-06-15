@@ -182,6 +182,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
         String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();
         CharSequence richText = ParagraphTextConverter.hierarchic(
                 context,
+                null,
                 paragraphFragment,
                 new RoleRefTextRule() {
                     @Override
