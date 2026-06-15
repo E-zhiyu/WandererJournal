@@ -26,7 +26,7 @@ public class KeyboardAttachmentHelper {
                 rootView.removeCallbacks(runnable);
             }
             runnable = () -> notifyUi(listener);
-            rootView.postDelayed(runnable, 100);
+            rootView.postDelayed(runnable, 20);
         };
 
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(globalLayoutListener);
