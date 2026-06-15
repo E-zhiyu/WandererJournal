@@ -9,8 +9,7 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.3.1" +
-            "# v1.3.1\n" +
+    private final static String CHANGELOG = "# v1.3.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
