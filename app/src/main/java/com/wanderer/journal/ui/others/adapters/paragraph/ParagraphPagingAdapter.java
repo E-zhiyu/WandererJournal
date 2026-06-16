@@ -44,8 +44,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -383,13 +381,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            Pattern searchPattern;
-            try {
-                searchPattern = Pattern.compile(currentKeyword);
-            } catch (PatternSyntaxException e) {
-                searchPattern = null;
-            }
-            CharSequence richText = TextHelper.hierarchicFromString(context, searchPattern, rawContent, new RoleRefTextRule() {
+            CharSequence richText = TextHelper.hierarchicFromString(context, currentKeyword, rawContent, new RoleRefTextRule() {
                 @Override
                 public void onClick(String clickData) {
                     try {
@@ -400,16 +392,6 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 }
             });
             itemHolder.binding.contentText.setText(richText);
-//            if (!currentKeyword.isEmpty() && positionList.contains(position)) {
-//                CharSequence heighLightedText = TextHelper.renderHighLightedText(
-//                        currentKeyword,
-//                        richText,
-//                        context
-//                );
-//                itemHolder.binding.contentText.setText(heighLightedText);
-//            } else {
-//                itemHolder.binding.contentText.setText(richText);
-//            }
 
             //选择状态
             if (isSelectMode) {

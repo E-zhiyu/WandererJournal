@@ -27,7 +27,6 @@ import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TextHelper {
     /**
@@ -126,26 +125,24 @@ public class TextHelper {
     /**
      * 渲染高亮文本
      *
-     * @param highlightedPattern 高亮文本的正则表达式
+     * @param highlightedKeyword 高亮文本的正则表达式
      * @param raw                原始文本（支持富文本）
      * @param context            上下文
      * @return 高亮后的文本
      */
     @NonNull
     public static CharSequence renderHighLightedText(
-            Pattern highlightedPattern,
+            String highlightedKeyword,
             CharSequence raw,
             Context context
     ) {
-        //没有传递正则表达式直接返回原始文本
-        if (highlightedPattern == null) return raw;
+        if (raw == null || raw.length() == 0) return "";
+        if (highlightedKeyword == null || highlightedKeyword.isEmpty()) return raw;
 
         SpannableStringBuilder builder = new SpannableStringBuilder(raw);
+        String rawStr = String.valueOf(raw);
 
-        //通过正则表达式寻找文本
-        Matcher matcher = highlightedPattern.matcher(raw);
-
-        //高亮颜色
+        int startIndex = rawStr.indexOf(highlightedKeyword);
         int heightLightedColor = MaterialColors.getColor(
                 context,
                 android.R.attr.colorFocusedHighlight,
@@ -153,12 +150,16 @@ public class TextHelper {
         );
 
         //循环高亮文本
-        while (matcher.find()) {
+        while (startIndex >= 0) {
+            int endIndex = startIndex + highlightedKeyword.length();
             // 设置文字颜色为橘红色
             builder.setSpan(
                     new ForegroundColorSpan(heightLightedColor),
-                    matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
             );
+
+            // 循环查找，防止一句话里有多个相同的关键词
+            startIndex = rawStr.indexOf(highlightedKeyword, endIndex);
         }
 
         return builder;
@@ -168,13 +169,13 @@ public class TextHelper {
      * 生成文本块
      *
      * @param context            上下文
-     * @param highlightedPattern 高亮文本正则表达式
+     * @param highlightedKeyword 需要高亮的文本
      * @param display            文本块显示的文本
      * @param key                文本块保存数据的关键字
      * @param value              文本块保存的数据
      */
     @NonNull
-    public static SpannableString createTextTag(Context context, Pattern highlightedPattern, String display, String key, String value) {
+    public static SpannableString createTextTag(Context context, String highlightedKeyword, String display, String key, String value) {
         SpannableString spannable = new SpannableString(display);
 
         //贴纸元数据绑定
@@ -192,7 +193,7 @@ public class TextHelper {
                 android.R.attr.colorFocusedHighlight,
                 Color.parseColor("#FF5722")
         );
-        ReplacementSpan roundedBackgroundSpan = new HighLightableReplacementSpan(defaultColor, highlightedColor, highlightedPattern);
+        ReplacementSpan roundedBackgroundSpan = new HighLightableReplacementSpan(defaultColor, highlightedColor, highlightedKeyword);
 
         spannable.setSpan(roundedBackgroundSpan, 0, display.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
@@ -234,16 +235,15 @@ public class TextHelper {
      * 将普通文本立体化
      *
      * @param context            上下文
-     * @param highlightedPattern 高亮文本正则表达式
+     * @param highlightedKeyword 高亮文本
      * @param raw                原始文本
      * @param rules              用于立体化的转换规则
      * @return 能够直接显示在{@link TextInputEditText}中的富文本，已将特定格式的文本转换为文本块
      */
     @NonNull
-    public static CharSequence hierarchicFromString(Context context, @Nullable Pattern highlightedPattern, String raw, RichTextRule... rules) {
-        if (raw == null || raw.isEmpty() || rules == null || rules.length == 0) {
+    public static CharSequence hierarchicFromString(Context context, @Nullable String highlightedKeyword, String raw, RichTextRule... rules) {
+        if (raw == null || raw.isEmpty() || rules == null || rules.length == 0)
             return raw == null ? "" : raw;
-        }
 
         SpannableStringBuilder builder = new SpannableStringBuilder();
         int cursor = 0; // 当前流水线扫描到的字符指针位置
@@ -286,7 +286,7 @@ public class TextHelper {
             // 立体化组装：生成带有输入框专用的 Annotation 和 ReplacementSpan 的标签
             // 这里我们需要动态识别不同的 Key，确保保存时能够区分出谁是谁
             String key = matchedRule.getKey();
-            SpannableString richTag = createTextTag(context, highlightedPattern, displayText, key, tagData);
+            SpannableString richTag = createTextTag(context, highlightedKeyword, displayText, key, tagData);
             builder.append(richTag);
 
             //添加点击事件
@@ -303,7 +303,7 @@ public class TextHelper {
             cursor = closestMatch.end;
         }
 
-        return renderHighLightedText(highlightedPattern, builder, context);
+        return renderHighLightedText(highlightedKeyword, builder, context);
     }
 
     /**

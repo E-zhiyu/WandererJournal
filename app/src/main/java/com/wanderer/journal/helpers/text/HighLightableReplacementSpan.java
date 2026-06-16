@@ -7,23 +7,20 @@ import android.text.style.ReplacementSpan;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class HighLightableReplacementSpan extends ReplacementSpan {
-    private final int defaultTextColor; // 气泡默认文字颜色
-    private final int highlightColor;   // 搜索高亮文字颜色
-    private final Pattern highlightPattern; // 高亮正则表达式
+    private final int defaultTextColor;     //气泡默认文字颜色
+    private final int highlightColor;       //搜索高亮文字颜色
+    private final String highlightKeyword;  //需要高亮的文本
 
     /**
      * @param defaultTextColor 默认文本颜色
      * @param highlightColor   高亮文本颜色
-     * @param highlightPattern 高亮文本正则表达式
+     * @param highlightKeyword 高亮文本正则表达式
      */
-    public HighLightableReplacementSpan(int defaultTextColor, int highlightColor, @Nullable Pattern highlightPattern) {
+    public HighLightableReplacementSpan(int defaultTextColor, int highlightColor, @Nullable String highlightKeyword) {
         this.defaultTextColor = defaultTextColor;
         this.highlightColor = highlightColor;
-        this.highlightPattern = highlightPattern;
+        this.highlightKeyword = highlightKeyword;
     }
 
     @Override
@@ -35,7 +32,7 @@ public class HighLightableReplacementSpan extends ReplacementSpan {
     @Override
     public void draw(
             @NonNull Canvas canvas,
-            CharSequence text,
+            @NonNull CharSequence text,
             int start,
             int end,
             float x,
@@ -52,46 +49,30 @@ public class HighLightableReplacementSpan extends ReplacementSpan {
         String fullTagName = text.subSequence(start, end).toString(); // 例如 " @张三12 "
         paint.setFakeBoldText(true); // 气泡内文字统一加粗
 
-        // 初始绘制起点偏移量
-        float currentXOffset = x;
-
         //渲染高亮文本
-        if (highlightPattern != null) {
-            Matcher matcher = highlightPattern.matcher(fullTagName);
-            int lastDrawIndex = 0; // 记录上一次绘制截断的字符下标
+        if (highlightKeyword != null && !highlightKeyword.isEmpty() && fullTagName.contains(highlightKeyword)) {
 
-            // 流式扫描：只要正则能匹配到下一段，就切开绘制
-            while (matcher.find()) {
-                int matchStart = matcher.start();
-                int matchEnd = matcher.end();
+            int keywordIndex = fullTagName.indexOf(highlightKeyword);
 
-                // 阶段 A：绘制“当前命中正则”前方的普通文字
-                if (matchStart > lastDrawIndex) {
-                    String leftText = fullTagName.substring(lastDrawIndex, matchStart);
-                    paint.setColor(defaultTextColor);
-                    canvas.drawText(leftText, currentXOffset, y, paint);
-                    currentXOffset += paint.measureText(leftText); // 绘制完后，横坐标向右递增
-                }
+            // 阶段 A：绘制关键词前方的文字
+            String leftText = fullTagName.substring(0, keywordIndex);
+            paint.setColor(defaultTextColor);
+            canvas.drawText(leftText, x, y, paint);
+            float leftWidth = paint.measureText(leftText);
 
-                // 阶段 B：绘制“精准命中正则”的高亮文字
-                String matchText = fullTagName.substring(matchStart, matchEnd);
-                paint.setColor(highlightColor); // 切换为高亮色（如橘红色）
-                canvas.drawText(matchText, currentXOffset, y, paint);
-                currentXOffset += paint.measureText(matchText);
+            // 阶段 B：绘制命中高亮的关键词
+            String matchText = fullTagName.substring(keywordIndex, keywordIndex + highlightKeyword.length());
+            paint.setColor(highlightColor); // 强行切成你的橘红色！
+            canvas.drawText(matchText, x + leftWidth, y, paint);
+            float matchWidth = paint.measureText(matchText);
 
-                // 更新下一次绘制的起点
-                lastDrawIndex = matchEnd;
-            }
-
-            // 阶段 C：收尾，绘制整串文本最后剩下的普通文字
-            if (lastDrawIndex < fullTagName.length()) {
-                String tailText = fullTagName.substring(lastDrawIndex);
-                paint.setColor(defaultTextColor);
-                canvas.drawText(tailText, currentXOffset, y, paint);
-            }
+            // 阶段 C：绘制关键词后方的文字
+            String rightText = fullTagName.substring(keywordIndex + highlightKeyword.length());
+            paint.setColor(defaultTextColor);
+            canvas.drawText(rightText, x + leftWidth + matchWidth, y, paint);
 
         } else {
-            // 如果压根没有传入高亮正则，直接用默认颜色整串一口气绘制
+            // 如果没有命中关键词，直接用默认颜色整串绘制
             paint.setColor(defaultTextColor);
             canvas.drawText(text, start, end, x, y, paint);
         }
