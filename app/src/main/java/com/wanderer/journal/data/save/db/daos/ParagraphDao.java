@@ -19,6 +19,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ import io.reactivex.rxjava3.core.Single;
 public interface ParagraphDao {
     /**
      * 获取段落总数
+     *
      * @return 段落总数
      */
     @Query("SELECT COUNT(*) FROM paragraphs")
@@ -184,6 +186,16 @@ public interface ParagraphDao {
     long insertParagraph(ParagraphEntity paragraph);
 
     /**
+     * 获取插入的段落在当天的位置
+     *
+     * @param startDate      段落所属日记的日期
+     * @param paragraphTime  段落插入的时间
+     * @return 插入的段落在当天的位置
+     */
+    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime % 86400000 <= :paragraphTime % 86400000 AND createTime < :startDate + 86400000")
+    int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime);
+
+    /**
      * 插入段落的事务
      *
      * @param paragraph       新段落实例
@@ -191,11 +203,16 @@ public interface ParagraphDao {
      * @param db              数据库实例
      */
     @Transaction
-    default void insertParagraph(
-            ParagraphEntity paragraph,
+    default int insertParagraph(
+            @NonNull ParagraphEntity paragraph,
             @NonNull List<Uri> newMediaUriList,
             @NonNull DiaryDatabase db
     ) {
+        int paragraphPosition = getNewParagraphPosition(
+                paragraph.getCreateTime().toLocalDate(),
+                paragraph.getCreateTime()
+        );
+
         //插入段落
         long paragraphId = insertParagraph(paragraph);
 
@@ -205,6 +222,8 @@ public interface ParagraphDao {
                 .collect(Collectors.toList());
         MediaDao mediaDao = db.mediaDao();
         mediaDao.insertMedia(mediaEntityList);
+
+        return paragraphPosition;
     }
 
     /**
