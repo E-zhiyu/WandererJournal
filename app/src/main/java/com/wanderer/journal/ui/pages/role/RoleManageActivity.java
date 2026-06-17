@@ -24,6 +24,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
@@ -32,6 +33,7 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -63,6 +65,8 @@ public class RoleManageActivity extends AppCompatActivity {
 
         initViews();
         initBackHandlers();
+
+        binding.getRoot().post(this::initGuide);    //显示提示
     }
 
     @Override
@@ -123,6 +127,19 @@ public class RoleManageActivity extends AppCompatActivity {
     }
 
     /**
+     * 初始化引导提示
+     */
+    private void initGuide() {
+        //角色引用的方法
+        if (!TipPreference.getValue(this, TipPreference.KEY_ROLE_REF_METHOD)) {
+            TipPreference.setValue(this, TipPreference.KEY_ROLE_REF_METHOD, true);
+
+            TextPopupWindow window = new TextPopupWindow("添加角色后，可在日记段落中使用“@”引用该角色", this);
+            window.show(binding.addFab, Gravity.START);
+        }
+    }
+
+    /**
      * 初始化 RecyclerView
      */
     private void initRecyclerView() {
@@ -177,6 +194,8 @@ public class RoleManageActivity extends AppCompatActivity {
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
+                            binding.loadingIndicator.setVisibility(View.GONE);
+
                             if (roleList.isEmpty()) {
                                 binding.emptyText.setVisibility(View.VISIBLE);
                             } else {

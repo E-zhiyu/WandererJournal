@@ -57,11 +57,7 @@
         android:layout_gravity="center"
         android:text="@string/no_paragraph"
         android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="gone" />
 
     <!-- 列表加载指示器 -->
     <com.google.android.material.loadingindicator.LoadingIndicator
@@ -69,11 +65,7 @@
         style="@style/Widget.Material3.LoadingIndicator.Contained"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_gravity="center" />
 
     <!-- 跳转搜索结果的按钮布局 -->
     <androidx.constraintlayout.widget.ConstraintLayout

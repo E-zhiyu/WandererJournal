@@ -44,7 +44,7 @@ public class RoleService {
                 // 【核心优化】：将由于数据库变化触发的 map 集合重组逻辑，丢给计算线程，解放主线程
                 .observeOn(Schedulers.computation())
                 .map(rawList -> {
-                    List<RoleUiModel> resultList = new ArrayList<>(rawList.size() + 5); // 给予合理的初始容量，减少 ArrayList 扩容开销
+                    List<RoleUiModel> resultList = new ArrayList<>(rawList.size() + RoleRelationship.values().length); //给予合理的初始容量，减少 ArrayList 扩容开销
 
                     if (rawList.isEmpty()) {
                         return resultList;

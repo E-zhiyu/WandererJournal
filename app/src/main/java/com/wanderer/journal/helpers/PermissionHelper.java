@@ -397,10 +397,7 @@ public class PermissionHelper {
      * @return 是否能跳转原生界面
      */
     public static boolean canSkip2ProtogeneticBatteryOptimizationsPage() {
-        if (DeviceOs.isHyperOs() || DeviceOs.isMiui()) return false;    //小米系统无法弹出允许电池优化对话框
-
-        int osVersionCode = Build.VERSION.SDK_INT;
-        return !DeviceOs.isColorOs() || osVersionCode < Build.VERSION_CODES.BAKLAVA; //ColorOS 16 无法弹出允许电池优化对话框
+        return !DeviceOs.isHyperOs() && !DeviceOs.isMiui();    //小米系统无法弹出允许电池优化对话框
     }
 
     /**

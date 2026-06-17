@@ -81,4 +81,16 @@ public class ViewEdgeHelper {
         ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         return displayMetrics.widthPixels;
     }
+
+    /**
+     * 获取屏幕高度
+     *
+     * @param context 上下文
+     * @return 屏幕像素高度
+     */
+    public static int getScreenHeight(Context context) {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        return displayMetrics.heightPixels;
+    }
 }

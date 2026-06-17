@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.others.adapters;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -9,10 +10,13 @@ import androidx.annotation.NonNull;
 import androidx.core.widget.TextViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.color.MaterialColors;
+import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewHolderMultichoiceItemBinding;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDialogAdapter.MultiChoiceItemViewHolder> {
@@ -54,6 +58,7 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
     @Override
     public void onBindViewHolder(@NonNull MultiChoiceItemViewHolder holder, int position) {
         MultiChoiceDialogBuilder.ChoiceItem item = itemList.get(position);
+        Context context = holder.itemView.getContext();
         boolean itemEnabled = item.isEnabled();
         boolean stat = item.getInitStat();
         String itemTitle = item.getTitle();
@@ -65,8 +70,23 @@ public class MultiChoiceDialogAdapter extends RecyclerView.Adapter<MultiChoiceDi
             holder.binding.checkedText.setEnabled(false);
             holder.binding.checkedText.setChecked(false);
 
-            //图标也变成灰色
-            TextViewCompat.setCompoundDrawableTintList(holder.binding.checkedText, ColorStateList.valueOf(Color.GRAY));
+            //文字和图标变为灰色
+            int disabledColor = MaterialColors.getColor(
+                    context,
+                    com.google.android.material.R.attr.colorOutline,
+                    Color.GRAY
+            );
+            holder.binding.checkedText.setTextColor(disabledColor);
+            TextViewCompat.setCompoundDrawableTintList(holder.binding.checkedText, ColorStateList.valueOf(disabledColor));
+
+            //加上禁用提示字样
+            String notIncluded = String.format(
+                    Locale.getDefault(),
+                    "%s(%s)",
+                    holder.binding.checkedText.getText(),
+                    context.getString(R.string.not_included)
+            );
+            holder.binding.checkedText.setText(notIncluded);
         } else {
             holder.binding.checkedText.setChecked(stat);
         }
