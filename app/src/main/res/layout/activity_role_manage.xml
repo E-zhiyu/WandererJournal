@@ -42,11 +42,15 @@
         android:layout_gravity="center"
         android:text="@string/no_role"
         android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="gone" />
+
+    <!-- 加载指示器 -->
+    <com.google.android.material.loadingindicator.LoadingIndicator
+        android:id="@+id/loading_indicator"
+        style="@style/Widget.Material3.LoadingIndicator.Contained"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center" />
 
     <!-- 添加按钮 -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

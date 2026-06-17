@@ -194,6 +194,8 @@ public class RoleManageActivity extends AppCompatActivity {
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
+                            binding.loadingIndicator.setVisibility(View.GONE);
+
                             if (roleList.isEmpty()) {
                                 binding.emptyText.setVisibility(View.VISIBLE);
                             } else {
