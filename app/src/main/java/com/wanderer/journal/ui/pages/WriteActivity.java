@@ -1303,6 +1303,7 @@ public class WriteActivity extends AppCompatActivity {
             );
             binding.originText.setText(richText);                               //显示原始文本的富文本
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
+            binding.contentTextInput.setSelection(richText.length());           //光标移动到末尾
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
