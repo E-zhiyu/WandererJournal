@@ -28,16 +28,18 @@ public class ParagraphService {
      * @param db           数据库实例
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
-    public static Completable insertParagraphWithMedia(
+    public static Single<Integer> insertParagraphWithMedia(
             @NonNull ParagraphEntity paragraph,
             List<Uri> newMediaList,
             @NonNull DiaryDatabase db
     ) {
         paragraph.setContent(paragraph.getContent().trim());
-        return Completable.fromAction(() -> {
+        return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                paragraphDao.insertParagraph(paragraph, newMediaList, db);
+                return paragraphDao.insertParagraph(paragraph, newMediaList, db) + 1;   //需要考虑日期分隔符
+            } else {
+                return -1;
             }
         });
     }

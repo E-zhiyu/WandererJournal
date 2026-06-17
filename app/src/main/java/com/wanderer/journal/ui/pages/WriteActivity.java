@@ -99,6 +99,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -116,7 +117,7 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
     private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
-    private boolean needScrollToBottom = false;             //是否需要在段落刷新的时候滚动到底部
+    private final AtomicInteger scrollPosition = new AtomicInteger(-1); //段落列表加载完毕后需要滚动到的位置
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
@@ -679,22 +680,21 @@ public class WriteActivity extends AppCompatActivity {
             boolean endOfPaginationReached = loadStates.getAppend().getEndOfPaginationReached();
 
             //滚动到底部
-            if (isNotLoading && needScrollToBottom) {
-                needScrollToBottom = false;
-
+            if (isNotLoading && scrollPosition.get() != -1) {
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
                     AppearanceAnimationHelper.scrollPagingRecycler(
                             binding.contentRecycler,
                             (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                             adapter,
-                            itemCount - 1,
+                            scrollPosition.get(),
                             63,
                             10,
                             750,
                             new PagingRecyclerScrollListener() {
                                 @Override
                                 public void onSucceed() {
+                                    scrollPosition.set(-1);
                                 }
 
                                 @Override
@@ -703,6 +703,7 @@ public class WriteActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onFailed() {
+                                    scrollPosition.set(-1);
                                 }
                             }
                     );
@@ -1039,25 +1040,26 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void addParagraph(String content, List<Uri> newMediaList) {
         //执行写入操作
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
         LocalDate diaryDate = getParentDiaryDate();
+        LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
-                .flatMapCompletable(diaryId -> {
+                .flatMap(diaryId -> {
                     ParagraphEntity newParagraph = new ParagraphEntity(
                             diaryId,
                             content.trim(),
-                            diaryDate.atTime(LocalTime.now())
+                            paragraphDateTime
                     );
                     return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        () -> {
+                        position -> {
                             binding.contentTextInput.setText(null);
 
-                            //将滚动到底部标识改为true
-                            needScrollToBottom = true;
+                            //修改滚动位置标识符
+                            scrollPosition.set(position);
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )

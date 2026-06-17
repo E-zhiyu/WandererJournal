@@ -9,7 +9,13 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.3.1" +
+    private final static String CHANGELOG = "# v1.3.2\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复新增段落后跳转的位置总是最底部而不是实际添加的位置的BUG\n" +
+            "- 修复更新日志版本号标题显示错误的BUG\n" +
+            "\n" +
             "# v1.3.1\n" +
             "\n" +
             "### BUG修复\n" +
