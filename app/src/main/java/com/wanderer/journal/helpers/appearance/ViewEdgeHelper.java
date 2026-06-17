@@ -1,6 +1,5 @@
 package com.wanderer.journal.helpers.appearance;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -76,10 +75,9 @@ public class ViewEdgeHelper {
      * @param context 上下文
      * @return 屏幕像素宽度
      */
-    public static int getScreenWidth(Context context) {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        return displayMetrics.widthPixels;
+    public static int getScreenWidth(@NonNull Context context) {
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return dm.widthPixels;
     }
 
     /**
@@ -88,9 +86,8 @@ public class ViewEdgeHelper {
      * @param context 上下文
      * @return 屏幕像素高度
      */
-    public static int getScreenHeight(Context context) {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        return displayMetrics.heightPixels;
+    public static int getScreenHeight(@NonNull Context context) {
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        return dm.heightPixels;
     }
 }
