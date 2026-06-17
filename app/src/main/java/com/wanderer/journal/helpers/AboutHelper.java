@@ -11,6 +11,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.3.3\n" +
             "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 导入数据时未包含的数据项会显示提示文本并且让该选项的文本变为灰色\n" +
+            "\n" +
             "### BUG修复\n" +
             "\n" +
             "- 修复无法正常申请忽略电池优化的BUG（小米系统由于底层魔改仍需要手动前往电池优化策略列表调整）\n" +
