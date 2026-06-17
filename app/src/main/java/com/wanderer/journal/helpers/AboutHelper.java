@@ -11,10 +11,11 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.3.3\n" +
             "\n" +
-            "### 优化内容\n" +
+            "### 优化和修改的内容\n" +
             "\n" +
             "- 导入数据时未包含的数据项会显示提示文本并且让该选项的文本变为灰色\n" +
             "- 第一次进入角色列表界面显示提示文本\n" +
+            "- 将“不对付”角色关系改为“处不来”\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
