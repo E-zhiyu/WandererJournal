@@ -4,12 +4,10 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsAnimationCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.R;
@@ -20,7 +18,6 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
@@ -50,7 +47,7 @@ public class RoleInputActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
-            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //滚动布局中的线性布局
             binding.linearLayout.setPadding(
@@ -61,30 +58,6 @@ public class RoleInputActivity extends AppCompatActivity {
             );
 
             return insets;
-        });
-
-        //设置键盘动画监听器
-        ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
-                WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
-        ) {
-            @NonNull
-            @Override
-            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-                // 获取当前帧键盘（IME）和系统栏的高度
-                Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
-                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.bottomBtnGroup.setTranslationY(-keyboardHeight);
-
-                return insets;
-            }
-
-            @Override
-            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-                super.onEnd(animation);
-            }
         });
 
         initBundle = getIntent().getExtras();
@@ -194,11 +167,6 @@ public class RoleInputActivity extends AppCompatActivity {
 
             onConfirm();
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.confirmButton);
-
-        //取消按钮
-        binding.cancelButton.setOnClickListener(view -> finish());
-        AppearanceAnimationHelper.attachMorphAnimation(binding.cancelButton);
     }
 
     /**
