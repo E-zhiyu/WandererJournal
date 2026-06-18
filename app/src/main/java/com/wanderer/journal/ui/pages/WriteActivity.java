@@ -1045,12 +1045,24 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMap(diaryId -> {
+                    //实例化新段落对象
                     ParagraphEntity newParagraph = new ParagraphEntity(
                             diaryId,
                             content.trim(),
                             paragraphDateTime
                     );
-                    return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
+
+                    //获取传递的起始日期
+                    LocalDate startDate;
+                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                        startDate = LocalDate.now();
+                    } else {
+                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                        startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                    }
+
+                    //返回查询到的下标
+                    return ParagraphService.insertParagraphWithMedia(startDate, newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

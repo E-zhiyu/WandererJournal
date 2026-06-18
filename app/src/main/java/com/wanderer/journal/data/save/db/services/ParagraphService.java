@@ -13,6 +13,7 @@ import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.helpers.file.FileHelper;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -23,12 +24,14 @@ public class ParagraphService {
     /**
      * 插入新日记段落并插入新添加的媒体
      *
+     * @param startDate    写日记界面的起始日期
      * @param paragraph    新段落实体
      * @param newMediaList 新媒体文件的Uri列表
      * @param db           数据库实例
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
     public static Single<Integer> insertParagraphWithMedia(
+            LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             List<Uri> newMediaList,
             @NonNull DiaryDatabase db
@@ -37,7 +40,7 @@ public class ParagraphService {
         return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.insertParagraph(paragraph, newMediaList, db) + 1;   //需要考虑日期分隔符
+                return paragraphDao.insertParagraph(startDate, paragraph, newMediaList, db);
             } else {
                 return -1;
             }

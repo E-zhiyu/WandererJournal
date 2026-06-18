@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -188,30 +189,36 @@ public interface ParagraphDao {
     /**
      * 获取插入的段落在当天的位置
      *
-     * @param startDate      段落所属日记的日期
-     * @param paragraphTime  段落插入的时间
+     * @param startDate     段落所属日记的日期
+     * @param paragraphTime 段落插入的时间
      * @return 插入的段落在当天的位置
      */
-    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime % 86400000 <= :paragraphTime % 86400000 AND createTime < :startDate + 86400000")
+    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime <= :paragraphTime")
     int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime);
 
     /**
      * 插入段落的事务
      *
+     * @param startDate       写日记界面的起始日期
      * @param paragraph       新段落实例
      * @param newMediaUriList 该段落新添加的媒体 Uri 列表
      * @param db              数据库实例
      */
     @Transaction
     default int insertParagraph(
+            LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             @NonNull List<Uri> newMediaUriList,
             @NonNull DiaryDatabase db
     ) {
-        int paragraphPosition = getNewParagraphPosition(
+        //获取从起始日期开始，有多少个段落日期小于等于该段落
+        int earlierThanNewParagraph = getNewParagraphPosition(
                 paragraph.getCreateTime().toLocalDate(),
                 paragraph.getCreateTime()
         );
+
+        //计算有几个日期分隔符
+        int dateSeparatorCount = Math.toIntExact(ChronoUnit.DAYS.between(startDate, paragraph.getCreateTime())) + 1;
 
         //插入段落
         long paragraphId = insertParagraph(paragraph);
@@ -223,7 +230,7 @@ public interface ParagraphDao {
         MediaDao mediaDao = db.mediaDao();
         mediaDao.insertMedia(mediaEntityList);
 
-        return paragraphPosition;
+        return earlierThanNewParagraph + dateSeparatorCount;
     }
 
     /**
