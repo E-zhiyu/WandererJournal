@@ -128,6 +128,7 @@ public class WriteActivity extends AppCompatActivity {
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
     private static final int DRAFT_SAVING_DELAY = 3000;     //3s没有修改文本则保存草稿
     private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
+    private boolean needCursorSkipToTail = false;           //输入框文本变化时需要让光标移动到末尾
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -204,6 +205,7 @@ public class WriteActivity extends AppCompatActivity {
                         .setTitle("草稿恢复")
                         .setMessage("您有一篇段落草稿未发送，是否恢复该草稿？")
                         .setPositiveButton("恢复", (dialogInterface, i) -> {
+                            needCursorSkipToTail = true;
                             binding.contentTextInput.setText(draft);
                             ImmHelper.showImm(binding.contentTextInput);
                         })
@@ -594,6 +596,12 @@ public class WriteActivity extends AppCompatActivity {
                     else if (finalSelection > binding.contentTextInput.getEditableText().length())
                         finalSelection = binding.contentTextInput.getEditableText().length();
                     binding.contentTextInput.setSelection(finalSelection);
+                }
+
+                //需要时光标滚动到末尾
+                if (needCursorSkipToTail) {
+                    needCursorSkipToTail = false;
+                    binding.contentTextInput.setSelection(binding.contentTextInput.getEditableText().length());
                 }
             }
         });
@@ -1045,12 +1053,24 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                 .flatMap(diaryId -> {
+                    //实例化新段落对象
                     ParagraphEntity newParagraph = new ParagraphEntity(
                             diaryId,
                             content.trim(),
                             paragraphDateTime
                     );
-                    return ParagraphService.insertParagraphWithMedia(newParagraph, newMediaList, db);
+
+                    //获取传递的起始日期
+                    LocalDate startDate;
+                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                        startDate = LocalDate.now();
+                    } else {
+                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                        startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                    }
+
+                    //返回查询到的下标
+                    return ParagraphService.insertParagraphWithMedia(startDate, newParagraph, newMediaList, db);
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -1291,19 +1311,9 @@ public class WriteActivity extends AppCompatActivity {
         //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            CharSequence richText = ParagraphTextConverter.hierarchic(
-                    this,
-                    null,
-                    modifyingParagraph.getContent(),
-                    new RoleRefTextRule() {
-                        @Override
-                        public void onClick(String clickData) {
-                        }
-                    }
-            );
-            binding.originText.setText(richText);                               //显示原始文本的富文本
+            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本的富文本
+            needCursorSkipToTail = true;
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-            binding.contentTextInput.setSelection(richText.length());           //光标移动到末尾
             binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法

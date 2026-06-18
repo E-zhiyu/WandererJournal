@@ -220,8 +220,10 @@ public class RoleManageActivity extends AppCompatActivity {
                 SearchHistoryPreference.KEY_ROLE_INFO,
                 keyword -> {
                     RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
-                    viewModel.executeSearch(keyword);
-                    setSearchMode(true);
+                    viewModel.executeSearch(keyword.trim());
+
+                    //根据搜索关键词是否为空开启和关闭搜索模式
+                    setSearchMode(!keyword.trim().isEmpty());
                 },
                 null
         );
