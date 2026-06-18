@@ -9,7 +9,13 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.3.4\n" +
+    private final static String CHANGELOG = "# v1.3.5\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 角色列表界面输入空的搜索文本会自动退出搜索模式\n" +
+            "\n" +
+            "# v1.3.4\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
