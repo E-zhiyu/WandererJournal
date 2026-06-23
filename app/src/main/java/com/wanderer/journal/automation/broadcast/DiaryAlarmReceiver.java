@@ -19,6 +19,7 @@ import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.intent.PendingRequestCode;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
+import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
@@ -34,6 +35,11 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(LogTags.DIARY_ALARM_RECEIVER.n(), "日记提醒接收器已触发");
+
+        //没有打开开关直接结束
+        if (!DiaryAlarmPreference.getSwitchStat(context)) {
+            return;
+        }
 
         // 建立一个临时性的 CompositeDisposable
         final PendingResult pendingResult = goAsync();
