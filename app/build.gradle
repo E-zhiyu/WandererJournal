@@ -75,4 +75,5 @@ dependencies {
     implementation libs.documentfile                // 用于解析SAF 返回的指向本地文件的 Uri
     implementation libs.core                        // Markdown支持
     implementation libs.recyclerview.selection      // Recycler 多选支持
+    implementation libs.lifecycle.process           // 生命周期监听
 }
