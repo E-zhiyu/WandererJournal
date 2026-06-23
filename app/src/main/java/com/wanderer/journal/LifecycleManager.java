@@ -6,8 +6,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -26,8 +24,7 @@ import java.util.Locale;
 
 public class LifecycleManager implements Application.ActivityLifecycleCallbacks {
     private static LifecycleManager instance;
-    private boolean doNotHideOnce = false;      //豁免一次后台隐藏
-    private boolean userLeft = true;            //用户离开应用（即前台活动数量为0）
+    private boolean isExempted = false;         //豁免一次 onStop() 中的逻辑
     private long lastAuthTimeMilli = 0;         //上次进行身份验证的时间戳
     private int foregroundCount = 0;
 
@@ -73,9 +70,11 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
             return;
         }
 
+        Log.d(LogTags.LIFECYCLE_MANAGER.n(), "跳转至外部界面");
+
         //设置豁免标识
         LifecycleManager manager = get();
-        manager.doNotHideOnce = true;
+        manager.isExempted = true;
 
         context.startActivity(intent);
     }
@@ -91,9 +90,11 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
             return;
         }
 
+        Log.d(LogTags.LIFECYCLE_MANAGER.n(), "跳转至外部界面");
+
         //设置豁免标识
         LifecycleManager manager = get();
-        manager.doNotHideOnce = true;
+        manager.isExempted = true;
 
         launcher.launch(intent);
     }
@@ -109,11 +110,22 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
     @Override
     public void onActivityStarted(@NonNull Activity activity) {
         Log.d(LogTags.LIFECYCLE_MANAGER.n(), "活动启动");
-        foregroundCount++;
+
+        if (isExempted) {
+            isExempted = false; //仅在重新启动时取消豁免
+            foregroundCount++;
+            return;
+        }
 
         boolean isAuthOpened = SecurityPreference.getAuthSwitchStat(activity);
         AuthOpportunity authOpportunity = AuthOpportunity.values()[SecurityPreference.getAuthOpportunity(activity)];
-        if (userLeft && isAuthOpened && System.currentTimeMillis() - lastAuthTimeMilli >= authOpportunity.getTimeMilli()) {
+        if (
+                foregroundCount == 0 &&
+                        isAuthOpened &&
+                        System.currentTimeMillis() - lastAuthTimeMilli >= authOpportunity.getTimeMilli()
+        ) {
+            Log.d(LogTags.LIFECYCLE_MANAGER.n(), "启动身份验证");
+
             BiometricHelper.showBiometricPrompt((FragmentActivity) activity, new BiometricHelper.AuthCallback() {
                 @Override
                 public void onSuccess() {
@@ -123,6 +135,8 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
 
                 @Override
                 public void onError(int errCode, CharSequence errStr) {
+                    Log.w(LogTags.LIFECYCLE_MANAGER.n(), "身份验证出错");
+
                     if (errCode == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE
                             || errCode == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
                     ) {
@@ -151,25 +165,19 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
                 }
             });
         }
-        userLeft = false;
+        foregroundCount++;
     }
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
         Log.d(LogTags.LIFECYCLE_MANAGER.n(), "活动停止");
         foregroundCount--;
-
         Log.d(LogTags.LIFECYCLE_MANAGER.n(), String.format(Locale.getDefault(), "前台活动数：%d", foregroundCount));
+
+        if (isExempted) return;
+
         if (foregroundCount == 0) {
             Log.i(LogTags.LIFECYCLE_MANAGER.n(), "前台活动数量为0");
-
-            //延迟修改用户离开标志位
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (foregroundCount == 0) {
-                    Log.i(LogTags.LIFECYCLE_MANAGER.n(), "判定为用户离开应用");
-                    userLeft = true;
-                }
-            }, 500);
 
             handleAppToBackground(activity);
         }
@@ -181,35 +189,24 @@ public class LifecycleManager implements Application.ActivityLifecycleCallbacks 
      * @param context 上下文
      */
     private void handleAppToBackground(Context context) {
-        //判断是否豁免
-        if (doNotHideOnce) {
-            doNotHideOnce = false;
-            return;
-        }
-
         //判断开关
         boolean isHideInRecents = SecurityPreference.getHideRecentTask(context);
         if (!isHideInRecents) {
             return;
         }
 
-        //延迟清除最近任务，防止重新创建活动时误执行
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            if (foregroundCount != 0) {
-                return;
-            }
-
-            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am != null) {
-                List<ActivityManager.AppTask> taskList = am.getAppTasks();
-                if (taskList != null) {
-                    for (ActivityManager.AppTask task : taskList) {
-                        // 将当前应用的 Task 从最近任务列表中彻底移除
-                        task.finishAndRemoveTask();
-                    }
+        //清除最近任务
+        Log.i(LogTags.LIFECYCLE_MANAGER.n(), "执行隐藏后台逻辑");
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (am != null) {
+            List<ActivityManager.AppTask> taskList = am.getAppTasks();
+            if (taskList != null) {
+                for (ActivityManager.AppTask task : taskList) {
+                    // 将当前应用的 Task 从最近任务列表中彻底移除
+                    task.finishAndRemoveTask();
                 }
             }
-        }, 3000);
+        }
     }
 
     // =========================

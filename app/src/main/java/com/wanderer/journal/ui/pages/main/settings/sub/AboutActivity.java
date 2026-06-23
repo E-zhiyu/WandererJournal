@@ -12,6 +12,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.LifecycleManager;
 import com.wanderer.journal.databinding.ActivityAboutBinding;
 import com.wanderer.journal.helpers.AboutHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
@@ -53,7 +54,7 @@ public class AboutActivity extends AppCompatActivity {
         binding.authorCard.setOnClickListener(view -> {
             Uri uri = Uri.parse("https://github.com/E-zhiyu");
             Intent skip2GitHub = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(skip2GitHub);
+            LifecycleManager.startExternalActivity(this, skip2GitHub);
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.authorCard);
 
@@ -61,7 +62,7 @@ public class AboutActivity extends AppCompatActivity {
         binding.projectAddressCard.setOnClickListener(view -> {
             Uri uri = Uri.parse("https://gitee.com/e-zhiyu/wanderer-journal");
             Intent skip2Project = new Intent(Intent.ACTION_VIEW, uri);
-            startActivity(skip2Project);
+            LifecycleManager.startExternalActivity(this, skip2Project);
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.projectAddressCard);
     }
