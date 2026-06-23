@@ -1311,7 +1311,17 @@ public class WriteActivity extends AppCompatActivity {
         //执行状态改变
         if (isEditMode) {
             this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本的富文本
+            CharSequence richText = TextHelper.hierarchicFromString(
+                    this,
+                    null,
+                    modifyingParagraph.getContent(),
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                        }
+                    }
+            );
+            binding.originText.setText(richText);                               //显示原始文本的富文本
             needCursorSkipToTail = true;
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
             binding.contentEditCard.setVisibility(View.VISIBLE);
