@@ -151,11 +151,12 @@ public class WriteActivity extends AppCompatActivity {
             );
 
             //内容 RecyclerView 额外增加5dp的底部内边距
+            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
             binding.contentRecycler.setPadding(
                     systemBars.left,
                     0,
                     systemBars.right,
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                    keyboardHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
