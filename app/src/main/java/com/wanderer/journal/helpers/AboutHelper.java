@@ -11,6 +11,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.3.6\n" +
             "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 读日记界面支持用空格分隔多个关键词进行多词搜索\n" +
+            "\n" +
             "### 优化内容\n" +
             "\n" +
             "- 优化身份验证逻辑，现在会跳转到专门的身份验证界面\n" +

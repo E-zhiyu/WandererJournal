@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.sqlite.db.SimpleSQLiteQuery;
 
 import com.wanderer.journal.auxiliary.classes.DiaryLength;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -14,6 +15,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -112,29 +114,73 @@ public class ParagraphService {
     /**
      * 获取匹配搜索的段落的位置
      *
-     * @param keyword     搜索关键词
-     * @param emotionIds  情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
-     * @param filterMedia 是否需要由媒体文件
-     * @param db          数据库实例
+     * @param keywords       符合 FTS4 语法的搜索字符串
+     * @param emotionIds     情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
+     * @param useMediaFilter 是否需要由媒体文件
+     * @param db             数据库实例
      * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
      */
     @NonNull
     public static Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
-            String keyword,
+            String[] keywords,
             List<Long> emotionIds,
-            boolean filterMedia,
+            boolean useMediaFilter,
             @NonNull DiaryDatabase db
     ) {
+        boolean useContentFilter = keywords != null && !(keywords.length == 0);
+
         ParagraphDao paragraphDao = db.paragraphDao();
-        int useEmotionFilter = (emotionIds == null || emotionIds.isEmpty()) ? 0 : 1;
-        int useContentFilter = (keyword == null || keyword.isEmpty()) ? 0 : 1;
-        int useMediaFilter = filterMedia ? 1 : 0;
-        return paragraphDao.getSearchMatchedParagraphPositionsFlowableInternal(
-                keyword,
-                emotionIds,
-                useContentFilter,
-                useEmotionFilter,
-                useMediaFilter
+        // 1. 基础 SQL 骨架（保留你原本完美的位置计算逻辑）
+        StringBuilder sql = new StringBuilder(
+                "SELECT (pure_paragraph_position + date_separator_count) FROM (" +
+                        "    SELECT " +
+                        "        paragraphId, " +
+                        "        content, " +
+                        "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
+                        "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= d.diaryDate) AS date_separator_count" +
+                        "    FROM paragraphs " +
+                        "    INNER JOIN diaries d ON parentDiaryId = d.diaryId" +
+                        ") WHERE 1=1 " // 1=1 是为了方便后面直接拼接 AND
         );
+
+        List<Object> args = new ArrayList<>();
+
+        // 2. 动态拼接多词内容过滤 (LIKE 方案)
+        if (useContentFilter) {
+            // 按空格拆分出多个关键词
+            for (String keyword : keywords) {
+                if (!keyword.isEmpty()) {
+                    // 转义处理，防止用户输入 % 或 _ 导致逻辑崩溃
+                    String safeKeyword = keyword.replace("/", "//").replace("%", "/%").replace("_", "/_");
+
+                    // 每一个关键词都生成一个独立的 AND LIKE 条件，确保“同时包含”
+                    sql.append(" AND content LIKE ? ESCAPE '/'");
+                    args.add("%" + safeKeyword + "%");
+                }
+            }
+        }
+
+        // 3. 动态拼接情绪标签过滤
+        boolean useEmotionFilter = emotionIds != null && !emotionIds.isEmpty();
+        if (useEmotionFilter) {
+            sql.append(" AND paragraphId IN (SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (");
+            for (int i = 0; i < emotionIds.size(); i++) {
+                sql.append("?");
+                args.add(emotionIds.get(i));
+                if (i < emotionIds.size() - 1) sql.append(",");
+            }
+            sql.append("))");
+        }
+
+        // 4. 动态拼接媒体过滤
+        if (useMediaFilter) {
+            sql.append(" AND paragraphId IN (SELECT parentParagraphId FROM medias)");
+        }
+
+        // 5. 封装成 Room 需要的 SimpleSQLiteQuery 对象
+        SimpleSQLiteQuery rawQuery = new SimpleSQLiteQuery(sql.toString(), args.toArray());
+
+        // 6. 调用 DAO 返回响应式 Flowable
+        return paragraphDao.getSearchMatchedParagraphPositionsRaw(rawQuery);
     }
 }

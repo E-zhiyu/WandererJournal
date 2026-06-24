@@ -10,10 +10,13 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.RawQuery;
 import androidx.room.Transaction;
 import androidx.room.Update;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
@@ -92,42 +95,12 @@ public interface ParagraphDao {
     Single<Integer> getAdjustedPositionSingle(LocalDate date);
 
     /**
-     * 获取匹配搜索的段落的位置
-     *
-     * @param keyword          搜索关键词
-     * @param emotionIds       情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
-     * @param useContentFilter 是否过滤段落内容
-     * @param useEmotionFilter 是否过滤情绪标签，(1：过滤，0：不过滤)
-     * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
+     * 使用 RawQuery 动态计算匹配搜索的段落位置
+     * * @param query 支持响应式更新的 SupportSQLiteQuery
+     * @return 包含所有匹配位置的列表，支持 Flowable 响应式
      */
-    @Query(
-            "SELECT (pure_paragraph_position + date_separator_count) " +
-                    "FROM (" +
-                    "    SELECT " +
-                    "        paragraphId, " +
-                    "        content, " +
-                    "        -- 1. 计算纯段落的绝对位置（从 0 开始）\n" +
-                    "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
-                    "        -- 2. 统计当前段落前的日期分隔符数量\n" +
-                    "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= d.diaryDate) AS date_separator_count" +
-                    "    FROM paragraphs " +
-                    "    INNER JOIN diaries d ON parentDiaryId = d.diaryId" +
-                    ") " +
-                    "WHERE (:useContentFilter = 0 OR (content LIKE '%' || :keyword || '%' ESCAPE '/')) " +
-                    "  AND (:useEmotionFilter = 0 OR paragraphId IN (" +
-                    "      SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (:emotionIds)" +
-                    "  )) " +
-                    "  AND (:useMediaFilter = 0 OR paragraphId IN (" +
-                    "      SELECT parentParagraphId FROM medias" +
-                    "  ))"
-    )
-    Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
-            String keyword,
-            List<Long> emotionIds,
-            int useContentFilter,
-            int useEmotionFilter,
-            int useMediaFilter
-    );
+    @RawQuery(observedEntities = {ParagraphEntity.class, DiaryEntity.class})
+    Flowable<List<Integer>> getSearchMatchedParagraphPositionsRaw(SupportSQLiteQuery query);
 
     /**
      * 通过日记 ID 获取段落

@@ -47,16 +47,16 @@ public class ParagraphTextConverter {
     /**
      * 将段落文本立体化
      *
-     * @param context            上下文
-     * @param highlightedKeyword 高亮文本
-     * @param raw                扁平化后的段落文本
+     * @param context             上下文
+     * @param highlightedKeywords 高亮文本
+     * @param raw                 扁平化后的段落文本
      * @return 立体化后的富文本，能够直接显示在{@link MaterialTextView}和{@link TextInputEditText}中
      */
     @NonNull
-    public static CharSequence hierarchic(Context context, @Nullable String highlightedKeyword, String raw, RoleRefTextRule rule) {
+    public static CharSequence hierarchic(Context context, @Nullable String[] highlightedKeywords, String raw, RoleRefTextRule rule) {
         return TextHelper.hierarchicFromString(
                 context,
-                highlightedKeyword,
+                highlightedKeywords,
                 raw,
                 rule
         );

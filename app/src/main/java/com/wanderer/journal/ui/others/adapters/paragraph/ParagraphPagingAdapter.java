@@ -48,7 +48,7 @@ import java.util.Locale;
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
-    private String currentKeyword = "";                                 //当前高亮的搜索关键词
+    private String[] currentKeywords = null;                             //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
     private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
     private boolean isSelectMode = false;                               //是否是选择模式
@@ -381,7 +381,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            CharSequence richText = TextHelper.hierarchicFromString(context, currentKeyword, rawContent, new RoleRefTextRule() {
+            CharSequence richText = TextHelper.hierarchicFromString(context, currentKeywords, rawContent, new RoleRefTextRule() {
                 @Override
                 public void onClick(String clickData) {
                     try {
@@ -553,9 +553,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * @param keyword      高亮关键词
      * @param positionList 有符合关键词的视图的下标
      */
-    public void setHighlightTarget(String keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(String[] keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
         //修改搜索元素数据
-        this.currentKeyword = keyword;
+        this.currentKeywords = keyword;
         this.filterEmotionIdList.clear();
         this.filterEmotionIdList.addAll(filterEmotionIdList);
 
@@ -579,7 +579,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * 清除高亮
      */
     public void clearHighlight() {
-        this.currentKeyword = "";
+        this.currentKeywords = null;
         this.filterEmotionIdList.clear();
         for (int position : positionList) {
             notifyItemChanged(position);

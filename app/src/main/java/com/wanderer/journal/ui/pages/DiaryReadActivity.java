@@ -155,7 +155,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     checkedEmotionTagIdList.remove(emotionTag.getEmotionId());
 
                     //执行搜索逻辑或退出搜搜模式
-                    String searchKeyword = (String) binding.contentSearchBar.getText();
+                    String searchKeyword = String.valueOf(binding.contentSearchBar.getText());
                     if (searchKeyword.isEmpty() && checkedEmotionTagIdList.isEmpty()) {
                         setSearchMode(false);   //退出搜索模式
                     } else {
@@ -385,7 +385,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
         bottomSheet.setOnDismissListener(() -> {
             refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
-            String keyword = (String) binding.contentSearchBar.getText();
+            String keyword = String.valueOf(binding.contentSearchBar.getText());
             executeSearch(keyword);
         });
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
@@ -760,22 +760,26 @@ public class DiaryReadActivity extends AppCompatActivity {
      *
      * @param keyword 搜索关键词
      */
-    private void executeSearch(@Nullable String keyword) {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-
+    private void executeSearch(@NonNull String keyword) {
+        //每次搜索前先清除之前的搜索订阅
         if (searchDisposable != null) {
             disposable.remove(searchDisposable);
             searchDisposable = null;
         }
 
-        disposable.add((searchDisposable = viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
+        //拆分输入的字符串
+        String[] words = keyword.split("\\s+"); // 按空格拆分
+
+        //开始搜索
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        disposable.add((searchDisposable = viewModel.executeSearch(words, checkedEmotionTagIdList, filterMedia, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         positionList -> {
                             if (!positionList.isEmpty()) {
-                                adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
+                                adapter.setHighlightTarget(words, checkedEmotionTagIdList, positionList);
                             } else {
                                 adapter.clearHighlight();
                             }
