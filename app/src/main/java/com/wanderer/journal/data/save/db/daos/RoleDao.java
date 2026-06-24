@@ -122,6 +122,15 @@ public interface RoleDao {
     String getRoleNameById(long roleId);
 
     /**
+     * 获取同名橘色数量
+     *
+     * @param name 角色名称
+     * @return 同名角色的数量
+     */
+    @Query("SELECT COUNT(*) FROM roles WHERE name = :name")
+    Single<Integer> getRoleCountWithSameNameSingle(String name);
+
+    /**
      * 更新角色事务
      *
      * @param role     修改后的角色（主键不能为0）

@@ -147,8 +147,8 @@ public class EmotionTagInputActivity extends AppCompatActivity {
      */
     private void onConfirm() {
         //获取输入内容
-        String name = String.valueOf(binding.nameInput.getText());
-        String description = String.valueOf(binding.descriptionInput.getText());
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String description = String.valueOf(binding.descriptionInput.getText()).trim();
 
         //实例化情绪标签并获取Dao接口
         EmotionTagEntity emotionTag = new EmotionTagEntity(name, description, emotionType.ordinal());

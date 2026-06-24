@@ -10,6 +10,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
@@ -25,6 +26,7 @@ import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -191,9 +193,9 @@ public class RoleInputActivity extends AppCompatActivity {
      */
     private void onConfirm() {
         //获取输入内容
-        String name = String.valueOf(binding.nameInput.getText());
-        String identity = String.valueOf(binding.identityInput.getText());
-        String impression = String.valueOf(binding.impressionInput.getText());
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String identity = String.valueOf(binding.identityInput.getText()).trim();
+        String impression = String.valueOf(binding.impressionInput.getText()).trim();
         int relationship = this.relationship.ordinal();
         List<String> aliaList;
         if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
@@ -207,18 +209,54 @@ public class RoleInputActivity extends AppCompatActivity {
         RoleEntity role = new RoleEntity(name, identity, impression, relationship);
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         if (initBundle == null) {
-            disposable.add(RoleService.addRole(db, role, aliaList)
+            disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
-                            () -> {
-                                Toast.makeText(this, "角色新建成功", Toast.LENGTH_SHORT).show();
-                                finish();
+                            count -> {
+                                if (count != 0) {
+                                    String message = String.format(
+                                            Locale.getDefault(),
+                                            "已有%d个同名角色，确认要添加吗？",
+                                            count
+                                    );
+                                    new MaterialAlertDialogBuilder(this)
+                                            .setTitle("角色同名警告")
+                                            .setMessage(message)
+                                            .setPositiveButton("确认", (dialogInterface, i) ->
+                                                    disposable.add(RoleService.addRole(db, role, aliaList)
+                                                            .observeOn(AndroidSchedulers.mainThread())
+                                                            .subscribeOn(Schedulers.io())
+                                                            .subscribe(
+                                                                    () -> {
+                                                                        Toast.makeText(this, "角色新建成功", Toast.LENGTH_SHORT).show();
+                                                                        finish();
+                                                                    },
+                                                                    e -> ExceptionHelper.showExceptionDialog(this, e)
+                                                            )
+                                                    ))
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                } else {
+                                    //添加角色
+                                    disposable.add(RoleService.addRole(db, role, aliaList)
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribeOn(Schedulers.io())
+                                            .subscribe(
+                                                    () -> {
+                                                        Toast.makeText(this, "角色新建成功", Toast.LENGTH_SHORT).show();
+                                                        finish();
+                                                    },
+                                                    e -> ExceptionHelper.showExceptionDialog(this, e)
+                                            )
+                                    );
+                                }
                             },
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )
             );
         } else {
+            //修改角色
             role.setRoleId(initBundle.getLong(KeyStrings.ROLE_ID.getS()));
             disposable.add(RoleService.updateRole(db, role, aliaList)
                     .observeOn(AndroidSchedulers.mainThread())
