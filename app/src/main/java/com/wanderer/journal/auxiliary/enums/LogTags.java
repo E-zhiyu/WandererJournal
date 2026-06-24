@@ -1,11 +1,12 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum LogTags {
+    WANDERER_JOURNAL("WandererJournal"),
     DIARY_FRAGMENT("DiaryFragment"),
     WRITE_ACTIVITY("WriteActivity"),
     DIARY_READ_ACTIVITY("DiaryReadActivity"),
     SAF_HELPER("SAFHelper"),
-    LIFECYCLE_MANAGER("LifecycleManager"),
+    AUTH_ACTIVITY("AuthActivity"),
     BIOMETRIC_HELPER("BiometricHelper"),
     DATA_IO_HELPER("DataIOHelper"),
     FILE_HELPER("FileHelper"),

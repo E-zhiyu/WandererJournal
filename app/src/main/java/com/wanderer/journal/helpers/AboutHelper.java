@@ -11,8 +11,13 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.3.6\n" +
             "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 优化身份验证逻辑，现在会跳转到专门的身份验证界面\n" +
+            "\n" +
             "### BUG修复\n" +
             "\n" +
+            "- 修复启用后台隐藏后某些情况会误退出应用的BUG\n" +
             "- 修复启动身份验证后，从后台返回应用会意外退出的BUG\n" +
             "- 修复没有日记提醒时间仍会显示“提醒时间”标题的BUG\n" +
             "- 修复日记提醒功能关闭时删除提醒时间会更新日记提醒定时任务的BUG\n" +

@@ -24,7 +24,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
-import com.wanderer.journal.LifecycleManager;
+import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
@@ -255,7 +255,8 @@ public class PermissionHelper {
                     .setPositiveButton("去设置", (d, w) -> {
                         isProcessing = false;    //未直接调用processNextSpecial()，需要标记为未处理
 
-                        LifecycleManager.startExternalActivity(activity, type.getIntent(activity));
+                        WandererJournal.lockLifecycleObserver();
+                        activity.startActivity(type.getIntent(activity));
 
                         //如果是自启动权限，则下次不再提醒
                         if (request.permission == SpecialPermissionType.AUTO_START) {
