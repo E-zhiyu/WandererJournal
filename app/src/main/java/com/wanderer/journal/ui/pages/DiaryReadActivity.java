@@ -126,6 +126,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
+        binding.getRoot().postDelayed(this::initGuide, 250);
         observeLiveData();
         initBackHandlers();
     }
@@ -186,6 +187,18 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //搜索跳转组件布局
         ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
+    }
+
+    /**
+     * 初始化引导内容
+     */
+    private void initGuide() {
+        if (!TipPreference.getValue(this, TipPreference.KEY_READ_MULTI_SEARCH)) {
+            TipPreference.setValue(this, TipPreference.KEY_READ_MULTI_SEARCH, true);
+
+            TextPopupWindow window = new TextPopupWindow("用空格隔开多个关键词可以实现多词搜索", this);
+            window.show(binding.contentSearchBar, Gravity.BOTTOM);
+        }
     }
 
     /**
