@@ -690,6 +690,9 @@ public class WriteActivity extends AppCompatActivity {
 
             //滚动到底部
             if (isNotLoading && scrollPosition.get() != -1) {
+                //折叠标题栏
+                binding.appBarLayout.setExpanded(false);
+
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
                     AppearanceAnimationHelper.scrollPagingRecycler(
