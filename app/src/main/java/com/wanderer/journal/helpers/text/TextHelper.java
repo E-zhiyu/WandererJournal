@@ -65,7 +65,7 @@ public class TextHelper {
         }
 
         // 处理空字符串
-        String[] lines = text.split("\r\n|\n|\r", -1); // -1 保留尾部空字符串
+        String[] lines = text.split("\\s+", -1); // -1 保留尾部空字符串
 
         // 如果最后一个是空字符串且原字符串以换行结尾，不算作一行
         int count = lines.length;
