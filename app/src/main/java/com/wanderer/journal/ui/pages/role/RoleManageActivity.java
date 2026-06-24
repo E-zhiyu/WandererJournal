@@ -66,7 +66,7 @@ public class RoleManageActivity extends AppCompatActivity {
         initViews();
         initBackHandlers();
 
-        binding.getRoot().post(this::initGuide);    //显示提示
+        binding.getRoot().postDelayed(this::initGuide, 250);
     }
 
     @Override

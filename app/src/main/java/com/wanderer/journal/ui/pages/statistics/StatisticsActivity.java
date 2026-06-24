@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +24,14 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
+import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
 import java.time.LocalDate;
@@ -61,6 +64,7 @@ public class StatisticsActivity extends AppCompatActivity {
         });
 
         initViews();
+        binding.getRoot().postDelayed(this::initGuide, 250);
     }
 
     @Override
@@ -143,6 +147,19 @@ public class StatisticsActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+    }
+
+    /**
+     * 初始化用户引导
+     */
+    private void initGuide() {
+        //角色引用的方法
+        if (TipPreference.getValue(this, TipPreference.KEY_MEMERY_PIXEL_CHECK)) {
+            TipPreference.setValue(this, TipPreference.KEY_MEMERY_PIXEL_CHECK, true);
+
+            TextPopupWindow window = new TextPopupWindow("点击记忆像素可查看当天日记", this);
+            window.show(binding.memeryPixelRecycler, Gravity.BOTTOM);
+        }
     }
 
     /**

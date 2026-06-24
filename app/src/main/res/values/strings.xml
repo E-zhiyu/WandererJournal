@@ -131,7 +131,7 @@
     <string name="click_to_auth">点击屏幕进行身份验证</string>
 
     <string-array name="tips_array">
-        <item>长按添加日记按钮可以选择日期并跳转到对应日期的写日记界面。</item>
+        <item>长按添加日记按钮可以补写日记。</item>
         <item>长按某条搜索历史可以删除它。</item>
         <item>在数据统计界面点击记忆像素可以查看当天的日记信息。</item>
         <item>分享日记多选时可以长按并拖动实现快速框选。</item>

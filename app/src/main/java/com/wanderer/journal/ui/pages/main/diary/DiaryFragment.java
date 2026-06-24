@@ -25,12 +25,14 @@ import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
+import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.WriteActivity;
 
@@ -51,6 +53,12 @@ public class DiaryFragment extends Fragment {
         initViews();
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        binding.getRoot().post(this::initGuide);
     }
 
     @Override
@@ -154,6 +162,19 @@ public class DiaryFragment extends Fragment {
                         }
                 )
         );
+    }
+
+    /**
+     * 初始化用户引导
+     */
+    private void initGuide() {
+        //角色引用的方法
+        if (!TipPreference.getValue(requireContext(), TipPreference.KEY_WRITE_UP_DIARY)) {
+            TipPreference.setValue(requireContext(), TipPreference.KEY_WRITE_UP_DIARY, true);
+
+            TextPopupWindow window = new TextPopupWindow("长按可以补写日记", requireContext());
+            window.show(binding.addFab, Gravity.START);
+        }
     }
 
     /**

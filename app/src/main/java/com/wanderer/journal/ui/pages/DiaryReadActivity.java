@@ -48,6 +48,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
@@ -62,6 +63,7 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
@@ -254,7 +256,14 @@ public class DiaryReadActivity extends AppCompatActivity {
                         return true;
                     } else if (item.getItemId() == R.id.action_share) {
                         if (!adapter.getSelectMode()) {
-                            Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                            if (!TipPreference.getValue(this, TipPreference.KEY_SHARE_MULTI_CHOICE)) {
+                                TipPreference.setValue(this, TipPreference.KEY_SHARE_MULTI_CHOICE, true);
+
+                                TextPopupWindow window = new TextPopupWindow("长按拖动可以快速多选", this);
+                                window.show(binding.appBarLayout, Gravity.BOTTOM);
+                            }
+
+                            Toast.makeText(this, "选完再次点击即可分享", Toast.LENGTH_SHORT).show();
                             setShareSelectMode(true);
                         } else {
                             //判空
