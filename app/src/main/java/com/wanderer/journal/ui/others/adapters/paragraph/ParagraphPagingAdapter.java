@@ -34,7 +34,7 @@ import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.text.TextHelper;
+import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
@@ -48,7 +48,7 @@ import java.util.Locale;
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
-    private String[] currentKeywords = null;                             //当前高亮的搜索关键词
+    private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
     private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
     private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
     private boolean isSelectMode = false;                               //是否是选择模式
@@ -381,16 +381,21 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            CharSequence richText = TextHelper.hierarchicFromString(context, currentKeywords, rawContent, new RoleRefTextRule() {
-                @Override
-                public void onClick(String clickData) {
-                    try {
-                        long roleId = Long.parseLong(clickData);
-                        roleClickListener.onRoleClicked(roleId);
-                    } catch (NumberFormatException ignored) {
+            CharSequence richText = ParagraphTextConverter.hierarchic(
+                    context,
+                    highlightedKeywordList,
+                    rawContent,
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                            try {
+                                long roleId = Long.parseLong(clickData);
+                                roleClickListener.onRoleClicked(roleId);
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
                     }
-                }
-            });
+            );
             itemHolder.binding.contentText.setText(richText);
 
             //选择状态
@@ -550,12 +555,12 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 设置高亮
      *
-     * @param keyword      高亮关键词
+     * @param keywordList  高亮关键词列表
      * @param positionList 有符合关键词的视图的下标
      */
-    public void setHighlightTarget(String[] keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(List<String> keywordList, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
         //修改搜索元素数据
-        this.currentKeywords = keyword;
+        this.highlightedKeywordList = keywordList;
         this.filterEmotionIdList.clear();
         this.filterEmotionIdList.addAll(filterEmotionIdList);
 
@@ -579,7 +584,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * 清除高亮
      */
     public void clearHighlight() {
-        this.currentKeywords = null;
+        this.highlightedKeywordList = null;
         this.filterEmotionIdList.clear();
         for (int position : positionList) {
             notifyItemChanged(position);

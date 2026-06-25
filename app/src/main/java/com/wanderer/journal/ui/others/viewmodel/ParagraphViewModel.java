@@ -157,20 +157,22 @@ public class ParagraphViewModel extends ViewModel {
     /**
      * 执行搜索逻辑
      *
-     * @param keywords   符合 FTS4 语法的搜索字符串
+     * @param keywordList   搜索的关键词列表
      * @param emotionIdList 用户选择的情绪标签 ID
      * @param filterMedia   是否需要由媒体文件
      * @param db            数据库实例
+     * @param isAndMode     多词搜索模式是否为“与”模式
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(
-            @Nullable String[] keywords,
+            @Nullable List<String> keywordList,
             List<Long> emotionIdList,
             boolean filterMedia,
-            DiaryDatabase db
+            DiaryDatabase db,
+            boolean isAndMode
     ) {
         //判断是否没有过滤选项
-        if ((keywords == null || keywords.length == 0) &&
+        if ((keywordList == null || keywordList.isEmpty()) &&
                 (emotionIdList == null || emotionIdList.isEmpty()) &&
                 !filterMedia
         ) {
@@ -182,10 +184,11 @@ public class ParagraphViewModel extends ViewModel {
 
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
         return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
-                        keywords,
+                        keywordList,
                         emotionIdList,
                         filterMedia,
-                        db
+                        db,
+                        isAndMode
                 )
                 .doOnNext(positionList -> {
                     // 每次收到新数据时更新 UI 状态

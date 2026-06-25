@@ -26,6 +26,7 @@ import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 
 import org.jetbrains.annotations.Contract;
 
+import java.util.List;
 import java.util.regex.Matcher;
 
 public class TextHelper {
@@ -132,12 +133,12 @@ public class TextHelper {
      */
     @NonNull
     public static CharSequence renderHighLightedText(
-            String[] highlightedKeywords,
+            List<String> highlightedKeywords,
             CharSequence raw,
             Context context
     ) {
         if (raw == null || raw.length() == 0) return "";
-        if (highlightedKeywords == null || highlightedKeywords.length == 0) return raw;
+        if (highlightedKeywords == null || highlightedKeywords.isEmpty()) return raw;
 
         SpannableStringBuilder builder = new SpannableStringBuilder(raw);
         String rawStr = String.valueOf(raw);
@@ -150,7 +151,9 @@ public class TextHelper {
 
         //循环高亮文本
         for (String currentKeyWord : highlightedKeywords) {
-            int startIndex = rawStr.indexOf(currentKeyWord);
+            if (currentKeyWord.isEmpty()) continue;
+
+            int startIndex = rawStr.toLowerCase().indexOf(currentKeyWord.toLowerCase());    //转换为小写再匹配
             while (startIndex >= 0) {
                 int endIndex = startIndex + currentKeyWord.length();
                 // 设置文字颜色为橘红色
@@ -177,7 +180,7 @@ public class TextHelper {
      * @param value               文本块保存的数据
      */
     @NonNull
-    public static SpannableString createTextTag(Context context, String[] highlightedKeywords, String display, String key, String value) {
+    public static SpannableString createTextTag(Context context, List<String> highlightedKeywords, String display, String key, String value) {
         SpannableString spannable = new SpannableString(display);
 
         //贴纸元数据绑定
@@ -243,7 +246,7 @@ public class TextHelper {
      * @return 能够直接显示在{@link TextInputEditText}中的富文本，已将特定格式的文本转换为文本块
      */
     @NonNull
-    public static CharSequence hierarchicFromString(Context context, @Nullable String[] highlightedKeywords, String raw, RichTextRule... rules) {
+    public static CharSequence hierarchicFromString(Context context, @Nullable List<String> highlightedKeywords, String raw, RichTextRule... rules) {
         if (raw == null || raw.isEmpty() || rules == null || rules.length == 0)
             return raw == null ? "" : raw;
 

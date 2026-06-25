@@ -45,10 +45,10 @@ public class SearchHelper {
                 searchKey,
                 keyword -> {
                     searchView.hide();
-                    searchBar.setText(keyword);
+                    searchBar.setText(keyword.trim());
 
                     //执行搜索
-                    executer.executeSearch(keyword);
+                    executer.executeSearch(keyword.trim());
                 }
         );
         List<String> initList = SearchHistoryPreference.getHistory(
@@ -78,7 +78,7 @@ public class SearchHelper {
                 searchBar.setText(keyword.trim());
 
                 //触发搜索执行器
-                executer.executeSearch(keyword);
+                executer.executeSearch(keyword.trim());
 
                 //保存搜索历史
                 List<String> historyList = SearchHistoryPreference.addKeyword(

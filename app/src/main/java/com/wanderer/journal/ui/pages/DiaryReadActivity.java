@@ -76,9 +76,11 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -102,6 +104,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private boolean filterMedia = false;                                    //搜索时是否只显示带有媒体的段落
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
+    private boolean isAndMode = true;                                       //多词搜索是否为“与”模式
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,6 +190,17 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //搜索跳转组件布局
         ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
+
+        //多词搜索模式切换按钮
+        binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
+            isAndMode = !isAndMode;
+
+            if (isAndMode) {
+                binding.multiSearchModeSwitchBtn.setText("多词搜索模式：同时出现");
+            } else {
+                binding.multiSearchModeSwitchBtn.setText("多词搜索模式：出现任意一个");
+            }
+        });
     }
 
     /**
@@ -259,7 +273,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                         setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
                     } else {
                         executeSearch(keyword);
-                        binding.contentSearchBar.setText(keyword);
                     }
                 },
                 item -> {
@@ -782,17 +795,20 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //拆分输入的字符串
         String[] words = keyword.split("\\s+"); // 按空格拆分
+        List<String> validKeywordList = Arrays.stream(words)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
 
         //开始搜索
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
-        disposable.add((searchDisposable = viewModel.executeSearch(words, checkedEmotionTagIdList, filterMedia, db)
+        disposable.add((searchDisposable = viewModel.executeSearch(validKeywordList, checkedEmotionTagIdList, filterMedia, db, isAndMode)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         positionList -> {
                             if (!positionList.isEmpty()) {
-                                adapter.setHighlightTarget(words, checkedEmotionTagIdList, positionList);
+                                adapter.setHighlightTarget(validKeywordList, checkedEmotionTagIdList, positionList);
                             } else {
                                 adapter.clearHighlight();
                             }
