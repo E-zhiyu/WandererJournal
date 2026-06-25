@@ -480,7 +480,7 @@ public class DataManageActivity extends AppCompatActivity {
                 .flatMapCompletable(diaryId -> {
                     //生成段落实体列表
                     List<ParagraphEntity> paragraphEntityList = new ArrayList<>();
-                    String[] lines = content.split("\n");
+                    String[] lines = content.split("\\s+");
                     for (String line : lines) {
                         if (line.trim().isEmpty()) continue;
 
