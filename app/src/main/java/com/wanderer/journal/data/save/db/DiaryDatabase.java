@@ -33,7 +33,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
                 RoleEntity.class,
                 RoleAliaEntity.class
         },
-        version = 5
+        version = 6
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -61,7 +61,8 @@ public abstract class DiaryDatabase extends RoomDatabase {
                                     DatabaseMigrations.MIGRATION_1_2,
                                     DatabaseMigrations.MIGRATION_2_3,
                                     DatabaseMigrations.MIGRATION_3_4,
-                                    DatabaseMigrations.MIGRATION_4_5
+                                    DatabaseMigrations.MIGRATION_4_5,
+                                    DatabaseMigrations.MIGRATION_5_6
                             )
                             .build();
                 }
@@ -78,6 +79,8 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public abstract MediaDao mediaDao();
 
     public abstract EmotionTagDao emotionTagDao();
+
     public abstract RoleDao roleDao();
+
     public abstract DataBackupDao dataBackupDao();
 }

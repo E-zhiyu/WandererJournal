@@ -154,6 +154,7 @@ public class RoleManageActivity extends AppCompatActivity {
                     RoleEntity role = item.model.getRole();
                     long roleId = role.getRoleId();
                     String roleName = role.getName();
+                    String roleDisplayName = role.getDisplayName();
                     String identity = role.getIdentity();
                     String impression = role.getImpression();
                     int relationship = role.getRelationship();
@@ -165,6 +166,7 @@ public class RoleManageActivity extends AppCompatActivity {
                     Bundle bundle = new Bundle();
                     bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
                     bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
+                    bundle.putString(KeyStrings.ROLE_DISPLAY_NAME.getS(), roleDisplayName);
                     bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
                     bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
                     bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);

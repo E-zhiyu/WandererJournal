@@ -10,6 +10,7 @@ import androidx.room.PrimaryKey;
         indices = {
                 @Index(value = "roleId"),
                 @Index(value = "name"),
+                @Index(value = "displayName"),
                 @Index(value = "relationship"),
                 @Index(value = "identity"),
                 @Index(value = "impression")
@@ -19,13 +20,16 @@ public class RoleEntity {
     @PrimaryKey(autoGenerate = true)
     private long roleId;            //自增主键
     private String name;            //名称
+    @ColumnInfo(defaultValue = "")
+    private String displayName;     //显示名称
     private String identity;        //身份描述
     private String impression;      //印象描述
     @ColumnInfo(defaultValue = "2")
     private int relationship;       //关系程度
 
-    public RoleEntity(String name, String identity, String impression, int relationship) {
+    public RoleEntity(String name, String displayName, String identity, String impression, int relationship) {
         this.name = name;
+        this.displayName = displayName;
         this.identity = identity;
         this.impression = impression;
         this.relationship = relationship;
@@ -45,6 +49,14 @@ public class RoleEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getIdentity() {

@@ -94,6 +94,22 @@ public class RoleInputActivity extends AppCompatActivity {
                 String input = String.valueOf(binding.nameInput.getText());
                 if (input.isEmpty()) {
                     binding.nameLayout.setError("名称不能为空");
+                } else if (input.contains("[") || input.contains("]")) {
+                    binding.nameLayout.setError("名称不能包含英文中括号");
+                }
+            }
+        });
+
+        //显示名称
+        String initDisplayName = initBundle != null ? initBundle.getString(KeyStrings.ROLE_DISPLAY_NAME.getS()) : "";
+        binding.displayNameInput.setText(initDisplayName);
+        binding.displayNameInput.setOnFocusChangeListener((view, b) -> {
+            if (b) {
+                binding.nameLayout.setError(null);
+            } else {
+                String input = String.valueOf(binding.nameInput.getText());
+                if (input.contains("[") || input.contains("]")) {
+                    binding.nameLayout.setError("名称不能包含英文中括号");
                 }
             }
         });
@@ -180,7 +196,8 @@ public class RoleInputActivity extends AppCompatActivity {
     private String verifyInput() {
         String err = null;
 
-        String name = String.valueOf(binding.nameInput.getText());
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String displayName = String.valueOf(binding.displayNameInput.getText()).trim();
 
         if (name.isEmpty()) {
             err = "名称不能为空";
@@ -188,6 +205,9 @@ public class RoleInputActivity extends AppCompatActivity {
         } else if (name.contains("[") || name.contains("]")) {
             err = "名称不能包含英文中括号";
             binding.nameInput.setError(err);
+        } else if (displayName.contains("[") || displayName.contains("]")) {
+            err = "显示名称不能包含英文中括号";
+            binding.displayNameLayout.setError(err);
         }
 
         return err;
@@ -199,6 +219,7 @@ public class RoleInputActivity extends AppCompatActivity {
     private void onConfirm() {
         //获取输入内容
         String name = String.valueOf(binding.nameInput.getText()).trim();
+        String displayName = String.valueOf(binding.displayNameInput.getText()).trim();
         String identity = String.valueOf(binding.identityInput.getText()).trim();
         String impression = String.valueOf(binding.impressionInput.getText()).trim();
         int relationship = this.relationship.ordinal();
@@ -211,7 +232,7 @@ public class RoleInputActivity extends AppCompatActivity {
         }
 
         //插入数据
-        RoleEntity role = new RoleEntity(name, identity, impression, relationship);
+        RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         if (initBundle == null) {
             disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name)
