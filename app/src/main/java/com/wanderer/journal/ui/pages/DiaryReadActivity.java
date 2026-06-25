@@ -196,9 +196,9 @@ public class DiaryReadActivity extends AppCompatActivity {
             isAndMode = !isAndMode;
 
             if (isAndMode) {
-                binding.multiSearchModeSwitchBtn.setText("多词搜索模式：同时出现");
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
             } else {
-                binding.multiSearchModeSwitchBtn.setText("多词搜索模式：出现任意一个");
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_or);
             }
         });
     }

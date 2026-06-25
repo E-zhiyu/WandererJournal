@@ -180,7 +180,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="5dp"
-                android:text="多词搜索模式：同时出现" />
+                android:text="@string/multi_word_search_and" />
         </LinearLayout>
     </com.google.android.material.search.SearchView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
