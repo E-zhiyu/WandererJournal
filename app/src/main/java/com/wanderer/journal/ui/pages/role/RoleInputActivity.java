@@ -180,9 +180,14 @@ public class RoleInputActivity extends AppCompatActivity {
     private String verifyInput() {
         String err = null;
 
-        if (String.valueOf(binding.nameInput.getText()).isEmpty()) {
+        String name = String.valueOf(binding.nameInput.getText());
+
+        if (name.isEmpty()) {
             err = "名称不能为空";
             binding.nameLayout.setError(err);
+        } else if (name.contains("[") || name.contains("]")) {
+            err = "名称不能包含英文中括号";
+            binding.nameInput.setError(err);
         }
 
         return err;
