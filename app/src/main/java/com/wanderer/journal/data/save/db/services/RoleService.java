@@ -94,7 +94,6 @@ public class RoleService {
     /**
      * 更新角色
      *
-     * @param db       数据库实例
      * @param role     新角色
      * @param aliaList 角色别名列表
      * @return 是否完成
@@ -102,7 +101,7 @@ public class RoleService {
     public static Completable updateRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
         RoleDao roleDao = db.roleDao();
         return Completable.defer(() -> {
-            roleDao.updateRole(role, aliaList);
+            roleDao.updateRoleAndAlia(role, aliaList);
             return Completable.complete();
         });
     }

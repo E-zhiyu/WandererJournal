@@ -13,10 +13,12 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
+import com.wanderer.journal.data.save.preference.DraftPreference;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
@@ -233,8 +235,9 @@ public class RoleInputActivity extends AppCompatActivity {
 
         //插入数据
         RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
+        role.setRoleId(initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));   //设置传递过来的角色 ID
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name)
+        disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -285,12 +288,23 @@ public class RoleInputActivity extends AppCompatActivity {
             );
         } else {
             //修改角色
-            role.setRoleId(initBundle.getLong(KeyStrings.ROLE_ID.getS()));
             disposable.add(RoleService.updateRole(db, role, aliaList)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                             () -> {
+                                //更新草稿中的引用文本
+                                String replaceRegex = RichTextRegex.ROLE_REF.getRegexStr();
+                                String draft = DraftPreference.getDraft(this);
+                                String replacement = String.format(
+                                        Locale.getDefault(),
+                                        "[role_ref:@%s](%d)",
+                                        role.getDisplayName().isEmpty() ? role.getName() : role.getDisplayName(),
+                                        role.getRoleId()
+                                );
+                                String replacedDraft = draft.replaceAll(replaceRegex, replacement);
+                                DraftPreference.setDraft(this, replacedDraft);
+
                                 Toast.makeText(this, "角色修改成功", Toast.LENGTH_SHORT).show();
                                 finish();
                             },

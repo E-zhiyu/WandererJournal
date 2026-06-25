@@ -22,6 +22,7 @@ import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.util.List;
+import java.util.Locale;
 
 public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -49,6 +50,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                 RoleEntityModel oldModel = ((RoleUiModel.Item) oldItem).model;
                 RoleEntityModel newModel = ((RoleUiModel.Item) newItem).model;
                 return oldModel.getRole().getName().equals(newModel.getRole().getName()) &&
+                        oldModel.getRole().getDisplayName().equals(newModel.getRole().getDisplayName()) &&
                         oldModel.getRoleAliaList().equals(newModel.getRoleAliaList()) &&
                         oldModel.getRole().getIdentity().equals(newModel.getRole().getIdentity());
             } else
@@ -197,9 +199,19 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             RoleUiModel.Item itemModel = (RoleUiModel.Item) model;
             RoleViewHolder itemHolder = (RoleViewHolder) holder;
 
-            //名称
+            //显示名称 + 名称
             String name = itemModel.model.getRole().getName();
-            itemHolder.binding.nameText.setText(name);
+            String displayName = itemModel.model.getRole().getDisplayName();
+            if (displayName == null || displayName.isEmpty()) {
+                itemHolder.binding.nameText.setText(name);
+            } else {
+                String finalDisplay = String.format(
+                        Locale.getDefault(),
+                        "%s (%s)",
+                        displayName, name
+                );
+                itemHolder.binding.nameText.setText(finalDisplay);
+            }
 
             //别名
             StringBuilder aliasBuilder = new StringBuilder();

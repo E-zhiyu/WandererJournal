@@ -104,31 +104,32 @@ public interface RoleDao {
     /**
      * 更新段落中引用的角色的名称
      *
-     * @param oldName 旧名称
-     * @param newName 新名称
-     * @param roleId  角色 ID
+     * @param oldRefName 旧名称
+     * @param newRefName 新名称
+     * @param roleId     角色 ID
      */
-    @Query("UPDATE paragraphs SET content = REPLACE(content, '[role_ref:@' || :oldName || '](' || :roleId || ')', '[role_ref:@' || :newName || '](' || :roleId || ')') " +
-            "WHERE content LIKE '%[role_ref:@' || :oldName || '](' || :roleId || ')%'")
-    void renameInParagraph(String oldName, String newName, long roleId);
+    @Query("UPDATE paragraphs SET content = REPLACE(content, '[role_ref:@' || :oldRefName || '](' || :roleId || ')', '[role_ref:@' || :newRefName || '](' || :roleId || ')') " +
+            "WHERE content LIKE '%[role_ref:@' || :oldRefName || '](' || :roleId || ')%'")
+    void renameInParagraph(String oldRefName, String newRefName, long roleId);
 
     /**
-     * 通过角色 ID 获取角色名称
+     * 通过角色 ID 获取角色数据
      *
      * @param roleId 角色 ID
-     * @return 该 ID 对应的角色名称
+     * @return 该 ID 对应的角色数据
      */
-    @Query("SELECT name FROM roles WHERE roleId = :roleId")
-    String getRoleNameById(long roleId);
+    @Query("SELECT * FROM roles WHERE roleId = :roleId")
+    RoleEntity getRoleById(long roleId);
 
     /**
      * 获取同名橘色数量
      *
-     * @param name 角色名称
+     * @param name   角色名称
+     * @param roleId 角色编号，用于排除自身
      * @return 同名角色的数量
      */
-    @Query("SELECT COUNT(*) FROM roles WHERE name = :name")
-    Single<Integer> getRoleCountWithSameNameSingle(String name);
+    @Query("SELECT COUNT(*) FROM roles WHERE name = :name AND roleId != :roleId")
+    Single<Integer> getRoleCountWithSameNameSingle(String name, long roleId);
 
     /**
      * 更新角色事务
@@ -137,12 +138,14 @@ public interface RoleDao {
      * @param aliaList 角色别名列表
      */
     @Transaction
-    default void updateRole(@NonNull RoleEntity role, List<String> aliaList) {
+    default void updateRoleAndAlia(@NonNull RoleEntity role, List<String> aliaList) {
         long roleId = role.getRoleId();
         if (roleId == 0) throw new SQLiteException("角色主键无效，无法更新");
 
         //获取角色的旧数据
-        String oldName = getRoleNameById(roleId);
+        RoleEntity oldRole = getRoleById(roleId);
+        String oldName = oldRole.getName();
+        String oldDisplayName = oldRole.getDisplayName();
 
         //更新角色
         updateRole(role);
@@ -156,9 +159,11 @@ public interface RoleDao {
                 .collect(Collectors.toList());
         insertRoleAlias(aliaEntityList);
 
-        //更新角色引用文本（仅新旧名称不一致时）
-        if (!oldName.equals(role.getName())) {
-            renameInParagraph(oldName, role.getName(), roleId);
+        //更新角色引用文本（引用文本变化时）
+        String oldRefName = oldDisplayName.isEmpty() ? oldName : oldDisplayName;
+        String newRefName = role.getDisplayName().isEmpty() ? role.getName() : role.getDisplayName();
+        if (!oldRefName.equals(newRefName)) {
+            renameInParagraph(oldRefName, newRefName, roleId);
         }
     }
 

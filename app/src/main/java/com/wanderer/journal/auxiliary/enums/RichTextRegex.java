@@ -18,6 +18,10 @@ public enum RichTextRegex {
         this.minLength = minLength;
     }
 
+    public String getRegexStr() {
+        return regexStr;
+    }
+
     /**
      * 获取正则表达式对象
      *

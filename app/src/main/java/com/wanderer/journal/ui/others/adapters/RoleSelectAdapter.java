@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
+import java.util.Locale;
+
 public class RoleSelectAdapter extends ListAdapter<RoleEntity, RoleSelectAdapter.RoleSelectViewHolder> {
     private final static DiffUtil.ItemCallback<RoleEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -20,7 +22,8 @@ public class RoleSelectAdapter extends ListAdapter<RoleEntity, RoleSelectAdapter
 
         @Override
         public boolean areContentsTheSame(@NonNull RoleEntity oldItem, @NonNull RoleEntity newItem) {
-            return oldItem.getName().equals(newItem.getName());
+            return oldItem.getName().equals(newItem.getName()) &&
+                    oldItem.getDisplayName().equals(newItem.getDisplayName());
         }
     };
     private final OnClickListener clickListener;    //点击监听
@@ -71,6 +74,17 @@ public class RoleSelectAdapter extends ListAdapter<RoleEntity, RoleSelectAdapter
     @Override
     public void onBindViewHolder(@NonNull RoleSelectViewHolder holder, int position) {
         RoleEntity role = getItem(position);
-        holder.binding.chip.setText(role.getName());
+        String name = role.getName();
+        String displayName = role.getDisplayName();
+        if (displayName.isEmpty()) {
+            holder.binding.chip.setText(role.getName());
+        } else {
+            String finalDisplay = String.format(
+                    Locale.getDefault(),
+                    "%s (%s)",
+                    displayName, name
+            );
+            holder.binding.chip.setText(finalDisplay);
+        }
     }
 }

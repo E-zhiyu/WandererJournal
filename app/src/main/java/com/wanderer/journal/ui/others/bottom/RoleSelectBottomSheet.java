@@ -66,8 +66,9 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         RoleSelectAdapter adapter = new RoleSelectAdapter(
                 role -> {
                     String roleName = role.getName();
+                    String roleDisplayName = role.getDisplayName();
                     long roleId = role.getRoleId();
-                    selectListener.onSelected(roleName, roleId);
+                    selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
                     dismiss();
                 }
         );
