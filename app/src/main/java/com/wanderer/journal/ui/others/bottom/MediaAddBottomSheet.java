@@ -11,7 +11,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.wanderer.journal.databinding.BottomSheetPictureAddOptionBinding;
+import com.wanderer.journal.databinding.BottomSheetMediaAddOptionBinding;
 
 public class MediaAddBottomSheet extends BaseBottomSheetDialogFragment {
     private final TakePictureListener takePictureListener;
@@ -35,7 +35,7 @@ public class MediaAddBottomSheet extends BaseBottomSheetDialogFragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        BottomSheetPictureAddOptionBinding binding = BottomSheetPictureAddOptionBinding.inflate(inflater, container, false);
+        BottomSheetMediaAddOptionBinding binding = BottomSheetMediaAddOptionBinding.inflate(inflater, container, false);
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(0, 0, 0, systemBars.bottom);
