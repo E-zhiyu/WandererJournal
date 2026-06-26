@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
@@ -65,6 +66,24 @@ public interface RoleDao {
      */
     @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount LIMIT 7")
     Flowable<List<RoleEntity>> getCommonRoleFlowable();
+
+    /**
+     * 将角色使用次数加一
+     *
+     * @param roleId 需要增加使用次数的角色 ID
+     * @return 是否完成
+     */
+    @Query("UPDATE roles SET useCount = useCount + 1 WHERE roleId = :roleId")
+    Completable addRoleUseCount(long roleId);
+
+    /**
+     * 清空某个角色的使用次数
+     *
+     * @param roleId 需要清空使用次数的角色 ID
+     * @return 是否完成
+     */
+    @Query("UPDATE roles SET useCount = 0 WHERE roleId = :roleId")
+    Completable clearRoleUseCount(long roleId);
 
     /**
      * 通过角色 ID 获取角色数据

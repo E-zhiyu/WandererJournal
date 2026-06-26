@@ -27,13 +27,20 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
         }
     };
     private final OnClickListener clickListener;    //点击监听
+    private final OnLongClickListener longClickListener;    //长按监听
 
     public interface ViewHolderListener {
         void onClick(int position);
+
+        void onLongClick(int position);
     }
 
     public interface OnClickListener {
         void onClick(RoleEntity role);
+    }
+
+    public interface OnLongClickListener {
+        void onLongClick(RoleEntity role);
     }
 
     public static class RoleSelectViewHolder extends RecyclerView.ViewHolder {
@@ -45,13 +52,21 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
 
             binding.chip.setCheckable(false);
 
+            //设置点击监听
             binding.chip.setOnClickListener(view -> listener.onClick(getBindingAdapterPosition()));
+
+            //设置长按监听
+            binding.chip.setOnLongClickListener(view -> {
+                listener.onLongClick(getBindingAdapterPosition());
+                return true;
+            });
         }
     }
 
-    public CommonRoleSelectAdapter(OnClickListener clickListener) {
+    public CommonRoleSelectAdapter(OnClickListener clickListener, OnLongClickListener longClickListener) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
     }
 
     @NonNull
@@ -64,9 +79,18 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
         );
         return new RoleSelectViewHolder(
                 binding,
-                position -> {
-                    RoleEntity role = getItem(position);
-                    clickListener.onClick(role);
+                new ViewHolderListener() {
+                    @Override
+                    public void onClick(int position) {
+                        RoleEntity role = getItem(position);
+                        clickListener.onClick(role);
+                    }
+
+                    @Override
+                    public void onLongClick(int position) {
+                        RoleEntity role = getItem(position);
+                        longClickListener.onLongClick(role);
+                    }
                 }
         );
     }

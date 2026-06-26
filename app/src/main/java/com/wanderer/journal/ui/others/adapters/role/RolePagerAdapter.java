@@ -31,14 +31,14 @@ public class RolePagerAdapter extends FragmentStateAdapter {
     /**
      * 当数据库发射新数据时，调用此方法更新适配器内部的数据源
      */
-    public void updateCategories(@NonNull Map<Integer, List<RoleEntity>> newCategories) {
+    public void updateData(@NonNull Map<Integer, List<RoleEntity>> newData) {
         int oldCount = idList.size();
         idList.clear();
         dataList.clear();
         notifyItemRangeRemoved(0, oldCount);
 
-        idList.addAll(newCategories.keySet());
-        dataList.addAll(newCategories.values());
+        idList.addAll(newData.keySet());
+        dataList.addAll(newData.values());
         // 通知 ViewPager2 整体结构发生了改变
         notifyItemRangeInserted(0, idList.size());
     }

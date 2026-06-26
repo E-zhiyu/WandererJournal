@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.others.bottom.role;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,11 +17,13 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.BottomSheetRoleSelectBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
 import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
+import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,9 +77,9 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
             if (bottomSheet != null) {
                 BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(bottomSheet);
 
-                // 2. 强行把底座的高度设置为固定值（比如屏幕高度的 70%）
+                // 2. 强行把底座的高度设置为固定值，防止 ViewPager2 高度不同而突变
                 int screenHeight = getResources().getDisplayMetrics().heightPixels;
-                int desiredHeight = (int) (screenHeight * 0.7); // 70% 屏幕高
+                int desiredHeight = (int) (screenHeight * 0.75); // 70% 屏幕高
 
                 ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
                 layoutParams.height = desiredHeight;
@@ -122,7 +125,29 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                     String roleDisplayName = role.getDisplayName();
                     long roleId = role.getRoleId();
                     selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
-                    dismiss();
+
+                    //添加角色使用次数
+                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+                    disposable.add(db.roleDao().addRoleUseCount(roleId)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    this::dismiss,
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                            )
+                    );
+                },
+                role -> {
+                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+                    disposable.add(db.roleDao().clearRoleUseCount(role.getRoleId())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> {
+                                    },
+                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                            )
+                    );
                 }
         );
         binding.commonRoleRecycler.setAdapter(commonRoleAdapter);
@@ -142,6 +167,13 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                             } else {
                                 binding.commonRoleRecycler.setVisibility(View.VISIBLE);
                                 binding.commonRoleTitle.setVisibility(View.VISIBLE);
+
+                                if (!TipPreference.getValue(requireContext(), TipPreference.KEY_CLEAR_ROLE_USE_COUNT)) {
+                                    TipPreference.setValue(requireContext(), TipPreference.KEY_CLEAR_ROLE_USE_COUNT, true);
+
+                                    TextPopupWindow window = new TextPopupWindow("长按可以移除常用角色", requireContext());
+                                    window.show(binding.commonRoleTitle, Gravity.END);
+                                }
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
@@ -159,7 +191,17 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
             String roleDisplayName = role.getDisplayName();
             long roleId = role.getRoleId();
             selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
-            dismiss();
+
+            //添加角色使用次数
+            DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+            disposable.add(db.roleDao().addRoleUseCount(roleId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            this::dismiss,
+                            e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                    )
+            );
         });
         binding.groupPager.setAdapter(pagerAdapter);
         binding.groupPager.setOffscreenPageLimit(2);
@@ -193,15 +235,13 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                             if (tabLayoutMediator != null) {
                                 tabLayoutMediator.detach();
                             }
-                            pagerAdapter.updateCategories(groupedRoleMap);
+                            pagerAdapter.updateData(groupedRoleMap);
                             tabLayoutMediator = new TabLayoutMediator(
                                     binding.roleGroupTabLayout,
                                     binding.groupPager,
                                     (tab, position) -> tab.setText(groupTitleList.get(position))
                             );
                             tabLayoutMediator.attach();
-
-                            //刷新 Fragment 中的数据
                         },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
