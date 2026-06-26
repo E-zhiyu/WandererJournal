@@ -1,13 +1,17 @@
 package com.wanderer.journal.ui.others.bottom.role;
 
+import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -58,6 +62,34 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         initViews();
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Dialog dialog = getDialog();
+        if (dialog instanceof BottomSheetDialog) {
+            // 1. 捞出系统的底座容器
+            FrameLayout bottomSheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(bottomSheet);
+
+                // 2. 强行把底座的高度设置为固定值（比如屏幕高度的 70%）
+                int screenHeight = getResources().getDisplayMetrics().heightPixels;
+                int desiredHeight = (int) (screenHeight * 0.7); // 70% 屏幕高
+
+                ViewGroup.LayoutParams layoutParams = bottomSheet.getLayoutParams();
+                layoutParams.height = desiredHeight;
+                bottomSheet.setLayoutParams(layoutParams);
+
+                // 3. 配置展开状态：一探头就直接进入完全展开状态，不给它留半折腾的空间
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true); // 往下滑直接关闭，不允许停留在半高状态
+
+                // 4. 设置默认的起跳高度，防止高度坍塌
+                behavior.setPeekHeight(desiredHeight);
+            }
+        }
     }
 
     @Override
@@ -130,6 +162,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
             dismiss();
         });
         binding.groupPager.setAdapter(pagerAdapter);
+        binding.groupPager.setOffscreenPageLimit(2);
 
         //绑定数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
