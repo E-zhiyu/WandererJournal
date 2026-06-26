@@ -14,11 +14,10 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.databinding.BottomSheetRoleSelectBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
 import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
+import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +31,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetRoleSelectBinding binding;       //绑定的 XML 布局
     private final OnRoleSelectListener selectListener;  //角色选择回调
     private final CompositeDisposable disposable = new CompositeDisposable();
+    private TabLayoutMediator tabLayoutMediator;
 
     /**
      * @param selectListener 角色选择回调
@@ -121,32 +121,15 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
      * 初始化角色分组
      */
     private void initRoleGroup() {
-        //分组 Fragment
-        List<RoleGroupFragment> fragmentList = new ArrayList<>(RoleRelationship.values().length + 1);
-        for (int i = 0; i < RoleRelationship.values().length + 1; i++) {
-            fragmentList.add(new RoleGroupFragment(role -> {
-                String roleName = role.getName();
-                String roleDisplayName = role.getDisplayName();
-                long roleId = role.getRoleId();
-                selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
-                dismiss();
-            }));
-        }
-        FragmentPagerAdapter pagerAdapter = new FragmentPagerAdapter(requireActivity(), fragmentList);
+        // ViewPager2 翻页器
+        RolePagerAdapter pagerAdapter = new RolePagerAdapter(getParentFragmentManager(), getLifecycle(), role -> {
+            String roleName = role.getName();
+            String roleDisplayName = role.getDisplayName();
+            long roleId = role.getRoleId();
+            selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
+            dismiss();
+        });
         binding.groupPager.setAdapter(pagerAdapter);
-
-        //Tab栏
-        new TabLayoutMediator(
-                binding.roleGroupTabLayout,
-                binding.groupPager,
-                (tab, i) -> {
-                    if (i != 0) {
-                        tab.setText(RoleRelationship.values()[i - 1].getTitle());
-                    } else {
-                        tab.setText("全部");
-                    }
-                }
-        ).attach();
 
         //绑定数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
@@ -156,20 +139,36 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 .subscribe(
                         roleList -> {
                             //将角色根据关系程度分组
-                            Map<Integer, List<RoleEntity>> groupedRoleMap = roleList.stream()
-                                    .collect(Collectors.groupingBy(
-                                            RoleEntity::getRelationship,
-                                            LinkedHashMap::new,
-                                            Collectors.toList()
-                                    ));
+                            Map<Integer, List<RoleEntity>> groupedRoleMap = new LinkedHashMap<>();
+                            groupedRoleMap.put(-1, roleList);
+                            groupedRoleMap.putAll(roleList.stream().collect(Collectors.groupingBy(
+                                    RoleEntity::getRelationship,
+                                    LinkedHashMap::new,
+                                    Collectors.toList()
+                            )));
+                            List<String> groupTitleList = groupedRoleMap.keySet().stream()
+                                    .map(key -> {
+                                        if (key == -1) {
+                                            return "全部";
+                                        } else {
+                                            return RoleRelationship.values()[key].getTitle();
+                                        }
+                                    })
+                                    .collect(Collectors.toList());
 
-                            //添加到对应的 Fragment 中
-                            fragmentList.get(0).submitRoleList(roleList);   //全部分组
-                            int i = 1;
-                            for (Map.Entry<Integer, List<RoleEntity>> entry : groupedRoleMap.entrySet()) {
-                                fragmentList.get(i).submitRoleList(entry.getValue());
-                                i++;
+                            //更新 ViewPager2 和 TabLayout
+                            if (tabLayoutMediator != null) {
+                                tabLayoutMediator.detach();
                             }
+                            pagerAdapter.updateCategories(groupedRoleMap);
+                            tabLayoutMediator = new TabLayoutMediator(
+                                    binding.roleGroupTabLayout,
+                                    binding.groupPager,
+                                    (tab, position) -> tab.setText(groupTitleList.get(position))
+                            );
+                            tabLayoutMediator.attach();
+
+                            //刷新 Fragment 中的数据
                         },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )

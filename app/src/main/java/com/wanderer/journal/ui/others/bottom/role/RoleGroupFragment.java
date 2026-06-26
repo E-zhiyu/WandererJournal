@@ -15,6 +15,7 @@ import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.adapters.role.GroupRoleSelectAdapter;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,12 @@ public class RoleGroupFragment extends Fragment {
     public void submitRoleList(@NonNull List<RoleEntity> roleList) {
         //根据拼音分组为 Map
         Map<String, List<RoleEntity>> pinyinGroupedRoleMap = roleList.stream()
+                .sorted(Comparator.comparing(role -> {  //先将列表中的元素按照字母顺序排序
+                    String finalDisplay = role.getDisplayName().isEmpty() ?
+                            role.getName() :
+                            role.getDisplayName();
+                    return TextHelper.getPinyinFirstLetter(finalDisplay);
+                }))
                 .collect(Collectors.groupingBy(
                         role -> {
                             String finalDisplay = role.getDisplayName().isEmpty() ?
