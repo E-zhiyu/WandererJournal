@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
-    android:minHeight="150dp"
     android:orientation="vertical"
     android:paddingTop="10dp"
     android:paddingBottom="20dp">
@@ -14,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <!-- 标题 -->
     <com.google.android.material.textview.MaterialTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -21,8 +21,18 @@
         android:text="@string/select_role"
         android:textAppearance="?attr/textAppearanceTitleLarge" />
 
+    <!-- 常用角色标题 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/common_role_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/common_role"
+        android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+    <!-- 常用角色列表 -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/role_recycler"
+        android:id="@+id/common_role_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -31,4 +41,18 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
+
+    <!-- 分组标签布局 -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/role_group_tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" />
+
+    <!-- 分组布局 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/group_pager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="100dp" />
 </LinearLayout>
