@@ -26,10 +26,13 @@ import java.util.stream.Collectors;
 
 public class RoleGroupFragment extends Fragment {
     private FragmentRoleGroupBinding binding;       //绑定的 XML 布局
-    private final GroupRoleSelectAdapter adapter;   //根据拼音分组的适配器
+    private GroupRoleSelectAdapter adapter;         //根据拼音分组的适配器
+    private final OnClickListener clickListener;
+    private final List<RoleEntity> roleList;
 
-    public RoleGroupFragment(@NonNull OnClickListener clickListener) {
-        adapter = new GroupRoleSelectAdapter(clickListener::onClick);
+    public RoleGroupFragment(@NonNull OnClickListener clickListener, @NonNull List<RoleEntity> roleList) {
+        this.clickListener = clickListener;
+        this.roleList = roleList;
     }
 
     public interface OnClickListener {
@@ -41,7 +44,9 @@ public class RoleGroupFragment extends Fragment {
         binding = FragmentRoleGroupBinding.inflate(inflater, container, false);
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            binding.recycler.setPadding(0, 0, 0, systemBars.bottom);
 
             return insets;
         });
@@ -55,7 +60,9 @@ public class RoleGroupFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
+        adapter = new GroupRoleSelectAdapter(clickListener::onClick);
         binding.recycler.setAdapter(adapter);
+        submitRoleList(roleList);
     }
 
     /**
@@ -63,7 +70,7 @@ public class RoleGroupFragment extends Fragment {
      *
      * @param roleList 角色列表
      */
-    public void submitRoleList(@NonNull List<RoleEntity> roleList) {
+    private void submitRoleList(@NonNull List<RoleEntity> roleList) {
         //根据拼音分组为 Map
         Map<String, List<RoleEntity>> pinyinGroupedRoleMap = roleList.stream()
                 .sorted(Comparator.comparing(role -> {  //先将列表中的元素按照字母顺序排序
@@ -96,6 +103,14 @@ public class RoleGroupFragment extends Fragment {
         }
 
         //提交到适配器中
-        adapter.submitList(uiModelList);
+        adapter.submitList(uiModelList, () -> {
+            binding.loadingIndicator.setVisibility(View.GONE);
+
+            if (uiModelList.isEmpty()) {
+                binding.emptyText.setVisibility(View.VISIBLE);
+            } else {
+                binding.emptyText.setVisibility(View.GONE);
+            }
+        });
     }
 }

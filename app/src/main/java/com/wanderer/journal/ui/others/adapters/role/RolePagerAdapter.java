@@ -47,9 +47,7 @@ public class RolePagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         // 根据当前的分类名称，创建对应的角色子列表 Fragment
-        RoleGroupFragment fragment = new RoleGroupFragment(clickListener::onClick);
-        fragment.submitRoleList(dataList.get(position));
-        return fragment;
+        return new RoleGroupFragment(clickListener::onClick,dataList.get(position));
     }
 
     @Override
