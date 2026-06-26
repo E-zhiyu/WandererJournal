@@ -7,7 +7,7 @@ public class EmotionTagPojo {
     private long emotionId;             //自增主键
     private String name;                //名称
     private String description;         //描述
-    private int type;                   //情绪种类
+    private int type = 1;               //情绪种类
 
     public EmotionTagPojo() {
     }

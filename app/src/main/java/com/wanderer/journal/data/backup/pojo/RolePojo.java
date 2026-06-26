@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class RolePojo {
     private long roleId;
     private String name;
-    private String displayName;
+    private String displayName = "";
     private String identity;
     private String impression;
     private int relationship;
