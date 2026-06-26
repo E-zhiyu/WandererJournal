@@ -1,4 +1,6 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.ui;
+
+import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 
 public class RoleUiModel {
     //角色项

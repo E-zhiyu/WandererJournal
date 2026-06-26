@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.adapters;
+package com.wanderer.journal.ui.others.adapters.role;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -13,7 +13,7 @@ import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
 import java.util.Locale;
 
-public class RoleSelectAdapter extends ListAdapter<RoleEntity, RoleSelectAdapter.RoleSelectViewHolder> {
+public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleSelectAdapter.RoleSelectViewHolder> {
     private final static DiffUtil.ItemCallback<RoleEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull RoleEntity oldItem, @NonNull RoleEntity newItem) {
@@ -49,7 +49,7 @@ public class RoleSelectAdapter extends ListAdapter<RoleEntity, RoleSelectAdapter
         }
     }
 
-    public RoleSelectAdapter(OnClickListener clickListener) {
+    public CommonRoleSelectAdapter(OnClickListener clickListener) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
     }

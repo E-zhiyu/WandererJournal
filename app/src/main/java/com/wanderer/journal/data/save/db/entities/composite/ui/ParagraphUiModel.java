@@ -1,4 +1,6 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.ui;
+
+import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 
 import java.time.LocalDate;
 

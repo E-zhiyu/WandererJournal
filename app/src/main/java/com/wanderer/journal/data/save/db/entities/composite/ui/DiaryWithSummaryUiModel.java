@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.ui;
 
 import androidx.room.Embedded;
 

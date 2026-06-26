@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums.dropdown;
+package com.wanderer.journal.auxiliary.enums.text;
 
 public enum RoleRelationship {
     POOR("关系恶劣"),

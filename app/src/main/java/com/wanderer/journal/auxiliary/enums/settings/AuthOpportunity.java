@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums.options;
+package com.wanderer.journal.auxiliary.enums.settings;
 
 public enum AuthOpportunity {
     EVERY_TIME(0, 0, 0, 0, "每次"),
