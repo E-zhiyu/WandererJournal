@@ -13,7 +13,8 @@ import androidx.room.PrimaryKey;
                 @Index(value = "displayName"),
                 @Index(value = "relationship"),
                 @Index(value = "identity"),
-                @Index(value = "impression")
+                @Index(value = "impression"),
+                @Index(value = "useCount")
         }
 )
 public class RoleEntity {
@@ -26,6 +27,8 @@ public class RoleEntity {
     private String impression;      //印象描述
     @ColumnInfo(defaultValue = "2")
     private int relationship;       //关系程度
+    @ColumnInfo(defaultValue = "0")
+    private int useCount;           //使用次数
 
     public RoleEntity(String name, String displayName, String identity, String impression, int relationship) {
         this.name = name;
@@ -81,5 +84,13 @@ public class RoleEntity {
 
     public void setRelationship(int relationship) {
         this.relationship = relationship;
+    }
+
+    public int getUseCount() {
+        return useCount;
+    }
+
+    public void setUseCount(int useCount) {
+        this.useCount = useCount;
     }
 }

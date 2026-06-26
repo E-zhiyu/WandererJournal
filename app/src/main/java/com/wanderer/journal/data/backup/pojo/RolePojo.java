@@ -10,6 +10,7 @@ public class RolePojo {
     private String identity;
     private String impression;
     private int relationship;
+    private int useCount;
 
     public RolePojo() {
     }
@@ -61,5 +62,13 @@ public class RolePojo {
 
     public void setRelationship(int relationship) {
         this.relationship = relationship;
+    }
+
+    public int getUseCount() {
+        return useCount;
+    }
+
+    public void setUseCount(int useCount) {
+        this.useCount = useCount;
     }
 }
