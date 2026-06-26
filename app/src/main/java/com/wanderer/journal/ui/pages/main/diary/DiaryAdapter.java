@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;

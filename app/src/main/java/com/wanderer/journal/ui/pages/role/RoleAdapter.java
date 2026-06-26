@@ -12,10 +12,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.databinding.ViewHolderRoleBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;

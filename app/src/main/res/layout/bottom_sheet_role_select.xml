@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
+    android:minHeight="200dp"
     android:orientation="vertical"
     android:paddingTop="10dp"
     android:paddingBottom="20dp">
@@ -45,9 +46,11 @@
     <!-- 分组标签布局 -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/role_group_tab_layout"
+        style="@style/TabLayoutStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="10dp"
+        app:tabMode="scrollable" />
 
     <!-- 分组布局 -->
     <androidx.viewpager2.widget.ViewPager2

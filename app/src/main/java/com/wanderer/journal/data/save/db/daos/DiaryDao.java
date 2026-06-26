@@ -12,7 +12,7 @@ import androidx.room.Update;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 import com.wanderer.journal.databinding.ViewHolderChipTextElevatedBinding;
 import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 

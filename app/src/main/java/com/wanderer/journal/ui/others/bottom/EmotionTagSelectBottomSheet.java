@@ -19,7 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.slider.Slider;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;

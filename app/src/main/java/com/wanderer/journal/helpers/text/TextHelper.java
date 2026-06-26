@@ -24,6 +24,8 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.EditableFlattenListener;
 import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 
+import net.sourceforge.pinyin4j.PinyinHelper;
+
 import org.jetbrains.annotations.Contract;
 
 import java.util.List;
@@ -75,6 +77,30 @@ public class TextHelper {
         }
 
         return count;
+    }
+
+    /**
+     * 获取某个字符串的首字母
+     *
+     * @param str 需要获取首字母的字符串
+     * @return 若以汉字开头，获取拼音首字母，若以字母开头，获取该字母
+     */
+    public static String getPinyinFirstLetter(String str) {
+        if (str == null || str.isEmpty()) return "#";
+
+        char firstChar = str.charAt(0);
+
+        // 如果是英文字母，直接返回大写
+        if (firstChar >= 'A' && firstChar <= 'Z') return String.valueOf(firstChar);
+        if (firstChar >= 'a' && firstChar <= 'z') return String.valueOf((char) (firstChar - 32));
+
+        // 如果是汉字，取拼音首字母
+        String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(firstChar);
+        if (pinyinArray != null && pinyinArray.length > 0) {
+            return String.valueOf(pinyinArray[0].charAt(0)).toUpperCase();
+        }
+
+        return "#";
     }
 
     /**

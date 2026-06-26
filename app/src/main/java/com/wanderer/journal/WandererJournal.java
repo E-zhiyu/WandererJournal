@@ -16,7 +16,7 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.options.AuthOpportunity;
+import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.helpers.NotificationHelper;

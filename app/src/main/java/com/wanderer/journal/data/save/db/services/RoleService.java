@@ -2,12 +2,12 @@ package com.wanderer.journal.data.save.db.services;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ public class RoleService {
         // 提前把枚举的 values 数组拿出来缓存，避免在 for 循环中高频触发内存抖动
         final RoleRelationship[] relations = RoleRelationship.values();
 
-        return roleDao.getAllRoleFlowable(safeKeyword, isSearchFilter)
+        return roleDao.getAllRoleWithSearchFlowable(safeKeyword, isSearchFilter)
                 // 【核心优化】：将由于数据库变化触发的 map 集合重组逻辑，丢给计算线程，解放主线程
                 .observeOn(Schedulers.computation())
                 .map(rawList -> {

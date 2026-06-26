@@ -80,7 +80,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.RoleSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;

@@ -3,7 +3,7 @@ package com.wanderer.journal.ui.others.viewmodel;
 import androidx.lifecycle.ViewModel;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 
 import java.util.List;

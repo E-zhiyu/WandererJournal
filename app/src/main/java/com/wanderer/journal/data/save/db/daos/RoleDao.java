@@ -48,7 +48,7 @@ public interface RoleDao {
             // 将 IN 子查询改为高效的 EXISTS 关联查询，并在 SQL 层面指定转义符
             "OR EXISTS (SELECT 1 FROM roleAlias WHERE roleAlias.roleId = roles.roleId AND alia LIKE '%' || :safeKeyword || '%' ESCAPE '/') " +
             "ORDER BY relationship DESC")
-    Flowable<List<RoleEntityModel>> getAllRoleFlowable(String safeKeyword, int filterSearchKeyword);
+    Flowable<List<RoleEntityModel>> getAllRoleWithSearchFlowable(String safeKeyword, int filterSearchKeyword);
 
     /**
      * 查询所有角色数据，并按照关系由近到远排序
@@ -57,6 +57,14 @@ public interface RoleDao {
      */
     @Query("SELECT * FROM roles ORDER BY relationship DESC")
     Single<List<RoleEntity>> getAllRoleSingle();
+
+    /**
+     * 获取最常用的几个角色
+     *
+     * @return 最常用的几个角色的列表
+     */
+    @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount LIMIT 7")
+    Flowable<List<RoleEntity>> getCommonRoleFlowable();
 
     /**
      * 通过角色 ID 获取角色数据
