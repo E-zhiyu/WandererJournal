@@ -57,14 +57,14 @@ public interface RoleDao {
      * @return 所有角色组成的列表
      */
     @Query("SELECT * FROM roles ORDER BY relationship DESC")
-    Single<List<RoleEntity>> getAllRoleSingle();
+    Flowable<List<RoleEntity>> getAllRoleFlowable();
 
     /**
      * 获取最常用的几个角色
      *
      * @return 最常用的几个角色的列表
      */
-    @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount LIMIT 7")
+    @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount DESC LIMIT 7")
     Flowable<List<RoleEntity>> getCommonRoleFlowable();
 
     /**

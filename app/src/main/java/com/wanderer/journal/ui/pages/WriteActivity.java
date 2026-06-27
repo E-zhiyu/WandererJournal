@@ -548,7 +548,8 @@ public class WriteActivity extends AppCompatActivity {
 
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
-                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
+                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet();
+                    bottomSheet.setSelectListener((name, roleId) -> {
                         //生成包装好的富文本标签块
                         String display = "@" + name;
                         String value = String.valueOf(roleId);

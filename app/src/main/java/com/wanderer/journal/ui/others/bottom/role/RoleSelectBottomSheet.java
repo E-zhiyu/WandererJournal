@@ -1,7 +1,9 @@
 package com.wanderer.journal.ui.others.bottom.role;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +16,7 @@ import androidx.annotation.Nullable;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
@@ -24,6 +27,7 @@ import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
 import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
+import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,14 +40,14 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetRoleSelectBinding binding;       //绑定的 XML 布局
-    private final OnRoleSelectListener selectListener;  //角色选择回调
+    private OnRoleSelectListener selectListener;        //角色选择回调
     private final CompositeDisposable disposable = new CompositeDisposable();
     private TabLayoutMediator tabLayoutMediator;
 
-    /**
-     * @param selectListener 角色选择回调
-     */
-    public RoleSelectBottomSheet(OnRoleSelectListener selectListener) {
+    public RoleSelectBottomSheet() {
+    }
+
+    public void setSelectListener(OnRoleSelectListener selectListener) {
         this.selectListener = selectListener;
     }
 
@@ -112,6 +116,12 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
         //分组角色
         initRoleGroup();
+
+        //角色添加按钮
+        binding.addRoleBtn.setOnClickListener(view -> {
+            Intent skip2RoleInput = new Intent(requireContext(), RoleInputActivity.class);
+            startActivity(skip2RoleInput);
+        });
     }
 
     /**
@@ -208,11 +218,13 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
         //绑定数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-        disposable.add(db.roleDao().getAllRoleSingle()
+        disposable.add(db.roleDao().getAllRoleFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         roleList -> {
+                            Log.d(LogTags.ROLE_SELECT_BOTTOM_SHEET.n(), "角色数量：" + roleList.size());
+
                             //将角色根据关系程度分组
                             Map<Integer, List<RoleEntity>> groupedRoleMap = new LinkedHashMap<>();
                             groupedRoleMap.put(-1, roleList);

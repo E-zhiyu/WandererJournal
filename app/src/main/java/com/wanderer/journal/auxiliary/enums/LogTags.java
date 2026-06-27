@@ -5,6 +5,7 @@ public enum LogTags {
     DIARY_FRAGMENT("DiaryFragment"),
     WRITE_ACTIVITY("WriteActivity"),
     DIARY_READ_ACTIVITY("DiaryReadActivity"),
+    ROLE_SELECT_BOTTOM_SHEET("RoleSelectBottomSheet"),
     SAF_HELPER("SAFHelper"),
     AUTH_ACTIVITY("AuthActivity"),
     BIOMETRIC_HELPER("BiometricHelper"),
