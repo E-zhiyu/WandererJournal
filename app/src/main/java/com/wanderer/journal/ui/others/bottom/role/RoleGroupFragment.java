@@ -87,7 +87,7 @@ public class RoleGroupFragment extends Fragment {
      * @param roleList 角色列表
      */
     private void submitRoleList(@Nullable List<RoleEntity> roleList) {
-        if (roleList == null || roleList.isEmpty()) return;
+        if (roleList == null) return;
 
         //根据拼音分组为 Map
         Map<String, List<RoleEntity>> pinyinGroupedRoleMap = roleList.stream()

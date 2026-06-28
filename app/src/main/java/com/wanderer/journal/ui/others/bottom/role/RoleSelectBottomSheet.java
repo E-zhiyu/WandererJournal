@@ -30,6 +30,7 @@ import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +194,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         //绑定数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         disposable.add(db.roleDao().getAllRoleFlowable()
+                .defaultIfEmpty(new ArrayList<>())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
