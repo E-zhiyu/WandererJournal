@@ -12,15 +12,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.transition.Fade;
-import androidx.transition.TransitionManager;
-import androidx.transition.TransitionSet;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
@@ -246,21 +244,16 @@ public class DiaryAlarmActivity extends AppCompatActivity {
      */
     private void setAlarmComponentsVisibility(boolean isVisible, boolean needAnimation) {
         if (needAnimation) {
-            TransitionSet set = new TransitionSet()
-                    .addTarget(binding.alarmTimeTitle)
-                    .addTarget(binding.alarmTimeRecycler)
-                    .setDuration(250)
-                    .addTransition(new Fade());
-
-            TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-        }
-
-        if (isVisible) {
-            binding.alarmTimeTitle.setVisibility(View.VISIBLE);
-            binding.alarmTimeRecycler.setVisibility(View.VISIBLE);
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.alarmTimeTitle, isVisible);
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
         } else {
-            binding.alarmTimeTitle.setVisibility(View.GONE);
-            binding.alarmTimeRecycler.setVisibility(View.GONE);
+            if (isVisible) {
+                binding.alarmTimeTitle.setVisibility(View.VISIBLE);
+                binding.alarmTimeRecycler.setVisibility(View.VISIBLE);
+            } else {
+                binding.alarmTimeTitle.setVisibility(View.GONE);
+                binding.alarmTimeRecycler.setVisibility(View.GONE);
+            }
         }
     }
 }

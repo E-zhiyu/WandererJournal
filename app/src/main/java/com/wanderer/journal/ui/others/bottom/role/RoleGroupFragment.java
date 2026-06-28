@@ -17,6 +17,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleGroupUiModel;
 import com.wanderer.journal.databinding.FragmentRoleGroupBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.adapters.role.GroupRoleSelectAdapter;
 import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
@@ -122,13 +123,9 @@ public class RoleGroupFragment extends Fragment {
 
         //提交到适配器中
         adapter.submitList(uiModelList, () -> {
-            binding.loadingIndicator.setVisibility(View.GONE);
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.loadingIndicator, false);
 
-            if (uiModelList.isEmpty()) {
-                binding.emptyText.setVisibility(View.VISIBLE);
-            } else {
-                binding.emptyText.setVisibility(View.GONE);
-            }
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, uiModelList.isEmpty());
         });
     }
 }

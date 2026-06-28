@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -502,5 +503,41 @@ public class AppearanceAnimationHelper {
                     }
                 }
         );
+    }
+
+    /**
+     * 使用淡入淡出动画切换视图可见性
+     *
+     * @param view      需要切换可见性的视图
+     * @param isVisible 是否可见
+     */
+    public static void setVisibilityWithFade(View view, boolean isVisible) {
+        setVisibilityWithFade(view, isVisible, 250);
+    }
+
+    /**
+     * 使用淡入淡出动画切换视图可见性
+     *
+     * @param view      需要切换可见性的视图
+     * @param isVisible 是否可见
+     * @param duration  动画持续时间
+     */
+    public static void setVisibilityWithFade(View view, boolean isVisible, int duration) {
+        if (isVisible && view.getVisibility() == View.GONE) {
+            view.setAlpha(0f);
+            view.setVisibility(View.VISIBLE);
+            view.animate()
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .start();
+        } else if (!isVisible && view.getVisibility() == View.VISIBLE) {
+            view.animate()
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .withEndAction(() -> view.setVisibility(View.GONE))
+                    .start();
+        }
     }
 }

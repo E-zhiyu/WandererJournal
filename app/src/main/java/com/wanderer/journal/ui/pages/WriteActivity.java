@@ -1300,12 +1300,13 @@ public class WriteActivity extends AppCompatActivity {
         //定义过渡动画：组合滑入和渐变
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.BOTTOM))
+                .addTarget(binding.contentEditCard)
                 .addTransition(new Fade())
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.contentEditCard, set);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
         //执行状态改变
         if (isEditMode) {
@@ -1365,11 +1366,12 @@ public class WriteActivity extends AppCompatActivity {
         TransitionSet set = new TransitionSet()
                 .addTransition(new Slide(Gravity.BOTTOM))
                 .addTransition(new Fade())
+                .addTarget(binding.mediaCard)
                 .setInterpolator(new FastOutSlowInInterpolator())
                 .setDuration(250);
 
         //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.mediaCard, set);
+        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
 
         //切换视图可见性
         if (isVisible) {

@@ -27,8 +27,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.transition.ChangeBounds;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
+import androidx.transition.Transition;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
 
@@ -588,20 +590,12 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 将段落内容列表滚动到初始位置
      */
     private void scrollRecyclerToInitPosition() {
-        //创建动画
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .addTarget(binding.recyclerLoadingIndicator)
-                .setDuration(250);
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
         //控制视图显示
-        binding.recyclerLoadingIndicator.setVisibility(View.GONE);
+        AppearanceAnimationHelper.setVisibilityWithFade(binding.recyclerLoadingIndicator, false);
         if (adapter.getItemCount() == 0) {
-            binding.emptyText.setVisibility(View.VISIBLE);
-        } else {
-            binding.emptyText.setVisibility(View.GONE);
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, true);
+        } else if (adapter.getItemCount() != 0) {
+            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, false);
         }
 
         //执行滚动操作
@@ -980,17 +974,19 @@ public class DiaryReadActivity extends AppCompatActivity {
      * @param checkedEmotionTagIdSet 需要获取的情绪标签的 ID 集合
      */
     private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.TOP))
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .addTarget(binding.emotionTagInAppbarRecycler)
-                .setDuration(250);
         if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
-            TransitionManager.beginDelayedTransition(binding.getRoot(), set);
+            // 【显示逻辑】
+            TransitionSet showSet = new TransitionSet()
+                    .setOrdering(TransitionSet.ORDERING_TOGETHER)
+                    .addTransition(new Slide(Gravity.TOP)) // 显示时用 Slide 效果很好
+                    .addTransition(new Fade(Fade.IN))
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250);
+
+            TransitionManager.beginDelayedTransition(binding.appBarLayout, showSet);
             binding.emotionTagInAppbarRecycler.setVisibility(View.VISIBLE);
 
-            //从数据库中读取标签名称并显示
+            // 从数据库中读取标签名称并显示
             EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
             disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdSet)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -1001,10 +997,46 @@ public class DiaryReadActivity extends AppCompatActivity {
                     )
             );
         } else {
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
-            binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
+            // 【隐藏逻辑】
+            // 如果当前已经是 GONE 或者是初次加载，不需要重复执行隐藏动画
+            if (binding.emotionTagInAppbarRecycler.getVisibility() == View.GONE) {
+                return;
+            }
 
-            appbarEmotionAdapter.submitList(new ArrayList<>());
+            // 隐藏时使用 ChangeBounds (折叠) + Fade (淡出)
+            TransitionSet hideSet = new TransitionSet()
+                    .setOrdering(TransitionSet.ORDERING_TOGETHER)
+                    .addTransition(new ChangeBounds()) // 捕获 AppBarLayout 高度缩小的动画，实现折叠
+                    .addTransition(new Fade(Fade.OUT))  // 捕获 RecyclerView 渐隐
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250);
+
+            // 监听动画结束，动画结束后再清空数据，防止动画过程中变成空白
+            hideSet.addListener(new Transition.TransitionListener() {
+                @Override
+                public void onTransitionEnd(@NonNull Transition transition) {
+                    appbarEmotionAdapter.submitList(new ArrayList<>());
+                }
+
+                @Override
+                public void onTransitionStart(@NonNull Transition transition) {
+                }
+
+                @Override
+                public void onTransitionCancel(@NonNull Transition transition) {
+                }
+
+                @Override
+                public void onTransitionPause(@NonNull Transition transition) {
+                }
+
+                @Override
+                public void onTransitionResume(@NonNull Transition transition) {
+                }
+            });
+
+            TransitionManager.beginDelayedTransition(binding.appBarLayout, hideSet);
+            binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
         }
     }
 }
