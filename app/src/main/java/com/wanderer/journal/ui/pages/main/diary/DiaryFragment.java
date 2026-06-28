@@ -202,12 +202,15 @@ public class DiaryFragment extends Fragment {
             }
         }
 
+        //折叠 AppBarLayout
+        binding.appBarLayout.setExpanded(false);
+
         //滚动列表视图
         AppearanceAnimationHelper.scrollRecycler(
                 binding.diaryRecycler,
                 (LinearLayoutManager) binding.diaryRecycler.getLayoutManager(),
                 targetPosition,
-                15,
+                30,
                 0,
                 new RecyclerViewScrollListener() {
                     @Override
