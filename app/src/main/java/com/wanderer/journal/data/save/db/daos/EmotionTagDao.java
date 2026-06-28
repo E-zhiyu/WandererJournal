@@ -39,6 +39,25 @@ public interface EmotionTagDao {
     Completable insertEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
+     * 判断引用关系是否存在
+     *
+     * @param emotionTagId 情绪标签 ID
+     * @param paragraphId  段落 ID
+     * @return 引用关系是否存在
+     */
+    @Query("SELECT EXISTS(SELECT * FROM emotionParagraphCrossRef WHERE emotionId = :emotionTagId AND paragraphId = :paragraphId)")
+    boolean isRefExists(long emotionTagId, long paragraphId);
+
+    /**
+     * 删除情绪标签与段落的关系
+     *
+     * @param ref 关系实体
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
+
+    /**
      * 修改情绪标签
      *
      * @param emotionTag 修改后的情绪标签
@@ -115,13 +134,4 @@ public interface EmotionTagDao {
      */
     @Delete
     Completable deleteEmotionTagCompletable(EmotionTagEntity emotionTag);
-
-    /**
-     * 删除情绪标签与段落的关系
-     *
-     * @param ref 关系实体
-     * @return 是否完成
-     */
-    @Delete
-    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 }

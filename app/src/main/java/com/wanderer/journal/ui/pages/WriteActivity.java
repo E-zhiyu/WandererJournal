@@ -52,13 +52,13 @@ import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
@@ -83,6 +83,7 @@ import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
 import com.wanderer.journal.ui.others.viewmodel.MediaAddOptionViewModel;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
@@ -583,6 +584,7 @@ public class WriteActivity extends AppCompatActivity {
      * 观察 ViewModel 的 LiveData
      */
     private void observeLiveData() {
+        //角色选择情况
         RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(this).get(RoleSelectViewModel.class);
         roleSelectViewModel.getSelectedRoleEvent().observe(this, role -> {
             String roleName = role.getName();
@@ -611,6 +613,7 @@ public class WriteActivity extends AppCompatActivity {
             binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
         });
 
+        //媒体添加选项
         MediaAddOptionViewModel mediaAddOptionViewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
         mediaAddOptionViewModel.getClickEvent().observe(this, integer -> {
             MediaAddOption option = MediaAddOption.values()[integer];
@@ -629,6 +632,45 @@ public class WriteActivity extends AppCompatActivity {
                         new PickVisualMediaRequest.Builder()
                                 .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                                 .build()
+                );
+            }
+        });
+
+        //情绪标签选择状态
+        EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
+        emotionTagSelectViewModel.getCheckedEmotionTag().observe(this, emotionTagEntity -> {
+            long paragraphId = emotionTagSelectViewModel.getParagraphId();
+            long emotionId = emotionTagEntity.getEmotionId();
+            int degree = emotionTagSelectViewModel.getDegree();
+            boolean isChecked = emotionTagSelectViewModel.isChecked();
+
+            EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            if (isChecked) {
+                disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(
+                                        LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "添加情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId +
+                                                "，强烈程度：" + degree
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            } else {
+                disposable.add(db.emotionTagDao().deleteEmotionParagraphRefCompletable(refEntity)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "删除情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
                 );
             }
         });
@@ -1204,77 +1246,7 @@ public class WriteActivity extends AppCompatActivity {
         ImmHelper.hideImm(binding.contentTextInput);
 
         //实例化底部对话框并显示
-        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
-                paragraph.getParagraphId(),
-                (model, isChecked) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    if (isChecked) {
-                        disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，添加情绪标签：" +
-                                                        model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                                )
-                        );
-                    } else {
-                        disposable.add(dao.deleteEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" +
-                                                        model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> {
-                                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落的情绪标签移除失败");
-                                            ExceptionHelper.showExceptionDialog(this, e);
-                                        }
-                                )
-                        );
-                    }
-                },
-                (model, value) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    ref.setDegree(value);
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    disposable.add(dao.updateEmotionParagraphRefCompletable(ref)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> Log.i(
-                                            LogTags.WRITE_ACTIVITY.n(),
-                                            "段落编号：" + paragraph.getParagraphId() +
-                                                    "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                    "，更新情绪强烈程度为" + value
-                                    ),
-                                    e -> {
-                                        ExceptionHelper.showExceptionDialog(this, e);
-                                        Log.e(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() +
-                                                        "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                        "情绪强烈程度更新失败"
-                                        );
-                                    }
-                            )
-                    );
-                }
-        );
+        EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 

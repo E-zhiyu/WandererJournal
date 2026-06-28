@@ -108,7 +108,6 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
 
     @Override
     public int getItemViewType(int position) {
-        // 假设最后一个item是“添加”入口
         EmotionTagUiModel model = getItem(position);
         if (model == null) {
             return TYPE_ADD_ENTRY;

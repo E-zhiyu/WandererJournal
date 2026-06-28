@@ -38,10 +38,10 @@ public class EmotionParagraphRefEntity {
      * @param emotionId   情绪标签 ID
      * @param paragraphId 段落 ID
      */
-    public EmotionParagraphRefEntity(long emotionId, long paragraphId) {
+    public EmotionParagraphRefEntity(long emotionId, long paragraphId, int degree) {
         this.emotionId = emotionId;
         this.paragraphId = paragraphId;
-        this.degree = 1;
+        this.degree = degree;
     }
 
     public long getParagraphId() {
