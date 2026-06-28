@@ -88,6 +88,7 @@ import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
+import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -192,6 +193,7 @@ public class WriteActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
+        observeLiveData();
         initLaunchers();
         initOnBackPressedHandlers();
 
@@ -549,28 +551,6 @@ public class WriteActivity extends AppCompatActivity {
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
                     RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet();
-                    bottomSheet.setSelectListener((name, roleId) -> {
-                        //生成包装好的富文本标签块
-                        String display = "@" + name;
-                        String value = String.valueOf(roleId);
-                        SpannableString roleTag = TextHelper.createTextTag(
-                                WriteActivity.this,
-                                null,
-                                display,
-                                KeyStrings.ROLE_ID.getS(),
-                                value
-                        );
-
-                        //把刚才打出"@"替换成高亮的标签块
-                        Editable editable = binding.contentTextInput.getText();
-                        int selectionStart = binding.contentTextInput.getSelectionStart();
-                        if (editable != null) {
-                            editable.replace(selectionStart - 1, selectionStart, roleTag);
-                        }
-
-                        //让光标跳到这个标签块的后面
-                        binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
-                    });
                     bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
                 } else if (i2 >= RichTextRegex.getShortestPatternLength()) {    //只有新增的文本大于最短正则表达式长度才富文本化
                     //计算光标与文本末尾的距离
@@ -610,6 +590,39 @@ public class WriteActivity extends AppCompatActivity {
 
         //内容编辑关闭按钮
         binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null, null));
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(this).get(RoleSelectViewModel.class);
+        roleSelectViewModel.getSelectedRoleEvent().observe(this, role -> {
+            String roleName = role.getName();
+            String roleDisplayName = role.getDisplayName();
+            long roleId = role.getRoleId();
+
+            //生成包装好的富文本标签块
+            String display = "@" + (roleDisplayName.isEmpty() ? roleName : roleDisplayName);
+            String value = String.valueOf(roleId);
+            SpannableString roleTag = TextHelper.createTextTag(
+                    WriteActivity.this,
+                    null,
+                    display,
+                    KeyStrings.ROLE_ID.getS(),
+                    value
+            );
+
+            //把刚才打出"@"替换成高亮的标签块
+            Editable editable = binding.contentTextInput.getText();
+            int selectionStart = binding.contentTextInput.getSelectionStart();
+            if (editable != null) {
+                editable.replace(selectionStart - 1, selectionStart, roleTag);
+            }
+
+            //让光标跳到这个标签块的后面
+            binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
+        });
     }
 
     /**

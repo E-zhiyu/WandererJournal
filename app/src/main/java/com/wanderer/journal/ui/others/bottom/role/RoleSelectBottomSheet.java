@@ -12,6 +12,7 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -27,6 +28,7 @@ import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
 import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
+import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
 import java.util.LinkedHashMap;
@@ -40,26 +42,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetRoleSelectBinding binding;       //绑定的 XML 布局
-    private OnRoleSelectListener selectListener;        //角色选择回调
     private final CompositeDisposable disposable = new CompositeDisposable();
     private TabLayoutMediator tabLayoutMediator;
-
-    public RoleSelectBottomSheet() {
-    }
-
-    public void setSelectListener(OnRoleSelectListener selectListener) {
-        this.selectListener = selectListener;
-    }
-
-    public interface OnRoleSelectListener {
-        /**
-         * 角色选择回调
-         *
-         * @param name   角色名称
-         * @param roleId 角色 ID
-         */
-        void onSelected(String name, long roleId);
-    }
 
     @Nullable
     @Override
@@ -67,6 +51,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         binding = BottomSheetRoleSelectBinding.inflate(inflater, container, false);
 
         initViews();
+        observeLiveData();
 
         return binding.getRoot();
     }
@@ -125,28 +110,33 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     }
 
     /**
+     * 观察 ViewModel 的
+     */
+    private void observeLiveData() {
+        RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(requireActivity()).get(RoleSelectViewModel.class);
+        roleSelectViewModel.getSelectedRoleEvent().observe(getViewLifecycleOwner(), role -> {
+            //添加角色使用次数
+            DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+            disposable.add(db.roleDao().addRoleUseCount(role.getRoleId())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            this::dismiss,
+                            e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                    )
+            );
+        });
+    }
+
+    /**
      * 初始化常用角色
      */
     private void initCommonRole() {
+        RoleSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(RoleSelectViewModel.class);
+
         //实例化适配器
         CommonRoleSelectAdapter commonRoleAdapter = new CommonRoleSelectAdapter(
-                role -> {
-                    String roleName = role.getName();
-                    String roleDisplayName = role.getDisplayName();
-                    long roleId = role.getRoleId();
-                    selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
-
-                    //添加角色使用次数
-                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-                    disposable.add(db.roleDao().addRoleUseCount(roleId)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    this::dismiss,
-                                    e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
-                            )
-                    );
-                },
+                viewModel::setSelectedRole,
                 role -> {
                     DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
                     disposable.add(db.roleDao().clearRoleUseCount(role.getRoleId())
@@ -196,23 +186,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
      */
     private void initRoleGroup() {
         // ViewPager2 翻页器
-        RolePagerAdapter pagerAdapter = new RolePagerAdapter(getParentFragmentManager(), getLifecycle(), role -> {
-            String roleName = role.getName();
-            String roleDisplayName = role.getDisplayName();
-            long roleId = role.getRoleId();
-            selectListener.onSelected(roleDisplayName.isEmpty() ? roleName : roleDisplayName, roleId);
-
-            //添加角色使用次数
-            DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-            disposable.add(db.roleDao().addRoleUseCount(roleId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            this::dismiss,
-                            e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
-                    )
-            );
-        });
+        RolePagerAdapter pagerAdapter = new RolePagerAdapter(getParentFragmentManager(), getLifecycle());
         binding.groupPager.setAdapter(pagerAdapter);
         binding.groupPager.setOffscreenPageLimit(2);
 
@@ -227,7 +201,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
                             //将角色根据关系程度分组
                             Map<Integer, List<RoleEntity>> groupedRoleMap = new LinkedHashMap<>();
-                            groupedRoleMap.put(-1, roleList);
+                            groupedRoleMap.put(-1, roleList);   //第一个先放入“全部”分组
                             groupedRoleMap.putAll(roleList.stream().collect(Collectors.groupingBy(
                                     RoleEntity::getRelationship,
                                     LinkedHashMap::new,
@@ -242,6 +216,10 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                                         }
                                     })
                                     .collect(Collectors.toList());
+
+                            //更新 ViewModel中的分组
+                            RoleSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(RoleSelectViewModel.class);
+                            viewModel.setGroupedMap(groupedRoleMap);
 
                             //更新 ViewPager2 和 TabLayout
                             if (tabLayoutMediator != null) {

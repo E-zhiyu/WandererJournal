@@ -16,16 +16,9 @@ import java.util.Map;
 
 public class RolePagerAdapter extends FragmentStateAdapter {
     private final List<Integer> idList = new ArrayList<>();
-    private final List<List<RoleEntity>> dataList = new ArrayList<>();
-    private final OnClickListener clickListener;
 
-    public interface OnClickListener {
-        void onClick(RoleEntity role);
-    }
-
-    public RolePagerAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle, OnClickListener clickListener) {
+    public RolePagerAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle) {
         super(fragmentManager, lifecycle);
-        this.clickListener = clickListener;
     }
 
     /**
@@ -34,11 +27,9 @@ public class RolePagerAdapter extends FragmentStateAdapter {
     public void updateData(@NonNull Map<Integer, List<RoleEntity>> newData) {
         int oldCount = idList.size();
         idList.clear();
-        dataList.clear();
         notifyItemRangeRemoved(0, oldCount);
 
         idList.addAll(newData.keySet());
-        dataList.addAll(newData.values());
         // 通知 ViewPager2 整体结构发生了改变
         notifyItemRangeInserted(0, idList.size());
     }
@@ -46,8 +37,7 @@ public class RolePagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        // 根据当前的分类名称，创建对应的角色子列表 Fragment
-        return new RoleGroupFragment(clickListener::onClick, dataList.get(position));
+        return RoleGroupFragment.newInstance(idList.get(position));
     }
 
     @Override

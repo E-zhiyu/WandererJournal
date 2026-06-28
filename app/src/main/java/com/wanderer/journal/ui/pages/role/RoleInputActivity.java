@@ -235,7 +235,7 @@ public class RoleInputActivity extends AppCompatActivity {
 
         //插入数据
         RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
-        role.setRoleId(initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));   //设置传递过来的角色 ID
+        role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));  //设置传递过来的角色 ID
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
                 .observeOn(AndroidSchedulers.mainThread())

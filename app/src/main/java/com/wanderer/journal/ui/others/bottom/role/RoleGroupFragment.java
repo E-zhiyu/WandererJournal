@@ -6,16 +6,20 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleGroupUiModel;
 import com.wanderer.journal.databinding.FragmentRoleGroupBinding;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.adapters.role.GroupRoleSelectAdapter;
+import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -27,16 +31,24 @@ import java.util.stream.Collectors;
 public class RoleGroupFragment extends Fragment {
     private FragmentRoleGroupBinding binding;       //绑定的 XML 布局
     private GroupRoleSelectAdapter adapter;         //根据拼音分组的适配器
-    private final OnClickListener clickListener;
-    private final List<RoleEntity> roleList;
+    private int groupKey;                           //该 Fragment 对应的分组关键字
 
-    public RoleGroupFragment(@NonNull OnClickListener clickListener, @NonNull List<RoleEntity> roleList) {
-        this.clickListener = clickListener;
-        this.roleList = roleList;
+    @NonNull
+    public static RoleGroupFragment newInstance(int groupKey) {
+        RoleGroupFragment fragment = new RoleGroupFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(KeyStrings.KEY_ROLE_GROUP.getS(), groupKey);
+        fragment.setArguments(bundle);
+        return fragment;
     }
 
-    public interface OnClickListener {
-        void onClick(RoleEntity role);
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            //取出需要获取的分组关键字
+            groupKey = getArguments().getInt(KeyStrings.KEY_ROLE_GROUP.getS());
+        }
     }
 
     @Override
@@ -60,9 +72,13 @@ public class RoleGroupFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
-        adapter = new GroupRoleSelectAdapter(clickListener::onClick);
+        RoleSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(RoleSelectViewModel.class);
+        adapter = new GroupRoleSelectAdapter(viewModel::setSelectedRole);
         binding.recycler.setAdapter(adapter);
-        submitRoleList(roleList);
+        viewModel.getGroupedMap().observe(getViewLifecycleOwner(), groupedMap -> {
+            List<RoleEntity> roleList = groupedMap.get(groupKey);
+            submitRoleList(roleList);
+        });
     }
 
     /**
@@ -70,7 +86,9 @@ public class RoleGroupFragment extends Fragment {
      *
      * @param roleList 角色列表
      */
-    private void submitRoleList(@NonNull List<RoleEntity> roleList) {
+    private void submitRoleList(@Nullable List<RoleEntity> roleList) {
+        if (roleList == null || roleList.isEmpty()) return;
+
         //根据拼音分组为 Map
         Map<String, List<RoleEntity>> pinyinGroupedRoleMap = roleList.stream()
                 .sorted(Comparator.comparing(role -> {  //先将列表中的元素按照字母顺序排序

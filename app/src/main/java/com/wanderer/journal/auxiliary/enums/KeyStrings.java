@@ -1,6 +1,7 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
+    KEY_ROLE_GROUP("key_role_group"),                   //角色分组的关键字
     ROLE_ID("role_id"),                                 //角色 ID
     ROLE_NAME("role_name"),                             //角色名称
     ROLE_DISPLAY_NAME("role_display_name"),             //角色显示名称
