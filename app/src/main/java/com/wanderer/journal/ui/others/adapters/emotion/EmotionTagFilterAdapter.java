@@ -13,6 +13,7 @@ import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, EmotionTagFilterAdapter.EmotionTagFilterViewHolder> {
     private static final DiffUtil.ItemCallback<EmotionTagEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -26,7 +27,7 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
             return oldItem.getName().equals(newItem.getName());
         }
     };
-    private final List<Long> checkedEmotionIdList = new ArrayList<>();  //被选择了的情绪标签的 ID 列表
+    private final List<Long> checkedEmotionIdSet = new ArrayList<>();  //被选择了的情绪标签的 ID 列表
     private final OnCheckedChangedListener checkedChangedListener;      //选择状态变化监听器
 
     public static class EmotionTagFilterViewHolder extends RecyclerView.ViewHolder {
@@ -64,9 +65,9 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
         void onCheckChanged(int position, boolean isChecked);
     }
 
-    public EmotionTagFilterAdapter(List<Long> checkedEmotionIdList, OnCheckedChangedListener checkedChangedListener) {
+    public EmotionTagFilterAdapter(Set<Long> checkedEmotionIdSet, OnCheckedChangedListener checkedChangedListener) {
         super(ITEM_CALLBACK);
-        this.checkedEmotionIdList.addAll(checkedEmotionIdList);
+        this.checkedEmotionIdSet.addAll(checkedEmotionIdSet);
         this.checkedChangedListener = checkedChangedListener;
     }
 
@@ -96,7 +97,7 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
 
         //设置选择状态
         holder.isBlocked = true;
-        if (checkedEmotionIdList.contains(emotionTag.getEmotionId())) {
+        if (checkedEmotionIdSet.contains(emotionTag.getEmotionId())) {
             holder.binding.chip.setChecked(true);
         }
         holder.isBlocked = false;

@@ -42,14 +42,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
     private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
-    private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
+    private final Set<Long> filterEmotionIdList = new HashSet<>();      //搜索的情绪标签 ID 集合
     private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
     private boolean isSelectMode = false;                               //是否是选择模式
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
@@ -558,7 +560,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * @param keywordList  高亮关键词列表
      * @param positionList 有符合关键词的视图的下标
      */
-    public void setHighlightTarget(List<String> keywordList, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
         //修改搜索元素数据
         this.highlightedKeywordList = keywordList;
         this.filterEmotionIdList.clear();

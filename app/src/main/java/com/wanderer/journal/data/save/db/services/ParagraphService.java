@@ -17,6 +17,7 @@ import com.wanderer.journal.helpers.file.FileHelper;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -115,7 +116,7 @@ public class ParagraphService {
      * 获取匹配搜索的段落的位置
      *
      * @param keywordList    搜索关键词列表
-     * @param emotionIds     情绪标签 ID 列表（如果传入空列表，代表不限制情绪，只按关键词搜索）
+     * @param emotionIds     情绪标签 ID 集合（如果传入空集合，代表不限制情绪，只按关键词搜索）
      * @param useMediaFilter 是否需要由媒体文件
      * @param db             数据库实例
      * @param isAndMode      多词搜索模式是否为“与”模式
@@ -124,12 +125,11 @@ public class ParagraphService {
     @NonNull
     public static Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
             List<String> keywordList,
-            List<Long> emotionIds,
+            Set<Long> emotionIds,
             boolean useMediaFilter,
             @NonNull DiaryDatabase db,
             boolean isAndMode
     ) {
-
         ParagraphDao paragraphDao = db.paragraphDao();
         // 1. 基础 SQL 骨架（保留你原本完美的位置计算逻辑）
         StringBuilder sql = new StringBuilder(
@@ -162,13 +162,13 @@ public class ParagraphService {
      * 获取搜索参数
      *
      * @param keywordList 搜索关键词列表
-     * @param emotionIds  情绪标签 ID 列表
+     * @param emotionIds  情绪标签 ID 集合
      * @param sql         SQL 语句构建器
      * @param isAndMode   多词搜索模式是否为“与”模式
      * @return 匹配 SQL 中参数通配符的参数列表
      */
     @NonNull
-    private static List<Object> getSearchArgs(List<String> keywordList, List<Long> emotionIds, StringBuilder sql, boolean isAndMode) {
+    private static List<Object> getSearchArgs(List<String> keywordList, Set<Long> emotionIds, StringBuilder sql, boolean isAndMode) {
         List<Object> args = new ArrayList<>();
 
         // 2. 动态拼接多词内容过滤 (LIKE 方案)
@@ -203,10 +203,12 @@ public class ParagraphService {
         boolean useEmotionFilter = emotionIds != null && !emotionIds.isEmpty();
         if (useEmotionFilter) {
             sql.append(" AND paragraphId IN (SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (");
-            for (int i = 0; i < emotionIds.size(); i++) {
+            int i = 0;
+            for (long emotionId : emotionIds) {
                 sql.append("?");
-                args.add(emotionIds.get(i));
+                args.add(emotionId);
                 if (i < emotionIds.size() - 1) sql.append(",");
+                i++;
             }
             sql.append("))");
         }

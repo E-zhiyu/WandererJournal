@@ -12,22 +12,28 @@ import androidx.paging.PagingData;
 import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
-import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class ParagraphViewModel extends ViewModel {
-    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);   //匹配搜索的位置列表
-    private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);   //当前所在的匹配搜索位置的下标
+public class ParagraphFilterViewModel extends ViewModel {
+    private boolean filterMedia = false;
+    private final Set<Long> checkedEmotionIdSet = new HashSet<>();
+    private String searchText = "";
+
+    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);    //匹配搜索的位置列表
+    private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);           //当前所在的匹配搜索位置的下标
 
     public LiveData<Integer> getCurrentMatchIndex() {
         return currentMatchIndex;
@@ -35,6 +41,26 @@ public class ParagraphViewModel extends ViewModel {
 
     public LiveData<List<Integer>> getMatchedPositions() {
         return matchedPositions;
+    }
+
+    public Boolean getFilterMedia() {
+        return filterMedia;
+    }
+
+    public Set<Long> getCheckedEmotionIdSet() {
+        return checkedEmotionIdSet;
+    }
+
+    public void setFilterMedia(boolean filterMedia) {
+        this.filterMedia = filterMedia;
+    }
+
+    public String getSearchText() {
+        return searchText;
+    }
+
+    public void setSearchText(String searchText) {
+        this.searchText = searchText;
     }
 
     /**
@@ -157,23 +183,23 @@ public class ParagraphViewModel extends ViewModel {
     /**
      * 执行搜索逻辑
      *
-     * @param keywordList   搜索的关键词列表
-     * @param emotionIdList 用户选择的情绪标签 ID
-     * @param filterMedia   是否需要由媒体文件
-     * @param db            数据库实例
-     * @param isAndMode     多词搜索模式是否为“与”模式
+     * @param keywordList  搜索的关键词列表
+     * @param emotionIdSet 用户选择的情绪标签 ID
+     * @param filterMedia  是否需要由媒体文件
+     * @param db           数据库实例
+     * @param isAndMode    多词搜索模式是否为“与”模式
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(
             @Nullable List<String> keywordList,
-            List<Long> emotionIdList,
+            Set<Long> emotionIdSet,
             boolean filterMedia,
             DiaryDatabase db,
             boolean isAndMode
     ) {
         //判断是否没有过滤选项
         if ((keywordList == null || keywordList.isEmpty()) &&
-                (emotionIdList == null || emotionIdList.isEmpty()) &&
+                (emotionIdSet == null || emotionIdSet.isEmpty()) &&
                 !filterMedia
         ) {
             return Flowable.empty();
@@ -185,7 +211,7 @@ public class ParagraphViewModel extends ViewModel {
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
         return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
                         keywordList,
-                        emotionIdList,
+                        emotionIdSet,
                         filterMedia,
                         db,
                         isAndMode
@@ -235,5 +261,23 @@ public class ParagraphViewModel extends ViewModel {
         } else {
             currentMatchIndex.postValue(-1);
         }
+    }
+
+    /**
+     * 判断是否有过滤条件
+     *
+     * @return 是否有过滤条件
+     */
+    public boolean isHasFilter() {
+        return !checkedEmotionIdSet.isEmpty() || filterMedia || !searchText.isEmpty();
+    }
+
+    /**
+     * 清空过滤条件
+     */
+    public void clearFilter() {
+        filterMedia = false;
+        checkedEmotionIdSet.clear();
+        searchText = "";
     }
 }

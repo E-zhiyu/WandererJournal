@@ -12,6 +12,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -95,7 +96,7 @@ public interface EmotionTagDao {
      * @return ID 在列表中的情绪标签实例
      */
     @Query("SELECT * FROM emotionTags WHERE emotionId IN (:emotionIdList)")
-    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(List<Long> emotionIdList);
+    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(Set<Long> emotionIdList);
 
     /**
      * 查询某个情绪标签绑定的段落数量
