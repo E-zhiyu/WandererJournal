@@ -155,19 +155,13 @@ public class DiaryReadActivity extends AppCompatActivity {
         appbarEmotionAdapter = new EmotionTagInAppBarAdapter(
                 emotionTag -> {
                     ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
 
                     //移除已选择的情绪标签 ID
+                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
                     checkedEmotionIdSet.remove(emotionTag.getEmotionId());
 
-                    //执行搜索逻辑或退出搜搜模式
-                    String searchKeyword = String.valueOf(binding.contentSearchBar.getText());
-                    if (searchKeyword.isEmpty() && checkedEmotionIdSet.isEmpty()) {
-                        setSearchMode(false);   //退出搜索模式
-                    } else {
-                        //执行搜索逻辑
-                        executeSearch();
-                    }
+                    //执行一次搜索
+                    executeSearch();
                 }
         );
         binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
@@ -1016,17 +1010,17 @@ public class DiaryReadActivity extends AppCompatActivity {
     /**
      * 刷新选中的情绪标签显示视图
      *
-     * @param checkedEmotionTagIdSet 需要获取的情绪标签的 ID 列表
+     * @param checkedEmotionTagIdSet 需要获取的情绪标签的 ID 集合
      */
-    private void refreshFilterEmotionTagGroup(Set<Long> checkedEmotionTagIdSet) {
+    private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
+        TransitionSet set = new TransitionSet()
+                .addTransition(new Slide(Gravity.TOP))
+                .addTransition(new Fade())
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .addTarget(binding.emotionTagInAppbarRecycler)
+                .setDuration(250);
         if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
-            TransitionSet set = new TransitionSet()
-                    .addTransition(new Slide(Gravity.TOP))
-                    .addTransition(new Fade())
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .addTarget(binding.emotionTagInAppbarRecycler)
-                    .setDuration(250);
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
+            TransitionManager.beginDelayedTransition(binding.getRoot(), set);
             binding.emotionTagInAppbarRecycler.setVisibility(View.VISIBLE);
 
             //从数据库中读取标签名称并显示
@@ -1040,12 +1034,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                     )
             );
         } else {
-            TransitionSet set = new TransitionSet()
-                    .addTransition(new Slide(Gravity.TOP))
-                    .addTransition(new Fade())
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .addTarget(binding.emotionTagInAppbarRecycler)
-                    .setDuration(250);
             TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
             binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
 
