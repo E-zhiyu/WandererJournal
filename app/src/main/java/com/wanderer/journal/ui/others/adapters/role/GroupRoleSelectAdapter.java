@@ -16,6 +16,7 @@ import com.wanderer.journal.databinding.ViewHolderGroupRoleSeparatorBinding;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, RecyclerView.ViewHolder> {
     private static final DiffUtil.ItemCallback<RoleGroupUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -24,7 +25,13 @@ public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, Recycl
             if (oldItem instanceof RoleGroupUiModel.Item && newItem instanceof RoleGroupUiModel.Item) {
                 RoleGroupUiModel.Item oldI = (RoleGroupUiModel.Item) oldItem;
                 RoleGroupUiModel.Item newI = (RoleGroupUiModel.Item) newItem;
-                return oldI.roleList.equals(newI.roleList);
+                List<Long> oldItemRoleIdList = oldI.roleList.stream()
+                        .map(RoleEntity::getRoleId)
+                        .collect(Collectors.toList());
+                List<Long> newItemRoleIdList = newI.roleList.stream()
+                        .map(RoleEntity::getRoleId)
+                        .collect(Collectors.toList());
+                return oldItemRoleIdList.equals(newItemRoleIdList);
             } else if (oldItem instanceof RoleGroupUiModel.Separator && newItem instanceof RoleGroupUiModel.Separator) {
                 RoleGroupUiModel.Separator oldS = (RoleGroupUiModel.Separator) oldItem;
                 RoleGroupUiModel.Separator newS = (RoleGroupUiModel.Separator) newItem;
@@ -52,6 +59,7 @@ public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, Recycl
 
     public static class GroupRoleItemViewHolder extends RecyclerView.ViewHolder {
         ViewHolderGroupRoleItemBinding binding;
+
         public GroupRoleItemViewHolder(@NonNull ViewHolderGroupRoleItemBinding binding) {
             super(binding.getRoot());
             this.binding = binding;

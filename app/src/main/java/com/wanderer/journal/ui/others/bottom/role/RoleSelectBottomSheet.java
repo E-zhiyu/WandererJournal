@@ -30,7 +30,6 @@ import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -115,6 +114,8 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private void observeLiveData() {
         RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(requireActivity()).get(RoleSelectViewModel.class);
         roleSelectViewModel.getSelectedRoleEvent().observe(getViewLifecycleOwner(), role -> {
+            disposable.clear();
+
             //添加角色使用次数
             DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
             disposable.add(db.roleDao().addRoleUseCount(role.getRoleId())
@@ -173,7 +174,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                                         Gravity.END,
                                         "长按可以移除常用角色",
                                         TipPreference.KEY_CLEAR_ROLE_USE_COUNT,
-                                        3
+                                        1
                                 );
                             }
                         },
@@ -194,7 +195,6 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         //绑定数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         disposable.add(db.roleDao().getAllRoleFlowable()
-                .defaultIfEmpty(new ArrayList<>())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
