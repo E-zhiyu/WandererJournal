@@ -2,7 +2,6 @@ package com.wanderer.journal.ui.others.viewmodel;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
@@ -35,11 +34,11 @@ public class ParagraphFilterViewModel extends ViewModel {
     private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);    //匹配搜索的位置列表
     private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);           //当前所在的匹配搜索位置的下标
 
-    public LiveData<Integer> getCurrentMatchIndex() {
+    public MutableLiveData<Integer> getCurrentMatchIndex() {
         return currentMatchIndex;
     }
 
-    public LiveData<List<Integer>> getMatchedPositions() {
+    public MutableLiveData<List<Integer>> getMatchedPositions() {
         return matchedPositions;
     }
 
@@ -183,25 +182,18 @@ public class ParagraphFilterViewModel extends ViewModel {
     /**
      * 执行搜索逻辑
      *
-     * @param keywordList  搜索的关键词列表
-     * @param emotionIdSet 用户选择的情绪标签 ID
-     * @param filterMedia  是否需要由媒体文件
-     * @param db           数据库实例
-     * @param isAndMode    多词搜索模式是否为“与”模式
+     * @param keywordList 搜索的关键词列表
+     * @param db          数据库实例
+     * @param isAndMode   多词搜索模式是否为“与”模式
      * @return 从数据库中获取符合搜索条件的下标
      */
     public Flowable<List<Integer>> executeSearch(
             @Nullable List<String> keywordList,
-            Set<Long> emotionIdSet,
-            boolean filterMedia,
             DiaryDatabase db,
             boolean isAndMode
     ) {
         //判断是否没有过滤选项
-        if ((keywordList == null || keywordList.isEmpty()) &&
-                (emotionIdSet == null || emotionIdSet.isEmpty()) &&
-                !filterMedia
-        ) {
+        if (!isHasFilter()) {
             return Flowable.empty();
         }
 
@@ -211,7 +203,7 @@ public class ParagraphFilterViewModel extends ViewModel {
         // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
         return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
                         keywordList,
-                        emotionIdSet,
+                        checkedEmotionIdSet,
                         filterMedia,
                         db,
                         isAndMode

@@ -233,7 +233,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setSearchMode(false);
+                ParagraphFilterViewModel viewModel = new ViewModelProvider(DiaryReadActivity.this).get(ParagraphFilterViewModel.class);
+                viewModel.clearFilter();
+                executeSearch();    //清空后执行一次查询（没有过滤条件不会触发滚动）
                 return true;
             }
 
@@ -791,8 +793,8 @@ public class DiaryReadActivity extends AppCompatActivity {
         //开始搜索
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
-        boolean filterMedia = viewModel.getFilterMedia();
-        disposable.add((searchDisposable = viewModel.executeSearch(validKeywordList, checkedEmotionIdSet, filterMedia, db, isAndMode)
+        disposable.add((searchDisposable = viewModel.executeSearch(validKeywordList, db, isAndMode)
+                .defaultIfEmpty(new ArrayList<>())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -983,9 +985,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
             backHelper.unregisterHandler(searchBackHandler);
             adapter.clearHighlight();                               //清除文本高亮
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-            viewModel.clearFilter();
-            refreshFilterEmotionTagGroup(null); //清空情绪标签选择视图
 
             disposable.remove(searchDisposable);
         } else {

@@ -51,8 +51,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
     private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
-    private final Set<Long> filterEmotionIdList = new HashSet<>();      //搜索的情绪标签 ID 集合
-    private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
+    private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
+    private final Set<Integer> positionSet = new HashSet<>();           //当前高亮的段落下标集合
     private boolean isSelectMode = false;                               //是否是选择模式
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -385,7 +385,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             String rawContent = paragraph.getContent(); //数据库中的原始数据
             CharSequence richText = ParagraphTextConverter.hierarchic(
                     context,
-                    highlightedKeywordList,
+                    positionSet.contains(position) ? highlightedKeywordList : null,
                     rawContent,
                     new RoleRefTextRule() {
                         @Override
@@ -508,7 +508,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         emotionChip.setFocusable(false);
 
         //设置是否选中（即高亮）
-        boolean isHighLighted = filterEmotionIdList.contains(emotionId);
+        boolean isHighLighted = filterEmotionIdSet.contains(emotionId);
         emotionChip.setCheckable(isHighLighted);
         emotionChip.setChecked(isHighLighted);
 
@@ -563,13 +563,13 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
         //修改搜索元素数据
         this.highlightedKeywordList = keywordList;
-        this.filterEmotionIdList.clear();
-        this.filterEmotionIdList.addAll(filterEmotionIdList);
+        this.filterEmotionIdSet.clear();
+        this.filterEmotionIdSet.addAll(filterEmotionIdList);
 
         //更改位置列表中的内容
         List<Integer> oldPositionList = new ArrayList<>(positionList);
-        this.positionList.clear();
-        this.positionList.addAll(positionList);
+        this.positionSet.clear();
+        this.positionSet.addAll(positionList);
 
         //提醒旧的取消高亮
         for (int i : oldPositionList) {
@@ -587,10 +587,10 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      */
     public void clearHighlight() {
         this.highlightedKeywordList = null;
-        this.filterEmotionIdList.clear();
-        for (int position : positionList) {
+        this.filterEmotionIdSet.clear();
+        for (int position : positionSet) {
             notifyItemChanged(position);
         }
-        positionList.clear();
+        positionSet.clear();
     }
 }
