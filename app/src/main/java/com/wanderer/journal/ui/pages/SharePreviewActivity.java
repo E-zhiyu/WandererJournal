@@ -19,6 +19,7 @@ import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
@@ -26,6 +27,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -44,6 +46,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
+import com.wanderer.journal.ui.others.viewmodel.DiaryShareViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -98,6 +101,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
+        observeLiveData();
     }
 
     @Override
@@ -123,57 +127,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //导出按钮
         binding.shareBtn.setOnClickListener(view -> {
-            DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet(
-                    new DiaryShareBottomSheet.OptionListener() {
-                        @Override
-                        public void onShareAsImage() {
-                            generateImageAndDoAction(imageFile -> {
-                                //根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
-                                Uri uri = Uri.fromFile(imageFile);
-                                String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-
-                                //调用系统分享 API
-                                disposable.add(FileHelper.shareFileCompletable(
-                                                SharePreviewActivity.this,
-                                                imageFile,
-                                                mimeType
-                                        )
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
-                                                e -> {
-                                                    ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
-                                                    Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
-                                                }
-                                        ));
-                            });
-                        }
-
-                        @Override
-                        public void onSaveToAlbum() {
-                            generateImageAndDoAction(imageFile -> {
-                                //保存至相册
-                                Uri currentUri = Uri.fromFile(imageFile);
-                                disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                uri -> Toast.makeText(
-                                                        SharePreviewActivity.this,
-                                                        "图片已保存至相册", Toast.LENGTH_SHORT
-                                                ).show(),
-                                                e -> ExceptionHelper.showExceptionDialog(
-                                                        SharePreviewActivity.this,
-                                                        e
-                                                )
-                                        )
-                                );
-                            });
-                        }
-                    }
-            );
+            DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.getTag());
         });
         AppearanceAnimationHelper.attachMorphAnimation(binding.shareBtn);
@@ -181,6 +135,60 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //段落列表
         initRecycler();
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        DiaryShareViewModel diaryShareViewModel = new ViewModelProvider(this).get(DiaryShareViewModel.class);
+        diaryShareViewModel.getClickEvent().observe(this, code -> {
+            DiaryShareOption option = DiaryShareOption.values()[code];
+
+            if (option == DiaryShareOption.SHARE_AS_IMAGE) {
+                generateImageAndDoAction(imageFile -> {
+                    //根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
+                    Uri uri = Uri.fromFile(imageFile);
+                    String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+
+                    //调用系统分享 API
+                    disposable.add(FileHelper.shareFileCompletable(
+                                    SharePreviewActivity.this,
+                                    imageFile,
+                                    mimeType
+                            )
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
+                                        Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
+                                    }
+                            ));
+                });
+            } else if (option == DiaryShareOption.SAVE_TO_ALBUM) {
+                generateImageAndDoAction(imageFile -> {
+                    //保存至相册
+                    Uri currentUri = Uri.fromFile(imageFile);
+                    disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    uri -> Toast.makeText(
+                                            SharePreviewActivity.this,
+                                            "图片已保存至相册", Toast.LENGTH_SHORT
+                                    ).show(),
+                                    e -> ExceptionHelper.showExceptionDialog(
+                                            SharePreviewActivity.this,
+                                            e
+                                    )
+                            )
+                    );
+                });
+            }
+        });
     }
 
     /**
