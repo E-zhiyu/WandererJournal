@@ -27,7 +27,6 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
 import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
@@ -168,12 +167,13 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                                 binding.commonRoleRecycler.setVisibility(View.VISIBLE);
                                 binding.commonRoleTitle.setVisibility(View.VISIBLE);
 
-                                if (!TipPreference.getValue(requireContext(), TipPreference.KEY_CLEAR_ROLE_USE_COUNT)) {
-                                    TipPreference.setValue(requireContext(), TipPreference.KEY_CLEAR_ROLE_USE_COUNT, true);
-
-                                    TextPopupWindow window = new TextPopupWindow("长按可以移除常用角色", requireContext());
-                                    window.show(binding.commonRoleTitle, Gravity.END);
-                                }
+                                TipPreference.showTip(
+                                        binding.commonRoleTitle,
+                                        Gravity.END,
+                                        "长按可以移除常用角色",
+                                        TipPreference.KEY_CLEAR_ROLE_USE_COUNT,
+                                        3
+                                );
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)

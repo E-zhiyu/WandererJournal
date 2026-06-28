@@ -64,7 +64,6 @@ import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
@@ -204,12 +203,13 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 初始化引导内容
      */
     private void initGuide() {
-        if (!TipPreference.getValue(this, TipPreference.KEY_READ_MULTI_SEARCH)) {
-            TipPreference.setValue(this, TipPreference.KEY_READ_MULTI_SEARCH, true);
-
-            TextPopupWindow window = new TextPopupWindow("用空格隔开多个关键词可以实现多词搜索", this);
-            window.show(binding.contentSearchBar, Gravity.BOTTOM);
-        }
+        TipPreference.showTip(
+                binding.contentSearchBar,
+                Gravity.BOTTOM,
+                "用空格隔开多个关键词可以实现多词搜索",
+                TipPreference.KEY_READ_MULTI_SEARCH,
+                1
+        );
     }
 
     /**
@@ -280,12 +280,13 @@ public class DiaryReadActivity extends AppCompatActivity {
                         return true;
                     } else if (item.getItemId() == R.id.action_share) {
                         if (!adapter.getSelectMode()) {
-                            if (!TipPreference.getValue(this, TipPreference.KEY_SHARE_MULTI_CHOICE)) {
-                                TipPreference.setValue(this, TipPreference.KEY_SHARE_MULTI_CHOICE, true);
-
-                                TextPopupWindow window = new TextPopupWindow("长按拖动可以快速多选", this);
-                                window.show(binding.appBarLayout, Gravity.BOTTOM);
-                            }
+                            TipPreference.showTip(
+                                    binding.appBarLayout,
+                                    Gravity.BOTTOM,
+                                    "长按拖动可以快速多选",
+                                    TipPreference.KEY_SHARE_MULTI_CHOICE,
+                                    1
+                            );
 
                             Toast.makeText(this, "选完再次点击即可分享", Toast.LENGTH_SHORT).show();
                             setShareSelectMode(true);

@@ -31,7 +31,6 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
 import java.time.LocalDate;
@@ -154,12 +153,13 @@ public class StatisticsActivity extends AppCompatActivity {
      */
     private void initGuide() {
         //角色引用的方法
-        if (TipPreference.getValue(this, TipPreference.KEY_MEMERY_PIXEL_CHECK)) {
-            TipPreference.setValue(this, TipPreference.KEY_MEMERY_PIXEL_CHECK, true);
-
-            TextPopupWindow window = new TextPopupWindow("点击记忆像素可查看当天日记", this);
-            window.show(binding.memeryPixelRecycler, Gravity.BOTTOM);
-        }
+        TipPreference.showTip(
+                binding.memeryPixelRecycler,
+                Gravity.BOTTOM,
+                "点击记忆像素可查看当天日记",
+                TipPreference.KEY_MEMERY_PIXEL_CHECK,
+                1
+        );
     }
 
     /**

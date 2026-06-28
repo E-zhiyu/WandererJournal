@@ -33,7 +33,6 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
 import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -131,12 +130,13 @@ public class RoleManageActivity extends AppCompatActivity {
      */
     private void initGuide() {
         //角色引用的方法
-        if (!TipPreference.getValue(this, TipPreference.KEY_ROLE_REF_METHOD)) {
-            TipPreference.setValue(this, TipPreference.KEY_ROLE_REF_METHOD, true);
-
-            TextPopupWindow window = new TextPopupWindow("添加角色后，可在日记段落中使用“@”引用该角色", this);
-            window.show(binding.addFab, Gravity.START);
-        }
+        TipPreference.showTip(
+                binding.addFab,
+                Gravity.START,
+                "添加角色后，可在日记段落中使用“@”引用该角色",
+                TipPreference.KEY_ROLE_REF_METHOD,
+                1
+        );
     }
 
     /**
