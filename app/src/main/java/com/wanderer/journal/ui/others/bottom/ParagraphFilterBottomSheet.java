@@ -78,7 +78,16 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        adapter::submitList,
+                        emotionTagList -> {
+                            if (emotionTagList.isEmpty()) {
+                                binding.emotionRecyclerTitleText.setVisibility(View.GONE);
+                                binding.emotionTagRecycler.setVisibility(View.GONE);
+                            } else {
+                                binding.emotionRecyclerTitleText.setVisibility(View.VISIBLE);
+                                binding.emotionTagRecycler.setVisibility(View.VISIBLE);
+                            }
+                            adapter.submitList(emotionTagList);
+                        },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
