@@ -266,15 +266,10 @@ public class DiaryReadActivity extends AppCompatActivity {
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
                     ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
                     viewModel.setSearchText(keyword);
 
-                    //根据搜索词和选中的情绪标签选择是否执行搜索操作
-                    if (keyword.isEmpty() && checkedEmotionIdSet.isEmpty()) {
-                        setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
-                    } else {
-                        executeSearch();
-                    }
+                    //执行一次搜索
+                    executeSearch();
                 },
                 item -> {
                     if (item.getItemId() == R.id.action_emotion_select) {
