@@ -46,6 +46,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
@@ -82,6 +83,7 @@ import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.viewmodel.MediaAddOptionViewModel;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
@@ -341,22 +343,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //媒体添加按钮
         binding.mediaAddBtn.setOnClickListener(view -> {
-            MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet(
-                    () -> {
-                        if (PermissionHelper.isRuntimePermissionGranted(
-                                Manifest.permission.CAMERA,
-                                this
-                        )) {
-                            launchSystemCamera();
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.CAMERA);
-                        }
-                    },
-                    () -> albumLauncher.launch(new PickVisualMediaRequest.Builder()
-                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                            .build()
-                    )
-            );
+            MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
         });
 
@@ -622,6 +609,28 @@ public class WriteActivity extends AppCompatActivity {
 
             //让光标跳到这个标签块的后面
             binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
+        });
+
+        MediaAddOptionViewModel mediaAddOptionViewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
+        mediaAddOptionViewModel.getClickEvent().observe(this, integer -> {
+            MediaAddOption option = MediaAddOption.values()[integer];
+
+            if (option == MediaAddOption.TAKE_PICTURE) {
+                if (PermissionHelper.isRuntimePermissionGranted(
+                        Manifest.permission.CAMERA,
+                        this
+                )) {
+                    launchSystemCamera();
+                } else {
+                    permissionLauncher.launch(Manifest.permission.CAMERA);
+                }
+            } else if (option == MediaAddOption.OPEN_ALBUM) {
+                albumLauncher.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build()
+                );
+            }
         });
     }
 

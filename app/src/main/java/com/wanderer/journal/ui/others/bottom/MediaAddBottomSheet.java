@@ -10,48 +10,40 @@ import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.databinding.BottomSheetMediaAddOptionBinding;
+import com.wanderer.journal.ui.others.viewmodel.MediaAddOptionViewModel;
 
 public class MediaAddBottomSheet extends BaseBottomSheetDialogFragment {
-    private final TakePictureListener takePictureListener;
-    private final OpenAlbumListener openAlbumListener;
-
-    public interface TakePictureListener {
-        void takePicture();
-    }
-
-    public interface OpenAlbumListener {
-        void openAlbum();
-    }
-
-    public MediaAddBottomSheet(
-            TakePictureListener takePictureListener,
-            OpenAlbumListener openAlbumListener
-    ) {
-        this.takePictureListener = takePictureListener;
-        this.openAlbumListener = openAlbumListener;
-    }
+    private BottomSheetMediaAddOptionBinding binding;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        BottomSheetMediaAddOptionBinding binding = BottomSheetMediaAddOptionBinding.inflate(inflater, container, false);
+        binding = BottomSheetMediaAddOptionBinding.inflate(inflater, container, false);
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 
+        initViews();
+
+        return binding.getRoot();
+    }
+
+    private void initViews() {
+        MediaAddOptionViewModel viewModel = new ViewModelProvider(requireActivity()).get(MediaAddOptionViewModel.class);
+
         binding.addViaCamera.setOnClickListener(v -> {
-            takePictureListener.takePicture();
+            viewModel.setClickEvent(MediaAddOption.TAKE_PICTURE.ordinal());
             dismiss();
         });
 
         binding.addViaAlbum.setOnClickListener(v -> {
-            openAlbumListener.openAlbum();
+            viewModel.setClickEvent(MediaAddOption.OPEN_ALBUM.ordinal());
             dismiss();
         });
-
-        return binding.getRoot();
     }
 }
