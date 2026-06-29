@@ -2,6 +2,8 @@ package com.wanderer.journal.data.save.db.services;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 public class DiaryService {
@@ -93,46 +96,43 @@ public class DiaryService {
      * @param end   截止日期（包含）
      * @return 一个{@link Single}实例，包含能够直接提交给适配器的数据模型列表
      */
-    public static Single<List<DiaryLengthModel>> getMemeryPixelData(
+    public static Flowable<List<DiaryLengthModel>> getMemeryPixelData(
             LocalDate start,
             LocalDate end,
-            DiaryDatabase db
+            @NonNull DiaryDatabase db
     ) {
-        return Single.defer(() -> {
-            DiaryDao diaryDao = db.diaryDao();
+        DiaryDao diaryDao = db.diaryDao();
+        return diaryDao.getDiaryParagraphWordCountFlowable(start, end)
+                .map(withDiaryModelList -> {
+                    //将数据放到哈希表中
+                    HashMap<LocalDate, Integer> dateMap = new HashMap<>();
+                    for (DiaryLengthModel model : withDiaryModelList) {
+                        dateMap.put(model.getDiaryDate(), model.getDiaryLength());
+                    }
 
-            //获取有日记的天
-            List<DiaryLengthModel> withDiaryModelList = diaryDao.getDiaryParagraphWordCount(start, end);
+                    List<DiaryLengthModel> resultList = new ArrayList<>();
 
-            //将数据放到哈希表中
-            HashMap<LocalDate, Integer> dateMap = new HashMap<>();
-            for (DiaryLengthModel model : withDiaryModelList) {
-                dateMap.put(model.getDiaryDate(), model.getDiaryLength());
-            }
+                    //填充头部 null 对象，使开始日期对齐（例如：星期一对齐到下标为0）
+                    int dayOfWeekValue = start.getDayOfWeek().getValue();
+                    int nullCount = dayOfWeekValue - 1;
+                    for (int i = 0; i < nullCount; i++) {
+                        resultList.add(null);
+                    }
 
-            List<DiaryLengthModel> resultList = new ArrayList<>();
+                    //遍历哈希表填充没有记日记的天
+                    long dateDiff = ChronoUnit.DAYS.between(start, end);
+                    for (int i = 0; i <= dateDiff; i++) {
+                        LocalDate date = start.plusDays(i);
 
-            //填充头部 null 对象，使开始日期对齐（例如：星期一对齐到下标为0）
-            int dayOfWeekValue = start.getDayOfWeek().getValue();
-            int nullCount = dayOfWeekValue - 1;
-            for (int i = 0; i < nullCount; i++) {
-                resultList.add(null);
-            }
+                        Integer paragraphCount;
+                        if (dateMap.containsKey(date) && (paragraphCount = dateMap.get(date)) != null) {
+                            resultList.add(new DiaryLengthModel(date, paragraphCount));
+                        } else {
+                            resultList.add(new DiaryLengthModel(date, 0));
+                        }
+                    }
 
-            //遍历哈希表填充没有记日记的天
-            long dateDiff = ChronoUnit.DAYS.between(start, end);
-            for (int i = 0; i <= dateDiff; i++) {
-                LocalDate date = start.plusDays(i);
-
-                Integer paragraphCount;
-                if (dateMap.containsKey(date) && (paragraphCount = dateMap.get(date)) != null) {
-                    resultList.add(new DiaryLengthModel(date, paragraphCount));
-                } else {
-                    resultList.add(new DiaryLengthModel(date, 0));
-                }
-            }
-
-            return Single.just(resultList);
-        });
+                    return resultList;
+                });
     }
 }
