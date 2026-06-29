@@ -16,7 +16,7 @@ import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
-import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
@@ -77,9 +77,9 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
     }
 
     public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderRoleRelationshipSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public SeparatorViewHolder(@NonNull ViewHolderRoleRelationshipSeparatorBinding binding) {
+        public SeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -200,7 +200,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
                     }
             );
         } else {
-            ViewHolderRoleRelationshipSeparatorBinding binding = ViewHolderRoleRelationshipSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false

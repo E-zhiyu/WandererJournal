@@ -26,7 +26,7 @@ import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
-import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.SearchHelper;
@@ -182,10 +182,10 @@ public class RoleManageActivity extends AppCompatActivity {
         binding.recycler.setAdapter(adapter);
 
         //添加粘性头部装饰器
-        StickyHeaderItemDecoration<ViewHolderRoleRelationshipSeparatorBinding> decoration =
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration =
                 new StickyHeaderItemDecoration<>(
                         adapter,
-                        ViewHolderRoleRelationshipSeparatorBinding::inflate,
+                        ViewHolderSeparatorTextChipBinding::inflate,
                         (binding, data) -> binding.separatorText.setText(data)
                 );
         binding.recycler.addItemDecoration(decoration);

@@ -17,7 +17,7 @@ import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.databinding.ViewHolderRoleBinding;
-import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
@@ -76,9 +76,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     }
 
     public static class RelationshipSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderRoleRelationshipSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public RelationshipSeparatorViewHolder(@NonNull ViewHolderRoleRelationshipSeparatorBinding binding) {
+        public RelationshipSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -189,7 +189,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                     }
             );
         } else {
-            ViewHolderRoleRelationshipSeparatorBinding binding = ViewHolderRoleRelationshipSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
