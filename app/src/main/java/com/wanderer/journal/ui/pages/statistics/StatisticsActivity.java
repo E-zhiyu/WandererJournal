@@ -235,10 +235,17 @@ public class StatisticsActivity extends AppCompatActivity {
                             true
                     );
 
-                    //设置文本
+                    //设置文本和按钮可见性
                     DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
                     windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
-                    String lenStr = model.getDiaryLength() == 0 ? "无日记" : model.getDiaryLength() + "字符";
+                    String lenStr;
+                    if (model.getDiaryLength() == 0) {
+                        lenStr = "无日记";
+                        windowBinding.checkDiaryBtn.setVisibility(View.GONE);
+                    } else {
+                        lenStr = model.getDiaryLength() + "字符";
+                        windowBinding.checkDiaryBtn.setVisibility(View.VISIBLE);
+                    }
                     windowBinding.diaryLengthText.setText(lenStr);
 
                     //设置查看日记按钮点击监听
