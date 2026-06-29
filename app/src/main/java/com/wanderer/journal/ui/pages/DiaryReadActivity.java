@@ -590,11 +590,11 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void scrollRecyclerToInitPosition() {
         //控制视图显示
-        VisibilityHelper.setVisibilityWithFade(binding.recyclerLoadingIndicator, false);
+        VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
         if (adapter.getItemCount() == 0) {
-            VisibilityHelper.setVisibilityWithFade(binding.emptyText, true);
+            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, true);
         } else if (adapter.getItemCount() != 0) {
-            VisibilityHelper.setVisibilityWithFade(binding.emptyText, false);
+            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, false);
         }
 
         //执行滚动操作
@@ -974,7 +974,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
         if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
-            VisibilityHelper.toggleViewWithAnimation(
+            VisibilityHelper.toggleViewExpansion(
                     binding.getRoot(),
                     binding.emotionTagInAppbarRecycler,
                     true,
@@ -993,7 +993,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     }
             );
         } else {
-            VisibilityHelper.toggleViewWithAnimation(
+            VisibilityHelper.toggleViewExpansion(
                     binding.getRoot(),
                     binding.emotionTagInAppbarRecycler,
                     false,

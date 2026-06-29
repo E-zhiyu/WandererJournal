@@ -24,6 +24,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.BottomSheetRoleSelectBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.adapters.role.CommonRoleSelectAdapter;
 import com.wanderer.journal.ui.others.adapters.role.RolePagerAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
@@ -160,22 +161,32 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         roleList -> {
-                            commonRoleAdapter.submitList(roleList);
-
                             if (roleList.isEmpty()) {
-                                //TODO:常用角色显示和消失做动画
-                                binding.commonRoleRecycler.setVisibility(View.GONE);
                                 binding.commonRoleTitle.setVisibility(View.GONE);
+                                VisibilityHelper.toggleViewExpansion(
+                                        binding.getRoot(),
+                                        binding.commonRoleRecycler,
+                                        false,
+                                        Gravity.TOP,
+                                        () -> commonRoleAdapter.submitList(roleList)
+                                );
                             } else {
-                                binding.commonRoleRecycler.setVisibility(View.VISIBLE);
                                 binding.commonRoleTitle.setVisibility(View.VISIBLE);
-
-                                TipPreference.showTip(
-                                        binding.commonRoleTitle,
-                                        Gravity.END,
-                                        "长按可以移除常用角色",
-                                        TipPreference.KEY_CLEAR_ROLE_USE_COUNT,
-                                        1
+                                VisibilityHelper.toggleViewExpansion(
+                                        binding.getRoot(),
+                                        binding.commonRoleRecycler,
+                                        true,
+                                        Gravity.TOP,
+                                        () -> {
+                                            commonRoleAdapter.submitList(roleList);
+                                            TipPreference.showTip(
+                                                    binding.commonRoleTitle,
+                                                    Gravity.END,
+                                                    "长按可以移除常用角色",
+                                                    TipPreference.KEY_CLEAR_ROLE_USE_COUNT,
+                                                    1
+                                            );
+                                        }
                                 );
                             }
                         },

@@ -25,8 +25,8 @@ public class VisibilityHelper {
      * @param view      需要切换可见性的视图
      * @param isVisible 是否可见
      */
-    public static void setVisibilityWithFade(View view, boolean isVisible) {
-        setVisibilityWithFade(view, isVisible, 250);
+    public static void toggleVisibilityWithFade(View view, boolean isVisible) {
+        toggleVisibilityWithFade(view, isVisible, 250);
     }
 
     /**
@@ -36,7 +36,7 @@ public class VisibilityHelper {
      * @param isVisible 是否可见
      * @param duration  动画持续时间
      */
-    public static void setVisibilityWithFade(View view, boolean isVisible, int duration) {
+    public static void toggleVisibilityWithFade(View view, boolean isVisible, int duration) {
         if (isVisible && view.getVisibility() == View.GONE) {
             view.setAlpha(0f);
             view.setVisibility(View.VISIBLE);
@@ -68,17 +68,36 @@ public class VisibilityHelper {
      * @param targetView 要显示或隐藏的根目标视图（如你的 RecyclerView）
      * @param isVisible  true 为展开(VISIBLE)，false 为折叠(GONE)
      * @param direction  滑动方向，例如 Gravity.TOP（向上折叠/从上滑出）
+     * @param endAction  动画结束后的回调闭包（可用于清空数据、释放资源等），可传 null
+     */
+    public static void toggleViewExpansion(
+            @NonNull ViewGroup sceneRoot,
+            @NonNull View targetView,
+            boolean isVisible,
+            @AnimationDirection int direction,
+            @Nullable Runnable endAction
+    ) {
+        toggleViewExpansion(sceneRoot, targetView, isVisible, direction, 250, endAction);
+    }
+
+    /**
+     * 通用的视图折叠/展开（显示/隐藏）动画方法
+     *
+     * @param sceneRoot  动画作用的父容器（如 AppBarLayout, CoordinatorLayout, LinearLayout 等）
+     * @param targetView 要显示或隐藏的根目标视图（如你的 RecyclerView）
+     * @param isVisible  true 为展开(VISIBLE)，false 为折叠(GONE)
+     * @param direction  滑动方向，例如 Gravity.TOP（向上折叠/从上滑出）
      * @param duration   动画时长（毫秒）
      * @param endAction  动画结束后的回调闭包（可用于清空数据、释放资源等），可传 null
      */
-    public static void toggleViewWithAnimation(
+    public static void toggleViewExpansion(
             @NonNull ViewGroup sceneRoot,
             @NonNull View targetView,
             boolean isVisible,
             @AnimationDirection int direction,
             long duration,
-            @Nullable Runnable endAction) {
-
+            @Nullable Runnable endAction
+    ) {
         // 1. 状态防抖：如果目标状态与当前状态相同，则不重复执行动画
         int targetVisibility = isVisible ? View.VISIBLE : View.GONE;
         if (targetView.getVisibility() == targetVisibility) {

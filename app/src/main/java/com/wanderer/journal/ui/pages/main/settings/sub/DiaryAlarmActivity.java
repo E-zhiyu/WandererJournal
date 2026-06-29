@@ -244,8 +244,8 @@ public class DiaryAlarmActivity extends AppCompatActivity {
      */
     private void setAlarmComponentsVisibility(boolean isVisible, boolean needAnimation) {
         if (needAnimation) {
-            VisibilityHelper.setVisibilityWithFade(binding.alarmTimeTitle, isVisible);
-            VisibilityHelper.setVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
+            VisibilityHelper.toggleVisibilityWithFade(binding.alarmTimeTitle, isVisible);
+            VisibilityHelper.toggleVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
         } else {
             if (isVisible) {
                 binding.alarmTimeTitle.setVisibility(View.VISIBLE);

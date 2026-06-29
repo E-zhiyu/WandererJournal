@@ -123,9 +123,9 @@ public class RoleGroupFragment extends Fragment {
 
         //提交到适配器中
         adapter.submitList(uiModelList, () -> {
-            VisibilityHelper.setVisibilityWithFade(binding.loadingIndicator, false);
+            VisibilityHelper.toggleVisibilityWithFade(binding.loadingIndicator, false);
 
-            VisibilityHelper.setVisibilityWithFade(binding.emptyText, uiModelList.isEmpty());
+            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, uiModelList.isEmpty());
         });
     }
 }
