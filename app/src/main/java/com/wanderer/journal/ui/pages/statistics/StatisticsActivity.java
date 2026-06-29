@@ -250,6 +250,9 @@ public class StatisticsActivity extends AppCompatActivity {
 
                         skip2DiaryRead.putExtras(bundle);
                         startActivity(skip2DiaryRead);
+
+                        //让浮窗消失
+                        popupWindow.dismiss();
                     });
 
                     //设置背景以允许点击外部消失
@@ -289,7 +292,9 @@ public class StatisticsActivity extends AppCompatActivity {
                             binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
 
                             //滚动到最右侧
-                            binding.memeryPixelRecycler.scrollToPosition(adapter.getItemCount() - 1);
+                            binding.memeryPixelRecycler.post(() ->
+                                    binding.memeryPixelRecycler.scrollToPosition(adapter.getItemCount() - 1)
+                            );
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
