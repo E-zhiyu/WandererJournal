@@ -835,7 +835,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         );
 
         //更新情绪标签列表
-        refreshFilterEmotionTagGroup(checkedEmotionIdSet);
+        binding.getRoot().post(() -> refreshFilterEmotionTagGroup(checkedEmotionIdSet));
     }
 
     /**
