@@ -78,7 +78,7 @@ public class RoleGroupFragment extends Fragment {
         binding.recycler.setAdapter(adapter);
         viewModel.getGroupedMap().observe(getViewLifecycleOwner(), groupedMap -> {
             List<RoleEntity> roleList = groupedMap.get(groupKey);
-            submitRoleList(roleList);
+            binding.getRoot().post(() -> submitRoleList(roleList));
         });
     }
 
@@ -124,7 +124,6 @@ public class RoleGroupFragment extends Fragment {
         //提交到适配器中
         adapter.submitList(uiModelList, () -> {
             VisibilityHelper.toggleVisibilityWithFade(binding.loadingIndicator, false);
-
             VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, uiModelList.isEmpty());
         });
     }
