@@ -25,6 +25,7 @@ import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.AboutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
+import com.wanderer.journal.ui.pages.AlipayActivity;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingSpinnerView;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingSwitchView;
@@ -113,6 +114,20 @@ public class SettingsFragment extends Fragment {
         aboutOption.setFunctionListener(view -> {
             Intent skip2About = new Intent(requireContext(), AboutActivity.class);
             startActivity(skip2About);
+        });
+
+        //支付
+        SettingClickableTextView payOption = new SettingClickableTextView(
+                requireContext(),
+                binding.payOption,
+                R.string.pay,
+                "跳转至支付界面",
+                R.drawable.outline_payments_24,
+                RadiusStyle.SINGLE
+        );
+        payOption.setFunctionListener(view -> {
+            Intent skip2Pay = new Intent(requireContext(), AlipayActivity.class);
+            startActivity(skip2Pay);
         });
     }
 
