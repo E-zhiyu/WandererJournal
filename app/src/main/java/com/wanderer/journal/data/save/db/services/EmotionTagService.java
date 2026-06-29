@@ -10,7 +10,6 @@ import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,33 +46,32 @@ public class EmotionTagService {
      */
     public static Flowable<List<EmotionListUiModel>> getAllEmotionTagWithSeparator(@NonNull DiaryDatabase db) {
         EmotionTagDao dao = db.emotionTagDao();
-        return Flowable.defer(() -> {
-            List<EmotionTagEntity> emotionTagEntityList = dao.getAllEmotionTag();
+        return dao.getAllEmotionTagFlowable()
+                .map(emotionTagEntityList -> {
+                    List<EmotionListUiModel> resultList = new ArrayList<>();
+                    //判空
+                    if (emotionTagEntityList.isEmpty()) return resultList;
 
-            //判空
-            if (emotionTagEntityList.isEmpty()) return Flowable.just(Collections.emptyList());
+                    //分组
+                    Map<Integer, List<EmotionTagEntity>> groupedMap = emotionTagEntityList.stream()
+                            .collect(Collectors.groupingBy(
+                                    EmotionTagEntity::getType,
+                                    LinkedHashMap::new,
+                                    Collectors.toList()
+                            ));
 
-            //分组
-            Map<Integer, List<EmotionTagEntity>> groupedMap = emotionTagEntityList.stream()
-                    .collect(Collectors.groupingBy(
-                            EmotionTagEntity::getType,
-                            LinkedHashMap::new,
-                            Collectors.toList()
-                    ));
+                    //循环添加分隔符和 Item 项
+                    for (Map.Entry<Integer, List<EmotionTagEntity>> entry : groupedMap.entrySet()) {
+                        String separatorText = EmotionType.values()[entry.getKey()].getTitle();
+                        resultList.add(new EmotionListUiModel.Separator(separatorText));
 
-            //循环添加分隔符和 Item 项
-            List<EmotionListUiModel> resultList = new ArrayList<>();
-            for (Map.Entry<Integer, List<EmotionTagEntity>> entry : groupedMap.entrySet()) {
-                String separatorText = EmotionType.values()[entry.getKey()].getTitle();
-                resultList.add(new EmotionListUiModel.Separator(separatorText));
+                        List<EmotionListUiModel.Item> itemList = entry.getValue().stream()
+                                .map(EmotionListUiModel.Item::new)
+                                .collect(Collectors.toList());
+                        resultList.addAll(itemList);
+                    }
 
-                List<EmotionListUiModel.Item> itemList = entry.getValue().stream()
-                        .map(EmotionListUiModel.Item::new)
-                        .collect(Collectors.toList());
-                resultList.addAll(itemList);
-            }
-
-            return Flowable.just(resultList);
-        });
+                    return resultList;
+                });
     }
 }
