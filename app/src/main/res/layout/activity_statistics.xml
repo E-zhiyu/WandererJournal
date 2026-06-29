@@ -378,6 +378,8 @@
                     android:layout_height="wrap_content"
                     android:text="@string/more" />
             </LinearLayout>
+
+            <!-- TODO:加上角色统计和情绪标签统计 -->
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

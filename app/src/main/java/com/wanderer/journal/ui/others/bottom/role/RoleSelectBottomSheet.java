@@ -156,7 +156,8 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
         //订阅数据
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-        disposable.add(db.roleDao().getCommonRoleFlowable()
+        final int MAX_COMMON_ROLE_COUNT = 7;
+        disposable.add(db.roleDao().getCommonRoleFlowable(MAX_COMMON_ROLE_COUNT)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(

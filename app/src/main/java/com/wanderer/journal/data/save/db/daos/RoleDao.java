@@ -64,8 +64,8 @@ public interface RoleDao {
      *
      * @return 最常用的几个角色的列表
      */
-    @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount DESC LIMIT 7")
-    Flowable<List<RoleEntity>> getCommonRoleFlowable();
+    @Query("SELECT * FROM roles WHERE useCount > 0 ORDER BY useCount DESC LIMIT :limit")
+    Flowable<List<RoleEntity>> getCommonRoleFlowable(int limit);
 
     /**
      * 将角色使用次数加一
