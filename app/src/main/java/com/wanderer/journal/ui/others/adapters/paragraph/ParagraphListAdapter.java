@@ -152,6 +152,15 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 notifyItemChanged(positionStart - 1);   //更新前面的
                 notifyItemChanged(positionStart);               //更新后面的
             }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
+            }
         });
     }
 
@@ -271,7 +280,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
-            separatorViewHolder.binding.dateText.setText(dateStr);
+            separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }
 

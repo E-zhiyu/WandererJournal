@@ -225,7 +225,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
                 ViewHolderSeparatorTextChipBinding::inflate,
-                (binding, data) -> binding.dateText.setText(data)
+                (binding, data) -> binding.separatorText.setText(data)
         );
         binding.previewRecycler.addItemDecoration(decoration);
 

@@ -472,7 +472,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
                 ViewHolderSeparatorTextChipBinding::inflate,
-                (binding, data) -> binding.dateText.setText(data)
+                (binding, data) -> binding.separatorText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);
 

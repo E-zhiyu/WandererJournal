@@ -92,6 +92,14 @@ public interface EmotionTagDao {
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
 
     /**
+     * 获取所有情绪标签
+     *
+     * @return 所有情绪标签组成的列表
+     */
+    @Query("SELECT * FROM emotionTags ORDER BY type")
+    List<EmotionTagEntity> getAllEmotionTag();
+
+    /**
      * 获取可以选择的情绪标签数据
      *
      * @param paragraphId 正在编辑情绪标签的段落 ID
