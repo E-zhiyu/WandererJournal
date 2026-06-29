@@ -27,10 +27,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.transition.ChangeBounds;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
-import androidx.transition.Transition;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
 
@@ -59,8 +57,9 @@ import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.SearchHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -177,17 +176,17 @@ public class DiaryReadActivity extends AppCompatActivity {
             ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
             viewModel.jumpToPrevious();
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.upFab);
+        AppearanceHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
             ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
             viewModel.jumpToNext();
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.downFab);
+        AppearanceHelper.attachMorphAnimation(binding.downFab);
 
         //搜索跳转组件布局
-        ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
+        AppearanceHelper.setMarginToNavigation(binding.searchSkipLayout, this);
 
         //多词搜索模式切换按钮
         binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
@@ -591,11 +590,11 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void scrollRecyclerToInitPosition() {
         //控制视图显示
-        AppearanceAnimationHelper.setVisibilityWithFade(binding.recyclerLoadingIndicator, false);
+        VisibilityHelper.setVisibilityWithFade(binding.recyclerLoadingIndicator, false);
         if (adapter.getItemCount() == 0) {
-            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, true);
+            VisibilityHelper.setVisibilityWithFade(binding.emptyText, true);
         } else if (adapter.getItemCount() != 0) {
-            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, false);
+            VisibilityHelper.setVisibilityWithFade(binding.emptyText, false);
         }
 
         //执行滚动操作
@@ -745,12 +744,12 @@ public class DiaryReadActivity extends AppCompatActivity {
         dialog.setCancelable(false);    //不可取消
 
         //执行滚动逻辑
-        AppearanceAnimationHelper.scrollPagingRecycler(
+        ScrollHelper.scrollPagingRecycler(
                 binding.contentRecycler,
                 (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                 adapter,
                 targetPosition,
-                ViewEdgeHelper.dpToPx(this, 63),
+                AppearanceHelper.dpToPx(this, 63),
                 maxRetryCount,
                 750,
                 new PagingRecyclerScrollListener() {
@@ -975,68 +974,33 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
         if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
-            // 【显示逻辑】
-            TransitionSet showSet = new TransitionSet()
-                    .setOrdering(TransitionSet.ORDERING_TOGETHER)
-                    .addTransition(new Slide(Gravity.TOP)) // 显示时用 Slide 效果很好
-                    .addTransition(new Fade(Fade.IN))
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .setDuration(250);
-
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, showSet);
-            binding.emotionTagInAppbarRecycler.setVisibility(View.VISIBLE);
-
-            // 从数据库中读取标签名称并显示
-            EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
-            disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdSet)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
+            VisibilityHelper.toggleViewWithAnimation(
+                    binding.getRoot(),
+                    binding.emotionTagInAppbarRecycler,
+                    true,
+                    Gravity.TOP,
+                    250,
+                    () -> {
+                        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
+                        disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdSet)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    }
             );
         } else {
-            // 【隐藏逻辑】
-            // 如果当前已经是 GONE 或者是初次加载，不需要重复执行隐藏动画
-            if (binding.emotionTagInAppbarRecycler.getVisibility() == View.GONE) {
-                return;
-            }
-
-            // 隐藏时使用 ChangeBounds (折叠) + Fade (淡出)
-            TransitionSet hideSet = new TransitionSet()
-                    .setOrdering(TransitionSet.ORDERING_TOGETHER)
-                    .addTransition(new ChangeBounds()) // 捕获 AppBarLayout 高度缩小的动画，实现折叠
-                    .addTransition(new Fade(Fade.OUT))  // 捕获 RecyclerView 渐隐
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .setDuration(250);
-
-            // 监听动画结束，动画结束后再清空数据，防止动画过程中变成空白
-            hideSet.addListener(new Transition.TransitionListener() {
-                @Override
-                public void onTransitionEnd(@NonNull Transition transition) {
-                    appbarEmotionAdapter.submitList(new ArrayList<>());
-                }
-
-                @Override
-                public void onTransitionStart(@NonNull Transition transition) {
-                }
-
-                @Override
-                public void onTransitionCancel(@NonNull Transition transition) {
-                }
-
-                @Override
-                public void onTransitionPause(@NonNull Transition transition) {
-                }
-
-                @Override
-                public void onTransitionResume(@NonNull Transition transition) {
-                }
-            });
-
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, hideSet);
-            binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
+            VisibilityHelper.toggleViewWithAnimation(
+                    binding.getRoot(),
+                    binding.emotionTagInAppbarRecycler,
+                    false,
+                    Gravity.TOP,
+                    250,
+                    () -> appbarEmotionAdapter.submitList(new ArrayList<>())
+            );
         }
     }
 }

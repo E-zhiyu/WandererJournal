@@ -21,8 +21,7 @@ import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, ParagraphInnerMediaAdapter.MediaViewHolder> {
     private final int spanCount;                        //媒体列数
@@ -48,7 +47,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             this.binding = binding;
 
             //设置触摸监听
-            AppearanceAnimationHelper.attachMorphAnimation(binding.imageView);
+            AppearanceHelper.attachMorphAnimation(binding.imageView);
 
             //设置点击监听器
             binding.getRoot().setOnClickListener(
@@ -146,7 +145,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
 
         //只有一个媒体时设置为 Single 类型
         if (getItemCount() == 1) {
-            AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE);
+            AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE);
             return;
         }
 
@@ -158,54 +157,54 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
 
         //处理左上角
         if (position - 1 < 0) {                                                         //只有当它前面没有媒体才设置为中等圆角
-            builder.setTopLeftCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setTopLeftCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                    AppearanceHelper.MEDIUM_CARD_RADIUS
             ));
         } else {
-            builder.setTopLeftCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setTopLeftCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                    AppearanceHelper.SMALL_CARD_RADIUS
             ));
         }
 
         //处理右上角
         if (position % spanCount == spanCount - 1 && position - spanCount < 0) {        //只有在行尾且上方没有媒体才设置为中圆角
-            builder.setTopRightCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setTopRightCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                    AppearanceHelper.MEDIUM_CARD_RADIUS
             ));
         } else {
-            builder.setTopRightCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setTopRightCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                    AppearanceHelper.SMALL_CARD_RADIUS
             ));
         }
 
         //处理左下角
         if (position % spanCount == 0 && position + spanCount >= getItemCount()) {      //只有当在行首且下方没有媒体才设置为中圆角
-            builder.setBottomLeftCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setBottomLeftCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                    AppearanceHelper.MEDIUM_CARD_RADIUS
             ));
         } else {
-            builder.setBottomLeftCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setBottomLeftCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                    AppearanceHelper.SMALL_CARD_RADIUS
             ));
         }
 
         //处理右下角
         if (position == getItemCount() - 1 ||
                 position + spanCount >= getItemCount() && position % spanCount == spanCount - 1) {  //只有后面没有媒体或在行尾且下方没有媒体才设置为中圆角
-            builder.setBottomRightCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setBottomRightCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                    AppearanceHelper.MEDIUM_CARD_RADIUS
             ));
         } else {
-            builder.setBottomRightCornerSize(ViewEdgeHelper.dpToPx(
+            builder.setBottomRightCornerSize(AppearanceHelper.dpToPx(
                     context,
-                    AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                    AppearanceHelper.SMALL_CARD_RADIUS
             ));
         }
 

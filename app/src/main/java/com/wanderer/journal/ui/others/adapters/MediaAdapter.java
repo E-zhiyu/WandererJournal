@@ -21,7 +21,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderMediaBinding;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaViewHolder> {
     private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
@@ -136,8 +136,8 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                 .error(R.drawable.outline_error_24)             //错误图
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) //缓存策略
                 .override(
-                        ViewEdgeHelper.dpToPx(context, 200),
-                        ViewEdgeHelper.dpToPx(context, 200)
+                        AppearanceHelper.dpToPx(context, 200),
+                        AppearanceHelper.dpToPx(context, 200)
                 );                                              //图片尺寸
 
         //启用Stable Ids

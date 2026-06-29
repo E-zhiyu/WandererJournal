@@ -26,7 +26,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
@@ -314,21 +314,21 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         ParagraphUiModel front = getItem(position - 1);
         if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
             if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
             }
         } else {
             ParagraphUiModel behind = getItem(position + 1);
 
             if (front instanceof ParagraphUiModel.Separator && behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
             } else if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
             } else if (behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
     }

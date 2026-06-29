@@ -23,7 +23,7 @@ import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
@@ -59,7 +59,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                     0,
                     0,
                     0,
-                    systemBars.bottom + ViewEdgeHelper.dpToPx(this, 15)
+                    systemBars.bottom + AppearanceHelper.dpToPx(this, 15)
             );
             return insets;
         });

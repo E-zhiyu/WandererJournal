@@ -27,8 +27,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.databinding.ActivityMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 
@@ -105,14 +104,14 @@ public class FullScreenMediaActivity extends AppCompatActivity {
 
         //保存媒体
         binding.saveMediaBtn.setOnClickListener(v -> savePicture());
-        AppearanceAnimationHelper.attachMorphAnimation(binding.saveMediaBtn);
+        AppearanceHelper.attachMorphAnimation(binding.saveMediaBtn);
 
         //分享媒体
         binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
-        AppearanceAnimationHelper.attachMorphAnimation(binding.shareMediaBtn);
+        AppearanceHelper.attachMorphAnimation(binding.shareMediaBtn);
 
         //按钮分组设置到底部的边距
-        ViewEdgeHelper.setMarginToNavigation(binding.btnGroup, 30, this);
+        AppearanceHelper.setMarginToNavigation(binding.btnGroup, 30, this);
     }
 
     /**

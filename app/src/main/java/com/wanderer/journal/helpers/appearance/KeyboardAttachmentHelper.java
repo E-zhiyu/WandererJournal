@@ -5,11 +5,18 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 public class KeyboardAttachmentHelper {
-
     private final View rootView;
     private ViewTreeObserver.OnGlobalLayoutListener globalLayoutListener;
     private Runnable runnable = null;   // rootView.postDelayed() 执行的 Runnable 对象
     private int previousHeightDiff = 0;
+
+    public interface OnKeyboardHeightChangedListener {
+        /**
+         * @param currentHeight  当前键盘高度 (px)
+         * @param previousHeight 上一次的键盘高度 (px)
+         */
+        void onHeightChanged(int currentHeight, int previousHeight);
+    }
 
     public KeyboardAttachmentHelper(View rootView) {
         this.rootView = rootView;
@@ -74,13 +81,5 @@ public class KeyboardAttachmentHelper {
         }
 
         runnable = null;
-    }
-
-    public interface OnKeyboardHeightChangedListener {
-        /**
-         * @param currentHeight  当前键盘高度 (px)
-         * @param previousHeight 上一次的键盘高度 (px)
-         */
-        void onHeightChanged(int currentHeight, int previousHeight);
     }
 }

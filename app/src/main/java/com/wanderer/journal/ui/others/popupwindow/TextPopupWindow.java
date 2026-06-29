@@ -10,7 +10,7 @@ import android.widget.PopupWindow;
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.databinding.PopupWindowTextBinding;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class TextPopupWindow {
     private final PopupWindowTextBinding binding;   //绑定的 XML 布局
@@ -52,11 +52,11 @@ public class TextPopupWindow {
         int anchorTop = anchorLocation[1];
 
         // 获取屏幕的总宽高
-        int screenWidth = ViewEdgeHelper.getScreenWidth(anchor.getContext());
-        int screenHeight = ViewEdgeHelper.getScreenHeight(anchor.getContext());
+        int screenWidth = AppearanceHelper.getScreenWidth(anchor.getContext());
+        int screenHeight = AppearanceHelper.getScreenHeight(anchor.getContext());
 
         // 间距
-        int margin = ViewEdgeHelper.dpToPx(anchor.getContext(), 10);
+        int margin = AppearanceHelper.dpToPx(anchor.getContext(), 10);
 
         int xOffset, yOffset;
         int finalWidth = idealWidth;

@@ -18,7 +18,7 @@ import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.databinding.ViewHolderRoleBinding;
 import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.util.List;
@@ -92,7 +92,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             this.binding = binding;
 
             //设置触摸监听器
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
@@ -250,21 +250,21 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         RoleUiModel front = getItem(position - 1);
         if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
             if (front instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
             }
         } else {
             RoleUiModel behind = getItem(position + 1);
 
             if (front instanceof RoleUiModel.Separator && behind instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
             } else if (front instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
             } else if (behind instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
     }

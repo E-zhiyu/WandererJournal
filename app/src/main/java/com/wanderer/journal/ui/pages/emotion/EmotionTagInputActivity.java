@@ -19,7 +19,7 @@ import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
 import java.util.Arrays;
@@ -49,10 +49,10 @@ public class EmotionTagInputActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             binding.linearLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    imeInsets.bottom + AppearanceHelper.dpToPx(this, 10)
             );
 
             return insets;

@@ -71,14 +71,14 @@ import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
@@ -148,9 +148,9 @@ public class WriteActivity extends AppCompatActivity {
 
             //底部输入框卡片
             binding.contentInputLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 20),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 20),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
                     systemBars.bottom
             );
 
@@ -160,7 +160,7 @@ public class WriteActivity extends AppCompatActivity {
                     systemBars.left,
                     0,
                     systemBars.right,
-                    keyboardHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                    keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
@@ -257,7 +257,7 @@ public class WriteActivity extends AppCompatActivity {
                                 0,
                                 0,
                                 0,
-                                currentHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                                currentHeight + AppearanceHelper.dpToPx(this, 5)
                         );
                     }
             );
@@ -760,7 +760,7 @@ public class WriteActivity extends AppCompatActivity {
 
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    AppearanceAnimationHelper.scrollPagingRecycler(
+                    ScrollHelper.scrollPagingRecycler(
                             binding.contentRecycler,
                             (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                             adapter,

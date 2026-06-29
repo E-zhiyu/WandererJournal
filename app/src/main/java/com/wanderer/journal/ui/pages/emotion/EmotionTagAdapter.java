@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagAdapter.EmotionTagViewHolder> {
     private final OnClickedListener clickedListener;            //点击监听器
@@ -37,7 +37,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
             this.binding = binding;
 
             //设置触摸动画
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
@@ -153,6 +153,6 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
         holder.binding.descriptionText.setText(description.isEmpty() ? "<无描述>" : description);
 
         //设置圆角
-        AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
+        AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
     }
 }

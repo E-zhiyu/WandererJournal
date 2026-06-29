@@ -10,13 +10,14 @@ import android.view.ViewGroup;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 import androidx.appcompat.content.res.AppCompatResources;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.TextViewCompat;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.textview.MaterialTextView;
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.helpers.appearance.ColorHelper;
 
 
 public class SettingClickableTextView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
@@ -51,7 +52,12 @@ public class SettingClickableTextView extends SettingOptionViewBase<MaterialText
         ));
         functionComponent.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, endDrawable, null);
         functionComponent.setGravity(Gravity.CENTER_VERTICAL);
-        TextViewCompat.setCompoundDrawableTintList(functionComponent, ColorStateList.valueOf(ColorHelper.getPrimaryColor(context)));
+        int primaryColor = MaterialColors.getColor(
+                context,
+                androidx.appcompat.R.attr.colorPrimary,
+                ContextCompat.getColor(context, R.color.color_primary)
+        );
+        TextViewCompat.setCompoundDrawableTintList(functionComponent, ColorStateList.valueOf(primaryColor));
         functionComponent.setPadding(10, 10, 25, 10);
         binding.componentLayout.addView(functionComponent);
     }

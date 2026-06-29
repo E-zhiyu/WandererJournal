@@ -19,6 +19,7 @@ public enum ThemeMode {
         return title;
     }
 
+    @AppCompatDelegate.NightMode
     public int getCode() {
         return code;
     }

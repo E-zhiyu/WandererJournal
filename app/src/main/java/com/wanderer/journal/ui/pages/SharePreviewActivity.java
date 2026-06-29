@@ -36,9 +36,8 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
@@ -130,8 +129,8 @@ public class SharePreviewActivity extends AppCompatActivity {
             DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.getTag());
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.shareBtn);
-        ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, this);
+        AppearanceHelper.attachMorphAnimation(binding.shareBtn);
+        AppearanceHelper.setMarginToNavigation(binding.shareBtn, this);
 
         //段落列表
         initRecycler();

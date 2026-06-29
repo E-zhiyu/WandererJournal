@@ -28,8 +28,7 @@ import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
@@ -82,21 +81,21 @@ public class StatisticsActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
         //两个连续日期卡片
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.continuousCountCard,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.maxContinuousCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
 
         //连续日期数据
@@ -112,21 +111,21 @@ public class StatisticsActivity extends AppCompatActivity {
 
         //最大段落字符数量
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.maxCharacterCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.averageCharacterCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS
         );
         disposable.add(ParagraphService.getDiaryLengthData(db)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -264,7 +263,7 @@ public class StatisticsActivity extends AppCompatActivity {
 
                     //xOff: 居中对齐, yOff: 放在上方
                     int xOffset = (view.getWidth() - popupWidth) / 2;
-                    int yOffset = -(view.getHeight() + popupHeight) - ViewEdgeHelper.dpToPx(this, 5);
+                    int yOffset = -(view.getHeight() + popupHeight) - AppearanceHelper.dpToPx(this, 5);
 
                     popupWindow.showAsDropDown(view, xOffset, yOffset);
                 }

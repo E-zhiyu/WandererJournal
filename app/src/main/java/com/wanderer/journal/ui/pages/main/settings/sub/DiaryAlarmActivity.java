@@ -18,7 +18,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
@@ -244,8 +244,8 @@ public class DiaryAlarmActivity extends AppCompatActivity {
      */
     private void setAlarmComponentsVisibility(boolean isVisible, boolean needAnimation) {
         if (needAnimation) {
-            AppearanceAnimationHelper.setVisibilityWithFade(binding.alarmTimeTitle, isVisible);
-            AppearanceAnimationHelper.setVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
+            VisibilityHelper.setVisibilityWithFade(binding.alarmTimeTitle, isVisible);
+            VisibilityHelper.setVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
         } else {
             if (isVisible) {
                 binding.alarmTimeTitle.setVisibility(View.VISIBLE);

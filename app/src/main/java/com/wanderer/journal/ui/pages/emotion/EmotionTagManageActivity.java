@@ -22,8 +22,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ActivityEmotionTagManageBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 import java.util.Locale;
 
@@ -72,8 +71,8 @@ public class EmotionTagManageActivity extends AppCompatActivity {
             Intent skip2EmotionTagAdd = new Intent(this, EmotionTagInputActivity.class);
             startActivity(skip2EmotionTagAdd);
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
-        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(

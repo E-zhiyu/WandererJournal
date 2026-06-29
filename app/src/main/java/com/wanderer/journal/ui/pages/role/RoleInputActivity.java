@@ -21,7 +21,7 @@ import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 
@@ -55,10 +55,10 @@ public class RoleInputActivity extends AppCompatActivity {
 
             //滚动布局中的线性布局
             binding.linearLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    imeInsets.bottom + AppearanceHelper.dpToPx(this, 10)
             );
 
             return insets;

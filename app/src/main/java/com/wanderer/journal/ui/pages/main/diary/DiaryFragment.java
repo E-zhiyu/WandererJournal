@@ -30,7 +30,8 @@ import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.WriteActivity;
@@ -72,7 +73,7 @@ public class DiaryFragment extends Fragment {
      */
     private void initViews() {
         //添加 FAB
-        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
         binding.addFab.setOnClickListener(view -> {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
@@ -206,7 +207,7 @@ public class DiaryFragment extends Fragment {
         binding.appBarLayout.setExpanded(false);
 
         //滚动列表视图
-        AppearanceAnimationHelper.scrollRecycler(
+        ScrollHelper.scrollRecycler(
                 binding.diaryRecycler,
                 (LinearLayoutManager) binding.diaryRecycler.getLayoutManager(),
                 targetPosition,

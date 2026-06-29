@@ -163,6 +163,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                             commonRoleAdapter.submitList(roleList);
 
                             if (roleList.isEmpty()) {
+                                //TODO:常用角色显示和消失做动画
                                 binding.commonRoleRecycler.setVisibility(View.GONE);
                                 binding.commonRoleTitle.setVisibility(View.GONE);
                             } else {

@@ -9,7 +9,7 @@ import androidx.annotation.StringRes;
 
 import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 import org.jetbrains.annotations.Contract;
 
@@ -50,7 +50,7 @@ abstract public class SettingOptionViewBase<C, L> {
         setRadius(radiusStyle, context);
 
         //设置触摸动画
-        AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+        AppearanceHelper.attachMorphAnimation(binding.getRoot());
     }
 
     protected void setTitle(@StringRes int title) {
@@ -114,43 +114,43 @@ abstract public class SettingOptionViewBase<C, L> {
     public void setRadius(@NonNull RadiusStyle radiusStyle, Context context) {
         switch (radiusStyle) {
             case TOP:
-                AppearanceAnimationHelper.setRadius(
+                AppearanceHelper.setRadius(
                         context,
                         binding.getRoot(),
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS
                 );
                 break;
             case MIDDLE:
-                AppearanceAnimationHelper.setRadius(
+                AppearanceHelper.setRadius(
                         context,
                         binding.getRoot(),
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS
                 );
                 break;
             case BOTTOM:
-                AppearanceAnimationHelper.setRadius(
+                AppearanceHelper.setRadius(
                         context,
                         binding.getRoot(),
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.SMALL_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS
                 );
                 break;
             case SINGLE:
-                AppearanceAnimationHelper.setRadius(
+                AppearanceHelper.setRadius(
                         context,
                         binding.getRoot(),
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                        AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS,
+                        AppearanceHelper.MEDIUM_CARD_RADIUS
                 );
                 break;
         }

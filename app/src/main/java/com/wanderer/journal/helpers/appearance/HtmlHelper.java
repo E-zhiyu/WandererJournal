@@ -84,7 +84,7 @@ public class HtmlHelper {
         backgroundWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
 
         //动态获取当前手机屏幕的真实物理像素宽度 (px)
-        int screenWidthPx = ViewEdgeHelper.getScreenWidth(context);
+        int screenWidthPx = AppearanceHelper.getScreenWidth(context);
 
         //用动态算出的屏幕宽度去强行测绘 WebView
         backgroundWebView.measure(

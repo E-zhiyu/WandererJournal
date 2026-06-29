@@ -30,8 +30,8 @@ import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBindi
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.SearchHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
 
@@ -85,8 +85,8 @@ public class RoleManageActivity extends AppCompatActivity {
             Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);
             startActivity(skip2RoleInput);
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
-        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
 
         //初始化 RecyclerView
         initRecyclerView();
@@ -196,8 +196,8 @@ public class RoleManageActivity extends AppCompatActivity {
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
-                            AppearanceAnimationHelper.setVisibilityWithFade(binding.loadingIndicator, false);
-                            AppearanceAnimationHelper.setVisibilityWithFade(binding.emptyText, roleList.isEmpty());
+                            VisibilityHelper.setVisibilityWithFade(binding.loadingIndicator, false);
+                            VisibilityHelper.setVisibilityWithFade(binding.emptyText, roleList.isEmpty());
 
                             adapter.submitList(roleList);
                         }
