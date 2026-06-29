@@ -93,8 +93,6 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
                 (model, view) -> {
                     if (model == null) {
-                        Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
-                        startActivity(skip2EmotionAdd);
                         return;
                     }
 
@@ -119,6 +117,10 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
                     EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
                     viewModel.setCheckedEmotionTag(model.getEmotionTag(), false, 1);
+                },
+                () -> {
+                    Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
+                    startActivity(skip2EmotionAdd);
                 }
         );
         binding.recycler.setAdapter(adapter);

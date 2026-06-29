@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.others.bottom;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
 import java.util.Set;
 
@@ -61,13 +63,19 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         EmotionTagFilterAdapter adapter = new EmotionTagFilterAdapter(
                 viewModel.getCheckedEmotionIdSet(),
                 (emotionTag, isChecked) -> {
-                    long emotionId = emotionTag.getEmotionId();
-                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
-                    if (isChecked) {
-                        checkedEmotionIdSet.add(emotionId);
-                    } else {
-                        checkedEmotionIdSet.remove(emotionId);
+                    if (emotionTag != null) {
+                        long emotionId = emotionTag.getEmotionId();
+                        Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
+                        if (isChecked) {
+                            checkedEmotionIdSet.add(emotionId);
+                        } else {
+                            checkedEmotionIdSet.remove(emotionId);
+                        }
                     }
+                },
+                () -> {
+                    Intent skip2EmotionInput = new Intent(requireContext(), EmotionTagInputActivity.class);
+                    startActivity(skip2EmotionInput);
                 }
         );
         binding.emotionTagRecycler.setAdapter(adapter);
@@ -79,13 +87,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         emotionTagList -> {
-                            if (emotionTagList.isEmpty()) {
-                                binding.emotionRecyclerTitleText.setVisibility(View.GONE);
-                                binding.emotionTagRecycler.setVisibility(View.GONE);
-                            } else {
-                                binding.emotionRecyclerTitleText.setVisibility(View.VISIBLE);
-                                binding.emotionTagRecycler.setVisibility(View.VISIBLE);
-                            }
+                            emotionTagList.add(null);  //加上一个 null 占位符，作为添加标签的功能按钮
                             adapter.submitList(emotionTagList);
                         },
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)

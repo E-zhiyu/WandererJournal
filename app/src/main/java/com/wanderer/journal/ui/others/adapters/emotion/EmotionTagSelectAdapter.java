@@ -16,8 +16,9 @@ import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, RecyclerView.ViewHolder> {
     private static final int TYPE_ADD_ENTRY = 1;
     private static final int TYPE_NORMAL = 0;
-    private final OnClickedListener onClickedListener;  //点击监听
-    private final OnCloseListener onCloseListener;      //关闭图标点击监听
+    private final OnClickedListener onClickedListener;      //点击监听
+    private final OnCloseListener onCloseListener;          //关闭图标点击监听
+    private final OnAddEmotionListener addEmotionListener;  //添加情绪标签的监听器
     private final static DiffUtil.ItemCallback<EmotionTagUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
@@ -49,6 +50,10 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
         void onClosed(EmotionTagUiModel model);
     }
 
+    public interface OnAddEmotionListener {
+        void onAdd();
+    }
+
     public interface ViewHolderListener {
         void onClicked(int position, View view);
 
@@ -61,10 +66,11 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
      * @param onClickedListener 点击监听
      * @param onCloseListener   关闭按钮点击监听
      */
-    public EmotionTagSelectAdapter(OnClickedListener onClickedListener, OnCloseListener onCloseListener) {
+    public EmotionTagSelectAdapter(OnClickedListener onClickedListener, OnCloseListener onCloseListener, OnAddEmotionListener addEmotionListener) {
         super(ITEM_CALLBACK);
         this.onClickedListener = onClickedListener;
         this.onCloseListener = onCloseListener;
+        this.addEmotionListener = addEmotionListener;
     }
 
     public static class EmotionTagSelectViewHolder extends RecyclerView.ViewHolder {
@@ -91,7 +97,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
     public static class AddEmotionViewHolder extends RecyclerView.ViewHolder {
         ViewHolderChipTextElevatedBinding binding;
 
-        public AddEmotionViewHolder(@NonNull ViewHolderChipTextElevatedBinding binding, ViewHolderListener listener) {
+        public AddEmotionViewHolder(@NonNull ViewHolderChipTextElevatedBinding binding, OnAddEmotionListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -99,10 +105,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
             binding.chip.setCheckable(false);
 
             //设置点击监听
-            binding.chip.setOnClickListener(view -> {
-                listener.onClicked(getBindingAdapterPosition(), binding.chip);
-                binding.chip.setChecked(true);
-            });
+            binding.chip.setOnClickListener(view -> listener.onAdd());
         }
     }
 
@@ -148,19 +151,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
             );
             return new AddEmotionViewHolder(
                     binding,
-                    new ViewHolderListener() {
-                        @Override
-                        public void onClicked(int position, View view) {
-                            EmotionTagUiModel model = getItem(position);
-                            onClickedListener.onClicked(model, view);
-                        }
-
-                        @Override
-                        public void onClosed(int position) {
-                            EmotionTagUiModel model = getItem(position);
-                            onCloseListener.onClosed(model);
-                        }
-                    }
+                    addEmotionListener
             );
         }
     }
