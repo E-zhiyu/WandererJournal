@@ -610,6 +610,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                 new PagingRecyclerScrollListener() {
                     @Override
                     public void onSucceed() {
+                        //折叠标题栏
+                        binding.appBarLayout.setExpanded(false);
+
                         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
                         initScrollPosition.set(-1);
                     }

@@ -1,17 +1,13 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -341,7 +337,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
             holder.itemView.setVisibility(View.GONE);       //不显示占位符，防止加载时遮挡加载指示器
@@ -394,7 +390,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             String rawContent = paragraph.getContent(); //数据库中的原始数据
             CharSequence richText = ParagraphTextConverter.hierarchic(
                     context,
-                    positionSet.contains(position) ? highlightedKeywordList : null,
+                    positionSet.contains(holder.getBindingAdapterPosition()) ? highlightedKeywordList : null,
                     rawContent,
                     new RoleRefTextRule() {
                         @Override
@@ -409,35 +405,14 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             );
             itemHolder.binding.contentText.setText(richText);
 
-            //选择状态
+            //显示和隐藏复选框
             if (isSelectMode) {
-                //添加图标
-                TypedValue typedValue = new TypedValue();
-                boolean resolved = context.getTheme().resolveAttribute(
-                        android.R.attr.listChoiceIndicatorMultiple,
-                        typedValue,
-                        true
-                );
-                if (resolved) {
-                    Drawable drawable = AppCompatResources.getDrawable(context, typedValue.resourceId);
-                    itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            drawable,
-                            null,
-                            null,
-                            null
-                    );
-                }
+                itemHolder.binding.checkedText.setVisibility(View.VISIBLE);
             } else {
-                //去掉图标
-                itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        null,
-                        null,
-                        null,
-                        null
-                );
+                itemHolder.binding.checkedText.setVisibility(View.GONE);
             }
             //设置选择状态
-            itemHolder.binding.contentText.setChecked(
+            itemHolder.binding.checkedText.setChecked(
                     selectionTracker != null &&
                             selectionTracker.hasSelection() &&
                             selectionTracker.getSelection().contains(paragraph.getParagraphId())
@@ -473,7 +448,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
 
             //设置圆角
-            setRadius(itemHolder.binding.getRoot(), position);
+            setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
         } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
