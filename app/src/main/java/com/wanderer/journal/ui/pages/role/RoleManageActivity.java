@@ -200,7 +200,8 @@ public class RoleManageActivity extends AppCompatActivity {
                             VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, roleList.isEmpty());
 
                             adapter.submitList(roleList);
-                        }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
     }

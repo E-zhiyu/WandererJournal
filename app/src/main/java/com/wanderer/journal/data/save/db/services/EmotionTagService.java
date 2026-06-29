@@ -46,6 +46,7 @@ public class EmotionTagService {
      */
     public static Flowable<List<EmotionListUiModel>> getAllEmotionTagWithSeparator(@NonNull DiaryDatabase db) {
         EmotionTagDao dao = db.emotionTagDao();
+        EmotionType[] types = EmotionType.values();
         return dao.getAllEmotionTagFlowable()
                 .map(emotionTagEntityList -> {
                     List<EmotionListUiModel> resultList = new ArrayList<>();
@@ -62,7 +63,7 @@ public class EmotionTagService {
 
                     //循环添加分隔符和 Item 项
                     for (Map.Entry<Integer, List<EmotionTagEntity>> entry : groupedMap.entrySet()) {
-                        String separatorText = EmotionType.values()[entry.getKey()].getTitle();
+                        String separatorText = types[entry.getKey()].getTitle();
                         resultList.add(new EmotionListUiModel.Separator(separatorText));
 
                         List<EmotionListUiModel.Item> itemList = entry.getValue().stream()
