@@ -54,7 +54,7 @@ import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -469,9 +469,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //应用粘性头部装饰器
-        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                ViewHolderDateSeparatorBinding::inflate,
+                ViewHolderSeparatorTextChipBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);

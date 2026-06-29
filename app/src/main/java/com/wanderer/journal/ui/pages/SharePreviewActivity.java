@@ -34,7 +34,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
@@ -222,9 +222,9 @@ public class SharePreviewActivity extends AppCompatActivity {
         binding.previewRecycler.setAdapter(adapter);
 
         //添加粘性头部适配器
-        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                ViewHolderDateSeparatorBinding::inflate,
+                ViewHolderSeparatorTextChipBinding::inflate,
                 (binding, data) -> binding.dateText.setText(data)
         );
         binding.previewRecycler.addItemDecoration(decoration);

@@ -23,7 +23,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -109,9 +109,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderDateSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public DateSeparatorViewHolder(@NonNull ViewHolderDateSeparatorBinding binding) {
+        public DateSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -173,7 +173,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             );
             return new ParagraphListAdapter.ParagraphViewHolder(binding);
         } else {
-            ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false

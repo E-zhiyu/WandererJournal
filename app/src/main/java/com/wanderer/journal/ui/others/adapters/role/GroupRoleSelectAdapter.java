@@ -12,7 +12,7 @@ import com.google.android.material.chip.Chip;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleGroupUiModel;
 import com.wanderer.journal.databinding.ViewHolderGroupRoleItemBinding;
-import com.wanderer.journal.databinding.ViewHolderGroupRoleSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextviewBinding;
 
 import java.util.List;
 import java.util.Locale;
@@ -104,9 +104,9 @@ public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, Recycl
     }
 
     public static class GroupRoleSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderGroupRoleSeparatorBinding binding;
+        ViewHolderSeparatorTextviewBinding binding;
 
-        public GroupRoleSeparatorViewHolder(@NonNull ViewHolderGroupRoleSeparatorBinding binding) {
+        public GroupRoleSeparatorViewHolder(@NonNull ViewHolderSeparatorTextviewBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -135,7 +135,7 @@ public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, Recycl
             );
             return new GroupRoleItemViewHolder(binding);
         } else {
-            ViewHolderGroupRoleSeparatorBinding binding = ViewHolderGroupRoleSeparatorBinding.inflate(
+            ViewHolderSeparatorTextviewBinding binding = ViewHolderSeparatorTextviewBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false

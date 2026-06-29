@@ -88,7 +88,7 @@ public interface EmotionTagDao {
      *
      * @return 所有情绪标签组成的列表
      */
-    @Query("SELECT * FROM emotionTags")
+    @Query("SELECT * FROM emotionTags ORDER BY type")
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
 
     /**
