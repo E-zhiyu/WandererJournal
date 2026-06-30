@@ -7,7 +7,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 public class EmotionTagUseCountModel {
     @Embedded
     private EmotionTagEntity emotionTag;
-    private int useCount;
+    private final int useCount;
 
     public EmotionTagUseCountModel(EmotionTagEntity emotionTag, int useCount) {
         this.emotionTag = emotionTag;
