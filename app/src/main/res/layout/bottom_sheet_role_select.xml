@@ -44,7 +44,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:text="@string/common_role"
+        android:text="@string/common_role_top_5"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintBottom_toBottomOf="@id/add_role_btn"
         app:layout_constraintStart_toStartOf="parent"

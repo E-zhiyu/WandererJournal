@@ -397,6 +397,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
                         android:layout_marginTop="15dp"
+                        android:layout_marginBottom="7dp"
                         android:text="@string/role_statistics"
                         android:textAppearance="?attr/textAppearanceHeadline6" />
 
@@ -406,7 +407,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
-                        android:text="@string/common_role"
+                        android:text="@string/common_role_top_5"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOutline" />
 
@@ -432,6 +433,68 @@
 
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/role_relationship_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        app:chipSpacingHorizontal="6dp"
+                        app:chipSpacingVertical="0dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 情绪标签统计 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/emotion_statistics_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/role_statistics_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="15dp"
+                        android:layout_marginBottom="7dp"
+                        android:text="@string/emotion_statistics"
+                        android:textAppearance="?attr/textAppearanceHeadline6" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/common_emotion_tag_top_5"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOutline" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/common_emotion_chip_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        app:chipSpacingHorizontal="6dp"
+                        app:chipSpacingVertical="0dp" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/used_emotion_tag_type"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOutline" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/emotion_type_chip_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="20dp"

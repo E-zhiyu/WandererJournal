@@ -132,9 +132,12 @@
     <string name="multi_word_search_or">多词搜索：出现任意一个</string>
     <string name="display_name">显示名称</string>
     <string name="role_display_name_helper">角色显示在段落和选择列表中的名称，留空则显示角色名称</string>
-    <string name="common_role">常用角色</string>
+    <string name="common_role_top_5">常用角色(前5个)</string>
     <string name="role_statistics">角色统计</string>
     <string name="role_relationship">角色关系</string>
+    <string name="common_emotion_tag_top_5">常用情绪标签(前5个)</string>
+    <string name="emotion_statistics">情绪标签统计</string>
+    <string name="used_emotion_tag_type">使用过的情绪标签种类</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

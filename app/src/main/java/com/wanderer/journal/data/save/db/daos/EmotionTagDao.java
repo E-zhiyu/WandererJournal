@@ -9,6 +9,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
@@ -90,6 +91,20 @@ public interface EmotionTagDao {
      */
     @Query("SELECT * FROM emotionTags ORDER BY type")
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
+
+    /**
+     * 获取使用过的情绪标签及其使用次数
+     *
+     * @return 包含情绪标签和使用次数的复合实体列表
+     */
+    @Query(
+            "SELECT e.*, " +
+                    "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
+                    "FROM emotionTags e " +
+                    "WHERE useCount > 0 " +
+                    "ORDER BY e.type"
+    )
+    Flowable<List<EmotionTagUseCountModel>> getUsedEmotionTagFlowable();
 
     /**
      * 获取可以选择的情绪标签数据
