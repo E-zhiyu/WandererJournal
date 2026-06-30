@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.alipay.sdk.app.EnvUtils;
 import com.alipay.sdk.app.PayTask;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.auxiliary.classes.PayResult;
 import com.wanderer.journal.databinding.ActivityAlipayBinding;
 
@@ -56,15 +57,20 @@ public class AlipayActivity extends AppCompatActivity {
                 // 判断 resultStatus 状态码
                 // 9000 代表订单支付成功
                 if (TextUtils.equals(resultStatus, "9000")) {
-                    Toast.makeText(AlipayActivity.this, "支付成功！", Toast.LENGTH_SHORT).show();
+                    new MaterialAlertDialogBuilder(AlipayActivity.this)
+                            .setTitle("沙箱支付")
+                            .setMessage("支付成功")
+                            .setNegativeButton("关闭", (dialogInterface, i) -> finish())
+                            .show();
                     // 【注意】这里只是客户端的同步趋向成功，实际业务请以 Windows 服务器收到的异步通知为准
-                    finish();
                 } else if (TextUtils.equals(resultStatus, "6001")) {
                     // 6001 代表用户中途取消了支付
                     Toast.makeText(AlipayActivity.this, "支付已取消", Toast.LENGTH_SHORT).show();
+                    finish();
                 } else {
                     // 8000 代表正在处理中，4000 代表支付失败等
                     Toast.makeText(AlipayActivity.this, "支付失败，错误码: " + resultStatus, Toast.LENGTH_SHORT).show();
+                    finish();
                 }
                 Log.d(TAG, "支付宝返回状态码: " + resultStatus + "，详情: " + resultInfo);
             }
