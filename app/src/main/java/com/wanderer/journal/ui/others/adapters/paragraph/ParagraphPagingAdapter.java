@@ -452,9 +452,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
+            //分隔符文本
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
             separatorViewHolder.binding.separatorText.setText(dateStr);
-            separatorViewHolder.binding.getRoot().setVisibility(View.VISIBLE);
         }
     }
 

@@ -279,6 +279,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         } else if (holder instanceof ParagraphListAdapter.DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
+            //分隔符文字
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
