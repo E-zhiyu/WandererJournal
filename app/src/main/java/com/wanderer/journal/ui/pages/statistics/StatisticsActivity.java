@@ -22,6 +22,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.TipPreference;
@@ -299,6 +300,30 @@ public class StatisticsActivity extends AppCompatActivity {
                             }
                             headerDecoration = new MonthHeaderDecoration(modelList, this);
                             binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 初始化角色统计卡片
+     */
+    private void initRoleStatisticsCard() {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(db.roleDao().getCommonRoleFlowable(10)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        roleList -> {
+                            int visibility = roleList.isEmpty() ? View.GONE : View.VISIBLE;
+                            binding.commonRoleTitle.setVisibility(visibility);
+                            binding.commonRoleChipGroup.setVisibility(visibility);
+
+                            for (RoleEntity role : roleList) {
+                                String display = role.generateDisplayName();
+                                //TODO:设置角色统计数据显示逻辑
+                            }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )

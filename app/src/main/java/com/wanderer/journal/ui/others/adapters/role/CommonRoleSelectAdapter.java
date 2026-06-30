@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
-import java.util.Locale;
-
 public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleSelectAdapter.RoleSelectViewHolder> {
     private final static DiffUtil.ItemCallback<RoleEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -98,16 +96,11 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
     @Override
     public void onBindViewHolder(@NonNull RoleSelectViewHolder holder, int position) {
         RoleEntity role = getItem(position);
-        String name = role.getName();
         String displayName = role.getDisplayName();
         if (displayName.isEmpty()) {
             holder.binding.chip.setText(role.getName());
         } else {
-            String finalDisplay = String.format(
-                    Locale.getDefault(),
-                    "%s (%s)",
-                    displayName, name
-            );
+            String finalDisplay = role.generateDisplayName();
             holder.binding.chip.setText(finalDisplay);
         }
     }

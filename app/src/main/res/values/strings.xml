@@ -134,6 +134,7 @@
     <string name="display_name">显示名称</string>
     <string name="role_display_name_helper">角色显示在段落和选择列表中的名称，留空则显示角色名称</string>
     <string name="common_role">常用角色</string>
+    <string name="role_statistics">角色统计</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

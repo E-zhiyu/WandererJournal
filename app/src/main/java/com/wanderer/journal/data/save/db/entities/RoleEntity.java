@@ -5,6 +5,8 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.util.Locale;
+
 @Entity(
         tableName = "roles",
         indices = {
@@ -58,10 +60,6 @@ public class RoleEntity {
         return displayName;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
     public String getIdentity() {
         return identity;
     }
@@ -92,5 +90,13 @@ public class RoleEntity {
 
     public void setUseCount(int useCount) {
         this.useCount = useCount;
+    }
+
+    public String generateDisplayName() {
+        if (displayName.isEmpty()) {
+            return name;
+        } else {
+            return String.format(Locale.getDefault(), "%s (%s)", displayName, name);
+        }
     }
 }

@@ -15,7 +15,6 @@ import com.wanderer.journal.databinding.ViewHolderGroupRoleItemBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextviewBinding;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, RecyclerView.ViewHolder> {
@@ -82,17 +81,8 @@ public class GroupRoleSelectAdapter extends ListAdapter<RoleGroupUiModel, Recycl
                 roleChip.setCheckable(false);
 
                 //设置显示名称
-                if (role.getDisplayName().isEmpty()) {
-                    roleChip.setText(role.getName());
-                } else {
-                    String finalDisplay = String.format(
-                            Locale.getDefault(),
-                            "%s (%s)",
-                            role.getDisplayName(),
-                            role.getName()
-                    );
-                    roleChip.setText(finalDisplay);
-                }
+                String display = role.generateDisplayName();
+                roleChip.setText(display);
 
                 //添加到视图
                 binding.chipGroup.addView(roleChip);
