@@ -153,8 +153,8 @@ public class StatisticsActivity extends AppCompatActivity {
     private void initGuide() {
         //角色引用的方法
         TipPreference.showTip(
-                binding.memeryPixelRecycler,
-                Gravity.BOTTOM,
+                binding.weekLayout,
+                Gravity.END,
                 "点击记忆像素可查看当天日记",
                 TipPreference.KEY_MEMERY_PIXEL_CHECK,
                 1
@@ -289,7 +289,9 @@ public class StatisticsActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         modelList -> {
-                            adapter.submitList(modelList);
+                            adapter.submitList(modelList, () ->
+                                    layoutManager.scrollToPositionWithOffset(adapter.getItemCount() - 1, 0)
+                            );
 
                             //处理装饰器以绘制月份标签
                             if (headerDecoration != null) {
@@ -297,11 +299,6 @@ public class StatisticsActivity extends AppCompatActivity {
                             }
                             headerDecoration = new MonthHeaderDecoration(modelList, this);
                             binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
-
-                            //滚动到最右侧
-                            binding.memeryPixelRecycler.post(() ->
-                                    binding.memeryPixelRecycler.scrollToPosition(adapter.getItemCount() - 1)
-                            );
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
