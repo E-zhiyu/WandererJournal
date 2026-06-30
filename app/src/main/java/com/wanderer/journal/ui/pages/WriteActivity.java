@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
-import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
 import androidx.activity.EdgeToEdge;
@@ -74,6 +73,7 @@ import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -179,9 +179,7 @@ public class WriteActivity extends AppCompatActivity {
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.contentInputCard.setTranslationY(-keyboardHeight);
-                binding.contentEditCard.setTranslationY(-keyboardHeight);
-                binding.mediaCard.setTranslationY(-keyboardHeight);
+                binding.bottomLayout.setTranslationY(-keyboardHeight);
                 binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
                 return insets;
@@ -227,28 +225,16 @@ public class WriteActivity extends AppCompatActivity {
 
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> {
+                    (currentHeight, previousHeight) -> binding.getRoot().postDelayed(() -> {
                         if (hasWindowFocus()) return;
 
-                        int moveDistance = Math.max(0, currentHeight - binding.contentInputLayout.getPaddingBottom());
-                        binding.contentInputCard
+                        int moveDistance = Math.max(
+                                0,
+                                currentHeight - binding.contentInputLayout.getPaddingBottom()
+                        );
+                        binding.bottomLayout
                                 .animate()
                                 .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.contentEditCard
-                                .animate()
-                                .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.mediaCard
-                                .animate()
-                                .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.emptyText
-                                .animate()
-                                .translationY(-moveDistance / 2f)
                                 .setDuration(250)
                                 .start();
 
@@ -259,7 +245,7 @@ public class WriteActivity extends AppCompatActivity {
                                 0,
                                 currentHeight + AppearanceHelper.dpToPx(this, 5)
                         );
-                    }
+                    }, 50)
             );
         }
     }
@@ -1297,19 +1283,9 @@ public class WriteActivity extends AppCompatActivity {
             backHelper.unregisterHandler(editBackHandler);
         }
 
-        //定义过渡动画：组合滑入和渐变
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.BOTTOM))
-                .addTarget(binding.contentEditCard)
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250);
-
-        //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
         //执行状态改变
         if (isEditMode) {
+            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, true, Gravity.BOTTOM, null);
             this.modifyingParagraph = modifyingParagraph;
             CharSequence richText = TextHelper.hierarchicFromString(
                     this,
@@ -1324,13 +1300,12 @@ public class WriteActivity extends AppCompatActivity {
             binding.originText.setText(richText);                               //显示原始文本的富文本
             needCursorSkipToTail = true;
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-            binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
             ImmHelper.showImm(binding.contentTextInput);
         } else {
+            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, false, Gravity.BOTTOM, null);
             this.modifyingParagraph = null;
-            binding.contentEditCard.setVisibility(View.GONE);
             binding.contentTextInput.setText(null);         //清空输入框
         }
 
@@ -1362,23 +1337,8 @@ public class WriteActivity extends AppCompatActivity {
             backHelper.unregisterHandler(mediaBackHandler);
         }
 
-        //定义过渡动画：组合滑入和渐变
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.BOTTOM))
-                .addTransition(new Fade())
-                .addTarget(binding.mediaCard)
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250);
-
-        //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
         //切换视图可见性
-        if (isVisible) {
-            binding.mediaCard.setVisibility(View.VISIBLE);
-        } else {
-            binding.mediaCard.setVisibility(View.GONE);
-        }
+        VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.mediaCard, isVisible, Gravity.BOTTOM, null);
     }
 
     /**
