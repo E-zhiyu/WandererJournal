@@ -126,7 +126,7 @@
                 style="@style/DropdownMenuTextInputLayoutStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/relationship"
+                android:hint="@string/role_relationship"
                 app:helperText="@string/role_relationship_helper">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView

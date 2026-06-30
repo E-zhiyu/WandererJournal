@@ -110,7 +110,6 @@
     <string name="role">角色</string>
     <string name="role_search_hint">搜索角色信息……</string>
     <string name="no_role">无角色</string>
-    <string name="relationship">关系</string>
     <string name="add_role">新建角色</string>
     <string name="identity">身份</string>
     <string name="role_name_helper">该角色的通用称呼，建议填真实名称</string>
@@ -135,6 +134,7 @@
     <string name="role_display_name_helper">角色显示在段落和选择列表中的名称，留空则显示角色名称</string>
     <string name="common_role">常用角色</string>
     <string name="role_statistics">角色统计</string>
+    <string name="role_relationship">角色关系</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

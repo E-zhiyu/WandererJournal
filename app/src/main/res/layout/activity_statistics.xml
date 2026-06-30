@@ -379,7 +379,6 @@
                     android:text="@string/more" />
             </LinearLayout>
 
-            <!-- TODO:加上角色统计和情绪标签统计 -->
             <!-- 角色数据统计 -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/role_statistics_card"
@@ -397,13 +396,13 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="15dp"
                         android:text="@string/role_statistics"
                         android:textAppearance="?attr/textAppearanceHeadline6" />
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:layout_width="wrap_content"
                         android:id="@+id/common_role_title"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
@@ -419,7 +418,7 @@
                         android:paddingStart="10dp"
                         android:paddingEnd="10dp"
                         app:chipSpacingHorizontal="6dp"
-                        app:chipSpacingVertical="2dp" />
+                        app:chipSpacingVertical="0dp" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/role_summary_text"
@@ -427,10 +426,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
-                        android:layout_marginBottom="15dp"
-                        android:text="@string/role"
-                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:text="@string/role_relationship"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOutline" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/role_relationship_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="20dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        app:chipSpacingHorizontal="6dp"
+                        app:chipSpacingVertical="0dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,7 +18,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.google.android.material.chip.Chip;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -37,7 +39,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -146,6 +152,9 @@ public class StatisticsActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+
+        //角色统计
+        initRoleStatisticsCard();
     }
 
     /**
@@ -311,18 +320,65 @@ public class StatisticsActivity extends AppCompatActivity {
      */
     private void initRoleStatisticsCard() {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        disposable.add(db.roleDao().getCommonRoleFlowable(10)
+        disposable.add(db.roleDao().getAllRoleFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         roleList -> {
-                            int visibility = roleList.isEmpty() ? View.GONE : View.VISIBLE;
-                            binding.commonRoleTitle.setVisibility(visibility);
-                            binding.commonRoleChipGroup.setVisibility(visibility);
+                            //设置卡片可见性
+                            int cardVisibility = roleList.isEmpty() ? View.GONE : View.VISIBLE;
+                            binding.roleStatisticsCard.setVisibility(cardVisibility);
 
-                            for (RoleEntity role : roleList) {
-                                String display = role.generateDisplayName();
-                                //TODO:设置角色统计数据显示逻辑
+                            if (roleList.isEmpty()) return;
+
+                            //获取常用角色
+                            List<RoleEntity> commonRoleList = roleList.stream()
+                                    .filter(role -> role.getUseCount() > 0)
+                                    .collect(Collectors.toList());
+                            int commonRoleVisibility = commonRoleList.isEmpty() ? View.GONE : View.VISIBLE;
+                            binding.commonRoleTitle.setVisibility(commonRoleVisibility);
+                            binding.commonRoleChipGroup.setVisibility(commonRoleVisibility);
+
+                            //将常用角色添加到 ChipGroup 中
+                            binding.commonRoleChipGroup.removeAllViews();
+                            for (RoleEntity role : commonRoleList) {
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        role.generateDisplayName(),
+                                        role.getUseCount()
+                                ));
+
+                                binding.commonRoleChipGroup.addView(chip);
+                            }
+
+                            //获取角色关系数据
+                            Map<Integer, Long> roleRelationshipMap = roleList.stream()
+                                    .collect(Collectors.groupingBy(
+                                            RoleEntity::getRelationship,
+                                            LinkedHashMap::new,
+                                            Collectors.counting()
+                                    ));
+
+                            //显示角色关系数据
+                            RoleRelationship[] relationships = RoleRelationship.values();
+                            binding.roleRelationshipGroup.removeAllViews();
+                            for (Map.Entry<Integer, Long> entry : roleRelationshipMap.entrySet()) {
+                                String relationship = relationships[entry.getKey()].getTitle();
+                                long count = entry.getValue();
+
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        relationship,
+                                        count
+                                ));
+
+                                binding.roleRelationshipGroup.addView(chip);
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
