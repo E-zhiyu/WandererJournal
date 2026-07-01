@@ -21,19 +21,18 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityRoleManageBinding;
-import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.SearchHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -66,7 +65,7 @@ public class RoleManageActivity extends AppCompatActivity {
         initViews();
         initBackHandlers();
 
-        binding.getRoot().post(this::initGuide);    //显示提示
+        binding.getRoot().postDelayed(this::initGuide, 250);
     }
 
     @Override
@@ -86,8 +85,8 @@ public class RoleManageActivity extends AppCompatActivity {
             Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);
             startActivity(skip2RoleInput);
         });
-        ViewEdgeHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
-        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
 
         //初始化 RecyclerView
         initRecyclerView();
@@ -131,12 +130,13 @@ public class RoleManageActivity extends AppCompatActivity {
      */
     private void initGuide() {
         //角色引用的方法
-        if (!TipPreference.getValue(this, TipPreference.KEY_ROLE_REF_METHOD)) {
-            TipPreference.setValue(this, TipPreference.KEY_ROLE_REF_METHOD, true);
-
-            TextPopupWindow window = new TextPopupWindow("添加角色后，可在日记段落中使用“@”引用该角色", this);
-            window.show(binding.addFab, Gravity.START);
-        }
+        TipPreference.showTip(
+                binding.addFab,
+                Gravity.START,
+                "添加角色后，可在日记段落中使用“@”引用该角色",
+                TipPreference.KEY_ROLE_REF_METHOD,
+                1
+        );
     }
 
     /**
@@ -154,6 +154,7 @@ public class RoleManageActivity extends AppCompatActivity {
                     RoleEntity role = item.model.getRole();
                     long roleId = role.getRoleId();
                     String roleName = role.getName();
+                    String roleDisplayName = role.getDisplayName();
                     String identity = role.getIdentity();
                     String impression = role.getImpression();
                     int relationship = role.getRelationship();
@@ -165,6 +166,7 @@ public class RoleManageActivity extends AppCompatActivity {
                     Bundle bundle = new Bundle();
                     bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
                     bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
+                    bundle.putString(KeyStrings.ROLE_DISPLAY_NAME.getS(), roleDisplayName);
                     bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
                     bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
                     bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);
@@ -180,10 +182,10 @@ public class RoleManageActivity extends AppCompatActivity {
         binding.recycler.setAdapter(adapter);
 
         //添加粘性头部装饰器
-        StickyHeaderItemDecoration<ViewHolderRoleRelationshipSeparatorBinding> decoration =
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration =
                 new StickyHeaderItemDecoration<>(
                         adapter,
-                        ViewHolderRoleRelationshipSeparatorBinding::inflate,
+                        ViewHolderSeparatorTextChipBinding::inflate,
                         (binding, data) -> binding.separatorText.setText(data)
                 );
         binding.recycler.addItemDecoration(decoration);
@@ -194,16 +196,12 @@ public class RoleManageActivity extends AppCompatActivity {
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
-                            binding.loadingIndicator.setVisibility(View.GONE);
-
-                            if (roleList.isEmpty()) {
-                                binding.emptyText.setVisibility(View.VISIBLE);
-                            } else {
-                                binding.emptyText.setVisibility(View.GONE);
-                            }
+                            VisibilityHelper.toggleVisibilityWithFade(binding.loadingIndicator, false);
+                            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, roleList.isEmpty());
 
                             adapter.submitList(roleList);
-                        }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
     }

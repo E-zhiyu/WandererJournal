@@ -2,20 +2,21 @@ package com.wanderer.journal.data.save.db.services;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleService {
     /**
@@ -40,39 +41,36 @@ public class RoleService {
         // 提前把枚举的 values 数组拿出来缓存，避免在 for 循环中高频触发内存抖动
         final RoleRelationship[] relations = RoleRelationship.values();
 
-        return roleDao.getAllRoleFlowable(safeKeyword, isSearchFilter)
-                // 【核心优化】：将由于数据库变化触发的 map 集合重组逻辑，丢给计算线程，解放主线程
-                .observeOn(Schedulers.computation())
+        return roleDao.getAllRoleWithSearchFlowable(safeKeyword, isSearchFilter)
                 .map(rawList -> {
                     List<RoleUiModel> resultList = new ArrayList<>(rawList.size() + RoleRelationship.values().length); //给予合理的初始容量，减少 ArrayList 扩容开销
 
+                    //判空
                     if (rawList.isEmpty()) {
                         return resultList;
                     }
 
-                    // 利用缓存的数组获取 title
-                    String firstSeparator = relations[rawList.get(0).getRole().getRelationship()].getTitle();
-                    resultList.add(new RoleUiModel.Separator(firstSeparator));
+                    //通过关系远近进行分组
+                    Map<Integer, List<RoleEntityModel>> groupedMap = rawList.stream()
+                            .collect(Collectors.groupingBy(
+                                    model -> model.getRole().getRelationship(),
+                                    LinkedHashMap::new,
+                                    Collectors.toList()
+                            ));
 
-                    for (int i = 0; i < rawList.size(); i++) {
-                        RoleEntityModel currentModel = rawList.get(i);
-                        RoleEntityModel nextModel = i < rawList.size() - 1 ? rawList.get(i + 1) : null;
+                    //循环插入分隔符和 Item
+                    for (Map.Entry<Integer, List<RoleEntityModel>> entry : groupedMap.entrySet()) {
+                        String separatorText = relations[entry.getKey()].getTitle();
+                        resultList.add(new RoleUiModel.Separator(separatorText));
 
-                        resultList.add(new RoleUiModel.Item(currentModel));
-
-                        boolean isRelationshipSame = nextModel == null ||
-                                currentModel.getRole().getRelationship() == nextModel.getRole().getRelationship();
-
-                        if (!isRelationshipSame) {
-                            String separator = relations[nextModel.getRole().getRelationship()].getTitle();
-                            resultList.add(new RoleUiModel.Separator(separator));
-                        }
+                        List<RoleUiModel.Item> itemList = entry.getValue().stream()
+                                .map(RoleUiModel.Item::new)
+                                .collect(Collectors.toList());
+                        resultList.addAll(itemList);
                     }
 
                     return resultList;
-                })
-                // 数据在后台组装完毕后，切回 Android 主线程供 RecyclerView 渲染
-                .observeOn(AndroidSchedulers.mainThread());
+                });
     }
 
     /**
@@ -94,7 +92,6 @@ public class RoleService {
     /**
      * 更新角色
      *
-     * @param db       数据库实例
      * @param role     新角色
      * @param aliaList 角色别名列表
      * @return 是否完成
@@ -102,7 +99,7 @@ public class RoleService {
     public static Completable updateRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
         RoleDao roleDao = db.roleDao();
         return Completable.defer(() -> {
-            roleDao.updateRole(role, aliaList);
+            roleDao.updateRoleAndAlia(role, aliaList);
             return Completable.complete();
         });
     }

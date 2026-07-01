@@ -15,15 +15,18 @@ import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.slider.Slider;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagSelectAdapter;
+import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -32,29 +35,17 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetEmotionTagSelectBinding binding;             //绑定的XML布局
-    private final long paragraphId;
+    private long paragraphId;                                       //正在选择情绪标签的段落编号
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
-    private final OnCheckedChangedListener checkedChangedListener;  //标签选中状态变更监听
-    private final OnSlidedListener slidedListener;                  //滑块滑动监听
 
-    public interface OnCheckedChangedListener {
-        /**
-         * 标签选中状态变更回调
-         *
-         * @param model     数据原型
-         * @param isChecked 是否被选中
-         */
-        void onCheckChanged(EmotionTagUiModel model, boolean isChecked);
-    }
-
-    public interface OnSlidedListener {
-        /**
-         * 滑块滑动回调
-         *
-         * @param model 数据原型
-         * @param value 改变后的程度
-         */
-        void onSlided(EmotionTagUiModel model, int value);
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            paragraphId = getArguments().getLong(KeyStrings.PARAGRAPH_ID.getS());
+            EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
+            viewModel.setParagraphId(paragraphId);
+        }
     }
 
     @Nullable
@@ -80,20 +71,18 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     }
 
     /**
-     * 情绪标签选择对话框构造方法
+     * 创建新实例的方法
      *
-     * @param paragraphId            需要设置情绪标签的段落 ID
-     * @param checkedChangedListener 情绪标签选择状态变更监听器
-     * @param slidedListener         滑块滑动监听
+     * @param paragraphId 正在选择情绪标签的段落 ID
+     * @return 情绪标签选择对话框
      */
-    public EmotionTagSelectBottomSheet(
-            long paragraphId,
-            OnCheckedChangedListener checkedChangedListener,
-            OnSlidedListener slidedListener
-    ) {
-        this.paragraphId = paragraphId;
-        this.checkedChangedListener = checkedChangedListener;
-        this.slidedListener = slidedListener;
+    @NonNull
+    public static EmotionTagSelectBottomSheet newInstance(long paragraphId) {
+        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet();
+        Bundle bundle = new Bundle();
+        bundle.putLong(KeyStrings.PARAGRAPH_ID.getS(), paragraphId);
+        bottomSheet.setArguments(bundle);
+        return bottomSheet;
     }
 
     /**
@@ -104,14 +93,13 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
                 (model, view) -> {
                     if (model == null) {
-                        Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
-                        startActivity(skip2EmotionAdd);
                         return;
                     }
 
-                    //仅当没有选中时才触发上级监听
+                    //仅当没有选中时才报告给 ViewModel
                     if (!model.isChecked()) {
-                        checkedChangedListener.onCheckChanged(model, true);
+                        EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
+                        viewModel.setCheckedEmotionTag(model.getEmotionTag(), true, 1);
                     }
 
                     //显示悬浮滑块
@@ -127,7 +115,12 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                         return;
                     }
 
-                    checkedChangedListener.onCheckChanged(model, false);
+                    EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
+                    viewModel.setCheckedEmotionTag(model.getEmotionTag(), false, 1);
+                },
+                () -> {
+                    Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
+                    startActivity(skip2EmotionAdd);
                 }
         );
         binding.recycler.setAdapter(adapter);
@@ -184,7 +177,8 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 int degree = (int) slider.getValue();
-                slidedListener.onSlided(model, degree);
+                EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
+                viewModel.setCheckedEmotionTag(model.getEmotionTag(), true, degree);
             }
         });
 

@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
+import com.wanderer.journal.auxiliary.enums.settings.ThemeMode;
 
 
 public class AppSettingsPreference {

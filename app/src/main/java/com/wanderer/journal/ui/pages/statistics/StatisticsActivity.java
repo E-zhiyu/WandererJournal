@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,17 +18,22 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.google.android.material.chip.Chip;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.text.EmotionType;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityStatisticsBinding;
 import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
@@ -35,7 +41,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -61,6 +71,7 @@ public class StatisticsActivity extends AppCompatActivity {
         });
 
         initViews();
+        binding.getRoot().postDelayed(this::initGuide, 250);
     }
 
     @Override
@@ -79,21 +90,21 @@ public class StatisticsActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
         //两个连续日期卡片
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.continuousCountCard,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.maxContinuousCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
 
         //连续日期数据
@@ -109,21 +120,21 @@ public class StatisticsActivity extends AppCompatActivity {
 
         //最大段落字符数量
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.maxCharacterCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 this,
                 binding.averageCharacterCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS
         );
         disposable.add(ParagraphService.getDiaryLengthData(db)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -142,6 +153,26 @@ public class StatisticsActivity extends AppCompatActivity {
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
+        );
+
+        //角色统计
+        initRoleStatisticsCard();
+
+        //情绪标签统计
+        initEmotionStatisticsCard();
+    }
+
+    /**
+     * 初始化用户引导
+     */
+    private void initGuide() {
+        //角色引用的方法
+        TipPreference.showTip(
+                binding.weekLayout,
+                Gravity.END,
+                "点击记忆像素可查看当天日记",
+                TipPreference.KEY_MEMERY_PIXEL_CHECK,
+                1
         );
     }
 
@@ -219,10 +250,17 @@ public class StatisticsActivity extends AppCompatActivity {
                             true
                     );
 
-                    //设置文本
+                    //设置文本和按钮可见性
                     DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
                     windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
-                    String lenStr = model.getDiaryLength() == 0 ? "无日记" : model.getDiaryLength() + "字符";
+                    String lenStr;
+                    if (model.getDiaryLength() == 0) {
+                        lenStr = "无日记";
+                        windowBinding.checkDiaryBtn.setVisibility(View.GONE);
+                    } else {
+                        lenStr = model.getDiaryLength() + "字符";
+                        windowBinding.checkDiaryBtn.setVisibility(View.VISIBLE);
+                    }
                     windowBinding.diaryLengthText.setText(lenStr);
 
                     //设置查看日记按钮点击监听
@@ -234,6 +272,9 @@ public class StatisticsActivity extends AppCompatActivity {
 
                         skip2DiaryRead.putExtras(bundle);
                         startActivity(skip2DiaryRead);
+
+                        //让浮窗消失
+                        popupWindow.dismiss();
                     });
 
                     //设置背景以允许点击外部消失
@@ -247,7 +288,7 @@ public class StatisticsActivity extends AppCompatActivity {
 
                     //xOff: 居中对齐, yOff: 放在上方
                     int xOffset = (view.getWidth() - popupWidth) / 2;
-                    int yOffset = -(view.getHeight() + popupHeight) - ViewEdgeHelper.dpToPx(this, 5);
+                    int yOffset = -(view.getHeight() + popupHeight) - AppearanceHelper.dpToPx(this, 5);
 
                     popupWindow.showAsDropDown(view, xOffset, yOffset);
                 }
@@ -263,7 +304,9 @@ public class StatisticsActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         modelList -> {
-                            adapter.submitList(modelList);
+                            adapter.submitList(modelList, () ->
+                                    layoutManager.scrollToPositionWithOffset(adapter.getItemCount() - 1, 0)
+                            );
 
                             //处理装饰器以绘制月份标签
                             if (headerDecoration != null) {
@@ -271,9 +314,145 @@ public class StatisticsActivity extends AppCompatActivity {
                             }
                             headerDecoration = new MonthHeaderDecoration(modelList, this);
                             binding.memeryPixelRecycler.addItemDecoration(headerDecoration);
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
 
-                            //滚动到最右侧
-                            binding.memeryPixelRecycler.scrollToPosition(adapter.getItemCount() - 1);
+    /**
+     * 初始化角色统计卡片
+     */
+    private void initRoleStatisticsCard() {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(db.roleDao().getAllRoleFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        roleList -> {
+                            //设置卡片可见性
+                            int cardVisibility = roleList.isEmpty() ? View.GONE : View.VISIBLE;
+                            binding.roleStatisticsCard.setVisibility(cardVisibility);
+
+                            if (roleList.isEmpty()) return;
+
+                            //获取常用角色
+                            List<RoleEntity> commonRoleList = roleList.stream()
+                                    .filter(role -> role.getUseCount() > 0)
+                                    .limit(5)
+                                    .collect(Collectors.toList());
+                            int commonRoleVisibility = commonRoleList.isEmpty() ? View.GONE : View.VISIBLE;
+                            binding.commonRoleTitle.setVisibility(commonRoleVisibility);
+                            binding.commonRoleChipGroup.setVisibility(commonRoleVisibility);
+
+                            //将常用角色添加到 ChipGroup 中
+                            binding.commonRoleChipGroup.removeAllViews();
+                            for (RoleEntity role : commonRoleList) {
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        role.generateDisplayName(),
+                                        role.getUseCount()
+                                ));
+
+                                binding.commonRoleChipGroup.addView(chip);
+                            }
+
+                            //获取角色关系数据
+                            Map<Integer, Long> roleRelationshipMap = roleList.stream()
+                                    .collect(Collectors.groupingBy(
+                                            RoleEntity::getRelationship,
+                                            LinkedHashMap::new,
+                                            Collectors.counting()
+                                    ));
+
+                            //显示角色关系数据
+                            RoleRelationship[] relationships = RoleRelationship.values();
+                            binding.roleRelationshipGroup.removeAllViews();
+                            for (Map.Entry<Integer, Long> entry : roleRelationshipMap.entrySet()) {
+                                String relationship = relationships[entry.getKey()].getTitle();
+                                long count = entry.getValue();
+
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        relationship,
+                                        count
+                                ));
+
+                                binding.roleRelationshipGroup.addView(chip);
+                            }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 初始化情绪标签统计数据
+     */
+    private void initEmotionStatisticsCard() {
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(db.emotionTagDao().getUsedEmotionTagFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        usedModelList -> {
+                            if (usedModelList.isEmpty()) {
+                                binding.emotionStatisticsCard.setVisibility(View.GONE);
+                                return;
+                            }
+
+                            //添加使用的标签到 ChipGroup
+                            List<EmotionTagUseCountModel> commonEmotionTagList = usedModelList.stream()
+                                    .limit(5)
+                                    .collect(Collectors.toList());
+                            binding.commonEmotionChipGroup.removeAllViews();
+                            for (EmotionTagUseCountModel model : commonEmotionTagList) {
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        model.getEmotionTag().getName(),
+                                        model.getUseCount()
+                                ));
+
+                                binding.commonEmotionChipGroup.addView(chip);
+                            }
+
+                            //获取不同种类标签的数量
+                            Map<Integer, List<EmotionTagUseCountModel>> typeMap = usedModelList.stream()
+                                    .collect(Collectors.groupingBy(
+                                            model -> model.getEmotionTag().getType(),
+                                            LinkedHashMap::new,
+                                            Collectors.toList()
+                                    ));
+
+                            //将种类计数数据添加到 ChipGroup 中
+                            EmotionType[] types = EmotionType.values();
+                            binding.emotionTypeChipGroup.removeAllViews();
+                            for (Map.Entry<Integer, List<EmotionTagUseCountModel>> entry : typeMap.entrySet()) {
+                                String typeTitle = types[entry.getKey()].getTitle();
+                                int typeCount = entry.getValue().stream()
+                                        .map(EmotionTagUseCountModel::getUseCount)
+                                        .reduce(0, Integer::sum);
+
+                                Chip chip = new Chip(this);
+                                chip.setClickable(false);
+                                chip.setText(String.format(
+                                        Locale.getDefault(),
+                                        "%s ×%d",
+                                        typeTitle,
+                                        typeCount
+                                ));
+
+                                binding.emotionTypeChipGroup.addView(chip);
+                            }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )

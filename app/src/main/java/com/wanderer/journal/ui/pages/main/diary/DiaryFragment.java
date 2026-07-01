@@ -23,13 +23,15 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.WriteActivity;
@@ -54,6 +56,12 @@ public class DiaryFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        binding.getRoot().post(this::initGuide);
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
@@ -65,7 +73,7 @@ public class DiaryFragment extends Fragment {
      */
     private void initViews() {
         //添加 FAB
-        AppearanceAnimationHelper.attachMorphAnimation(binding.addFab);
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
         binding.addFab.setOnClickListener(view -> {
             Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
             startActivity(skip2DiaryContent);
@@ -157,6 +165,20 @@ public class DiaryFragment extends Fragment {
     }
 
     /**
+     * 初始化用户引导
+     */
+    private void initGuide() {
+        //角色引用的方法
+        TipPreference.showTip(
+                binding.addFab,
+                Gravity.START,
+                "长按可以补写日记",
+                TipPreference.KEY_WRITE_UP_DIARY,
+                1
+        );
+    }
+
+    /**
      * 跳转到指定位置
      *
      * @param targetPosition 目标下标，实际为大于目标日期的日记数量
@@ -181,12 +203,15 @@ public class DiaryFragment extends Fragment {
             }
         }
 
+        //折叠 AppBarLayout
+        binding.appBarLayout.setExpanded(false);
+
         //滚动列表视图
-        AppearanceAnimationHelper.scrollRecycler(
+        ScrollHelper.scrollRecycler(
                 binding.diaryRecycler,
                 (LinearLayoutManager) binding.diaryRecycler.getLayoutManager(),
                 targetPosition,
-                15,
+                30,
                 0,
                 new RecyclerViewScrollListener() {
                     @Override

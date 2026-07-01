@@ -26,7 +26,7 @@ import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
@@ -78,7 +78,7 @@ public class DataManageActivity extends AppCompatActivity {
                     0,
                     0,
                     0,
-                    systemBars.bottom + ViewEdgeHelper.dpToPx(this, 15)
+                    systemBars.bottom + AppearanceHelper.dpToPx(this, 15)
             );
             return insets;
         });
@@ -480,7 +480,7 @@ public class DataManageActivity extends AppCompatActivity {
                 .flatMapCompletable(diaryId -> {
                     //生成段落实体列表
                     List<ParagraphEntity> paragraphEntityList = new ArrayList<>();
-                    String[] lines = content.split("\n");
+                    String[] lines = content.split("\\s+");
                     for (String line : lines) {
                         if (line.trim().isEmpty()) continue;
 

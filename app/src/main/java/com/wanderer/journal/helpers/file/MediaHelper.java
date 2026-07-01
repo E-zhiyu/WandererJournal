@@ -18,7 +18,7 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +41,7 @@ public class MediaHelper {
 
         try {
             //对 WebView 进行布局
-            int screenWidthPx = ViewEdgeHelper.getScreenWidth(webView.getContext());
+            int screenWidthPx = AppearanceHelper.getScreenWidth(webView.getContext());
             float density = webView.getContext().getResources().getDisplayMetrics().density;
             Log.d(LogTags.MEDIA_HELPER.n(), "屏幕密度：" + density);
             int realHeight = (int) (webView.getContentHeight() * density);

@@ -70,6 +70,22 @@
                     android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- 显示名称 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/display_name_layout"
+                style="@style/CommonTextInputLayoutStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/display_name"
+                app:helperText="@string/role_display_name_helper">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/display_name_input"
+                    style="@style/UserInputEditTextStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <!-- 身份 -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/identity_layout"
@@ -110,7 +126,7 @@
                 style="@style/DropdownMenuTextInputLayoutStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/relationship"
+                android:hint="@string/role_relationship"
                 app:helperText="@string/role_relationship_helper">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView

@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
-import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
 import androidx.activity.EdgeToEdge;
@@ -46,18 +45,19 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
@@ -66,28 +66,32 @@ import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.ui.others.adapters.MediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.RoleSelectBottomSheet;
+import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
+import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
+import com.wanderer.journal.ui.others.viewmodel.MediaAddOptionViewModel;
+import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
+import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -144,18 +148,19 @@ public class WriteActivity extends AppCompatActivity {
 
             //底部输入框卡片
             binding.contentInputLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 20),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 20),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
                     systemBars.bottom
             );
 
             //内容 RecyclerView 额外增加5dp的底部内边距
+            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
             binding.contentRecycler.setPadding(
                     systemBars.left,
                     0,
                     systemBars.right,
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                    keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
@@ -174,9 +179,7 @@ public class WriteActivity extends AppCompatActivity {
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.contentInputCard.setTranslationY(-keyboardHeight);
-                binding.contentEditCard.setTranslationY(-keyboardHeight);
-                binding.mediaCard.setTranslationY(-keyboardHeight);
+                binding.bottomLayout.setTranslationY(-keyboardHeight);
                 binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
                 return insets;
@@ -191,6 +194,7 @@ public class WriteActivity extends AppCompatActivity {
 
         receiveIntent();
         initViews();
+        observeLiveData();
         initLaunchers();
         initOnBackPressedHandlers();
 
@@ -221,28 +225,16 @@ public class WriteActivity extends AppCompatActivity {
 
         if (keyboardAttachmentHelper != null) {
             keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> {
+                    (currentHeight, previousHeight) -> binding.getRoot().postDelayed(() -> {
                         if (hasWindowFocus()) return;
 
-                        int moveDistance = Math.max(0, currentHeight - binding.contentInputLayout.getPaddingBottom());
-                        binding.contentInputCard
+                        int moveDistance = Math.max(
+                                0,
+                                currentHeight - binding.contentInputLayout.getPaddingBottom()
+                        );
+                        binding.bottomLayout
                                 .animate()
                                 .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.contentEditCard
-                                .animate()
-                                .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.mediaCard
-                                .animate()
-                                .translationY(-moveDistance)
-                                .setDuration(250)
-                                .start();
-                        binding.emptyText
-                                .animate()
-                                .translationY(-moveDistance / 2f)
                                 .setDuration(250)
                                 .start();
 
@@ -251,9 +243,9 @@ public class WriteActivity extends AppCompatActivity {
                                 0,
                                 0,
                                 0,
-                                currentHeight + ViewEdgeHelper.dpToPx(WriteActivity.this, 5)
+                                currentHeight + AppearanceHelper.dpToPx(this, 5)
                         );
-                    }
+                    }, 50)
             );
         }
     }
@@ -338,22 +330,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //媒体添加按钮
         binding.mediaAddBtn.setOnClickListener(view -> {
-            MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet(
-                    () -> {
-                        if (PermissionHelper.isRuntimePermissionGranted(
-                                Manifest.permission.CAMERA,
-                                this
-                        )) {
-                            launchSystemCamera();
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.CAMERA);
-                        }
-                    },
-                    () -> albumLauncher.launch(new PickVisualMediaRequest.Builder()
-                            .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                            .build()
-                    )
-            );
+            MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
         });
 
@@ -547,28 +524,7 @@ public class WriteActivity extends AppCompatActivity {
 
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
-                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet((name, roleId) -> {
-                        //生成包装好的富文本标签块
-                        String display = "@" + name;
-                        String value = String.valueOf(roleId);
-                        SpannableString roleTag = TextHelper.createTextTag(
-                                WriteActivity.this,
-                                null,
-                                display,
-                                KeyStrings.ROLE_ID.getS(),
-                                value
-                        );
-
-                        //把刚才打出"@"替换成高亮的标签块
-                        Editable editable = binding.contentTextInput.getText();
-                        int selectionStart = binding.contentTextInput.getSelectionStart();
-                        if (editable != null) {
-                            editable.replace(selectionStart - 1, selectionStart, roleTag);
-                        }
-
-                        //让光标跳到这个标签块的后面
-                        binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
-                    });
+                    RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet();
                     bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
                 } else if (i2 >= RichTextRegex.getShortestPatternLength()) {    //只有新增的文本大于最短正则表达式长度才富文本化
                     //计算光标与文本末尾的距离
@@ -608,6 +564,102 @@ public class WriteActivity extends AppCompatActivity {
 
         //内容编辑关闭按钮
         binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null, null));
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        //角色选择情况
+        RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(this).get(RoleSelectViewModel.class);
+        roleSelectViewModel.getSelectedRoleEvent().observe(this, role -> {
+            String roleName = role.getName();
+            String roleDisplayName = role.getDisplayName();
+            long roleId = role.getRoleId();
+
+            //生成包装好的富文本标签块
+            String display = "@" + (roleDisplayName.isEmpty() ? roleName : roleDisplayName);
+            String value = String.valueOf(roleId);
+            SpannableString roleTag = TextHelper.createTextTag(
+                    WriteActivity.this,
+                    null,
+                    display,
+                    KeyStrings.ROLE_ID.getS(),
+                    value
+            );
+
+            //把刚才打出"@"替换成高亮的标签块
+            Editable editable = binding.contentTextInput.getText();
+            int selectionStart = binding.contentTextInput.getSelectionStart();
+            if (editable != null) {
+                editable.replace(selectionStart - 1, selectionStart, roleTag);
+            }
+
+            //让光标跳到这个标签块的后面
+            binding.contentTextInput.setSelection(selectionStart - 1 + roleTag.length());
+        });
+
+        //媒体添加选项
+        MediaAddOptionViewModel mediaAddOptionViewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
+        mediaAddOptionViewModel.getClickEvent().observe(this, integer -> {
+            MediaAddOption option = MediaAddOption.values()[integer];
+
+            if (option == MediaAddOption.TAKE_PICTURE) {
+                if (PermissionHelper.isRuntimePermissionGranted(
+                        Manifest.permission.CAMERA,
+                        this
+                )) {
+                    launchSystemCamera();
+                } else {
+                    permissionLauncher.launch(Manifest.permission.CAMERA);
+                }
+            } else if (option == MediaAddOption.OPEN_ALBUM) {
+                albumLauncher.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build()
+                );
+            }
+        });
+
+        //情绪标签选择状态
+        EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
+        emotionTagSelectViewModel.getCheckedEmotionTag().observe(this, emotionTagEntity -> {
+            long paragraphId = emotionTagSelectViewModel.getParagraphId();
+            long emotionId = emotionTagEntity.getEmotionId();
+            int degree = emotionTagSelectViewModel.getDegree();
+            boolean isChecked = emotionTagSelectViewModel.isChecked();
+
+            EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            if (isChecked) {
+                disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(
+                                        LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "添加情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId +
+                                                "，强烈程度：" + degree
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            } else {
+                disposable.add(db.emotionTagDao().deleteEmotionParagraphRefCompletable(refEntity)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "删除情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
+        });
     }
 
     /**
@@ -675,10 +727,10 @@ public class WriteActivity extends AppCompatActivity {
         );
 
         //添加粘性头部适配器
-        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                ViewHolderDateSeparatorBinding::inflate,
-                (binding, data) -> binding.dateText.setText(data)
+                ViewHolderSeparatorTextChipBinding::inflate,
+                (binding, data) -> binding.separatorText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);
 
@@ -689,9 +741,12 @@ public class WriteActivity extends AppCompatActivity {
 
             //滚动到底部
             if (isNotLoading && scrollPosition.get() != -1) {
+                //折叠标题栏
+                binding.appBarLayout.setExpanded(false);
+
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    AppearanceAnimationHelper.scrollPagingRecycler(
+                    ScrollHelper.scrollPagingRecycler(
                             binding.contentRecycler,
                             (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                             adapter,
@@ -733,7 +788,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
@@ -1177,77 +1232,7 @@ public class WriteActivity extends AppCompatActivity {
         ImmHelper.hideImm(binding.contentTextInput);
 
         //实例化底部对话框并显示
-        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
-                paragraph.getParagraphId(),
-                (model, isChecked) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    if (isChecked) {
-                        disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，添加情绪标签：" +
-                                                        model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                                )
-                        );
-                    } else {
-                        disposable.add(dao.deleteEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" +
-                                                        model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> {
-                                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落的情绪标签移除失败");
-                                            ExceptionHelper.showExceptionDialog(this, e);
-                                        }
-                                )
-                        );
-                    }
-                },
-                (model, value) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    ref.setDegree(value);
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    disposable.add(dao.updateEmotionParagraphRefCompletable(ref)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> Log.i(
-                                            LogTags.WRITE_ACTIVITY.n(),
-                                            "段落编号：" + paragraph.getParagraphId() +
-                                                    "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                    "，更新情绪强烈程度为" + value
-                                    ),
-                                    e -> {
-                                        ExceptionHelper.showExceptionDialog(this, e);
-                                        Log.e(
-                                                LogTags.WRITE_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() +
-                                                        "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                        "情绪强烈程度更新失败"
-                                        );
-                                    }
-                            )
-                    );
-                }
-        );
+        EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 
@@ -1298,29 +1283,29 @@ public class WriteActivity extends AppCompatActivity {
             backHelper.unregisterHandler(editBackHandler);
         }
 
-        //定义过渡动画：组合滑入和渐变
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.BOTTOM))
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250);
-
-        //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.contentEditCard, set);
-
         //执行状态改变
         if (isEditMode) {
+            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, true, Gravity.BOTTOM, null);
             this.modifyingParagraph = modifyingParagraph;
-            binding.originText.setText(modifyingParagraph.getContent());        //显示原始文本的富文本
+            CharSequence richText = TextHelper.hierarchicFromString(
+                    this,
+                    null,
+                    modifyingParagraph.getContent(),
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                        }
+                    }
+            );
+            binding.originText.setText(richText);                               //显示原始文本的富文本
             needCursorSkipToTail = true;
             binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-            binding.contentEditCard.setVisibility(View.VISIBLE);
 
             //自动显示输入法
             ImmHelper.showImm(binding.contentTextInput);
         } else {
+            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, false, Gravity.BOTTOM, null);
             this.modifyingParagraph = null;
-            binding.contentEditCard.setVisibility(View.GONE);
             binding.contentTextInput.setText(null);         //清空输入框
         }
 
@@ -1352,22 +1337,8 @@ public class WriteActivity extends AppCompatActivity {
             backHelper.unregisterHandler(mediaBackHandler);
         }
 
-        //定义过渡动画：组合滑入和渐变
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Slide(Gravity.BOTTOM))
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .setDuration(250);
-
-        //通知布局即将发生变化
-        TransitionManager.beginDelayedTransition(binding.mediaCard, set);
-
         //切换视图可见性
-        if (isVisible) {
-            binding.mediaCard.setVisibility(View.VISIBLE);
-        } else {
-            binding.mediaCard.setVisibility(View.GONE);
-        }
+        VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.mediaCard, isVisible, Gravity.BOTTOM, null);
     }
 
     /**

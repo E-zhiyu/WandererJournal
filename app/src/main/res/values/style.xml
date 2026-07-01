@@ -9,6 +9,12 @@
         <item name="titleTextAppearance">?attr/textAppearanceHeadlineSmall</item>
     </style>
 
+    <!-- TabLayout样式 -->
+    <style name="TabLayoutStyle" parent="Widget.Material3.TabLayout.OnSurface">
+        <item name="android:backgroundTint">?attr/colorSurface</item>
+        <item name="tabIndicatorColor">?attr/colorPrimary</item>
+    </style>
+
     <!-- 折叠标题栏布局样式 -->
     <style name="CollapsingToolbarLayoutStyle" parent="Widget.Material3.CollapsingToolbar.Medium">
         <item name="collapsedTitleGravity">start</item>

@@ -3,9 +3,11 @@ package com.wanderer.journal.ui.pages.main.settings.sub;
 import android.Manifest;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,6 +18,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.ui.others.adapters.AlarmTimeAdapter;
@@ -71,50 +74,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
 
         //开关
         boolean isSwitchOpened = DiaryAlarmPreference.getSwitchStat(this);
-        SettingSwitchView diaryAlarmSwitch = new SettingSwitchView(
-                this,
-                binding.diaryAlarmSwitch,
-                R.string.total_switch,
-                "忘记写日记时发送通知提醒",
-                R.drawable.outline_alarm_24,
-                RadiusStyle.TOP
-        );
-        diaryAlarmSwitch.setChecked(isSwitchOpened);
-        diaryAlarmSwitch.setFunctionListener((compoundButton, b) -> {
-            //判断权限授予情况
-            boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
-            boolean isNotificationGranted;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                isNotificationGranted = PermissionHelper.isRuntimePermissionGranted(
-                        Manifest.permission.POST_NOTIFICATIONS,
-                        this
-                );
-            } else {
-                isNotificationGranted = true;
-            }
-
-            //若权限未授予则拒绝打开
-            if (!isAlarmGranted || !isNotificationGranted) {
-                diaryAlarmSwitch.setChecked(false);
-                Toast.makeText(this, "请授予通知权限和精确闹钟权限", Toast.LENGTH_SHORT).show();
-                DiaryAlarmPreference.setSwitchStat(this, false);
-                return;
-            }
-
-            //保存开关状态
-            DiaryAlarmPreference.setSwitchStat(this, b);
-
-            //安排提醒闹钟
-            if (b) {
-                //有自启动权限的系统弹出提示
-                if (PermissionHelper.isAutoStartDefined()) {
-                    Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
-                }
-                AlarmHelper.setDiaryAlarm(this);
-            } else {
-                AlarmHelper.cancelDiaryAlarm(this);
-            }
-        });
+        SettingSwitchView diaryAlarmSwitch = getSettingSwitchView(isSwitchOpened);
 
         //提醒时间 RecyclerView
         adapter = new AlarmTimeAdapter(time -> {
@@ -130,11 +90,18 @@ public class DiaryAlarmActivity extends AppCompatActivity {
             adapter.submitList(removedTimeList);
 
             //更新定时任务
-            AlarmHelper.setDiaryAlarm(this);
+            if (diaryAlarmSwitch.getFunctionComponent().isChecked()) {
+                AlarmHelper.setDiaryAlarm(this);
+            }
+
+            if (removedTimeList.isEmpty()) {
+                setAlarmComponentsVisibility(false, true);
+            }
         });
         List<LocalTime> savedTimeList = DiaryAlarmPreference.getAlarmTime(this);
         adapter.submitList(savedTimeList);
         binding.alarmTimeRecycler.setAdapter(adapter);
+        setAlarmComponentsVisibility(!savedTimeList.isEmpty(), false);
 
         //添加时间
         SettingClickableTextView addAlarmTimeOption = new SettingClickableTextView(
@@ -173,11 +140,71 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                     Toast.makeText(this, "提醒时间添加成功", Toast.LENGTH_SHORT).show();
 
                     //更新定时任务
-                    if (DiaryAlarmPreference.getSwitchStat(this)) {
+                    if (diaryAlarmSwitch.getFunctionComponent().isChecked()) {
                         AlarmHelper.setDiaryAlarm(this);
                     }
+
+                    setAlarmComponentsVisibility(true, true);
                 }
         ));
+    }
+
+    /**
+     * 获取开关设置项
+     *
+     * @param isSwitchOpened 开关是否打开
+     * @return 开关设置项实例
+     */
+    @NonNull
+    private SettingSwitchView getSettingSwitchView(boolean isSwitchOpened) {
+        SettingSwitchView diaryAlarmSwitch = new SettingSwitchView(
+                this,
+                binding.diaryAlarmSwitch,
+                R.string.total_switch,
+                "忘记写日记时发送通知提醒",
+                R.drawable.outline_alarm_24,
+                RadiusStyle.TOP
+        );
+        diaryAlarmSwitch.setChecked(isSwitchOpened);
+        diaryAlarmSwitch.setFunctionListener((compoundButton, b) -> {
+            //打开开关时检查权限
+            if (b) {
+                //判断权限授予情况
+                boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
+                boolean isNotificationGranted;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    isNotificationGranted = PermissionHelper.isRuntimePermissionGranted(
+                            Manifest.permission.POST_NOTIFICATIONS,
+                            this
+                    );
+                } else {
+                    isNotificationGranted = true;
+                }
+
+                //若权限未授予则拒绝打开
+                if (!isAlarmGranted || !isNotificationGranted) {
+                    diaryAlarmSwitch.setChecked(false);
+                    Toast.makeText(this, "请授予通知权限和精确闹钟权限", Toast.LENGTH_SHORT).show();
+                    DiaryAlarmPreference.setSwitchStat(this, false);
+                    return;
+                }
+            }
+
+            //保存开关状态
+            DiaryAlarmPreference.setSwitchStat(this, b);
+
+            //安排提醒闹钟
+            if (b) {
+                //有自启动权限的系统弹出提示
+                if (PermissionHelper.isAutoStartDefined()) {
+                    Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
+                }
+                AlarmHelper.setDiaryAlarm(this);
+            } else {
+                AlarmHelper.cancelDiaryAlarm(this);
+            }
+        });
+        return diaryAlarmSwitch;
     }
 
     /**
@@ -207,5 +234,26 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 "精确闹钟权限",
                 "请授予精确闹钟权限以允许应用在指定时刻发送通知提醒"
         );
+    }
+
+    /**
+     * 切换日记提醒时间组件的可见性
+     *
+     * @param isVisible     是否可见
+     * @param needAnimation 是否需要动画效果
+     */
+    private void setAlarmComponentsVisibility(boolean isVisible, boolean needAnimation) {
+        if (needAnimation) {
+            VisibilityHelper.toggleVisibilityWithFade(binding.alarmTimeTitle, isVisible);
+            VisibilityHelper.toggleVisibilityWithFade(binding.alarmTimeRecycler, isVisible);
+        } else {
+            if (isVisible) {
+                binding.alarmTimeTitle.setVisibility(View.VISIBLE);
+                binding.alarmTimeRecycler.setVisibility(View.VISIBLE);
+            } else {
+                binding.alarmTimeTitle.setVisibility(View.GONE);
+                binding.alarmTimeRecycler.setVisibility(View.GONE);
+            }
+        }
     }
 }

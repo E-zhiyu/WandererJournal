@@ -3,14 +3,16 @@ package com.wanderer.journal.ui.others.viewmodel;
 import androidx.lifecycle.ViewModel;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleManageViewModel extends ViewModel {
     private final BehaviorProcessor<String> searchKeywordProcessor =
@@ -24,9 +26,11 @@ public class RoleManageViewModel extends ViewModel {
      */
     public Flowable<List<RoleUiModel>> getRoleListFlowable(DiaryDatabase db) {
         return searchKeywordProcessor
-                .debounce(300, TimeUnit.MILLISECONDS)
+                .debounce(50, TimeUnit.MILLISECONDS)
                 .switchMap(
                         keyword -> RoleService.getAllRoleFlowable(db, keyword)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
                 );
     }
 

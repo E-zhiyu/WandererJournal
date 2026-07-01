@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.emotion;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,23 +10,48 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
-public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagAdapter.EmotionTagViewHolder> {
+public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerView.ViewHolder>
+        implements StickyHeaderAdapter<String> {
+    private static final int TYPE_ITEM = 1;
+    private static final int TYPE_SEPARATOR = 0;
     private final OnClickedListener clickedListener;            //点击监听器
     private final OnLongClickedListener longClickedListener;    //长按监听器
-    private static final DiffUtil.ItemCallback<EmotionTagEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+    private static final DiffUtil.ItemCallback<EmotionListUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
-        public boolean areItemsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
-            return oldItem.getEmotionId() == newItem.getEmotionId();
+        public boolean areItemsTheSame(@NonNull EmotionListUiModel oldItem, @NonNull EmotionListUiModel newItem) {
+            if (oldItem instanceof EmotionListUiModel.Item && newItem instanceof EmotionListUiModel.Item) {
+                EmotionListUiModel.Item oldI = (EmotionListUiModel.Item) oldItem;
+                EmotionListUiModel.Item newI = (EmotionListUiModel.Item) newItem;
+                return oldI.entity.getEmotionId() == newI.entity.getEmotionId();
+            } else if (oldItem instanceof EmotionListUiModel.Separator && newItem instanceof EmotionListUiModel.Separator) {
+                EmotionListUiModel.Separator oldS = (EmotionListUiModel.Separator) oldItem;
+                EmotionListUiModel.Separator newS = (EmotionListUiModel.Separator) newItem;
+                return oldS.text.equals(newS.text);
+            } else {
+                return false;
+            }
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
-            return oldItem.getName().equals(newItem.getName()) &&
-                    oldItem.getDescription().equals(newItem.getDescription());
+        public boolean areContentsTheSame(@NonNull EmotionListUiModel oldItem, @NonNull EmotionListUiModel newItem) {
+            if (oldItem instanceof EmotionListUiModel.Item && newItem instanceof EmotionListUiModel.Item) {
+                EmotionListUiModel.Item oldI = (EmotionListUiModel.Item) oldItem;
+                EmotionListUiModel.Item newI = (EmotionListUiModel.Item) newItem;
+                return oldI.entity.getType() == newI.entity.getType() &&
+                        oldI.entity.getName().equals(newI.entity.getName()) &&
+                        oldI.entity.getDescription().equals(newI.entity.getDescription());
+            } else
+                return oldItem instanceof EmotionListUiModel.Separator && newItem instanceof EmotionListUiModel.Separator;
         }
     };
 
@@ -37,7 +63,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
             this.binding = binding;
 
             //设置触摸动画
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
@@ -47,6 +73,15 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
                 listener.onLongClicked(getBindingAdapterPosition(), view);
                 return true;
             });
+        }
+    }
+
+    public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
+        ViewHolderSeparatorTextChipBinding binding;
+
+        public SeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 
@@ -89,70 +124,145 @@ public class EmotionTagAdapter extends ListAdapter<EmotionTagEntity, EmotionTagA
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                // 如果在顶部插入了数据，通知原先的第一项（现在的第 itemCount 项）更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(itemCount);
-                }
-
-                // 如果在末尾追加了数据，通知原先的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(positionStart - 1);
-                }
+                notifyItemChanged(positionStart - 1);           //更新前面的
+                notifyItemChanged(positionStart + itemCount);   //更新后面的
             }
 
             @Override
             public void onItemRangeRemoved(int positionStart, int itemCount) {
-                // 如果在顶部删除了数据，通知现在的第一项更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(0);
-                }
+                notifyItemChanged(positionStart - 1);   //更新前面的
+                notifyItemChanged(positionStart);               //更新后面的
+            }
 
-                // 如果在末尾删除了数据，通知现在的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(getItemCount() - 1);
-                }
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
             }
         });
     }
 
-    @NonNull
     @Override
-    public EmotionTagViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderEmotionTagBinding binding = ViewHolderEmotionTagBinding.inflate(
-                LayoutInflater.from(parent.getContext()),
-                parent,
-                false
-        );
-        return new EmotionTagViewHolder(
-                binding,
-                new ViewHolderListener() {
-                    @Override
-                    public void onClicked(int position) {
-                        EmotionTagEntity emotionTag = getItem(position);
-                        clickedListener.onClicked(emotionTag);
-                    }
-
-                    @Override
-                    public void onLongClicked(int position, View view) {
-                        EmotionTagEntity emotionTag = getItem(position);
-                        longClickedListener.onLongClicked(emotionTag, view);
-                    }
-                }
-        );
+    public boolean isHeader(int position) {
+        return getItem(position) instanceof EmotionListUiModel.Separator;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull EmotionTagViewHolder holder, int position) {
-        EmotionTagEntity emotionTag = getItem(position);
+    public String getHeaderData(int position, Context context) {
+        EmotionListUiModel model = getItem(position);
+        if (model instanceof EmotionListUiModel.Separator) {
+            return ((EmotionListUiModel.Separator) model).text;
+        } else if (model instanceof EmotionListUiModel.Item) {
+            int type = ((EmotionListUiModel.Item) model).entity.getType();
+            return EmotionType.values()[type].getTitle();
+        } else {
+            return context.getString(R.string.not_applicable);
+        }
+    }
 
-        //标签名称
-        holder.binding.nameText.setText(emotionTag.getName());
+    @Override
+    public int getItemViewType(int position) {
+        EmotionListUiModel item = getItem(position);
+        if (item instanceof EmotionListUiModel.Item) return TYPE_ITEM;
+        return TYPE_SEPARATOR;
+    }
 
-        //标签描述
-        String description = emotionTag.getDescription();
-        holder.binding.descriptionText.setText(description.isEmpty() ? "<无描述>" : description);
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_ITEM) {
+            ViewHolderEmotionTagBinding binding = ViewHolderEmotionTagBinding.inflate(
+                    LayoutInflater.from(parent.getContext()),
+                    parent,
+                    false
+            );
+            return new EmotionTagViewHolder(
+                    binding,
+                    new ViewHolderListener() {
+                        @Override
+                        public void onClicked(int position) {
+                            EmotionListUiModel emotionTag = getItem(position);
+                            if (emotionTag instanceof EmotionListUiModel.Item) {
+                                clickedListener.onClicked(((EmotionListUiModel.Item) emotionTag).entity);
+                            }
+                        }
 
-        //设置圆角
-        AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
+                        @Override
+                        public void onLongClicked(int position, View view) {
+                            EmotionListUiModel emotionTag = getItem(position);
+                            if (emotionTag instanceof EmotionListUiModel.Item) {
+                                longClickedListener.onLongClicked(((EmotionListUiModel.Item) emotionTag).entity, view);
+                            }
+                        }
+                    }
+            );
+        } else {
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
+                    LayoutInflater.from(parent.getContext()),
+                    parent,
+                    false
+            );
+            return new SeparatorViewHolder(binding);
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        EmotionListUiModel model = getItem(position);
+
+        if (model instanceof EmotionListUiModel.Item && holder instanceof EmotionTagViewHolder) {
+            EmotionTagEntity emotionTag = ((EmotionListUiModel.Item) model).entity;
+            EmotionTagViewHolder itemHolder = (EmotionTagViewHolder) holder;
+
+            //标签名称
+            itemHolder.binding.nameText.setText(emotionTag.getName());
+
+            //标签描述
+            String description = emotionTag.getDescription();
+            itemHolder.binding.descriptionText.setText(description.isEmpty() ? "<无描述>" : description);
+
+            //设置圆角
+            setRadius(itemHolder.binding.getRoot(), position);
+        } else if (model instanceof EmotionListUiModel.Separator && holder instanceof SeparatorViewHolder) {
+            String text = ((EmotionListUiModel.Separator) model).text;
+            ((SeparatorViewHolder) holder).binding.separatorText.setText(text);
+        }
+    }
+
+    /**
+     * 设置圆角
+     *
+     * @param view     需要设置圆角的视图
+     * @param position 该视图所处的位置
+     */
+    private void setRadius(View view, int position) {
+        if (position == 0) {    //第0个不参与圆角设置，因为它是日期分隔视图
+            return;
+        }
+
+        //不需要考虑当前是分隔视图的情况，因为不是Shapable不会执行任何操作
+        EmotionListUiModel front = getItem(position - 1);
+        if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
+            if (front instanceof EmotionListUiModel.Separator) {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+            } else {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+            }
+        } else {
+            EmotionListUiModel behind = getItem(position + 1);
+
+            if (front instanceof EmotionListUiModel.Separator && behind instanceof EmotionListUiModel.Separator) {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+            } else if (front instanceof EmotionListUiModel.Separator) {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+            } else if (behind instanceof EmotionListUiModel.Separator) {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+            } else {
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+            }
+        }
     }
 }

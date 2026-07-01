@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 
 import java.time.LocalDate;
@@ -126,7 +126,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
             this.binding = binding;
 
             //设置触摸监听
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener
@@ -198,6 +198,6 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
         holder.binding.paragraphCountText.setText(tip);
 
         //设置圆角
-        AppearanceAnimationHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
+        AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), position);
     }
 }

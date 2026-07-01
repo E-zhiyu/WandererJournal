@@ -19,7 +19,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.role.RoleManageActivity;
@@ -67,7 +67,7 @@ public class HomeFragment extends Fragment {
     private void initViews() {
         //随机提示文本
         binding.randomTipCard.setOnClickListener(view -> showNextRandomTipText());
-        AppearanceAnimationHelper.attachMorphAnimation(binding.randomTipCard);
+        AppearanceHelper.attachMorphAnimation(binding.randomTipCard);
         showNextRandomTipText();
 
         initDateCard();
@@ -82,13 +82,13 @@ public class HomeFragment extends Fragment {
      */
     private void initDateCard() {
         //设置卡片圆角
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 requireContext(),
                 binding.diaryDateCard,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
 
         //设置点击监听
@@ -96,7 +96,7 @@ public class HomeFragment extends Fragment {
             Intent skip2DiaryRead = new Intent(requireContext(), DiaryReadActivity.class);
             startActivity(skip2DiaryRead);
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.diaryDateCard);
+        AppearanceHelper.attachMorphAnimation(binding.diaryDateCard);
 
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         DiaryDao diaryDao = db.diaryDao();
@@ -138,13 +138,13 @@ public class HomeFragment extends Fragment {
      */
     private void initDiaryCountCard() {
         //设置卡片圆角
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 requireContext(),
                 binding.diaryCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
 
         //设置点击监听
@@ -152,7 +152,7 @@ public class HomeFragment extends Fragment {
             Intent skip2DiaryStatistics = new Intent(requireContext(), StatisticsActivity.class);
             startActivity(skip2DiaryStatistics);
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.diaryCountCard);
+        AppearanceHelper.attachMorphAnimation(binding.diaryCountCard);
 
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
         DiaryDao diaryDao = db.diaryDao();
@@ -176,13 +176,13 @@ public class HomeFragment extends Fragment {
      */
     private void initParagraphCountCard() {
         //设置圆角
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 requireContext(),
                 binding.paragraphCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
 
         //设置点击监听
@@ -190,7 +190,7 @@ public class HomeFragment extends Fragment {
             Intent skip2DiaryStatistics = new Intent(requireContext(), StatisticsActivity.class);
             startActivity(skip2DiaryStatistics);
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.paragraphCountCard);
+        AppearanceHelper.attachMorphAnimation(binding.paragraphCountCard);
 
         //段落数量
         DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
@@ -213,15 +213,15 @@ public class HomeFragment extends Fragment {
      */
     private void initEmotionTagCountCard() {
         //设置卡片圆角
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 requireContext(),
                 binding.emotionTagCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
-        AppearanceAnimationHelper.attachMorphAnimation(binding.emotionTagCountCard);
+        AppearanceHelper.attachMorphAnimation(binding.emotionTagCountCard);
 
         //设置情绪标签管理入口
         binding.emotionTagCountCard.setOnClickListener(view -> {
@@ -250,15 +250,15 @@ public class HomeFragment extends Fragment {
      */
     private void initRoleCountCard() {
         //设置圆角
-        AppearanceAnimationHelper.setRadius(
+        AppearanceHelper.setRadius(
                 requireContext(),
                 binding.roleCountCard,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.SMALL_CARD_RADIUS,
-                AppearanceAnimationHelper.MEDIUM_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS
         );
-        AppearanceAnimationHelper.attachMorphAnimation(binding.roleCountCard);
+        AppearanceHelper.attachMorphAnimation(binding.roleCountCard);
 
         //设置点击监听
         binding.roleCountCard.setOnClickListener(view -> {

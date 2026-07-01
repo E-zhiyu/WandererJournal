@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.pages.main.settings.sub.ShareSettingsActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            style="@style/CollapsingToolbarLayoutStyle"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/collapsingToolbarLayoutMediumSize"
+            app:toolbarId="@id/toolbar">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:title="@string/share_settings" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:scrollbars="none"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <LinearLayout
+            android:id="@+id/app_settings_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/share_content"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <!-- 媒体 -->
+            <include
+                android:id="@+id/media_switch"
+                layout="@layout/view_setting_option" />
+
+            <!-- 情绪标签 -->
+            <include
+                android:id="@+id/emotion_switch"
+                layout="@layout/view_setting_option" />
+
+            <!-- 时间 -->
+            <include
+                android:id="@+id/time_switch"
+                layout="@layout/view_setting_option" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/others"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <!-- 图片页脚文本 -->
+            <include
+                android:id="@+id/picture_bottom_text_option"
+                layout="@layout/view_setting_option" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

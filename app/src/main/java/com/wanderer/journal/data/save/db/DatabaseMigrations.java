@@ -44,4 +44,16 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roleAlias_alia` ON `roleAlias` (`alia`)");
         }
     };
+
+    //添加角色显示名称字段
+    //添加角色使用次数字段
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE roles ADD COLUMN useCount INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_useCount` ON `roles` (`useCount`)");
+            db.execSQL("ALTER TABLE roles ADD COLUMN displayName TEXT DEFAULT ''");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_displayName` ON `roles` (`displayName`)");
+        }
+    };
 }

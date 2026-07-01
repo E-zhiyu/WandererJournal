@@ -1,34 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:clipToPadding="false"
-    android:minHeight="150dp"
+    android:minHeight="200dp"
     android:orientation="vertical"
-    android:paddingTop="10dp"
-    android:paddingBottom="20dp">
+    android:paddingTop="10dp">
 
     <com.google.android.material.bottomsheet.BottomSheetDragHandleView
         android:id="@+id/drag_handle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 标题 -->
     <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/title_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="@string/select_role"
-        android:textAppearance="?attr/textAppearanceTitleLarge" />
+        android:textAppearance="?attr/textAppearanceTitleLarge"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/drag_handle" />
 
+    <!-- 角色添加按钮 -->
+    <ImageButton
+        android:id="@+id/add_role_btn"
+        style="@style/ImageButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:contentDescription="@string/button_to_add"
+        android:src="@drawable/outline_add_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_text" />
+
+    <!-- 常用角色标题 -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/common_role_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/common_role_top_5"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        app:layout_constraintBottom_toBottomOf="@id/add_role_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/add_role_btn" />
+
+    <!-- 常用角色列表 -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/role_recycler"
+        android:id="@+id/common_role_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:clipToPadding="false"
+        android:nestedScrollingEnabled="false"
         android:orientation="horizontal"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
-        app:layoutManager="com.google.android.flexbox.FlexboxLayoutManager" />
-</LinearLayout>
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/add_role_btn" />
+
+    <!-- 常用角色和角色添加按钮的底部屏障 -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/common_role_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="add_role_btn,common_role_recycler" />
+
+    <!-- 分组标签布局 -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/role_group_tab_layout"
+        style="@style/TabLayoutStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/common_role_barrier"
+        app:tabMode="scrollable" />
+
+    <!-- 分组布局 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/group_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/role_group_tab_layout" />
+</androidx.constraintlayout.widget.ConstraintLayout>

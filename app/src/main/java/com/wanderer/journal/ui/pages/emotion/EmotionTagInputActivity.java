@@ -15,11 +15,11 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.dropdown.EmotionType;
+import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 
 import java.util.Arrays;
@@ -49,10 +49,10 @@ public class EmotionTagInputActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             binding.linearLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    imeInsets.bottom + AppearanceHelper.dpToPx(this, 10)
             );
 
             return insets;
@@ -147,8 +147,8 @@ public class EmotionTagInputActivity extends AppCompatActivity {
      */
     private void onConfirm() {
         //获取输入内容
-        String name = String.valueOf(binding.nameInput.getText());
-        String description = String.valueOf(binding.descriptionInput.getText());
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String description = String.valueOf(binding.descriptionInput.getText()).trim();
 
         //实例化情绪标签并获取Dao接口
         EmotionTagEntity emotionTag = new EmotionTagEntity(name, description, emotionType.ordinal());

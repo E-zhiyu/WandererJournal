@@ -22,11 +22,10 @@ import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
-import com.wanderer.journal.helpers.RomanNumberHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
@@ -35,7 +34,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -109,9 +107,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderDateSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public DateSeparatorViewHolder(@NonNull ViewHolderDateSeparatorBinding binding) {
+        public DateSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -152,6 +150,15 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 notifyItemChanged(positionStart - 1);   //更新前面的
                 notifyItemChanged(positionStart);               //更新后面的
             }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
+            }
         });
     }
 
@@ -173,7 +180,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             );
             return new ParagraphListAdapter.ParagraphViewHolder(binding);
         } else {
-            ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -244,13 +251,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
-                    String name = emotion.emotionTag.getName();
-                    int degree = emotion.crossRef.getDegree();
-                    String title = String.format(
-                            Locale.getDefault(),
-                            "%s %s",
-                            name, RomanNumberHelper.toRoman(degree)
-                    );
+                    String title = emotion.generateDisplayText();
 
                     //添加 Chip 到视图中
                     Chip emotionChip = getEmotionChip(context, title);
@@ -270,8 +271,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         } else if (holder instanceof ParagraphListAdapter.DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
+            //分隔符文字
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
-            separatorViewHolder.binding.dateText.setText(dateStr);
+            separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }
 
@@ -314,21 +316,21 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         ParagraphUiModel front = getItem(position - 1);
         if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
             if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
             }
         } else {
             ParagraphUiModel behind = getItem(position + 1);
 
             if (front instanceof ParagraphUiModel.Separator && behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
             } else if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
             } else if (behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
     }

@@ -9,9 +9,11 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -36,6 +38,25 @@ public interface EmotionTagDao {
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     Completable insertEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
+
+    /**
+     * 判断引用关系是否存在
+     *
+     * @param emotionTagId 情绪标签 ID
+     * @param paragraphId  段落 ID
+     * @return 引用关系是否存在
+     */
+    @Query("SELECT EXISTS(SELECT * FROM emotionParagraphCrossRef WHERE emotionId = :emotionTagId AND paragraphId = :paragraphId)")
+    boolean isRefExists(long emotionTagId, long paragraphId);
+
+    /**
+     * 删除情绪标签与段落的关系
+     *
+     * @param ref 关系实体
+     * @return 是否完成
+     */
+    @Delete
+    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
      * 修改情绪标签
@@ -68,8 +89,22 @@ public interface EmotionTagDao {
      *
      * @return 所有情绪标签组成的列表
      */
-    @Query("SELECT * FROM emotionTags")
+    @Query("SELECT * FROM emotionTags ORDER BY type")
     Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
+
+    /**
+     * 获取使用过的情绪标签及其使用次数
+     *
+     * @return 包含情绪标签和使用次数的复合实体列表
+     */
+    @Query(
+            "SELECT e.*, " +
+                    "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
+                    "FROM emotionTags e " +
+                    "WHERE useCount > 0 " +
+                    "ORDER BY e.type"
+    )
+    Flowable<List<EmotionTagUseCountModel>> getUsedEmotionTagFlowable();
 
     /**
      * 获取可以选择的情绪标签数据
@@ -95,7 +130,7 @@ public interface EmotionTagDao {
      * @return ID 在列表中的情绪标签实例
      */
     @Query("SELECT * FROM emotionTags WHERE emotionId IN (:emotionIdList)")
-    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(List<Long> emotionIdList);
+    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(Set<Long> emotionIdList);
 
     /**
      * 查询某个情绪标签绑定的段落数量
@@ -114,13 +149,4 @@ public interface EmotionTagDao {
      */
     @Delete
     Completable deleteEmotionTagCompletable(EmotionTagEntity emotionTag);
-
-    /**
-     * 删除情绪标签与段落的关系
-     *
-     * @param ref 关系实体
-     * @return 是否完成
-     */
-    @Delete
-    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 }

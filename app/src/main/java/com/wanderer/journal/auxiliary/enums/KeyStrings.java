@@ -1,8 +1,11 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
+    PARAGRAPH_ID("paragraph_id"),                       //日记段落 ID
+    KEY_ROLE_GROUP("key_role_group"),                   //角色分组的关键字
     ROLE_ID("role_id"),                                 //角色 ID
     ROLE_NAME("role_name"),                             //角色名称
+    ROLE_DISPLAY_NAME("role_display_name"),             //角色显示名称
     ROLE_IDENTITY("role_identity"),                     //角色身份
     ROLE_IMPRESSION("role_impression"),                 //角色印象
     ROLE_RELATIONSHIP("role_relationship"),             //角色关系

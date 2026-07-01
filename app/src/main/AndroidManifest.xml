@@ -69,8 +69,18 @@
         <activity
             android:name=".ui.pages.SharePreviewActivity"
             android:exported="false"
-            android:parentActivityName=".ui.pages.DiaryReadActivity"
-            android:windowSoftInputMode="adjustResize" />
+            android:parentActivityName=".ui.pages.DiaryReadActivity" />
+        <activity
+            android:name=".ui.pages.role.RoleManageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.pages.role.RoleInputActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.pages.role.RoleManageActivity" />
+        <activity
+            android:name=".ui.pages.AuthActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
             android:name=".ui.pages.main.MainActivity"
             android:exported="true">
@@ -106,11 +116,7 @@
             </intent-filter>
         </receiver> <!-- 开机广播接收器 -->
         <activity
-            android:name=".ui.pages.role.RoleManageActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.pages.role.RoleInputActivity"
+            android:name=".ui.pages.main.settings.sub.ShareSettingsActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

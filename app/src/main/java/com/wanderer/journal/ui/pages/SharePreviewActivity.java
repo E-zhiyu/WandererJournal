@@ -19,6 +19,7 @@ import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.auxiliary.classes.RoleShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
@@ -26,17 +27,19 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
@@ -44,6 +47,7 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
+import com.wanderer.journal.ui.others.viewmodel.DiaryShareViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -98,6 +102,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
+        observeLiveData();
     }
 
     @Override
@@ -123,64 +128,68 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //导出按钮
         binding.shareBtn.setOnClickListener(view -> {
-            DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet(
-                    new DiaryShareBottomSheet.OptionListener() {
-                        @Override
-                        public void onShareAsImage() {
-                            generateImageAndDoAction(imageFile -> {
-                                //根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
-                                Uri uri = Uri.fromFile(imageFile);
-                                String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-                                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-
-                                //调用系统分享 API
-                                disposable.add(FileHelper.shareFileCompletable(
-                                                SharePreviewActivity.this,
-                                                imageFile,
-                                                mimeType
-                                        )
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
-                                                e -> {
-                                                    ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
-                                                    Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
-                                                }
-                                        ));
-                            });
-                        }
-
-                        @Override
-                        public void onSaveToAlbum() {
-                            generateImageAndDoAction(imageFile -> {
-                                //保存至相册
-                                Uri currentUri = Uri.fromFile(imageFile);
-                                disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                uri -> Toast.makeText(
-                                                        SharePreviewActivity.this,
-                                                        "图片已保存至相册", Toast.LENGTH_SHORT
-                                                ).show(),
-                                                e -> ExceptionHelper.showExceptionDialog(
-                                                        SharePreviewActivity.this,
-                                                        e
-                                                )
-                                        )
-                                );
-                            });
-                        }
-                    }
-            );
+            DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet();
             bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.getTag());
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.shareBtn);
-        ViewEdgeHelper.setMarginToNavigation(binding.shareBtn, this);
+        AppearanceHelper.attachMorphAnimation(binding.shareBtn);
+        AppearanceHelper.setMarginToNavigation(binding.shareBtn, this);
 
         //段落列表
         initRecycler();
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        DiaryShareViewModel diaryShareViewModel = new ViewModelProvider(this).get(DiaryShareViewModel.class);
+        diaryShareViewModel.getClickEvent().observe(this, code -> {
+            DiaryShareOption option = DiaryShareOption.values()[code];
+
+            if (option == DiaryShareOption.SHARE_AS_IMAGE) {
+                generateImageAndDoAction(imageFile -> {
+                    //根据文件后缀获取 MimeType (例如 image/jpeg, video/mp4)
+                    Uri uri = Uri.fromFile(imageFile);
+                    String extension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
+                    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+
+                    //调用系统分享 API
+                    disposable.add(FileHelper.shareFileCompletable(
+                                    SharePreviewActivity.this,
+                                    imageFile,
+                                    mimeType
+                            )
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
+                                        Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
+                                    }
+                            ));
+                });
+            } else if (option == DiaryShareOption.SAVE_TO_ALBUM) {
+                generateImageAndDoAction(imageFile -> {
+                    //保存至相册
+                    Uri currentUri = Uri.fromFile(imageFile);
+                    disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(
+                                    uri -> Toast.makeText(
+                                            SharePreviewActivity.this,
+                                            "图片已保存至相册", Toast.LENGTH_SHORT
+                                    ).show(),
+                                    e -> ExceptionHelper.showExceptionDialog(
+                                            SharePreviewActivity.this,
+                                            e
+                                    )
+                            )
+                    );
+                });
+            }
+        });
     }
 
     /**
@@ -215,10 +224,10 @@ public class SharePreviewActivity extends AppCompatActivity {
         binding.previewRecycler.setAdapter(adapter);
 
         //添加粘性头部适配器
-        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                ViewHolderDateSeparatorBinding::inflate,
-                (binding, data) -> binding.dateText.setText(data)
+                ViewHolderSeparatorTextChipBinding::inflate,
+                (binding, data) -> binding.separatorText.setText(data)
         );
         binding.previewRecycler.addItemDecoration(decoration);
 
@@ -301,6 +310,11 @@ public class SharePreviewActivity extends AppCompatActivity {
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
+        //获取内容开关状态
+        boolean enableMedia = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_MEDIA);
+        boolean enableEmotion = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_EMOTION);
+        boolean enableTime = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_TIME);
+
         //分段并转换为 JSON 字符串列表
         final int STEP = 1;
         List<String> jsonList = new ArrayList<>();
@@ -322,7 +336,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     ParagraphEntity paragraph = entityModel.getParagraph();
 
                     //添加段落内容字段
-                    builder.append("\"type\":\"text\",\"content\":");
+                    builder.append("\"type\":\"paragraph\",\"content\":");
                     builder.append("\"");
                     String paragraphContent = paragraph.getContent();
                     builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
@@ -334,7 +348,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //添加图片字段
                     List<MediaEntity> mediaList = entityModel.getMediaList();
-                    if (!mediaList.isEmpty()) {
+                    if (!mediaList.isEmpty() && enableMedia) {
                         builder.append(",");
                         builder.append("\"imageUris\":[");
 
@@ -352,13 +366,36 @@ public class SharePreviewActivity extends AppCompatActivity {
                         builder.append("]");
                     }
 
+                    //添加情绪字段
+                    List<CrossRefWithEmotion> emotionList = entityModel.getEmotionList();
+                    if (!emotionList.isEmpty() && enableEmotion) {
+                        builder.append(",");
+                        builder.append("\"emotionTags\":");
+                        builder.append("[");
+
+                        int emotionIndex = 0;
+                        for (CrossRefWithEmotion emotionTagRef : emotionList) {
+                            builder.append("\"");
+                            builder.append(emotionTagRef.generateDisplayText());
+                            builder.append("\"");
+
+                            if (emotionIndex < emotionList.size() - 1) {
+                                builder.append(",");
+                            }
+                            emotionIndex++;
+                        }
+                        builder.append("]");
+                    }
+
                     //添加时间字段
-                    String time = paragraph.getCreateTime().format(timeFormatter);
-                    builder.append(",");
-                    builder.append("\"time\":");
-                    builder.append("\"");
-                    builder.append(time);
-                    builder.append("\"");
+                    if (enableTime) {
+                        String time = paragraph.getCreateTime().format(timeFormatter);
+                        builder.append(",");
+                        builder.append("\"time\":");
+                        builder.append("\"");
+                        builder.append(time);
+                        builder.append("\"");
+                    }
                 }
 
                 builder.append("}");
@@ -370,6 +407,19 @@ public class SharePreviewActivity extends AppCompatActivity {
             builder.append("]");
             jsonList.add(builder.toString());
         }
+
+        //加上其他自定义内容
+        StringBuilder otherBuilder = new StringBuilder("[");
+
+        //底部文本
+        String bottomText = ShareSettingsPreference.getPictureBottomText(this);
+        if (!bottomText.isEmpty()) {
+            otherBuilder.append("{\"type\":\"bottomText\",\"data\":");
+            otherBuilder.append("\"").append(bottomText).append("\"}");
+        }
+
+        otherBuilder.append("]");
+        jsonList.add(otherBuilder.toString());
 
         return jsonList;
     }

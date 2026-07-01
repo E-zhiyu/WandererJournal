@@ -1,6 +1,5 @@
 package com.wanderer.journal.helpers.appearance;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
 import android.view.View;
@@ -13,7 +12,7 @@ import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
-import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
+import com.wanderer.journal.auxiliary.enums.settings.ThemeMode;
 
 public class ThemeHelper {
     /**
@@ -21,7 +20,6 @@ public class ThemeHelper {
      *
      * @param themeMode {@link ThemeMode}的枚举序数
      */
-    @SuppressLint("WrongConstant")
     public static void applyTheme(int themeMode) {
         int mode = ThemeMode.values()[themeMode].getCode();
         AppCompatDelegate.setDefaultNightMode(mode);

@@ -16,12 +16,13 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.enums.options.AuthOpportunity;
-import com.wanderer.journal.auxiliary.enums.options.ThemeMode;
+import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
+import com.wanderer.journal.auxiliary.enums.settings.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.AboutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
@@ -32,6 +33,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -54,39 +56,9 @@ public class SettingsFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
-        //初始化软件设置
         initAppSettings();
-
-        //数据管理设置
-        SettingClickableTextView dataManage = new SettingClickableTextView(
-                requireContext(),
-                binding.dataManageOption,
-                R.string.data_manage,
-                "点击跳转数据管理界面",
-                R.drawable.outline_database_24,
-                RadiusStyle.SINGLE
-        );
-        dataManage.setFunctionListener(view -> {
-            Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
-            startActivity(skip2DataManage);
-        });
-
-        //日记提醒设置
-        SettingClickableTextView diaryAlarmOption = new SettingClickableTextView(
-                requireContext(),
-                binding.diaryAlarmOption,
-                R.string.diary_alarm,
-                "点击跳转至日记提醒设置界面",
-                R.drawable.outline_alarm_24,
-                RadiusStyle.SINGLE
-        );
-        diaryAlarmOption.setFunctionListener(view -> {
-            Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
-            startActivity(skip2DiaryAlarmSetting);
-        });
-
-        //初始化安全设置
-        initSecuritySettings();
+        initCommonSettings();
+        initPrivacySettings();
 
         //更新日志
         SettingClickableTextView changelogOption = new SettingClickableTextView(
@@ -138,16 +110,22 @@ public class SettingsFragment extends Fragment {
                 R.string.dynamic_color,
                 "将壁纸颜色作为APP主题色",
                 R.drawable.outline_colorize_24,
-                RadiusStyle.MIDDLE
+                RadiusStyle.BOTTOM
         );
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
                 (buttonView, isChecked) -> {
+                    WandererJournal.lockLifecycleObserver();
                     AppSettingsPreference.setDynamicColorStat(requireContext(), isChecked);
                     ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
                 }
         );
+    }
 
+    /**
+     * 初始化通用设置
+     */
+    private void initCommonSettings() {
         //权限管理
         SettingClickableTextView permissionsOption = new SettingClickableTextView(
                 requireContext(),
@@ -155,7 +133,7 @@ public class SettingsFragment extends Fragment {
                 R.string.permissions_setting,
                 "点击进入权限管理界面",
                 R.drawable.outline_admin_panel_settings_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.TOP
         );
         permissionsOption.setFunctionListener(v -> {
             Intent skip2PermissionManage = new Intent(
@@ -164,12 +142,54 @@ public class SettingsFragment extends Fragment {
             );
             startActivity(skip2PermissionManage);
         });
+
+        //数据管理设置
+        SettingClickableTextView dataManage = new SettingClickableTextView(
+                requireContext(),
+                binding.dataManageOption,
+                R.string.data_manage,
+                "点击跳转数据管理界面",
+                R.drawable.outline_database_24,
+                RadiusStyle.MIDDLE
+        );
+        dataManage.setFunctionListener(view -> {
+            Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
+            startActivity(skip2DataManage);
+        });
+
+        //日记提醒设置
+        SettingClickableTextView diaryAlarmOption = new SettingClickableTextView(
+                requireContext(),
+                binding.diaryAlarmOption,
+                R.string.diary_alarm,
+                "点击跳转至日记提醒设置界面",
+                R.drawable.outline_alarm_24,
+                RadiusStyle.MIDDLE
+        );
+        diaryAlarmOption.setFunctionListener(view -> {
+            Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
+            startActivity(skip2DiaryAlarmSetting);
+        });
+
+        //分享设置
+        SettingClickableTextView shareOption = new SettingClickableTextView(
+                requireContext(),
+                binding.shareOption,
+                R.string.share_settings,
+                "点击跳转分享设置界面",
+                R.drawable.outline_share_24,
+                RadiusStyle.BOTTOM
+        );
+        shareOption.setFunctionListener(view -> {
+            Intent skip2ShareSettings = new Intent(requireContext(), ShareSettingsActivity.class);
+            startActivity(skip2ShareSettings);
+        });
     }
 
     /**
-     * 初始化安全设置
+     * 初始化隐私设置
      */
-    private void initSecuritySettings() {
+    private void initPrivacySettings() {
         //身份验证开关
         SettingSwitchView authenticationSwitch = new SettingSwitchView(
                 requireContext(),
@@ -306,6 +326,7 @@ public class SettingsFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("主题模式")
                 .setSingleChoiceItems(themeModeStr, themeMode, (dialog, which) -> {
+                    WandererJournal.lockLifecycleObserver();
                     AppSettingsPreference.setThemeMode(requireContext(), which);
                     ThemeHelper.switchNightModeWithAnimation(requireActivity(), which);
                     dialog.dismiss();

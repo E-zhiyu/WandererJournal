@@ -12,7 +12,7 @@ import androidx.room.Update;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,7 +67,7 @@ public interface DiaryDao {
     Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
 
     /**
-     * 获取日记段落的字符数量数据
+     * 获取日记段落的字符数量数据，支持响应式更新
      *
      * @param start 起算日期（包含）
      * @param end   截止日期（包含）
@@ -79,7 +79,7 @@ public interface DiaryDao {
                     "FROM diaries " +
                     "WHERE diaryDate >= :start AND diaryDate <= :end"
     )
-    List<DiaryLengthModel> getDiaryParagraphWordCount(LocalDate start, LocalDate end);
+    Flowable<List<DiaryLengthModel>> getDiaryParagraphWordCountFlowable(LocalDate start, LocalDate end);
 
     /**
      * 查询指定日期之前（包括该日期）的所有日记的日期

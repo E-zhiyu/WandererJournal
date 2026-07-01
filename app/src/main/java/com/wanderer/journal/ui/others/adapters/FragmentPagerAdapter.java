@@ -8,10 +8,10 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import java.util.List;
 
 public class FragmentPagerAdapter extends FragmentStateAdapter {
-    private final List<Fragment> fragmentList;  //碎片列表
+    private final List<? extends Fragment> fragmentList;  //碎片列表
 
     //适配器构造方法
-    public FragmentPagerAdapter(@NonNull FragmentActivity fragmentActivity, List<Fragment> fragmentList) {
+    public FragmentPagerAdapter(@NonNull FragmentActivity fragmentActivity, List<? extends Fragment> fragmentList) {
         super(fragmentActivity);
         this.fragmentList = fragmentList;
     }

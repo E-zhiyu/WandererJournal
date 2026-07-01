@@ -22,8 +22,13 @@ public class EditTextDialogBuilder
      * @param hint        输入框的 hint 提示
      */
     public EditTextDialogBuilder(@NonNull Context context, String dialogTitle, String hint) {
+        this(context, dialogTitle, hint, "");
+    }
+
+    public EditTextDialogBuilder(Context context, String dialogTitle, String hint, String initText) {
         super(context, dialogTitle);
         binding.textLayout.setHint(hint);
+        binding.textInput.setText(initText);
     }
 
     @Override

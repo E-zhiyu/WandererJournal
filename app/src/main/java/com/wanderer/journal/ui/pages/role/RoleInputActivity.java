@@ -10,21 +10,25 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
+import com.wanderer.journal.data.save.preference.DraftPreference;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.NoFilteringArrayAdapter;
 import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -51,10 +55,10 @@ public class RoleInputActivity extends AppCompatActivity {
 
             //滚动布局中的线性布局
             binding.linearLayout.setPadding(
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    ViewEdgeHelper.dpToPx(this, 10),
-                    imeInsets.bottom + ViewEdgeHelper.dpToPx(this, 10)
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    imeInsets.bottom + AppearanceHelper.dpToPx(this, 10)
             );
 
             return insets;
@@ -92,6 +96,22 @@ public class RoleInputActivity extends AppCompatActivity {
                 String input = String.valueOf(binding.nameInput.getText());
                 if (input.isEmpty()) {
                     binding.nameLayout.setError("名称不能为空");
+                } else if (input.contains("[") || input.contains("]")) {
+                    binding.nameLayout.setError("名称不能包含英文中括号");
+                }
+            }
+        });
+
+        //显示名称
+        String initDisplayName = initBundle != null ? initBundle.getString(KeyStrings.ROLE_DISPLAY_NAME.getS()) : "";
+        binding.displayNameInput.setText(initDisplayName);
+        binding.displayNameInput.setOnFocusChangeListener((view, b) -> {
+            if (b) {
+                binding.nameLayout.setError(null);
+            } else {
+                String input = String.valueOf(binding.nameInput.getText());
+                if (input.contains("[") || input.contains("]")) {
+                    binding.nameLayout.setError("名称不能包含英文中括号");
                 }
             }
         });
@@ -178,9 +198,18 @@ public class RoleInputActivity extends AppCompatActivity {
     private String verifyInput() {
         String err = null;
 
-        if (String.valueOf(binding.nameInput.getText()).isEmpty()) {
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String displayName = String.valueOf(binding.displayNameInput.getText()).trim();
+
+        if (name.isEmpty()) {
             err = "名称不能为空";
             binding.nameLayout.setError(err);
+        } else if (name.contains("[") || name.contains("]")) {
+            err = "名称不能包含英文中括号";
+            binding.nameInput.setError(err);
+        } else if (displayName.contains("[") || displayName.contains("]")) {
+            err = "显示名称不能包含英文中括号";
+            binding.displayNameLayout.setError(err);
         }
 
         return err;
@@ -191,9 +220,10 @@ public class RoleInputActivity extends AppCompatActivity {
      */
     private void onConfirm() {
         //获取输入内容
-        String name = String.valueOf(binding.nameInput.getText());
-        String identity = String.valueOf(binding.identityInput.getText());
-        String impression = String.valueOf(binding.impressionInput.getText());
+        String name = String.valueOf(binding.nameInput.getText()).trim();
+        String displayName = String.valueOf(binding.displayNameInput.getText()).trim();
+        String identity = String.valueOf(binding.identityInput.getText()).trim();
+        String impression = String.valueOf(binding.impressionInput.getText()).trim();
         int relationship = this.relationship.ordinal();
         List<String> aliaList;
         if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
@@ -204,9 +234,47 @@ public class RoleInputActivity extends AppCompatActivity {
         }
 
         //插入数据
-        RoleEntity role = new RoleEntity(name, identity, impression, relationship);
+        RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
+        role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));  //设置传递过来的角色 ID
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> {
+                            if (count != 0) {
+                                String message = String.format(
+                                        Locale.getDefault(),
+                                        "已有%d个同名角色，确认继续吗？",
+                                        count
+                                );
+                                new MaterialAlertDialogBuilder(this)
+                                        .setTitle("角色同名警告")
+                                        .setMessage(message)
+                                        .setPositiveButton("确认", (dialogInterface, i) ->
+                                                doConfirmAction(role, aliaList)
+                                        )
+                                        .setNegativeButton("取消", null)
+                                        .show();
+                            } else {
+                                doConfirmAction(role, aliaList);
+                            }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 执行数据写入操作
+     *
+     * @param role     需要写入的角色数据
+     * @param aliaList 需要写入的别名数据
+     */
+    private void doConfirmAction(RoleEntity role, List<String> aliaList) {
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         if (initBundle == null) {
+            //添加角色
             disposable.add(RoleService.addRole(db, role, aliaList)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -219,12 +287,24 @@ public class RoleInputActivity extends AppCompatActivity {
                     )
             );
         } else {
-            role.setRoleId(initBundle.getLong(KeyStrings.ROLE_ID.getS()));
+            //修改角色
             disposable.add(RoleService.updateRole(db, role, aliaList)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                             () -> {
+                                //更新草稿中的引用文本
+                                String replaceRegex = RichTextRegex.ROLE_REF.getRegexStr();
+                                String draft = DraftPreference.getDraft(this);
+                                String replacement = String.format(
+                                        Locale.getDefault(),
+                                        "[role_ref:@%s](%d)",
+                                        role.getDisplayName().isEmpty() ? role.getName() : role.getDisplayName(),
+                                        role.getRoleId()
+                                );
+                                String replacedDraft = draft.replaceAll(replaceRegex, replacement);
+                                DraftPreference.setDraft(this, replacedDraft);
+
                                 Toast.makeText(this, "角色修改成功", Toast.LENGTH_SHORT).show();
                                 finish();
                             },

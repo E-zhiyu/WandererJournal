@@ -45,18 +45,21 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityDiaryReadBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.SearchHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.appearance.ViewEdgeHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.ScrollHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -64,9 +67,10 @@ import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphViewModel;
+import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
+import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.DiaryParagraphFilterBottomSheet;
+import com.wanderer.journal.ui.others.bottom.ParagraphFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
@@ -74,9 +78,12 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -96,10 +103,9 @@ public class DiaryReadActivity extends AppCompatActivity {
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
-    private final List<Long> checkedEmotionTagIdList = new ArrayList<>();   //选中的情绪标签 ID 列表
-    private boolean filterMedia = false;                                    //搜索时是否只显示带有媒体的段落
     private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
+    private boolean isAndMode = true;                                       //多词搜索是否为“与”模式
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +130,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
+        binding.getRoot().postDelayed(this::initGuide, 250);
         observeLiveData();
         initBackHandlers();
     }
@@ -149,18 +156,14 @@ public class DiaryReadActivity extends AppCompatActivity {
         //顶部情绪标签视图
         appbarEmotionAdapter = new EmotionTagInAppBarAdapter(
                 emotionTag -> {
-                    //移除已选择的情绪标签 ID
-                    checkedEmotionTagIdList.remove(emotionTag.getEmotionId());
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
 
-                    //执行搜索逻辑或退出搜搜模式
-                    String searchKeyword = (String) binding.contentSearchBar.getText();
-                    if (searchKeyword.isEmpty() && checkedEmotionTagIdList.isEmpty()) {
-                        setSearchMode(false);   //退出搜索模式
-                    } else {
-                        //执行搜索逻辑并更新 RecyclerView
-                        refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
-                        executeSearch(searchKeyword);
-                    }
+                    //移除已选择的情绪标签 ID
+                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
+                    checkedEmotionIdSet.remove(emotionTag.getEmotionId());
+
+                    //执行一次搜索
+                    executeSearch();
                 }
         );
         binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
@@ -170,20 +173,44 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
-            ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
             viewModel.jumpToPrevious();
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.upFab);
+        AppearanceHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
-            ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
             viewModel.jumpToNext();
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.downFab);
+        AppearanceHelper.attachMorphAnimation(binding.downFab);
 
         //搜索跳转组件布局
-        ViewEdgeHelper.setMarginToNavigation(binding.searchSkipLayout, this);
+        AppearanceHelper.setMarginToNavigation(binding.searchSkipLayout, this);
+
+        //多词搜索模式切换按钮
+        binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
+            isAndMode = !isAndMode;
+
+            if (isAndMode) {
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
+            } else {
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_or);
+            }
+        });
+    }
+
+    /**
+     * 初始化引导内容
+     */
+    private void initGuide() {
+        TipPreference.showTip(
+                binding.contentSearchBar,
+                Gravity.BOTTOM,
+                "用空格隔开多个关键词可以实现多词搜索",
+                TipPreference.KEY_READ_MULTI_SEARCH,
+                1
+        );
     }
 
     /**
@@ -203,7 +230,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setSearchMode(false);
+                ParagraphFilterViewModel viewModel = new ViewModelProvider(DiaryReadActivity.this).get(ParagraphFilterViewModel.class);
+                viewModel.clearFilter();
+                executeSearch();    //清空后执行一次查询（没有过滤条件不会触发滚动）
                 return true;
             }
 
@@ -239,13 +268,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
-                    //根据搜索词和选中的情绪标签选择是否执行搜索操作
-                    if (keyword.isEmpty() && (checkedEmotionTagIdList == null || checkedEmotionTagIdList.isEmpty())) {
-                        setSearchMode(false);   //搜索词为空且未选择情绪标签，直接退出搜索模式
-                    } else {
-                        executeSearch(keyword);
-                        binding.contentSearchBar.setText(keyword);
-                    }
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    viewModel.setSearchText(keyword);
+
+                    //执行一次搜索
+                    executeSearch();
                 },
                 item -> {
                     if (item.getItemId() == R.id.action_emotion_select) {
@@ -254,7 +281,15 @@ public class DiaryReadActivity extends AppCompatActivity {
                         return true;
                     } else if (item.getItemId() == R.id.action_share) {
                         if (!adapter.getSelectMode()) {
-                            Toast.makeText(this, "选择完毕后再次点击进行分享", Toast.LENGTH_SHORT).show();
+                            TipPreference.showTip(
+                                    binding.appBarLayout,
+                                    Gravity.BOTTOM,
+                                    "长按拖动可以快速多选",
+                                    TipPreference.KEY_SHARE_MULTI_CHOICE,
+                                    1
+                            );
+
+                            Toast.makeText(this, "选完再次点击即可分享", Toast.LENGTH_SHORT).show();
                             setShareSelectMode(true);
                         } else {
                             //判空
@@ -360,25 +395,8 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 显示过滤选项对话框
      */
     private void showFilterBottomSheet() {
-        DiaryParagraphFilterBottomSheet bottomSheet = new DiaryParagraphFilterBottomSheet(
-                checkedEmotionTagIdList,
-                filterMedia,
-                (emotionTag, isChecked) -> {
-                    long emotionId = emotionTag.getEmotionId();
-                    if (isChecked && !checkedEmotionTagIdList.contains(emotionId)) {
-                        checkedEmotionTagIdList.add(emotionId);
-                    } else if (!isChecked) {
-                        checkedEmotionTagIdList.remove(emotionId);
-                    }
-                },
-                checkedEmotionTagIdList::clear,
-                isFiltered -> filterMedia = isFiltered
-        );
-        bottomSheet.setOnDismissListener(() -> {
-            refreshFilterEmotionTagGroup(checkedEmotionTagIdList);
-            String keyword = (String) binding.contentSearchBar.getText();
-            executeSearch(keyword);
-        });
+        ParagraphFilterBottomSheet bottomSheet = new ParagraphFilterBottomSheet();
+        bottomSheet.setOnDismissListener(this::executeSearch);
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
     }
 
@@ -451,10 +469,10 @@ public class DiaryReadActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //应用粘性头部装饰器
-        StickyHeaderItemDecoration<ViewHolderDateSeparatorBinding> decoration = new StickyHeaderItemDecoration<>(
+        StickyHeaderItemDecoration<ViewHolderSeparatorTextChipBinding> decoration = new StickyHeaderItemDecoration<>(
                 adapter,
-                ViewHolderDateSeparatorBinding::inflate,
-                (binding, data) -> binding.dateText.setText(data)
+                ViewHolderSeparatorTextChipBinding::inflate,
+                (binding, data) -> binding.separatorText.setText(data)
         );
         binding.contentRecycler.addItemDecoration(decoration);
 
@@ -525,7 +543,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) != -1) {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS());
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
@@ -571,20 +589,12 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 将段落内容列表滚动到初始位置
      */
     private void scrollRecyclerToInitPosition() {
-        //创建动画
-        TransitionSet set = new TransitionSet()
-                .addTransition(new Fade())
-                .setInterpolator(new FastOutSlowInInterpolator())
-                .addTarget(binding.recyclerLoadingIndicator)
-                .setDuration(250);
-        TransitionManager.beginDelayedTransition(binding.getRoot(), set);
-
         //控制视图显示
-        binding.recyclerLoadingIndicator.setVisibility(View.GONE);
+        VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
         if (adapter.getItemCount() == 0) {
-            binding.emptyText.setVisibility(View.VISIBLE);
-        } else {
-            binding.emptyText.setVisibility(View.GONE);
+            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, true);
+        } else if (adapter.getItemCount() != 0) {
+            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, false);
         }
 
         //执行滚动操作
@@ -600,6 +610,9 @@ public class DiaryReadActivity extends AppCompatActivity {
                 new PagingRecyclerScrollListener() {
                     @Override
                     public void onSucceed() {
+                        //折叠标题栏
+                        binding.appBarLayout.setExpanded(false);
+
                         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
                         initScrollPosition.set(-1);
                     }
@@ -622,7 +635,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
 
         //匹配项的位置列表
         viewModel.getMatchedPositions().observe(this, positionList -> {
@@ -671,6 +684,45 @@ public class DiaryReadActivity extends AppCompatActivity {
                 scrollContentRecycler(targetPosition, true, null);
             }
         });
+
+        //情绪标签选择状态
+        EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
+        emotionTagSelectViewModel.getCheckedEmotionTag().observe(this, emotionTagEntity -> {
+            long paragraphId = emotionTagSelectViewModel.getParagraphId();
+            long emotionId = emotionTagEntity.getEmotionId();
+            int degree = emotionTagSelectViewModel.getDegree();
+            boolean isChecked = emotionTagSelectViewModel.isChecked();
+
+            EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            if (isChecked) {
+                disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(
+                                        LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "添加情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId +
+                                                "，强烈程度：" + degree
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            } else {
+                disposable.add(db.emotionTagDao().deleteEmotionParagraphRefCompletable(refEntity)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> Log.i(LogTags.DIARY_READ_ACTIVITY.n(),
+                                        "删除情绪标签引用，段落编号：" + paragraphId +
+                                                "，情绪标签：" + emotionId
+                                ),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
+        });
     }
 
     /**
@@ -695,12 +747,12 @@ public class DiaryReadActivity extends AppCompatActivity {
         dialog.setCancelable(false);    //不可取消
 
         //执行滚动逻辑
-        AppearanceAnimationHelper.scrollPagingRecycler(
+        ScrollHelper.scrollPagingRecycler(
                 binding.contentRecycler,
                 (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
                 adapter,
                 targetPosition,
-                ViewEdgeHelper.dpToPx(this, 63),
+                AppearanceHelper.dpToPx(this, 63),
                 maxRetryCount,
                 750,
                 new PagingRecyclerScrollListener() {
@@ -748,33 +800,45 @@ public class DiaryReadActivity extends AppCompatActivity {
 
     /**
      * 执行 ViewModel 的搜索方法并根据返回的数据更新 UI
-     *
-     * @param keyword 搜索关键词
      */
-    private void executeSearch(@Nullable String keyword) {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        ParagraphViewModel viewModel = new ViewModelProvider(this).get(ParagraphViewModel.class);
+    private void executeSearch() {
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        String keyword = viewModel.getSearchText();
 
+        //每次搜索前先清除之前的搜索订阅
         if (searchDisposable != null) {
             disposable.remove(searchDisposable);
             searchDisposable = null;
         }
 
-        disposable.add((searchDisposable = viewModel.executeSearch(keyword, checkedEmotionTagIdList, filterMedia, db)
+        //拆分输入的字符串
+        String[] words = keyword.split("\\s+"); // 按空格拆分
+        List<String> validKeywordList = Arrays.stream(words)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        //开始搜索
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
+        disposable.add((searchDisposable = viewModel.executeSearch(validKeywordList, db, isAndMode)
+                .defaultIfEmpty(new ArrayList<>())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         positionList -> {
                             if (!positionList.isEmpty()) {
-                                adapter.setHighlightTarget(keyword, checkedEmotionTagIdList, positionList);
+                                adapter.setHighlightTarget(validKeywordList, checkedEmotionIdSet, positionList);
                             } else {
                                 adapter.clearHighlight();
                             }
-                            setSearchMode(true);
+                            setSearchMode(viewModel.isHasFilter());
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 ))
         );
+
+        //更新情绪标签列表
+        binding.getRoot().post(() -> refreshFilterEmotionTagGroup(checkedEmotionIdSet));
     }
 
     /**
@@ -827,77 +891,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
         //实例化底部对话框并显示
-        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet(
-                paragraph.getParagraphId(),
-                (model, isChecked) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    if (isChecked) {
-                        disposable.add(dao.insertEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.DIARY_READ_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() +
-                                                        "，添加情绪标签：" + model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                                )
-                        );
-                    } else {
-                        disposable.add(dao.deleteEmotionParagraphRefCompletable(ref)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        () -> Log.i(
-                                                LogTags.DIARY_READ_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() + "，删除情绪标签：" +
-                                                        model.getEmotionTag().getEmotionId()
-                                        ),
-                                        e -> {
-                                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落的情绪标签移除失败");
-                                            ExceptionHelper.showExceptionDialog(this, e);
-                                        }
-                                )
-                        );
-                    }
-                },
-                (model, value) -> {
-                    EmotionParagraphRefEntity ref = new EmotionParagraphRefEntity(
-                            model.getEmotionTag().getEmotionId(),
-                            paragraph.getParagraphId()
-                    );
-                    ref.setDegree(value);
-                    EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
-
-                    disposable.add(dao.updateEmotionParagraphRefCompletable(ref)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    () -> Log.i(
-                                            LogTags.DIARY_READ_ACTIVITY.n(),
-                                            "段落编号：" + paragraph.getParagraphId() +
-                                                    "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                    "，更新情绪强烈程度为" + value
-                                    ),
-                                    e -> {
-                                        ExceptionHelper.showExceptionDialog(this, e);
-                                        Log.e(
-                                                LogTags.DIARY_READ_ACTIVITY.n(),
-                                                "段落编号：" + paragraph.getParagraphId() +
-                                                        "，情绪标签：" + model.getEmotionTag().getEmotionId() +
-                                                        "情绪强烈程度更新失败"
-                                        );
-                                    }
-                            )
-                    );
-                }
-        );
+        EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
     }
 
@@ -947,10 +941,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.searchSkipLayout.setVisibility(View.GONE);
 
             backHelper.unregisterHandler(searchBackHandler);
-            adapter.clearHighlight();           //清除文本高亮
-            checkedEmotionTagIdList.clear();    //清空选择的情绪标签
-            filterMedia = false;                //不再过滤媒体
-            refreshFilterEmotionTagGroup(new ArrayList<>());    //清空情绪标签选择视图
+            adapter.clearHighlight();                               //清除文本高亮
 
             disposable.remove(searchDisposable);
         } else {
@@ -982,40 +973,37 @@ public class DiaryReadActivity extends AppCompatActivity {
     /**
      * 刷新选中的情绪标签显示视图
      *
-     * @param checkedEmotionTagIdList 需要获取的情绪标签的 ID 列表
+     * @param checkedEmotionTagIdSet 需要获取的情绪标签的 ID 集合
      */
-    private void refreshFilterEmotionTagGroup(List<Long> checkedEmotionTagIdList) {
-        if (checkedEmotionTagIdList != null && !checkedEmotionTagIdList.isEmpty()) {
-            TransitionSet set = new TransitionSet()
-                    .addTransition(new Slide(Gravity.TOP))
-                    .addTransition(new Fade())
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .addTarget(binding.emotionTagInAppbarRecycler)
-                    .setDuration(250);
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
-            binding.emotionTagInAppbarRecycler.setVisibility(View.VISIBLE);
-
-            //从数据库中读取标签名称并显示
-            EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
-            disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdList)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
+    private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
+        if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
+            VisibilityHelper.toggleViewExpansion(
+                    binding.getRoot(),
+                    binding.emotionTagInAppbarRecycler,
+                    true,
+                    Gravity.TOP,
+                    250,
+                    () -> {
+                        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
+                        disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdSet)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    }
             );
         } else {
-            TransitionSet set = new TransitionSet()
-                    .addTransition(new Slide(Gravity.TOP))
-                    .addTransition(new Fade())
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .addTarget(binding.emotionTagInAppbarRecycler)
-                    .setDuration(250);
-            TransitionManager.beginDelayedTransition(binding.appBarLayout, set);
-            binding.emotionTagInAppbarRecycler.setVisibility(View.GONE);
-
-            appbarEmotionAdapter.submitList(new ArrayList<>());
+            VisibilityHelper.toggleViewExpansion(
+                    binding.getRoot(),
+                    binding.emotionTagInAppbarRecycler,
+                    false,
+                    Gravity.TOP,
+                    250,
+                    () -> appbarEmotionAdapter.submitList(new ArrayList<>())
+            );
         }
     }
 }

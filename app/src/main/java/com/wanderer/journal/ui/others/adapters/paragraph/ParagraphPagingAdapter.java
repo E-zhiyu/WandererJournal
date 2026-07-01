@@ -1,17 +1,13 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -24,17 +20,16 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
-import com.wanderer.journal.databinding.ViewHolderDateSeparatorBinding;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.helpers.RomanNumberHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
-import com.wanderer.journal.helpers.text.TextHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
@@ -42,15 +37,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
-    private String currentKeyword = "";                                 //当前高亮的搜索关键词
-    private final List<Long> filterEmotionIdList = new ArrayList<>();   //搜索的情绪标签 ID 列表
-    private final List<Integer> positionList = new ArrayList<>();       //当前高亮的段落下标列表
+    private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
+    private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
+    private final Set<Integer> positionSet = new HashSet<>();           //当前高亮的段落下标集合
     private boolean isSelectMode = false;                               //是否是选择模式
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -146,9 +142,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderDateSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public DateSeparatorViewHolder(@NonNull ViewHolderDateSeparatorBinding binding) {
+        public DateSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -200,7 +196,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             //设置监听器
             if (listener != null) {
                 //设置触摸监听
-                AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+                AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
                 //设置点击监听
                 binding.getRoot().setOnClickListener(view -> {
@@ -284,6 +280,15 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 notifyItemChanged(positionStart - 1);   //更新前面的
                 notifyItemChanged(positionStart);               //更新后面的
             }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
+            }
         });
     }
 
@@ -320,7 +325,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                     listener
             );
         } else {
-            ViewHolderDateSeparatorBinding binding = ViewHolderDateSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -330,7 +335,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
         if (uiModel == null) {
             holder.itemView.setVisibility(View.GONE);       //不显示占位符，防止加载时遮挡加载指示器
@@ -381,47 +386,31 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //内容文本填充富文本
             String rawContent = paragraph.getContent(); //数据库中的原始数据
-            CharSequence richText = TextHelper.hierarchicFromString(context, currentKeyword, rawContent, new RoleRefTextRule() {
-                @Override
-                public void onClick(String clickData) {
-                    try {
-                        long roleId = Long.parseLong(clickData);
-                        roleClickListener.onRoleClicked(roleId);
-                    } catch (NumberFormatException ignored) {
+            CharSequence richText = ParagraphTextConverter.hierarchic(
+                    context,
+                    positionSet.contains(holder.getBindingAdapterPosition()) ? highlightedKeywordList : null,
+                    rawContent,
+                    new RoleRefTextRule() {
+                        @Override
+                        public void onClick(String clickData) {
+                            try {
+                                long roleId = Long.parseLong(clickData);
+                                roleClickListener.onRoleClicked(roleId);
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
                     }
-                }
-            });
+            );
             itemHolder.binding.contentText.setText(richText);
 
-            //选择状态
+            //显示和隐藏复选框
             if (isSelectMode) {
-                //添加图标
-                TypedValue typedValue = new TypedValue();
-                boolean resolved = context.getTheme().resolveAttribute(
-                        android.R.attr.listChoiceIndicatorMultiple,
-                        typedValue,
-                        true
-                );
-                if (resolved) {
-                    Drawable drawable = AppCompatResources.getDrawable(context, typedValue.resourceId);
-                    itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            drawable,
-                            null,
-                            null,
-                            null
-                    );
-                }
+                itemHolder.binding.checkedText.setVisibility(View.VISIBLE);
             } else {
-                //去掉图标
-                itemHolder.binding.contentText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        null,
-                        null,
-                        null,
-                        null
-                );
+                itemHolder.binding.checkedText.setVisibility(View.GONE);
             }
             //设置选择状态
-            itemHolder.binding.contentText.setChecked(
+            itemHolder.binding.checkedText.setChecked(
                     selectionTracker != null &&
                             selectionTracker.hasSelection() &&
                             selectionTracker.getSelection().contains(paragraph.getParagraphId())
@@ -434,14 +423,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
-                    long emotionId = emotion.emotionTag.getEmotionId();
-                    String name = emotion.emotionTag.getName();
-                    int degree = emotion.crossRef.getDegree();
-                    String title = String.format(
-                            Locale.getDefault(),
-                            "%s %s",
-                            name, RomanNumberHelper.toRoman(degree)
-                    );
+                    long emotionId = emotion.getEmotionTag().getEmotionId();
+                    String title = emotion.generateDisplayText();
 
                     //添加 Chip 到视图中
                     Chip emotionChip = getEmotionChip(context, emotionId, title);
@@ -457,13 +440,13 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
 
             //设置圆角
-            setRadius(itemHolder.binding.getRoot(), position);
+            setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
         } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
+            //分隔符文本
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
-            separatorViewHolder.binding.dateText.setText(dateStr);
-            separatorViewHolder.binding.getRoot().setVisibility(View.VISIBLE);
+            separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }
 
@@ -501,7 +484,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         emotionChip.setFocusable(false);
 
         //设置是否选中（即高亮）
-        boolean isHighLighted = filterEmotionIdList.contains(emotionId);
+        boolean isHighLighted = filterEmotionIdSet.contains(emotionId);
         emotionChip.setCheckable(isHighLighted);
         emotionChip.setChecked(isHighLighted);
 
@@ -528,21 +511,21 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         ParagraphUiModel front = getItem(position - 1);
         if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
             if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
             }
         } else {
             ParagraphUiModel behind = getItem(position + 1);
 
             if (front instanceof ParagraphUiModel.Separator && behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
             } else if (front instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
             } else if (behind instanceof ParagraphUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
     }
@@ -550,19 +533,19 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 设置高亮
      *
-     * @param keyword      高亮关键词
+     * @param keywordList  高亮关键词列表
      * @param positionList 有符合关键词的视图的下标
      */
-    public void setHighlightTarget(String keyword, List<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
         //修改搜索元素数据
-        this.currentKeyword = keyword;
-        this.filterEmotionIdList.clear();
-        this.filterEmotionIdList.addAll(filterEmotionIdList);
+        this.highlightedKeywordList = keywordList;
+        this.filterEmotionIdSet.clear();
+        this.filterEmotionIdSet.addAll(filterEmotionIdList);
 
         //更改位置列表中的内容
         List<Integer> oldPositionList = new ArrayList<>(positionList);
-        this.positionList.clear();
-        this.positionList.addAll(positionList);
+        this.positionSet.clear();
+        this.positionSet.addAll(positionList);
 
         //提醒旧的取消高亮
         for (int i : oldPositionList) {
@@ -579,11 +562,11 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * 清除高亮
      */
     public void clearHighlight() {
-        this.currentKeyword = "";
-        this.filterEmotionIdList.clear();
-        for (int position : positionList) {
+        this.highlightedKeywordList = null;
+        this.filterEmotionIdSet.clear();
+        for (int position : positionSet) {
             notifyItemChanged(position);
         }
-        positionList.clear();
+        positionSet.clear();
     }
 }

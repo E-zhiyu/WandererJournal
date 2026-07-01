@@ -12,13 +12,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.enums.dropdown.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
-import com.wanderer.journal.data.save.db.entities.composite.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.databinding.ViewHolderRoleBinding;
-import com.wanderer.journal.databinding.ViewHolderRoleRelationshipSeparatorBinding;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
 import java.util.List;
@@ -49,6 +49,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                 RoleEntityModel oldModel = ((RoleUiModel.Item) oldItem).model;
                 RoleEntityModel newModel = ((RoleUiModel.Item) newItem).model;
                 return oldModel.getRole().getName().equals(newModel.getRole().getName()) &&
+                        oldModel.getRole().getDisplayName().equals(newModel.getRole().getDisplayName()) &&
                         oldModel.getRoleAliaList().equals(newModel.getRoleAliaList()) &&
                         oldModel.getRole().getIdentity().equals(newModel.getRole().getIdentity());
             } else
@@ -74,9 +75,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     }
 
     public static class RelationshipSeparatorViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderRoleRelationshipSeparatorBinding binding;
+        ViewHolderSeparatorTextChipBinding binding;
 
-        public RelationshipSeparatorViewHolder(@NonNull ViewHolderRoleRelationshipSeparatorBinding binding) {
+        public RelationshipSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -90,7 +91,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             this.binding = binding;
 
             //设置触摸监听器
-            AppearanceAnimationHelper.attachMorphAnimation(binding.getRoot());
+            AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
@@ -123,6 +124,15 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             public void onItemRangeRemoved(int positionStart, int itemCount) {
                 notifyItemChanged(positionStart - 1);   //更新前面的
                 notifyItemChanged(positionStart);               //更新后面的
+            }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
             }
         });
     }
@@ -178,7 +188,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                     }
             );
         } else {
-            ViewHolderRoleRelationshipSeparatorBinding binding = ViewHolderRoleRelationshipSeparatorBinding.inflate(
+            ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -197,9 +207,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             RoleUiModel.Item itemModel = (RoleUiModel.Item) model;
             RoleViewHolder itemHolder = (RoleViewHolder) holder;
 
-            //名称
-            String name = itemModel.model.getRole().getName();
-            itemHolder.binding.nameText.setText(name);
+            //显示名称 + 名称
+            String display = itemModel.model.getRole().generateDisplayName();
+            itemHolder.binding.nameText.setText(display);
 
             //别名
             StringBuilder aliasBuilder = new StringBuilder();
@@ -238,21 +248,21 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         RoleUiModel front = getItem(position - 1);
         if (position == getItemCount() - 1) {   //处理最后一个卡片的圆角
             if (front instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前一个是分隔视图，判断为单独类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //前一个不是分隔视图，判断为底部类型
             }
         } else {
             RoleUiModel behind = getItem(position + 1);
 
             if (front instanceof RoleUiModel.Separator && behind instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.SINGLE); //前后都是分隔视图，判断为单独类型
             } else if (front instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.TOP);    //前一个是分隔但后一个不是，判断为顶部类型
             } else if (behind instanceof RoleUiModel.Separator) {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.BOTTOM); //后一个是分隔但前一个不是，判断为底部类型
             } else {
-                AppearanceAnimationHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
+                AppearanceHelper.setRadiusStyle(view, RadiusStyle.MIDDLE); //前后都不是分隔视图，判断为中间类型
             }
         }
     }

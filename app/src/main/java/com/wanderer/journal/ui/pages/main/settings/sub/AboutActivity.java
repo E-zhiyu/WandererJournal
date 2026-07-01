@@ -12,9 +12,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.databinding.ActivityAboutBinding;
 import com.wanderer.journal.helpers.AboutHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceAnimationHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 
 public class AboutActivity extends AppCompatActivity {
@@ -51,18 +52,22 @@ public class AboutActivity extends AppCompatActivity {
 
         //作者卡片
         binding.authorCard.setOnClickListener(view -> {
+            WandererJournal.lockLifecycleObserver();
+
             Uri uri = Uri.parse("https://github.com/E-zhiyu");
             Intent skip2GitHub = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(skip2GitHub);
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.authorCard);
+        AppearanceHelper.attachMorphAnimation(binding.authorCard);
 
         //项目地址卡片
         binding.projectAddressCard.setOnClickListener(view -> {
+            WandererJournal.lockLifecycleObserver();
+
             Uri uri = Uri.parse("https://gitee.com/e-zhiyu/wanderer-journal");
             Intent skip2Project = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(skip2Project);
         });
-        AppearanceAnimationHelper.attachMorphAnimation(binding.projectAddressCard);
+        AppearanceHelper.attachMorphAnimation(binding.projectAddressCard);
     }
 }
