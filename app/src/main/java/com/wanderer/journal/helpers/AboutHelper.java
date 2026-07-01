@@ -9,7 +9,13 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.4.0\n" +
+    private final static String CHANGELOG = "# v1.4.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复更新到上个版本后进入角色列表界面会崩溃的BUG\n" +
+            "\n" +
+            "# v1.4.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

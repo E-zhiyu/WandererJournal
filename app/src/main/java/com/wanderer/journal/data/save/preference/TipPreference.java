@@ -11,7 +11,7 @@ import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
 
 public class TipPreference {
     private static final String PREF_NAME = "TipPreference";
-    public static final String KEY_ROLE_REF_METHOD = "role_ref_method";             //在角色列表界面提示引用角色的方法的提示
+    public static final String KEY_ROLE_REF_METHOD = "role_refence_method";         //在角色列表界面提示引用角色的方法的提示
     public static final String KEY_WRITE_UP_DIARY = "write_up_diary";               //补写日记提示
     public static final String KEY_MEMERY_PIXEL_CHECK = "memery_pixel_check";       //记忆像素可以点击查看日记
     public static final String KEY_SHARE_MULTI_CHOICE = "share_multi_choice";       //日记分享快捷多选提示
