@@ -55,39 +55,9 @@ public class SettingsFragment extends Fragment {
      * 初始化视图
      */
     private void initViews() {
-        //初始化软件设置
         initAppSettings();
-
-        //数据管理设置
-        SettingClickableTextView dataManage = new SettingClickableTextView(
-                requireContext(),
-                binding.dataManageOption,
-                R.string.data_manage,
-                "点击跳转数据管理界面",
-                R.drawable.outline_database_24,
-                RadiusStyle.SINGLE
-        );
-        dataManage.setFunctionListener(view -> {
-            Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
-            startActivity(skip2DataManage);
-        });
-
-        //日记提醒设置
-        SettingClickableTextView diaryAlarmOption = new SettingClickableTextView(
-                requireContext(),
-                binding.diaryAlarmOption,
-                R.string.diary_alarm,
-                "点击跳转至日记提醒设置界面",
-                R.drawable.outline_alarm_24,
-                RadiusStyle.SINGLE
-        );
-        diaryAlarmOption.setFunctionListener(view -> {
-            Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
-            startActivity(skip2DiaryAlarmSetting);
-        });
-
-        //初始化安全设置
-        initSecuritySettings();
+        initCommonSettings();
+        initPrivacySettings();
 
         //更新日志
         SettingClickableTextView changelogOption = new SettingClickableTextView(
@@ -139,7 +109,7 @@ public class SettingsFragment extends Fragment {
                 R.string.dynamic_color,
                 "将壁纸颜色作为APP主题色",
                 R.drawable.outline_colorize_24,
-                RadiusStyle.MIDDLE
+                RadiusStyle.BOTTOM
         );
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
@@ -149,7 +119,12 @@ public class SettingsFragment extends Fragment {
                     ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
                 }
         );
+    }
 
+    /**
+     * 初始化通用设置
+     */
+    private void initCommonSettings() {
         //权限管理
         SettingClickableTextView permissionsOption = new SettingClickableTextView(
                 requireContext(),
@@ -157,7 +132,7 @@ public class SettingsFragment extends Fragment {
                 R.string.permissions_setting,
                 "点击进入权限管理界面",
                 R.drawable.outline_admin_panel_settings_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.TOP
         );
         permissionsOption.setFunctionListener(v -> {
             Intent skip2PermissionManage = new Intent(
@@ -166,12 +141,40 @@ public class SettingsFragment extends Fragment {
             );
             startActivity(skip2PermissionManage);
         });
+
+        //数据管理设置
+        SettingClickableTextView dataManage = new SettingClickableTextView(
+                requireContext(),
+                binding.dataManageOption,
+                R.string.data_manage,
+                "点击跳转数据管理界面",
+                R.drawable.outline_database_24,
+                RadiusStyle.MIDDLE
+        );
+        dataManage.setFunctionListener(view -> {
+            Intent skip2DataManage = new Intent(requireContext(), DataManageActivity.class);
+            startActivity(skip2DataManage);
+        });
+
+        //日记提醒设置
+        SettingClickableTextView diaryAlarmOption = new SettingClickableTextView(
+                requireContext(),
+                binding.diaryAlarmOption,
+                R.string.diary_alarm,
+                "点击跳转至日记提醒设置界面",
+                R.drawable.outline_alarm_24,
+                RadiusStyle.BOTTOM
+        );
+        diaryAlarmOption.setFunctionListener(view -> {
+            Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
+            startActivity(skip2DiaryAlarmSetting);
+        });
     }
 
     /**
-     * 初始化安全设置
+     * 初始化隐私设置
      */
-    private void initSecuritySettings() {
+    private void initPrivacySettings() {
         //身份验证开关
         SettingSwitchView authenticationSwitch = new SettingSwitchView(
                 requireContext(),
