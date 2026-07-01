@@ -28,7 +28,6 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -40,7 +39,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
@@ -425,14 +423,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
-                    long emotionId = emotion.emotionTag.getEmotionId();
-                    String name = emotion.emotionTag.getName();
-                    int degree = emotion.crossRef.getDegree();
-                    String title = String.format(
-                            Locale.getDefault(),
-                            "%s %s",
-                            name, RomanNumberHelper.toRoman(degree)
-                    );
+                    long emotionId = emotion.getEmotionTag().getEmotionId();
+                    String title = emotion.generateDisplayText();
 
                     //添加 Chip 到视图中
                     Chip emotionChip = getEmotionChip(context, emotionId, title);

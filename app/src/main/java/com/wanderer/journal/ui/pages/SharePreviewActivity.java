@@ -31,6 +31,7 @@ import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
@@ -355,6 +356,27 @@ public class SharePreviewActivity extends AppCompatActivity {
                                 builder.append(",");
                             }
                             mediaIndex++;
+                        }
+                        builder.append("]");
+                    }
+
+                    //添加情绪字段
+                    List<CrossRefWithEmotion> emotionList = entityModel.getEmotionList();
+                    if (!emotionList.isEmpty()) {
+                        builder.append(",");
+                        builder.append("\"emotionTags\":");
+                        builder.append("[");
+
+                        int emotionIndex = 0;
+                        for (CrossRefWithEmotion emotionTagRef : emotionList) {
+                            builder.append("\"");
+                            builder.append(emotionTagRef.generateDisplayText());
+                            builder.append("\"");
+
+                            if (emotionIndex < emotionList.size() - 1) {
+                                builder.append(",");
+                            }
+                            emotionIndex++;
                         }
                         builder.append("]");
                     }

@@ -19,9 +19,8 @@ function addData(jsonString) {
             htmlContent += `<div class="date-divider"><span>${item.content}</span></div>`;
         }
         else if (item.type === 'text') {
+            //添加图片
             let innerImgHtml = '';
-
-            //判断当前段落是否有图片，且数组不为空
             if (item.imageUris && item.imageUris.length > 0) {
                 const imgCount = item.imageUris.length >= 3 ? 3 : item.imageUris.length;
                 let imgItemsHtml = '';
@@ -43,7 +42,17 @@ function addData(jsonString) {
                 `;
             }
 
-            //处理时间（如果没有传时间，给一个保底空标签）
+            //添加情绪标签
+            let emotionHtml = '';
+            if (item.emotionTags && item.emotionTags.length > 0) {
+                let chipItemsHtml = '';
+                item.emotionTags.forEach(emotionTag => {
+                    chipItemsHtml += `<span class="emotion-chip">${emotionTag}</span>`;
+                });
+                emotionHtml = `<div class="bubble-emotions-container">${chipItemsHtml}</div>`;
+            }
+
+            //添加时间
             let timeHtml = '';
             if (item.time && item.time.trim() !== '') {
                 timeHtml = `<span class="bubble-time">${item.time}</span>`;
@@ -54,6 +63,7 @@ function addData(jsonString) {
                 <div class="paragraph-bubble">
                     <div class="bubble-content-wrapper">
                         <div class="bubble-text">${item.content}</div>
+                        ${emotionHtml}
                         ${innerImgHtml}
                         ${timeHtml}
                     </div>

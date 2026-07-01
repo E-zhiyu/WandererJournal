@@ -25,7 +25,6 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
-import com.wanderer.journal.helpers.RomanNumberHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -35,7 +34,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -253,13 +251,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
                 for (CrossRefWithEmotion emotion : emotionList) {
-                    String name = emotion.emotionTag.getName();
-                    int degree = emotion.crossRef.getDegree();
-                    String title = String.format(
-                            Locale.getDefault(),
-                            "%s %s",
-                            name, RomanNumberHelper.toRoman(degree)
-                    );
+                    String title = emotion.generateDisplayText();
 
                     //添加 Chip 到视图中
                     Chip emotionChip = getEmotionChip(context, title);

@@ -13,7 +13,7 @@ public class EmotionTagEntity {
     private long emotionId;     //自增主键
     private String name;        //名称
     private String description; //描述
-    private int type = 1;       //情绪类型
+    private int type;           //情绪类型
 
     public EmotionTagEntity(String name, String description, int type) {
         this.name = name;

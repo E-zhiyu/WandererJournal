@@ -38,7 +38,7 @@ body {
 
 /* 时间戳的精致样式 */
 .bubble-time {
-    float: right;            /* 【核心属性】让时间戳向右浮动 */
+    float: right;            /* 让时间戳向右浮动 */
     font-size: 12px;         /* 字体小巧 */
     color: #aaaaaa;          /* 淡淡的灰色，高级感 */
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 选用无衬线西文字体，数字更好看 */
@@ -48,7 +48,7 @@ body {
     user-select: none;
 }
 
-/* 【黑魔法清除浮动】防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
+/* 防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
 .bubble-content-wrapper::after {
     content: "";
     display: block;
@@ -60,7 +60,7 @@ body {
     margin-top: 10px;
 }
 
-/* 日记消息气泡基本样式（保持你之前的优雅气泡外观） */
+/* 日记消息气泡基本样式 */
 .paragraph-bubble {
     background-color: #ffffff;
     color: #222222;
@@ -76,47 +76,6 @@ body {
 /* 气泡内部的纯文字区域 */
 .bubble-text {
     margin-bottom: 0; /* 默认如果没有图片，文字居底 */
-}
-
-/* --- 底部页脚样式 --- */
-.footer {
-    display: flex;
-    justify-content: space-between; /* 左右两端对齐 */
-    align-items: center;            /* 垂直居中对齐 */
-    margin-top: 24px;
-    padding: 16px 20px;
-    background-color: #fcfcfc;      /* 给底部一个极淡的独立背景色底栏 */
-    border-top: 1px solid #eeeeee;   /* 一条精致的分隔线 */
-    border-radius: 20px;
-    box-sizing: border-box;
-}
-/* 页脚左侧文字区域 */
-.footer-left {
-    display: flex;
-    max-width: 60%;
-    flex-direction: column;
-    gap: 4px;
-}
-/* 页脚应用名称 */
-.app-name {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333333;
-}
-/* 页脚应用名称下方的文字 */
-.app-slogan {
-    font-size: 12px;
-    color: #999999;
-}
-/* 页脚右侧二维码样式 */
-.project-qrcode {
-    width: 64px;               /* 严格控制二维码尺寸，不能太大，64px~80px 视觉效果最好 */
-    height: 64px;
-    border-radius: 6px;        /* 微微的圆角 */
-    border: 3px solid #ffffff; /* 高级感的白边相框 */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 淡淡的阴影，让二维码浮现出来 */
-    background-color: #ffffff;
-    display: block;
 }
 
 /* ================= 智能网格数量控制 ================= */
@@ -173,4 +132,71 @@ body {
 
 .images-count-3 .grid-image-item {
     aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
+}
+
+/* 情绪标签的外层包裹容器 */
+.bubble-emotions-container {
+    display: flex;
+    flex-wrap: wrap;       /* 位置不够时，标签自动折行到下一行 */
+    gap: 6px;              /* 标签之间的横纵向间隙 */
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 情绪 Chip 样式 */
+.emotion-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;      /* 胶囊内边距，上下窄左右宽 */
+    font-size: 11px;        /* 字体精致小巧 */
+    font-weight: 500;       /* 字重中等，清晰可读 */
+    border-radius: 100px;   /* 大圆角，呈现完美的圆润胶囊形态 */
+    line-height: 12px;
+    letter-spacing: 0.3px;  /* 字间距微调 */
+    transition: all 0.2s ease;
+    background-color: rgba(235, 240, 245, 0.8);
+    color: #5a6e7f;
+}
+
+/* --- 底部页脚样式 --- */
+.footer {
+    display: flex;
+    justify-content: space-between; /* 左右两端对齐 */
+    align-items: center;            /* 垂直居中对齐 */
+    margin-top: 24px;
+    padding: 16px 20px;
+    background-color: #fcfcfc;      /* 给底部一个极淡的独立背景色底栏 */
+    border-top: 1px solid #eeeeee;   /* 一条精致的分隔线 */
+    border-radius: 20px;
+    box-sizing: border-box;
+}
+/* 页脚左侧文字区域 */
+.footer-left {
+    display: flex;
+    max-width: 60%;
+    flex-direction: column;
+    gap: 4px;
+}
+/* 页脚应用名称 */
+.app-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333333;
+}
+/* 页脚应用名称下方的文字 */
+.app-slogan {
+    font-size: 12px;
+    color: #999999;
+}
+/* 页脚右侧二维码样式 */
+.project-qrcode {
+    width: 64px;               /* 严格控制二维码尺寸，不能太大，64px~80px 视觉效果最好 */
+    height: 64px;
+    border-radius: 6px;        /* 微微的圆角 */
+    border: 3px solid #ffffff; /* 高级感的白边相框 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 淡淡的阴影，让二维码浮现出来 */
+    background-color: #ffffff;
+    display: block;
 }
