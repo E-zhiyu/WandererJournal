@@ -149,7 +149,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 10px;      /* 胶囊内边距，上下窄左右宽 */
+    padding: 7px 10px;      /* 胶囊内边距，上下窄左右宽 */
     font-size: 11px;        /* 字体精致小巧 */
     font-weight: 500;       /* 字重中等，清晰可读 */
     border-radius: 100px;   /* 大圆角，呈现完美的圆润胶囊形态 */
