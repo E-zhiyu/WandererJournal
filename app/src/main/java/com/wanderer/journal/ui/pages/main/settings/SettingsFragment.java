@@ -33,6 +33,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -163,11 +164,25 @@ public class SettingsFragment extends Fragment {
                 R.string.diary_alarm,
                 "点击跳转至日记提醒设置界面",
                 R.drawable.outline_alarm_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         diaryAlarmOption.setFunctionListener(view -> {
             Intent skip2DiaryAlarmSetting = new Intent(requireContext(), DiaryAlarmActivity.class);
             startActivity(skip2DiaryAlarmSetting);
+        });
+
+        //分享设置
+        SettingClickableTextView shareOption = new SettingClickableTextView(
+                requireContext(),
+                binding.shareOption,
+                R.string.share_settings,
+                "点击跳转分享设置界面",
+                R.drawable.outline_share_24,
+                RadiusStyle.BOTTOM
+        );
+        shareOption.setFunctionListener(view -> {
+            Intent skip2ShareSettings = new Intent(requireContext(), ShareSettingsActivity.class);
+            startActivity(skip2ShareSettings);
         });
     }
 

@@ -1,11 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.main.settings.SettingsFragment">
+    tools:context=".ui.pages.main.settings.sub.ShareSettingsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true">
@@ -21,18 +24,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:navigationIcon="@null"
-                app:title="@string/settings" />
+                app:title="@string/share_settings" />
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:scrollbars="none"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <LinearLayout
+            android:id="@+id/app_settings_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
@@ -44,19 +51,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="15dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="@string/app_settings"
+                android:text="@string/share_content"
                 android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-            <!-- 主题模式 -->
+            <!-- 媒体 -->
             <include
-                android:id="@+id/theme_mode_option"
+                android:id="@+id/media_switch"
                 layout="@layout/view_setting_option" />
 
-            <!-- 动态色彩 -->
+            <!-- 情绪标签 -->
             <include
-                android:id="@+id/dynamic_color_option"
+                android:id="@+id/emotion_switch"
+                layout="@layout/view_setting_option" />
+
+            <!-- 时间 -->
+            <include
+                android:id="@+id/time_switch"
                 layout="@layout/view_setting_option" />
 
             <com.google.android.material.textview.MaterialTextView
@@ -65,70 +77,12 @@
                 android:layout_marginStart="15dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
-                android:text="@string/common_settings"
+                android:text="@string/others"
                 android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-            <!-- 权限管理 -->
+            <!-- 图片页脚文本 -->
             <include
-                android:id="@+id/permissions_option"
-                layout="@layout/view_setting_option" />
-
-            <!-- 数据管理 -->
-            <include
-                android:id="@+id/data_manage_option"
-                layout="@layout/view_setting_option" />
-
-            <!-- 日记提醒入口 -->
-            <include
-                android:id="@+id/diary_alarm_option"
-                layout="@layout/view_setting_option" />
-
-            <!-- 分享设置 -->
-            <include
-                android:id="@+id/share_option"
-                layout="@layout/view_setting_option" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:text="@string/privacy_settings"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
-
-            <!-- 身份验证开关 -->
-            <include
-                android:id="@+id/authentication_switch"
-                layout="@layout/view_setting_option" />
-
-            <!-- 身份验证时机 -->
-            <include
-                android:id="@+id/authentication_opportunity_option"
-                layout="@layout/view_setting_option" />
-
-            <!-- 最近任务隐藏 -->
-            <include
-                android:id="@+id/hide_recent_task_option"
-                layout="@layout/view_setting_option" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="15dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:text="@string/about_software"
-                android:textAppearance="?attr/textAppearanceBodyLarge" />
-
-            <!-- 更新日志 -->
-            <include
-                android:id="@+id/changelog_option"
-                layout="@layout/view_setting_option" />
-
-            <!-- 关于软件 -->
-            <include
-                android:id="@+id/about_option"
+                android:id="@+id/picture_bottom_text_option"
                 layout="@layout/view_setting_option" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

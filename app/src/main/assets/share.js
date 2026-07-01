@@ -17,8 +17,7 @@ function addData(jsonString) {
     data.forEach(item => {
         if (item.type === 'date') {
             htmlContent += `<div class="date-divider"><span>${item.content}</span></div>`;
-        }
-        else if (item.type === 'text') {
+        } else if (item.type === 'paragraph') {
             //添加图片
             let innerImgHtml = '';
             if (item.imageUris && item.imageUris.length > 0) {
@@ -69,6 +68,11 @@ function addData(jsonString) {
                     </div>
                 </div>
             `;
+        } else if (item.type === 'bottomText') {
+            const bottomTextContainer = document.getElementById('bottom-text');
+            if (item.data && item.data !== '') {
+                bottomTextContainer.innerHTML = item.data;
+            }
         }
     });
 

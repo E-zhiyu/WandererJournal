@@ -115,6 +115,10 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver> <!-- 开机广播接收器 -->
+        <activity
+            android:name=".ui.pages.main.settings.sub.ShareSettingsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

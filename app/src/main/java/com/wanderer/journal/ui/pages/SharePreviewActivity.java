@@ -34,6 +34,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -309,6 +310,11 @@ public class SharePreviewActivity extends AppCompatActivity {
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
+        //获取内容开关状态
+        boolean enableMedia = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_MEDIA);
+        boolean enableEmotion = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_EMOTION);
+        boolean enableTime = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_TIME);
+
         //分段并转换为 JSON 字符串列表
         final int STEP = 1;
         List<String> jsonList = new ArrayList<>();
@@ -330,7 +336,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     ParagraphEntity paragraph = entityModel.getParagraph();
 
                     //添加段落内容字段
-                    builder.append("\"type\":\"text\",\"content\":");
+                    builder.append("\"type\":\"paragraph\",\"content\":");
                     builder.append("\"");
                     String paragraphContent = paragraph.getContent();
                     builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
@@ -342,7 +348,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //添加图片字段
                     List<MediaEntity> mediaList = entityModel.getMediaList();
-                    if (!mediaList.isEmpty()) {
+                    if (!mediaList.isEmpty() && enableMedia) {
                         builder.append(",");
                         builder.append("\"imageUris\":[");
 
@@ -362,7 +368,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //添加情绪字段
                     List<CrossRefWithEmotion> emotionList = entityModel.getEmotionList();
-                    if (!emotionList.isEmpty()) {
+                    if (!emotionList.isEmpty() && enableEmotion) {
                         builder.append(",");
                         builder.append("\"emotionTags\":");
                         builder.append("[");
@@ -382,12 +388,14 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
 
                     //添加时间字段
-                    String time = paragraph.getCreateTime().format(timeFormatter);
-                    builder.append(",");
-                    builder.append("\"time\":");
-                    builder.append("\"");
-                    builder.append(time);
-                    builder.append("\"");
+                    if (enableTime) {
+                        String time = paragraph.getCreateTime().format(timeFormatter);
+                        builder.append(",");
+                        builder.append("\"time\":");
+                        builder.append("\"");
+                        builder.append(time);
+                        builder.append("\"");
+                    }
                 }
 
                 builder.append("}");
@@ -399,6 +407,19 @@ public class SharePreviewActivity extends AppCompatActivity {
             builder.append("]");
             jsonList.add(builder.toString());
         }
+
+        //加上其他自定义内容
+        StringBuilder otherBuilder = new StringBuilder("[");
+
+        //底部文本
+        String bottomText = ShareSettingsPreference.getPictureBottomText(this);
+        if (!bottomText.isEmpty()) {
+            otherBuilder.append("{\"type\":\"bottomText\",\"data\":");
+            otherBuilder.append("\"").append(bottomText).append("\"}");
+        }
+
+        otherBuilder.append("]");
+        jsonList.add(otherBuilder.toString());
 
         return jsonList;
     }
