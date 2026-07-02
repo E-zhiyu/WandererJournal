@@ -20,7 +20,7 @@ import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.ui.pages.cognition.CognitionListActivity;
+import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.role.RoleListActivity;
@@ -298,7 +298,7 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听器
         binding.lifeNoteCountCard.setOnClickListener(view -> {
-            Intent skip2Cognition = new Intent(requireContext(), CognitionListActivity.class);
+            Intent skip2Cognition = new Intent(requireContext(), LifeNoteListActivity.class);
             startActivity(skip2Cognition);
         });
     }

@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages.cognition;
+package com.wanderer.journal.ui.pages.life_note;
 
 import android.os.Bundle;
 
@@ -11,7 +11,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.wanderer.journal.databinding.ActivityCognitionListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
-public class CognitionListActivity extends AppCompatActivity {
+public class LifeNoteListActivity extends AppCompatActivity {
     private ActivityCognitionListBinding binding;   //绑定的 XML 布局
 
     @Override
