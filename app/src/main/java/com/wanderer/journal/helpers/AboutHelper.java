@@ -9,7 +9,13 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.4.1\n" +
+    private final static String CHANGELOG = "# v1.4.2\n" +
+            "\n" +
+            "### 修改内容\n" +
+            "\n" +
+            "- 回退将文本浮窗背景设为半透明的修改\n" +
+            "\n" +
+            "# v1.4.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

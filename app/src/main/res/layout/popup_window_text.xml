@@ -4,7 +4,6 @@
     style="@style/MediumRadiusCardStyle"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    app:cardBackgroundColor="@color/chip_separator_background_color"
     app:strokeWidth="1dp">
 
     <FrameLayout
