@@ -5,8 +5,10 @@ import android.content.DialogInterface;
 import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 
 import com.wanderer.journal.databinding.DialogEdittextBinding;
+import com.wanderer.journal.helpers.ImmHelper;
 
 public class EditTextDialogBuilder
         extends CustomDialogBuilderBase<
@@ -58,6 +60,13 @@ public class EditTextDialogBuilder
     public CustomDialogBuilderBase<DialogEdittextBinding, OnClickedListener, DialogInterface.OnClickListener> setNegativeButton(String btnTitle, DialogInterface.OnClickListener callback) {
         builder.setNegativeButton(btnTitle, callback);
         return this;
+    }
+
+    @Override
+    public AlertDialog show() {
+        AlertDialog dialog = super.show();
+        ImmHelper.showImm(binding.textInput);
+        return dialog;
     }
 
     public interface OnClickedListener {

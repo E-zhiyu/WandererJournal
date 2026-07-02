@@ -11,8 +11,9 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.4.2\n" +
             "\n" +
-            "### 修改内容\n" +
+            "### 优化和修改的内容\n" +
             "\n" +
+            "- 输入框对话框弹出时自动弹出键盘\n" +
             "- 调整日记分享图片中媒体预览图的位置\n" +
             "- 回退将文本浮窗背景设为半透明的修改\n" +
             "\n" +
