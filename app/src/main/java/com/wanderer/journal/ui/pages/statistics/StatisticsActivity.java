@@ -41,6 +41,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -339,6 +340,7 @@ public class StatisticsActivity extends AppCompatActivity {
                             //获取常用角色
                             List<RoleEntity> commonRoleList = roleList.stream()
                                     .filter(role -> role.getUseCount() > 0)
+                                    .sorted(Comparator.comparing(RoleEntity::getUseCount).reversed())
                                     .limit(5)
                                     .collect(Collectors.toList());
                             int commonRoleVisibility = commonRoleList.isEmpty() ? View.GONE : View.VISIBLE;
@@ -410,6 +412,7 @@ public class StatisticsActivity extends AppCompatActivity {
                             //添加使用的标签到 ChipGroup
                             List<EmotionTagUseCountModel> commonEmotionTagList = usedModelList.stream()
                                     .limit(5)
+                                    .sorted(Comparator.comparing(EmotionTagUseCountModel::getUseCount).reversed())
                                     .collect(Collectors.toList());
                             binding.commonEmotionChipGroup.removeAllViews();
                             for (EmotionTagUseCountModel model : commonEmotionTagList) {
