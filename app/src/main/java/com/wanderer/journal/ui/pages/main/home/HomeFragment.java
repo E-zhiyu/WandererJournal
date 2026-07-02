@@ -75,6 +75,7 @@ public class HomeFragment extends Fragment {
         initParagraphCountCard();
         initEmotionTagCountCard();
         initRoleCountCard();
+        initCognitionCountCard();
     }
 
     /**
@@ -256,7 +257,7 @@ public class HomeFragment extends Fragment {
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
-                AppearanceHelper.MEDIUM_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
         AppearanceHelper.attachMorphAnimation(binding.roleCountCard);
 
@@ -278,6 +279,26 @@ public class HomeFragment extends Fragment {
                         }
                 )
         );
+    }
+
+    /**
+     * 初始化认知和感想卡片
+     */
+    private void initCognitionCountCard() {
+        AppearanceHelper.setRadius(
+                requireContext(),
+                binding.cognitionCountCard,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS
+        );
+        AppearanceHelper.attachMorphAnimation(binding.cognitionCountCard);
+
+        //设置点击监听器
+        binding.cognitionCountCard.setOnClickListener(view -> {
+            //TODO:跳转至认知和感想列表界面
+        });
     }
 
     /**
