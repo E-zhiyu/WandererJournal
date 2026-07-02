@@ -38,7 +38,7 @@ abstract public class BaseBottomSheetDialogFragment extends BottomSheetDialogFra
      *
      * @param listener 监听器实例
      */
-    public void setOnDismissListener(OnDismissListener listener) {
+    protected void setOnDismissListener(OnDismissListener listener) {
         onDismissListener = listener;
     }
 

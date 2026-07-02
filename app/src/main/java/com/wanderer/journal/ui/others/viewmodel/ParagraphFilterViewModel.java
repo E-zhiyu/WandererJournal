@@ -30,7 +30,7 @@ public class ParagraphFilterViewModel extends ViewModel {
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
     private String searchText = "";
-
+    private final MutableLiveData<Boolean> needExecuteSearch = new MutableLiveData<>(false);  //是否需要进行搜索
     private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);    //匹配搜索的位置列表
     private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);           //当前所在的匹配搜索位置的下标
 
@@ -60,6 +60,14 @@ public class ParagraphFilterViewModel extends ViewModel {
 
     public void setSearchText(String searchText) {
         this.searchText = searchText;
+    }
+
+    public MutableLiveData<Boolean> getNeedExecuteSearch() {
+        return needExecuteSearch;
+    }
+
+    public void setNeedExecuteSearch(boolean needExecuteSearch) {
+        this.needExecuteSearch.setValue(needExecuteSearch);
     }
 
     /**

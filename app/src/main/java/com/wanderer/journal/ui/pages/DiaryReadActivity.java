@@ -396,7 +396,6 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void showFilterBottomSheet() {
         ParagraphFilterBottomSheet bottomSheet = new ParagraphFilterBottomSheet();
-        bottomSheet.setOnDismissListener(this::executeSearch);
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
     }
 
@@ -636,6 +635,13 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void observeLiveData() {
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+
+        //执行搜索的标识符
+        viewModel.getNeedExecuteSearch().observe(this, bool -> {
+            if (bool) {
+                executeSearch();
+            }
+        });
 
         //匹配项的位置列表
         viewModel.getMatchedPositions().observe(this, positionList -> {
