@@ -288,16 +288,16 @@ public class HomeFragment extends Fragment {
     private void initCognitionCountCard() {
         AppearanceHelper.setRadius(
                 requireContext(),
-                binding.cognitionCountCard,
+                binding.lifeNoteCountCard,
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.MEDIUM_CARD_RADIUS
         );
-        AppearanceHelper.attachMorphAnimation(binding.cognitionCountCard);
+        AppearanceHelper.attachMorphAnimation(binding.lifeNoteCountCard);
 
         //设置点击监听器
-        binding.cognitionCountCard.setOnClickListener(view -> {
+        binding.lifeNoteCountCard.setOnClickListener(view -> {
             Intent skip2Cognition = new Intent(requireContext(), CognitionListActivity.class);
             startActivity(skip2Cognition);
         });
