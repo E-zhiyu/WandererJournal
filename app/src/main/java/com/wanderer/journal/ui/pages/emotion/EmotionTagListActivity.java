@@ -33,7 +33,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class EmotionTagManageActivity extends AppCompatActivity {
+public class EmotionTagListActivity extends AppCompatActivity {
     private ActivityEmotionTagManageBinding binding;    //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
@@ -165,7 +165,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.action_delete_emotion_tag) {
                 //获取段落数量
                 EmotionTagDao dao = DiaryDatabase
-                        .getInstance(EmotionTagManageActivity.this)
+                        .getInstance(EmotionTagListActivity.this)
                         .emotionTagDao();
                 disposable.add(dao.getParagraphCountSingleByEmotionTagId(emotionTag.getEmotionId())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -185,7 +185,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
                                     }
 
                                     //显示对话框
-                                    new MaterialAlertDialogBuilder(EmotionTagManageActivity.this)
+                                    new MaterialAlertDialogBuilder(EmotionTagListActivity.this)
                                             .setTitle(R.string.delete_emotion_tag)
                                             .setMessage(message)
                                             .setPositiveButton(

@@ -45,9 +45,9 @@
         <activity
             android:name=".ui.pages.emotion.EmotionTagInputActivity"
             android:exported="false"
-            android:parentActivityName=".ui.pages.emotion.EmotionTagManageActivity" />
+            android:parentActivityName=".ui.pages.emotion.EmotionTagListActivity" />
         <activity
-            android:name=".ui.pages.emotion.EmotionTagManageActivity"
+            android:name=".ui.pages.emotion.EmotionTagListActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.main.settings.sub.AboutActivity"
@@ -71,12 +71,12 @@
             android:exported="false"
             android:parentActivityName=".ui.pages.DiaryReadActivity" />
         <activity
-            android:name=".ui.pages.role.RoleManageActivity"
+            android:name=".ui.pages.role.RoleListActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.role.RoleInputActivity"
             android:exported="false"
-            android:parentActivityName=".ui.pages.role.RoleManageActivity" />
+            android:parentActivityName=".ui.pages.role.RoleListActivity" />
         <activity
             android:name=".ui.pages.AuthActivity"
             android:exported="false"
@@ -117,6 +117,10 @@
         </receiver> <!-- 开机广播接收器 -->
         <activity
             android:name=".ui.pages.main.settings.sub.ShareSettingsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.pages.cognition.CognitionListActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

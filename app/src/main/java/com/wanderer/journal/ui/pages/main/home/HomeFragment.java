@@ -20,9 +20,9 @@ import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.role.RoleManageActivity;
+import com.wanderer.journal.ui.pages.role.RoleListActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
 import java.time.LocalDate;
@@ -226,7 +226,7 @@ public class HomeFragment extends Fragment {
 
         //设置情绪标签管理入口
         binding.emotionTagCountCard.setOnClickListener(view -> {
-            Intent skip2EmotionTagManage = new Intent(requireContext(), EmotionTagManageActivity.class);
+            Intent skip2EmotionTagManage = new Intent(requireContext(), EmotionTagListActivity.class);
             startActivity(skip2EmotionTagManage);
         });
 
@@ -263,7 +263,7 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.roleCountCard.setOnClickListener(view -> {
-            Intent skip2RoleManage = new Intent(requireContext(), RoleManageActivity.class);
+            Intent skip2RoleManage = new Intent(requireContext(), RoleListActivity.class);
             startActivity(skip2RoleManage);
         });
 

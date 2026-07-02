@@ -39,7 +39,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class RoleManageActivity extends AppCompatActivity {
+public class RoleListActivity extends AppCompatActivity {
     private ActivityRoleManageBinding binding;  //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();
     private BackPressedCallbackHelper backHelper;   //返回手势拦截器
@@ -113,7 +113,7 @@ public class RoleManageActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 setSearchMode(false);
-                RoleManageViewModel viewModel = new ViewModelProvider(RoleManageActivity.this).get(RoleManageViewModel.class);
+                RoleManageViewModel viewModel = new ViewModelProvider(RoleListActivity.this).get(RoleManageViewModel.class);
                 viewModel.executeSearch("");
                 return true;
             }
