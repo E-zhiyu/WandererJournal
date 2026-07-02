@@ -1,7 +1,6 @@
 package com.wanderer.journal.data.save.db.entities;
 
 import androidx.room.Entity;
-import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -18,36 +17,43 @@ import java.time.LocalDateTime;
 )
 public class LifeNoteEntity {
     @PrimaryKey(autoGenerate = true)
-    private final long noteId;              //主键
-    private final String insight;           //洞见
-    private final String elaboration;       //阐述
-    private final LocalDateTime dateTime;   //更新时间
+    private long noteId;            //主键
+    private String insight;         //洞见
+    private String elaboration;     //阐述
+    private LocalDateTime dateTime; //更新时间
 
-    public LifeNoteEntity(long noteId, String insight, String elaboration, LocalDateTime dateTime) {
-        this.noteId = noteId;
-        this.insight = insight;
-        this.elaboration = elaboration;
-        this.dateTime = dateTime;
-    }
-
-    @Ignore
-    public LifeNoteEntity(String insight, String elaboration, LocalDateTime dateTime) {
-        this(0, insight, elaboration, dateTime);
+    public LifeNoteEntity() {
     }
 
     public long getNoteId() {
         return noteId;
     }
 
+    public void setNoteId(long noteId) {
+        this.noteId = noteId;
+    }
+
     public String getInsight() {
         return insight;
+    }
+
+    public void setInsight(String insight) {
+        this.insight = insight;
+    }
+
+    public String getElaboration() {
+        return elaboration;
+    }
+
+    public void setElaboration(String elaboration) {
+        this.elaboration = elaboration;
     }
 
     public LocalDateTime getDateTime() {
         return dateTime;
     }
 
-    public String getElaboration() {
-        return elaboration;
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
     }
 }

@@ -5,6 +5,8 @@ import android.net.Uri;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
+import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
+import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
@@ -14,6 +16,8 @@ import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
@@ -31,6 +35,16 @@ import java.util.List;
 @Mapper
 public interface EntityPojoMapper {
     EntityPojoMapper INSTANCE = Mappers.getMapper(EntityPojoMapper.class);
+
+    @Named("longToTime")
+    default LocalDateTime longToTime(long timeMillis) {
+        return DateTimeConverter.toLocalDateTime(timeMillis);
+    }
+
+    @Named("timeToLong")
+    default long timeToLong(LocalDateTime time) {
+        return DateTimeConverter.fromLocalDateTime(time);
+    }
 
     @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "longToDate")
     DiaryEntity toDiaryEntity(DiaryPojo pojo);
@@ -61,16 +75,6 @@ public interface EntityPojoMapper {
     ParagraphPojo toParagraphPojo(ParagraphEntity entity);
 
     List<ParagraphPojo> toParagraphPojoList(List<ParagraphEntity> entityList);
-
-    @Named("longToTime")
-    default LocalDateTime longToTime(long timeMillis) {
-        return DateTimeConverter.toLocalDateTime(timeMillis);
-    }
-
-    @Named("timeToLong")
-    default long timeToLong(LocalDateTime time) {
-        return DateTimeConverter.fromLocalDateTime(time);
-    }
 
     @Mapping(target = "fileUri", source = "fileUri", qualifiedByName = "strToUri")
     MediaEntity toMediaEntity(MediaPojo pojo);
@@ -123,4 +127,24 @@ public interface EntityPojoMapper {
     RoleAliaPojo toRoleAliaPojo(RoleAliaEntity entity);
 
     List<RoleAliaPojo> toRoleAliaPojoList(List<RoleAliaEntity> entityList);
+
+    @Mapping(target = "dateTime", source = "dateTime", qualifiedByName = "longToTime")
+    LifeNoteEntity toLifeNoteEntity(LifeNotePojo pojo);
+
+    List<LifeNoteEntity> toLifeNoteEntityList(List<LifeNotePojo> pojoList);
+
+    @Mapping(target = "dateTime", source = "dateTime", qualifiedByName = "timeToLong")
+    LifeNotePojo toLifeNotePojo(LifeNoteEntity entity);
+
+    List<LifeNotePojo> toLifeNotePojoList(List<LifeNoteEntity> entityList);
+
+    @Mapping(target = "updateDateTime", source = "updateDateTime", qualifiedByName = "longToTime")
+    LifeNoteHistoryEntity toLifeNoteHistoryEntity(LifeNoteHistoryPojo pojo);
+
+    List<LifeNoteHistoryEntity> toLifeNoteHistoryEntityList(List<LifeNoteHistoryPojo> pojoList);
+
+    @Mapping(target = "updateDateTime", source = "updateDateTime", qualifiedByName = "timeToLong")
+    LifeNoteHistoryPojo toLifeNoteHistoryPojo(LifeNoteHistoryEntity entity);
+
+    List<LifeNoteHistoryPojo> toLifeNoteHistoryPojoList(List<LifeNoteHistoryEntity> historyEntityList);
 }

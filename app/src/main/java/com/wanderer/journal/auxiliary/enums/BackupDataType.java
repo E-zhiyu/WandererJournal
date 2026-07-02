@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.data.backup.helpers.DiaryBackupHelper;
+import com.wanderer.journal.data.backup.helpers.LifeNoteBackupHelper;
 import com.wanderer.journal.data.backup.helpers.RoleBackupHelper;
 
 import java.util.function.Function;
@@ -23,6 +24,11 @@ public enum BackupDataType {
             "角色数据",
             "role.json",
             RoleBackupHelper::new
+    ),
+    LIFE_NOTE(
+            "人生笔记数据",
+            "life_note.json",
+            LifeNoteBackupHelper::new
     );
     private final String title;
     private final String fileName;
@@ -54,6 +60,7 @@ public enum BackupDataType {
 
     /**
      * 根据文件名称判断数据种类
+     *
      * @param fileName 文件名称
      * @return 数据类型，若无法匹配类型则返回 null
      */
