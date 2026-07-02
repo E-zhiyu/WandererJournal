@@ -9,7 +9,20 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.4.1\n" +
+    private final static String CHANGELOG = "# v1.4.2\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 输入框对话框弹出时自动弹出键盘\n" +
+            "- 调整日记分享图片中媒体预览图的位置\n" +
+            "- 回退将文本浮窗背景设为半透明的修改\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复修改段落内容后返回读日记界面会导致分享时复选框无法正常切换选择状态的BUG\n" +
+            "- 修复段落文本与媒体预览图间距过小的BUG\n" +
+            "\n" +
+            "# v1.4.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

@@ -61,9 +61,9 @@ function addData(jsonString) {
             htmlContent += `
                 <div class="paragraph-bubble">
                     <div class="bubble-content-wrapper">
+                        ${innerImgHtml}
                         <div class="bubble-text">${item.content}</div>
                         ${emotionHtml}
-                        ${innerImgHtml}
                         ${timeHtml}
                     </div>
                 </div>

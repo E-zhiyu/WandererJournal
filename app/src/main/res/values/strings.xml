@@ -145,6 +145,7 @@
     <string name="share_content">分享内容</string>
     <string name="share_picture_bottom_text">分享图片底部文本</string>
     <string name="paragraph_time">段落时间</string>
+    <string name="common_role">常用角色</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

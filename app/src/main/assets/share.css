@@ -55,29 +55,6 @@ body {
     clear: both;
 }
 
-/* --- 细节微调：如果时间戳紧跟在多图网格后面，微调它的间距 --- */
-.bubble-image-grid + .bubble-time {
-    margin-top: 10px;
-}
-
-/* 日记消息气泡基本样式 */
-.paragraph-bubble {
-    background-color: #ffffff;
-    color: #222222;
-    padding: 16px;
-    border-radius: 20px;
-    margin-bottom: 16px;
-    line-height: 1.6;
-    font-size: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    word-wrap: break-word;
-}
-
-/* 气泡内部的纯文字区域 */
-.bubble-text {
-    margin-bottom: 0; /* 默认如果没有图片，文字居底 */
-}
-
 /* ================= 智能网格数量控制 ================= */
 
 /* 通用网格基础配置 */
@@ -85,6 +62,7 @@ body {
     display: grid;
     gap: 8px; /* 图片之间的间隙为 8px */
     width: 100%;
+    margin-bottom: 10px;
     box-sizing: border-box; /* 确保 padding 和 border 不会撑大容器 */
 }
 
@@ -100,10 +78,6 @@ body {
     object-fit: cover;
     border-radius: 10px;
     display: block; /* 消除图片下方的默认空白间隙 */
-}
-/* 文本下方的图片与文本隔开一段距离 */
-.bubble-text + .bubble-image-grid {
-    margin-top: 10px
 }
 
 /* --- 只有 1 张图 --- */
@@ -134,6 +108,24 @@ body {
     aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
 }
 
+/* 日记消息气泡基本样式 */
+.paragraph-bubble {
+    background-color: #ffffff;
+    color: #222222;
+    padding: 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+    font-size: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    word-wrap: break-word;
+}
+
+/* 气泡内部的纯文字区域 */
+.bubble-text {
+    margin-bottom: 0; /* 默认如果没有图片，文字居底 */
+}
+
 /* 情绪标签的外层包裹容器 */
 .bubble-emotions-container {
     display: flex;
@@ -141,6 +133,7 @@ body {
     gap: 6px;              /* 标签之间的横纵向间隙 */
     margin-top: 10px;
     width: 100%;
+    margin-bottom: 10px;
     box-sizing: border-box;
 }
 

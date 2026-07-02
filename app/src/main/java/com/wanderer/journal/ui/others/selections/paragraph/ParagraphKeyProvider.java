@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.others.selections.paragraph;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.paging.ItemSnapshotList;
 import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -9,7 +10,6 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 
-import java.util.List;
 import java.util.Objects;
 
 public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
@@ -32,11 +32,7 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
                 Long timeMillis = DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
 
                 //永远返回负数时间戳
-                if (timeMillis != null && timeMillis > 0) {
-                    return -timeMillis;
-                } else {
-                    return timeMillis;
-                }
+                return -Math.abs(timeMillis);
             }
         }
         return null;
@@ -45,7 +41,7 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
     @Override
     public int getPosition(@NonNull Long key) {
         // 反向查找：根据 ID 找到当前的 Position
-        List<ParagraphUiModel> snapshot = adapter.snapshot().getItems();
+        ItemSnapshotList<ParagraphUiModel> snapshot = adapter.snapshot();
         for (int i = 0; i < snapshot.size(); i++) {
             ParagraphUiModel item = snapshot.get(i);
             if (key >= 0 &&
@@ -55,7 +51,7 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
                 return i;
             } else if (key < 0 &&
                     (item instanceof ParagraphUiModel.Separator) &&
-                    Objects.equals(DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date), key)
+                    Objects.equals(DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date), -key)
             ) {
                 return i;
             }

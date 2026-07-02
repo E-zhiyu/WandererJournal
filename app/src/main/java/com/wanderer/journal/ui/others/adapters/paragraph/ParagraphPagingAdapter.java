@@ -412,8 +412,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             //设置选择状态
             itemHolder.binding.checkedText.setChecked(
                     selectionTracker != null &&
-                            selectionTracker.hasSelection() &&
-                            selectionTracker.getSelection().contains(paragraph.getParagraphId())
+                            selectionTracker.isSelected(paragraph.getParagraphId())
             );
 
             //情绪标签
