@@ -14,7 +14,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class RoleManageViewModel extends ViewModel {
+public class RoleListViewModel extends ViewModel {
     private final BehaviorProcessor<String> searchKeywordProcessor =
             BehaviorProcessor.createDefault("");    //搜索关键词处理器
 

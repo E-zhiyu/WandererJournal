@@ -33,7 +33,7 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
+import com.wanderer.journal.ui.others.viewmodel.RoleListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -113,7 +113,7 @@ public class RoleListActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 setSearchMode(false);
-                RoleManageViewModel viewModel = new ViewModelProvider(RoleListActivity.this).get(RoleManageViewModel.class);
+                RoleListViewModel viewModel = new ViewModelProvider(RoleListActivity.this).get(RoleListViewModel.class);
                 viewModel.executeSearch("");
                 return true;
             }
@@ -192,7 +192,7 @@ public class RoleListActivity extends AppCompatActivity {
 
         //订阅数据
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+        RoleListViewModel viewModel = new ViewModelProvider(this).get(RoleListViewModel.class);
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
@@ -217,7 +217,7 @@ public class RoleListActivity extends AppCompatActivity {
                 binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_ROLE_INFO,
                 keyword -> {
-                    RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+                    RoleListViewModel viewModel = new ViewModelProvider(this).get(RoleListViewModel.class);
                     viewModel.executeSearch(keyword.trim());
 
                     //根据搜索关键词是否为空开启和关闭搜索模式

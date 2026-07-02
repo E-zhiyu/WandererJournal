@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.ui.pages.cognition.CognitionListActivity;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.role.RoleListActivity;
@@ -297,7 +298,8 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听器
         binding.cognitionCountCard.setOnClickListener(view -> {
-            //TODO:跳转至认知和感想列表界面
+            Intent skip2Cognition = new Intent(requireContext(), CognitionListActivity.class);
+            startActivity(skip2Cognition);
         });
     }
 

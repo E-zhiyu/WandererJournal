@@ -8,19 +8,39 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.wanderer.journal.R;
+import com.wanderer.journal.databinding.ActivityCognitionListBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class CognitionListActivity extends AppCompatActivity {
+    private ActivityCognitionListBinding binding;   //绑定的 XML 布局
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        binding = ActivityCognitionListBinding.inflate(getLayoutInflater());
+
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_cognition_list);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
             return insets;
         });
+
+        initViews();
+    }
+
+    /**
+     * 初始化视图
+     */
+    private void initViews() {
+        //添加按钮
+        binding.addFab.setOnClickListener(view -> {
+            //TODO:跳转至输入界面
+        });
+        AppearanceHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
+        AppearanceHelper.attachMorphAnimation(binding.addFab);
+
+        //TODO:初始化搜索和列表
     }
 }
