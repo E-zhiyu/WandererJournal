@@ -32,11 +32,7 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
                 Long timeMillis = DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
 
                 //永远返回负数时间戳
-                if (timeMillis != null && timeMillis > 0) {
-                    return -timeMillis;
-                } else {
-                    return timeMillis;
-                }
+                return -Math.abs(timeMillis);
             }
         }
         return null;
