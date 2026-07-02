@@ -8,16 +8,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.wanderer.journal.databinding.ActivityCognitionListBinding;
+import com.wanderer.journal.databinding.ActivityLifeNoteListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 public class LifeNoteListActivity extends AppCompatActivity {
-    private ActivityCognitionListBinding binding;   //绑定的 XML 布局
+    private ActivityLifeNoteListBinding binding;   //绑定的 XML 布局
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityCognitionListBinding.inflate(getLayoutInflater());
+        binding = ActivityLifeNoteListBinding.inflate(getLayoutInflater());
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());

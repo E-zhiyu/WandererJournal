@@ -15,6 +15,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
@@ -76,7 +77,7 @@ public class HomeFragment extends Fragment {
         initParagraphCountCard();
         initEmotionTagCountCard();
         initRoleCountCard();
-        initCognitionCountCard();
+        initLifeNoteCountCard();
     }
 
     /**
@@ -285,7 +286,7 @@ public class HomeFragment extends Fragment {
     /**
      * 初始化认知和感想卡片
      */
-    private void initCognitionCountCard() {
+    private void initLifeNoteCountCard() {
         AppearanceHelper.setRadius(
                 requireContext(),
                 binding.lifeNoteCountCard,
@@ -298,9 +299,19 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听器
         binding.lifeNoteCountCard.setOnClickListener(view -> {
-            Intent skip2Cognition = new Intent(requireContext(), LifeNoteListActivity.class);
-            startActivity(skip2Cognition);
+            Intent skip2LifeNote = new Intent(requireContext(), LifeNoteListActivity.class);
+            startActivity(skip2LifeNote);
         });
+
+        LifeNoteDao dao = DiaryDatabase.getInstance(requireContext()).lifeNoteDao();
+        disposable.add(dao.getLifeNoteCountFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> binding.lifeNoteCountText.setText(String.valueOf(count)),
+                        e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
+                )
+        );
     }
 
     /**

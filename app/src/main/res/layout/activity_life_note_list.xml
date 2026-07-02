@@ -21,7 +21,7 @@
             style="@style/Widget.Material3Expressive.SearchBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/cognition_search_hint"
+            android:hint="@string/life_note_search_hint"
             app:layout_scrollFlags="scroll|enterAlways|snap" />
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -40,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="@string/no_cognition"
+        android:text="@string/no_life_note"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         android:visibility="gone" />
 
@@ -67,7 +67,7 @@
         android:id="@+id/search_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="@string/cognition_search_hint"
+        android:hint="@string/life_note_search_hint"
         app:layout_anchor="@id/search_bar">
 
         <LinearLayout

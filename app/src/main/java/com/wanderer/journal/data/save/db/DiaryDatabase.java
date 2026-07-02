@@ -12,6 +12,7 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
@@ -88,4 +89,5 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public abstract RoleDao roleDao();
 
     public abstract DataBackupDao dataBackupDao();
+    public abstract LifeNoteDao lifeNoteDao();
 }
