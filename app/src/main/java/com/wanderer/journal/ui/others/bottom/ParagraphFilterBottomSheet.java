@@ -44,6 +44,12 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         initViews();
 
+        //绑定消失监听器
+        setOnDismissListener(() -> {
+            ParagraphFilterViewModel viewModel = new ViewModelProvider(requireActivity()).get(ParagraphFilterViewModel.class);
+            viewModel.setNeedExecuteSearch(true);
+        });
+
         return binding.getRoot();
     }
 
