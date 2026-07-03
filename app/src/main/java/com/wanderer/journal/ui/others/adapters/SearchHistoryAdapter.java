@@ -14,7 +14,6 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapter.SearchHistoryViewHolder> {
@@ -31,6 +30,11 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     };
     private final String key;                                   //保存搜索历史的关键字
     private final AdapterOnClickListener<String> clickListener;
+    private final OnHistoryListChangListener changeListener;
+
+    public interface OnHistoryListChangListener {
+        void onChange(List<String> keywordList, SearchHistoryAdapter adapter);
+    }
 
     /**
      * 搜索历史适配器构造方法
@@ -38,10 +42,15 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
      * @param key           保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
      * @param clickListener 搜索历史 Chip 点击监听器
      */
-    public SearchHistoryAdapter(String key, AdapterOnClickListener<String> clickListener) {
+    public SearchHistoryAdapter(
+            String key,
+            AdapterOnClickListener<String> clickListener,
+            OnHistoryListChangListener changeListener
+    ) {
         super(ITEM_CALLBACK);
         this.key = key;
         this.clickListener = clickListener;
+        this.changeListener = changeListener;
     }
 
     public static class SearchHistoryViewHolder extends RecyclerView.ViewHolder {
@@ -87,7 +96,7 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
                                 key,
                                 parent.getContext()
                         );
-                        submitList(new ArrayList<>(historyList));
+                        changeListener.onChange(historyList, SearchHistoryAdapter.this);
                     }
 
                     @Override
@@ -100,7 +109,7 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
                                 key,
                                 parent.getContext()
                         );
-                        submitList(new ArrayList<>(historyList));
+                        changeListener.onChange(historyList, SearchHistoryAdapter.this);
                     }
                 }
         );
@@ -110,5 +119,9 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
     public void onBindViewHolder(@NonNull SearchHistoryViewHolder holder, int position) {
         String historyKeyWord = getItem(position);
         holder.binding.chip.setText(historyKeyWord);
+    }
+
+    public void submitListWithAnimation(List<String> keywordList) {
+        changeListener.onChange(keywordList, SearchHistoryAdapter.this);
     }
 }

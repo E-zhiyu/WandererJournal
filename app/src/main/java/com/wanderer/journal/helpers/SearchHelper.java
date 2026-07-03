@@ -1,6 +1,7 @@
 package com.wanderer.journal.helpers;
 
 import android.content.Context;
+import android.view.Gravity;
 import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import com.google.android.material.search.SearchView;
 import com.wanderer.journal.auxiliary.interfaces.search.SearchBarMenuListener;
 import com.wanderer.journal.auxiliary.interfaces.search.SearchExecuter;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.adapters.SearchHistoryAdapter;
 
 import java.util.ArrayList;
@@ -49,6 +51,16 @@ public class SearchHelper {
 
                     //执行搜索
                     executer.executeSearch(keyword.trim());
+                },
+                (keywordList, adapter) -> {
+                    boolean isVisible = !keywordList.isEmpty();
+                    VisibilityHelper.toggleViewExpansion(
+                            searchView,
+                            searchHistoryRecyclerView,
+                            isVisible,
+                            Gravity.TOP,
+                            () -> adapter.submitList(new ArrayList<>(keywordList))
+                    );
                 }
         );
         List<String> initList = SearchHistoryPreference.getHistory(
@@ -64,7 +76,13 @@ public class SearchHelper {
                     searchKey,
                     context
             );
-            historyAdapter.submitList(new ArrayList<>());
+            VisibilityHelper.toggleViewExpansion(
+                    searchView,
+                    searchHistoryRecyclerView,
+                    false,
+                    Gravity.TOP,
+                    () -> historyAdapter.submitList(new ArrayList<>())
+            );
         });
 
         //设置搜索监听
@@ -86,7 +104,7 @@ public class SearchHelper {
                         searchKey,
                         context
                 );
-                historyAdapter.submitList(new ArrayList<>(historyList));
+                historyAdapter.submitListWithAnimation(new ArrayList<>(historyList));
 
                 return true;
             } else {
