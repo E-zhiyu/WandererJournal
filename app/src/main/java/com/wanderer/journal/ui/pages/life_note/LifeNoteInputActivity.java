@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.life_note;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -14,12 +15,15 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.LifeNoteWithHistoryModel;
 import com.wanderer.journal.data.save.db.services.LifeNoteService;
 import com.wanderer.journal.databinding.ActivityLifeNoteInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -67,6 +71,17 @@ public class LifeNoteInputActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+        //修改历史列表
+        LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
+                (entity, anchor) -> {
+                    //TODO:点击监听
+                },
+                (entity, anchor) -> {
+                    //TODO;长按监听
+                }
+        );
+        binding.historyRecycler.setAdapter(historyListAdapter);
+
         //工具栏
         if (initBundle != null) {
             binding.toolbar.setTitle(R.string.modify_life_note);
@@ -81,9 +96,17 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                             noteOptional -> {
                                 if (noteOptional.isEmpty()) return;
 
-                                LifeNoteEntity lifeNote = noteOptional.get();
+                                LifeNoteWithHistoryModel model = noteOptional.get();
+                                LifeNoteEntity lifeNote = model.getLifeNote();
                                 binding.insightInput.setText(lifeNote.getInsight());            //洞见
                                 binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
+
+                                //修改历史列表
+                                List<LifeNoteHistoryEntity> historyList = model.getHistoryList();
+                                historyListAdapter.submitList(historyList);
+                                int visibility = historyList.isEmpty() ? View.GONE : View.VISIBLE;
+                                binding.historyRecycler.setVisibility(visibility);
+                                binding.modifyHistoryTitle.setVisibility(visibility);
                             },
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )

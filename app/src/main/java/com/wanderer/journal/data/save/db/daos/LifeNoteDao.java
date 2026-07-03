@@ -10,6 +10,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
+import com.wanderer.journal.data.save.db.entities.composite.LifeNoteWithHistoryModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,7 +51,7 @@ public interface LifeNoteDao {
      * @return 人生笔记数据实体
      */
     @Query("SELECT * FROM lifeNotes WHERE noteId = :id")
-    Single<Optional<LifeNoteEntity>> getLifeNoteOptionalSingleById(long id);
+    Single<Optional<LifeNoteWithHistoryModel>> getLifeNoteOptionalSingleById(long id);
 
     /**
      * 通过 ID 查询人生笔记
