@@ -167,7 +167,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
                 EmotionTagDao dao = DiaryDatabase
                         .getInstance(EmotionTagListActivity.this)
                         .emotionTagDao();
-                disposable.add(dao.getParagraphCountSingleByEmotionTagId(emotionTag.getEmotionId())
+                disposable.add(dao.getParagraphCountSingleById(emotionTag.getEmotionId())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(

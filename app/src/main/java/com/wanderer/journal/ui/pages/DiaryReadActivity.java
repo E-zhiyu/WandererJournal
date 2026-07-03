@@ -991,7 +991,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     250,
                     () -> {
                         EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
-                        disposable.add(emotionTagDao.getEmotionTagSingleByIdList(checkedEmotionTagIdSet)
+                        disposable.add(emotionTagDao.getEmotionTagSingleByIdSet(checkedEmotionTagIdSet)
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                                 .subscribe(

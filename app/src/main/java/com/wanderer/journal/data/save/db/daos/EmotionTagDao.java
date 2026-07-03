@@ -13,6 +13,7 @@ import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountMo
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -124,13 +125,22 @@ public interface EmotionTagDao {
     Flowable<List<EmotionTagUiModel>> getSelectableEmotionTagFlowable(long paragraphId);
 
     /**
-     * 获取在 ID 列表中的情绪标签
+     * 获取在 ID 集合中的情绪标签
      *
      * @param emotionIdList 需要获取的标签对应的 ID 列表
      * @return ID 在列表中的情绪标签实例
      */
     @Query("SELECT * FROM emotionTags WHERE emotionId IN (:emotionIdList)")
-    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdList(Set<Long> emotionIdList);
+    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdSet(Set<Long> emotionIdList);
+
+    /**
+     * 通过 ID 获取情绪标签
+     *
+     * @param id 需要获取的情绪标签的 ID
+     * @return 情绪标签数据实体
+     */
+    @Query("SELECT * FROM emotionTags WHERE emotionId = :id")
+    Single<Optional<EmotionTagEntity>> getEmotionTagOptionalSingleById(long id);
 
     /**
      * 查询某个情绪标签绑定的段落数量
@@ -139,7 +149,7 @@ public interface EmotionTagDao {
      * @return 包含绑定段落数量的{@link Single}对象
      */
     @Query("SELECT COUNT(*) FROM emotionParagraphCrossRef WHERE emotionId == :emotionTagId")
-    Single<Integer> getParagraphCountSingleByEmotionTagId(long emotionTagId);
+    Single<Integer> getParagraphCountSingleById(long emotionTagId);
 
     /**
      * 删除单个情绪标签
