@@ -105,13 +105,17 @@ public interface LifeNoteDao {
         //获取旧数据
         long noteId = newLifeNote.getNoteId();
         LifeNoteEntity oldLifeNote = getLifeNoteById(noteId);
-
-        //生成修改历史记录
         String oldInsight = oldLifeNote.getInsight();
         String oldElaboration = oldLifeNote.getElaboration();
-        LocalDateTime oldDateTime = oldLifeNote.getDateTime();
-        LifeNoteHistoryEntity historyEntity = new LifeNoteHistoryEntity(noteId, oldInsight, oldElaboration, oldDateTime);
-        insertLifeNoteHistory(historyEntity);
+
+        //仅当内容真正改变才保存记录
+        if (!newLifeNote.getInsight().equals(oldInsight) ||
+                !newLifeNote.getElaboration().equals(oldElaboration)) {
+            //生成修改历史记录
+            LocalDateTime oldDateTime = oldLifeNote.getDateTime();
+            LifeNoteHistoryEntity historyEntity = new LifeNoteHistoryEntity(noteId, oldInsight, oldElaboration, oldDateTime);
+            insertLifeNoteHistory(historyEntity);
+        }
 
         //更新人生笔记
         updateLifeNote(newLifeNote);
