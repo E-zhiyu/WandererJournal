@@ -1,0 +1,181 @@
+package com.wanderer.journal.ui.pages.life_note;
+
+import android.os.Bundle;
+import android.widget.Toast;
+
+import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.services.LifeNoteService;
+import com.wanderer.journal.databinding.ActivityLifeNoteInputBinding;
+import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+
+import java.time.LocalDateTime;
+
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
+public class LifeNoteInputActivity extends AppCompatActivity {
+    private ActivityLifeNoteInputBinding binding;   //绑定的 XML 布局
+    @Nullable
+    private Bundle initBundle;                      //包含初始化数据的数据包
+    private final CompositeDisposable disposable = new CompositeDisposable();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityLifeNoteInputBinding.inflate(getLayoutInflater());
+
+        EdgeToEdge.enable(this);
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            //滚动布局中的线性布局
+            binding.linearLayout.setPadding(
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    AppearanceHelper.dpToPx(this, 10),
+                    imeInsets.bottom + AppearanceHelper.dpToPx(this, 10)
+            );
+
+            return insets;
+        });
+
+        initBundle = getIntent().getExtras();
+        initViews();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        binding = null;
+        disposable.dispose();
+    }
+
+    private void initViews() {
+        //工具栏
+        if (initBundle != null) {
+            binding.toolbar.setTitle(R.string.modify_life_note);
+        }
+        binding.toolbar.setNavigationOnClickListener(view -> finish());
+
+        //洞见
+        binding.insightInput.setOnFocusChangeListener((view, b) -> {
+            if (b) {
+                binding.insightLayout.setError(null);
+            } else {
+                String input = String.valueOf(binding.insightInput.getText());
+                if (input.trim().isEmpty()) {
+                    binding.insightLayout.setError("洞见不能为空");
+                }
+            }
+        });
+
+        //确认按钮
+        binding.confirmButton.setOnClickListener(view -> {
+            String err = verifyInput();
+            if (err != null) {
+                Toast.makeText(this, err, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            onConfirm();
+        });
+
+        //初始化输入框内容
+        if (initBundle != null) {
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
+            disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            noteOptional -> {
+                                if (noteOptional.isEmpty()) return;
+
+                                LifeNoteEntity lifeNote = noteOptional.get();
+                                binding.insightInput.setText(lifeNote.getInsight());            //洞见
+                                binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
+    }
+
+    /**
+     * 校验输入的内容
+     *
+     * @return 错误提示，无错误则返回 null
+     */
+    @Nullable
+    private String verifyInput() {
+        String err = null;
+
+        String insight = String.valueOf(binding.insightInput.getText()).trim();
+
+        if (insight.trim().isEmpty()) {
+            err = "洞见不能为空";
+            binding.insightLayout.setError(err);
+        }
+
+        return err;
+    }
+
+    /**
+     * 确认按钮点击回调
+     */
+    private void onConfirm() {
+        //获取输入内容
+        String insight = String.valueOf(binding.insightInput.getText()).trim();
+        String elaboration = String.valueOf(binding.elaborationInput.getText()).trim();
+
+        //实例化数据实体
+        LocalDateTime dateTime = LocalDateTime.now();
+        LifeNoteEntity lifeNote = new LifeNoteEntity(insight, elaboration, dateTime);
+
+        //更新数据库
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        if (initBundle == null) {
+            disposable.add(db.lifeNoteDao().insertLifeNote(lifeNote)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> {
+                                Toast.makeText(this, "成功添加人生笔记", Toast.LENGTH_SHORT).show();
+                                finish();
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        } else {
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS());
+            lifeNote.setNoteId(noteId);
+            disposable.add(LifeNoteService.modifyLifeNoteCompletable(db, lifeNote)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> {
+                                Toast.makeText(this, "成功修改人生笔记", Toast.LENGTH_SHORT).show();
+                                finish();
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
+    }
+}

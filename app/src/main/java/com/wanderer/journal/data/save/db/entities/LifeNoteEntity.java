@@ -22,7 +22,10 @@ public class LifeNoteEntity {
     private String elaboration;     //阐述
     private LocalDateTime dateTime; //更新时间
 
-    public LifeNoteEntity() {
+    public LifeNoteEntity(String insight, String elaboration, LocalDateTime dateTime) {
+        this.insight = insight;
+        this.elaboration = elaboration;
+        this.dateTime = dateTime;
     }
 
     public long getNoteId() {

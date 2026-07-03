@@ -94,7 +94,7 @@ public class RoleInputActivity extends AppCompatActivity {
                 binding.nameLayout.setError(null);
             } else {
                 String input = String.valueOf(binding.nameInput.getText());
-                if (input.isEmpty()) {
+                if (input.trim().isEmpty()) {
                     binding.nameLayout.setError("名称不能为空");
                 } else if (input.contains("[") || input.contains("]")) {
                     binding.nameLayout.setError("名称不能包含英文中括号");

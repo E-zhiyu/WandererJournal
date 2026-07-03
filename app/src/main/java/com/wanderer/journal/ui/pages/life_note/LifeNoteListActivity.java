@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.life_note;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -10,6 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityLifeNoteListBinding;
@@ -89,7 +91,8 @@ public class LifeNoteListActivity extends AppCompatActivity {
     private void initViews() {
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
-            //TODO:跳转至输入界面
+            Intent skip2Input = new Intent(this, LifeNoteInputActivity.class);
+            startActivity(skip2Input);
         });
         AppearanceHelper.setMarginToNavigation(binding.addFab, this); //确保永远与底部导航栏有一定距离
         AppearanceHelper.attachMorphAnimation(binding.addFab);
@@ -104,7 +107,13 @@ public class LifeNoteListActivity extends AppCompatActivity {
     private void initRecycler() {
         LifeNoteListAdapter adapter = new LifeNoteListAdapter(
                 entity -> {
-                    //TODO:跳转到输入界面
+                    Intent skip2Input = new Intent(this, LifeNoteInputActivity.class);
+
+                    Bundle bundle = new Bundle();
+                    bundle.putLong(KeyStrings.LIFE_NOTE_ID.getS(), entity.getNoteId());
+                    skip2Input.putExtras(bundle);
+
+                    startActivity(skip2Input);
                 },
                 (entity, view) -> {
                     //TODO:展开菜单

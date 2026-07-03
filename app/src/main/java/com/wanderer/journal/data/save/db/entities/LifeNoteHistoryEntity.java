@@ -29,7 +29,11 @@ public class LifeNoteHistoryEntity {
     private String elaboration;             //阐述
     private LocalDateTime updateDateTime;   //更新时间
 
-    public LifeNoteHistoryEntity() {
+    public LifeNoteHistoryEntity(long noteId, String insight, String elaboration, LocalDateTime updateDateTime) {
+        this.noteId = noteId;
+        this.insight = insight;
+        this.elaboration = elaboration;
+        this.updateDateTime = updateDateTime;
     }
 
     public long getHistoryId() {

@@ -123,6 +123,10 @@
             android:name=".ui.pages.life_note.LifeNoteListActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.pages.life_note.LifeNoteInputActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
