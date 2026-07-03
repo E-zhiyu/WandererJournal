@@ -54,7 +54,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
         void onAdd();
     }
 
-    public interface ViewHolderListener {
+    public interface ChipListener {
         void onClicked(int position, View view);
 
         void onClosed(int position);
@@ -76,7 +76,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
     public static class EmotionTagSelectViewHolder extends RecyclerView.ViewHolder {
         ViewHolderClosableChipBinding binding;
 
-        public EmotionTagSelectViewHolder(@NonNull ViewHolderClosableChipBinding binding, ViewHolderListener listener) {
+        public EmotionTagSelectViewHolder(@NonNull ViewHolderClosableChipBinding binding, ChipListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -129,7 +129,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Recy
             );
             return new EmotionTagSelectViewHolder(
                     binding,
-                    new ViewHolderListener() {
+                    new ChipListener() {
                         @Override
                         public void onClicked(int position, View view) {
                             EmotionTagUiModel model = getItem(position);
