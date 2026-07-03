@@ -78,7 +78,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
-                emotionTag -> {
+                (emotionTag, anchor) -> {
                     Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
                     Bundle bundle = new Bundle();
                     bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTag.getEmotionId());

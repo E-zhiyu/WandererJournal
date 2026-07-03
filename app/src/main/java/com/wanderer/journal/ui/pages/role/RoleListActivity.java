@@ -20,7 +20,6 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.data.save.preference.TipPreference;
@@ -143,14 +142,8 @@ public class RoleListActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         RoleAdapter adapter = new RoleAdapter(
-                model -> {
-                    if (!(model instanceof RoleUiModel.Item)) {
-                        return;
-                    }
-
+                (role, anchor) -> {
                     //解析数据
-                    RoleUiModel.Item item = (RoleUiModel.Item) model;
-                    RoleEntity role = item.model.getRole();
                     long roleId = role.getRoleId();
 
                     //生成数据包
@@ -215,15 +208,10 @@ public class RoleListActivity extends AppCompatActivity {
     /**
      * 显示角色长按菜单
      *
-     * @param model  数据模型
+     * @param role   角色实体
      * @param anchor 锚点视图
      */
-    private void showRolePopupMenu(RoleUiModel model, View anchor) {
-        if (!(model instanceof RoleUiModel.Item)) {
-            return;
-        }
-        RoleUiModel.Item itemModel = (RoleUiModel.Item) model;
-
+    private void showRolePopupMenu(RoleEntity role, View anchor) {
         PopupMenu popupMenu = new PopupMenu(this, anchor, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_role_edit, popupMenu.getMenu());
 
@@ -235,7 +223,7 @@ public class RoleListActivity extends AppCompatActivity {
                         .setMessage("即将删除该角色，所有引用该角色的段落内容都将发生不可逆的变化，确认继续吗？")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                             DiaryDatabase db = DiaryDatabase.getInstance(this);
-                            disposable.add(RoleService.deleteRole(itemModel.model.getRole(), db)
+                            disposable.add(RoleService.deleteRole(role, db)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(
