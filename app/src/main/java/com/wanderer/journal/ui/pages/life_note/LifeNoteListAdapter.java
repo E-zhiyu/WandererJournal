@@ -9,6 +9,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.databinding.ViewHolderLifeNoteListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -30,22 +33,8 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
                     oldItem.getDateTime().isEqual(newItem.getDateTime());
         }
     };
-    private final OnClickListener clickListener;
-    private final OnLongClickListener longClickListener;
-
-    public interface ViewHolderListener {
-        void onClick(int position);
-
-        void onLongClick(int position, View view);
-    }
-
-    public interface OnClickListener {
-        void onClick(LifeNoteEntity entity);
-    }
-
-    public interface OnLongClickListener {
-        void onLongClick(LifeNoteEntity entity, View view);
-    }
+    private final AdapterOnClickListener<LifeNoteEntity> clickListener;
+    private final AdapterOnLongClickListener<LifeNoteEntity> longClickListener;
 
     public static class LifeNoteListViewHolder extends RecyclerView.ViewHolder {
         ViewHolderLifeNoteListBinding binding;
@@ -58,7 +47,7 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
             AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //绑定点击监听器
-            binding.getRoot().setOnClickListener(view -> listener.onClick(getBindingAdapterPosition()));
+            binding.getRoot().setOnClickListener(view -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
 
             //绑定长按监听器
             binding.getRoot().setOnLongClickListener(view -> {
@@ -68,7 +57,10 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
         }
     }
 
-    public LifeNoteListAdapter(OnClickListener clickListener, OnLongClickListener longClickListener) {
+    public LifeNoteListAdapter(
+            AdapterOnClickListener<LifeNoteEntity> clickListener,
+            AdapterOnLongClickListener<LifeNoteEntity> longClickListener
+    ) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
@@ -115,9 +107,9 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
                 binding,
                 new ViewHolderListener() {
                     @Override
-                    public void onClick(int position) {
+                    public void onClick(int position, View anchor) {
                         LifeNoteEntity entity = getItem(position);
-                        clickListener.onClick(entity);
+                        clickListener.onClick(entity, anchor);
                     }
 
                     @Override

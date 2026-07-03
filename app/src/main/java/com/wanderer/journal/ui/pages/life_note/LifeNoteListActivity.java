@@ -106,7 +106,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
      */
     private void initRecycler() {
         LifeNoteListAdapter adapter = new LifeNoteListAdapter(
-                entity -> {
+                (entity, anchor) -> {
                     Intent skip2Input = new Intent(this, LifeNoteInputActivity.class);
 
                     Bundle bundle = new Bundle();
