@@ -43,7 +43,7 @@ public class SearchHelper {
         //搜索历史显示
         SearchHistoryAdapter historyAdapter = new SearchHistoryAdapter(
                 searchKey,
-                keyword -> {
+                (keyword, anchor) -> {
                     searchView.hide();
                     searchBar.setText(keyword.trim());
 

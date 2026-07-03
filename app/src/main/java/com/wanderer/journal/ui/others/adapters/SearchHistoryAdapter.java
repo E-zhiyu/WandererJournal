@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.others.adapters;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,8 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
@@ -27,18 +30,18 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
         }
     };
     private final String key;                                   //保存搜索历史的关键字
-    private final OnClickedListener clickedListener;            //点击监听
+    private final AdapterOnClickListener<String> clickListener;
 
     /**
      * 搜索历史适配器构造方法
      *
-     * @param key             保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
-     * @param clickedListener 搜索历史 Chip 点击监听器
+     * @param key           保存搜索关键词的键，详见{@link SearchHistoryPreference}的静态字符串
+     * @param clickListener 搜索历史 Chip 点击监听器
      */
-    public SearchHistoryAdapter(String key, OnClickedListener clickedListener) {
+    public SearchHistoryAdapter(String key, AdapterOnClickListener<String> clickListener) {
         super(ITEM_CALLBACK);
         this.key = key;
-        this.clickedListener = clickedListener;
+        this.clickListener = clickListener;
     }
 
     public static class SearchHistoryViewHolder extends RecyclerView.ViewHolder {
@@ -52,29 +55,14 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
             binding.chip.setCheckable(false);
 
             //设置点击监听
-            binding.chip.setOnClickListener(v -> listener.onClicked(getBindingAdapterPosition()));
+            binding.chip.setOnClickListener(v -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
 
             //设置长按监听
             binding.chip.setOnLongClickListener(view -> {
-                listener.onLongClicked(getBindingAdapterPosition());
+                listener.onLongClick(getBindingAdapterPosition(), binding.getRoot());
                 return true;
             });
         }
-    }
-
-    public interface OnClickedListener {
-        /**
-         * 搜索历史记录点击监听
-         *
-         * @param keyword 点击的关键词
-         */
-        void onClicked(String keyword);
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(int position);
-
-        void onLongClicked(int position);
     }
 
     @NonNull
@@ -89,9 +77,9 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
                 binding,
                 new ViewHolderListener() {
                     @Override
-                    public void onClicked(int position) {
+                    public void onClick(int position, View anchor) {
                         String historyKeyWord = getItem(position);
-                        clickedListener.onClicked(historyKeyWord);
+                        clickListener.onClick(historyKeyWord, anchor);
 
                         //将点击的关键词放到第一位
                         List<String> historyList = SearchHistoryPreference.addKeyword(
@@ -103,7 +91,7 @@ public class SearchHistoryAdapter extends ListAdapter<String, SearchHistoryAdapt
                     }
 
                     @Override
-                    public void onLongClicked(int position) {
+                    public void onLongClick(int position, View anchor) {
                         String historyKeyWord = getItem(position);
 
                         //将点击的关键词放到第一位
