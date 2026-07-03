@@ -19,7 +19,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
@@ -153,24 +152,10 @@ public class RoleListActivity extends AppCompatActivity {
                     RoleUiModel.Item item = (RoleUiModel.Item) model;
                     RoleEntity role = item.model.getRole();
                     long roleId = role.getRoleId();
-                    String roleName = role.getName();
-                    String roleDisplayName = role.getDisplayName();
-                    String identity = role.getIdentity();
-                    String impression = role.getImpression();
-                    int relationship = role.getRelationship();
-                    String[] alias = item.model.getRoleAliaList().stream()
-                            .map(RoleAliaEntity::getAlia)
-                            .toArray(String[]::new);
 
                     //生成数据包
                     Bundle bundle = new Bundle();
                     bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
-                    bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
-                    bundle.putString(KeyStrings.ROLE_DISPLAY_NAME.getS(), roleDisplayName);
-                    bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
-                    bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
-                    bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);
-                    bundle.putStringArray(KeyStrings.ROLE_ALIAS.getS(), alias);
 
                     //跳转界面
                     Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);

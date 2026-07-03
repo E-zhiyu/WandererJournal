@@ -8,9 +8,6 @@ import android.widget.Toast;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
-import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
-import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
@@ -30,32 +27,15 @@ public class RoleShower {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        roleEntityModelMaybe -> {
-                            if (roleEntityModelMaybe.isEmpty()) {
-                                Toast.makeText(context,"无法读取该角色的信息",Toast.LENGTH_SHORT).show();
+                        roleEntityModelOptional -> {
+                            if (roleEntityModelOptional.isEmpty()) {
+                                Toast.makeText(context, "无法读取该角色的信息", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-
-                            RoleEntityModel model = roleEntityModelMaybe.get();
-
-                            //解析数据
-                            RoleEntity role = model.getRole();
-                            String roleName = role.getName();
-                            String identity = role.getIdentity();
-                            String impression = role.getImpression();
-                            int relationship = role.getRelationship();
-                            String[] alias = model.getRoleAliaList().stream()
-                                    .map(RoleAliaEntity::getAlia)
-                                    .toArray(String[]::new);
 
                             //生成数据包
                             Bundle bundle = new Bundle();
                             bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
-                            bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
-                            bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
-                            bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
-                            bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);
-                            bundle.putStringArray(KeyStrings.ROLE_ALIAS.getS(), alias);
 
                             //跳转界面
                             Intent skip2RoleInput = new Intent(context, RoleInputActivity.class);

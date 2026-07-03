@@ -16,6 +16,7 @@ import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
@@ -37,8 +38,9 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleInputActivity extends AppCompatActivity {
     private ActivityRoleInputBinding binding;   //绑定的 XML 布局
+    @Nullable
     private Bundle initBundle;                  //包含初始化数据的数据包
-    private RoleRelationship relationship;      //角色关系程度
+    private RoleRelationship relationship = RoleRelationship.NORMAL;    //角色关系程度
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -80,15 +82,44 @@ public class RoleInputActivity extends AppCompatActivity {
      * 初始化视图
      */
     private void initViews() {
+        //别名列表
+        RoleAliasAdapter aliasAdapter = new RoleAliasAdapter();
+        binding.aliaRecycler.setAdapter(aliasAdapter);
+
         //工具栏
         if (initBundle != null) {
             binding.toolbar.setTitle(R.string.modify_role);
+
+            //初始化文本框内容
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            long roleId = initBundle.getLong(KeyStrings.ROLE_ID.getS());
+            disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            optional -> {
+                                if (optional.isEmpty()) return;
+
+                                RoleEntity role = optional.get().getRole();
+                                List<String> aliaList = optional.get().getRoleAliaList().stream()
+                                        .map(RoleAliaEntity::getAlia)
+                                        .collect(Collectors.toList());
+
+                                binding.nameInput.setText(role.getName());                  //名称
+                                binding.displayNameInput.setText(role.getDisplayName());    //显示名称
+                                binding.identityInput.setText(role.getIdentity());          //身份
+                                binding.impressionInput.setText(role.getImpression());      //印象
+                                relationship = RoleRelationship.values()[role.getRelationship()];
+                                binding.relationshipInput.setText(relationship.getTitle()); //关系程度
+                                aliasAdapter.submitList(aliaList);                          //别名
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
         //名称
-        String initName = initBundle != null ? initBundle.getString(KeyStrings.ROLE_NAME.getS()) : "";
-        binding.nameInput.setText(initName);
         binding.nameInput.setOnFocusChangeListener((view, b) -> {
             if (b) {
                 binding.nameLayout.setError(null);
@@ -103,8 +134,6 @@ public class RoleInputActivity extends AppCompatActivity {
         });
 
         //显示名称
-        String initDisplayName = initBundle != null ? initBundle.getString(KeyStrings.ROLE_DISPLAY_NAME.getS()) : "";
-        binding.displayNameInput.setText(initDisplayName);
         binding.displayNameInput.setOnFocusChangeListener((view, b) -> {
             if (b) {
                 binding.nameLayout.setError(null);
@@ -116,18 +145,7 @@ public class RoleInputActivity extends AppCompatActivity {
             }
         });
 
-        //身份
-        String initIdentity = initBundle != null ? initBundle.getString(KeyStrings.ROLE_IDENTITY.getS()) : "";
-        binding.identityInput.setText(initIdentity);
-
-        //印象
-        String initImpression = initBundle != null ? initBundle.getString(KeyStrings.ROLE_IMPRESSION.getS()) : "";
-        binding.impressionInput.setText(initImpression);
-
         //关系
-        relationship = initBundle != null ?
-                RoleRelationship.values()[initBundle.getInt(KeyStrings.ROLE_RELATIONSHIP.getS())] :
-                RoleRelationship.NORMAL;
         binding.relationshipInput.setText(relationship.getTitle());
         String[] relationships = Arrays.stream(RoleRelationship.values())
                 .map(RoleRelationship::getTitle)
@@ -150,11 +168,11 @@ public class RoleInputActivity extends AppCompatActivity {
                     }
 
                     if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
-                        RoleAliasAdapter aliasAdapter = (RoleAliasAdapter) binding.aliaRecycler.getAdapter();
-                        List<String> aliaList = new ArrayList<>(aliasAdapter.getCurrentList());
+                        RoleAliasAdapter aliaRecyclerAdapter = (RoleAliasAdapter) binding.aliaRecycler.getAdapter();
+                        List<String> aliaList = new ArrayList<>(aliaRecyclerAdapter.getCurrentList());
                         if (!aliaList.contains(inputStr.trim())) {
                             aliaList.add(inputStr.trim());
-                            aliasAdapter.submitList(aliaList);
+                            aliaRecyclerAdapter.submitList(aliaList);
                             Toast.makeText(this, "别名添加成功", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(this, "无法添加相同的别名", Toast.LENGTH_SHORT).show();
@@ -165,17 +183,6 @@ public class RoleInputActivity extends AppCompatActivity {
                 })
                 .show()
         );
-
-        //别名列表
-        RoleAliasAdapter aliasAdapter = new RoleAliasAdapter();
-        binding.aliaRecycler.setAdapter(aliasAdapter);
-        String[] initAlias = initBundle != null ?
-                initBundle.getStringArray(KeyStrings.ROLE_ALIAS.getS()) :
-                new String[0];
-        if (initAlias == null) initAlias = new String[0];
-        List<String> initAliaList = Arrays.stream(initAlias)
-                .collect(Collectors.toList());
-        aliasAdapter.submitList(initAliaList);
 
         //确认按钮
         binding.confirmButton.setOnClickListener(view -> {
