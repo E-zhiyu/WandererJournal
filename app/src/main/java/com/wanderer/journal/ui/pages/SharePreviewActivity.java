@@ -219,7 +219,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
+                (roleId, view) -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
         binding.previewRecycler.setAdapter(adapter);
 

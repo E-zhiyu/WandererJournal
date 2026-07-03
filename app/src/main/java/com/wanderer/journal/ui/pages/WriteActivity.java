@@ -723,7 +723,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
+                (roleId, view) -> RoleShower.showRoleDetail(this, disposable, roleId)
         );
 
         //添加粘性头部适配器
