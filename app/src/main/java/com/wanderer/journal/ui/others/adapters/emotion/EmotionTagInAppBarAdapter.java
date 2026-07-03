@@ -29,7 +29,7 @@ public class EmotionTagInAppBarAdapter
     public static class ViewHolderEmotionTagInAppBar extends RecyclerView.ViewHolder {
         ViewHolderClosableChipElevatedBinding binding;
 
-        public ViewHolderEmotionTagInAppBar(@NonNull ViewHolderClosableChipElevatedBinding binding, ViewHolderListener listener) {
+        public ViewHolderEmotionTagInAppBar(@NonNull ViewHolderClosableChipElevatedBinding binding, ChipListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -37,7 +37,7 @@ public class EmotionTagInAppBarAdapter
         }
     }
 
-    public interface ViewHolderListener {
+    public interface ChipListener {
         /**
          * 关闭图标点击监听
          *
