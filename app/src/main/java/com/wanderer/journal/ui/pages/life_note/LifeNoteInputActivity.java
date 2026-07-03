@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
@@ -73,9 +74,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
     private void initViews() {
         //修改历史列表
         LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
-                (entity, anchor) -> {
-                    //TODO:点击监听
-                },
+                (entity, anchor) -> InfoShower.showLifeNoteHistory(this, entity),
                 (entity, anchor) -> {
                     //TODO;长按监听
                 }

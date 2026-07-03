@@ -34,7 +34,7 @@ import androidx.transition.TransitionSet;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -463,7 +463,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                (roleId, view) -> RoleShower.showRoleDetail(this, disposable, roleId)
+                (roleId, view) -> InfoShower.showRole(this, disposable, roleId)
         );
         binding.contentRecycler.setAdapter(adapter);
 

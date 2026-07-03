@@ -43,7 +43,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
@@ -723,7 +723,7 @@ public class WriteActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                (roleId, view) -> RoleShower.showRoleDetail(this, disposable, roleId)
+                (roleId, view) -> InfoShower.showRole(this, disposable, roleId)
         );
 
         //添加粘性头部适配器

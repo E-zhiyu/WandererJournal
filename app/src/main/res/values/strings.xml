@@ -156,6 +156,7 @@
     <string name="life_note_insight_helper">用一句简练的话概括您的深刻见解</string>
     <string name="life_note_elaboration_helper">将您的洞见用通俗的话讲解一遍</string>
     <string name="modify_history_record">修改历史记录</string>
+    <string name="time">时间</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>
