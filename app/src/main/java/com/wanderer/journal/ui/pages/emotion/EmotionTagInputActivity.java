@@ -32,6 +32,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagInputActivity extends AppCompatActivity {
     private ActivityEmotionTagInputBinding binding;         //绑定的XML布局
+    @Nullable
     private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
@@ -75,18 +76,31 @@ public class EmotionTagInputActivity extends AppCompatActivity {
      */
     private void initViews() {
         //初始化部分视图的内容
+        binding.toolbar.setNavigationOnClickListener(view -> finish());
         if (initBundle != null) {
             binding.toolbar.setTitle(R.string.modify_emotion_tag);
-            String name = initBundle.getString(KeyStrings.EMOTION_TAG_NAME.getS());
-            binding.nameInput.setText(name);                                    //名称
-            String description = initBundle.getString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS());
-            binding.descriptionInput.setText(description);                      //描述
-            int emotionTypeOrdinal = initBundle.getInt(KeyStrings.EMOTION_TAG_TYPE.getS());
-            emotionType = EmotionType.values()[emotionTypeOrdinal];             //情绪标签种类
-        }
 
-        //工具栏
-        binding.toolbar.setNavigationOnClickListener(view -> finish());
+            //初始化输入框内容
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
+            disposable.add(db.emotionTagDao().getEmotionTagOptionalSingleById(emotionId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            optional -> {
+                                if (optional.isEmpty()) return;
+
+                                EmotionTagEntity emotionTag = optional.get();
+                                binding.nameInput.setText(emotionTag.getName());    //名称
+                                binding.descriptionInput.setText(emotionTag.getDescription());  //描述
+                                int typeOrdinal = emotionTag.getType();
+                                emotionType = EmotionType.values()[typeOrdinal];
+                                binding.typeInput.setText(emotionType.getTitle());  //种类
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
 
         //名称
         binding.nameInput.setOnFocusChangeListener((view, b) -> {

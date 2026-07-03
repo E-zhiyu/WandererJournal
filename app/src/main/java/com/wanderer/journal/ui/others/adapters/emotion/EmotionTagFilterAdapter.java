@@ -38,7 +38,7 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Recyc
         ViewHolderClosableChipBinding binding;
         private boolean isBlocked;
 
-        public EmotionTagFilterViewHolder(@NonNull ViewHolderClosableChipBinding binding, ViewHolderListener listener) {
+        public EmotionTagFilterViewHolder(@NonNull ViewHolderClosableChipBinding binding, OnChipCheckChangedListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -84,7 +84,7 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Recyc
         void onAdd();
     }
 
-    public interface ViewHolderListener {
+    public interface OnChipCheckChangedListener {
         void onCheckChanged(int position, boolean isChecked);
     }
 

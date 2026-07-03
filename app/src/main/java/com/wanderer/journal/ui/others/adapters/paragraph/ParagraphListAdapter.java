@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.others.adapters.paragraph;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -17,7 +16,7 @@ import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
-import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -74,7 +73,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;     //媒体点击监听
-    private final OnRoleClickListener roleClickListener;                                //角色富文本点击监听
+    private final AdapterOnClickListener<Long> roleClickListener;                       //角色富文本点击监听
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
 
     @Override
@@ -131,7 +130,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
      */
     public ParagraphListAdapter(
             ParagraphListAdapter.OnMediaClickedListener mediaClickedListener,
-            OnRoleClickListener roleClickListener
+            AdapterOnClickListener<Long> roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.mediaClickedListener = mediaClickedListener;
@@ -190,7 +189,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, @SuppressLint("RecyclerView") int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ParagraphUiModel uiModel = getItem(position);
 
         if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
@@ -237,7 +236,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 public void onClick(String clickData) {
                     try {
                         long roleId = Long.parseLong(clickData);
-                        roleClickListener.onRoleClicked(roleId);
+                        roleClickListener.onClick(roleId, holder.itemView);
                     } catch (NumberFormatException ignored) {
                     }
                 }
@@ -267,7 +266,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
 
             //设置圆角
-            setRadius(itemHolder.binding.getRoot(), position);
+            setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
         } else if (holder instanceof ParagraphListAdapter.DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 

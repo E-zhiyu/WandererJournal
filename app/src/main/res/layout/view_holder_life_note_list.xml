@@ -10,30 +10,44 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp">
+        android:paddingStart="15dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="15dp"
+        android:paddingBottom="10dp">
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/name_text"
+            android:id="@+id/insight_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/emotion_tag"
+            android:text="@string/life_note_insight"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/description_text"
+            app:layout_constraintTop_toBottomOf="@id/elaboration_text"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/description_text"
+            android:id="@+id/elaboration_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@string/emotion_tag"
+            android:text="@string/life_note_elaboration"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOutline"
+            app:layout_constraintBottom_toTopOf="@id/date_time_text"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/insight_text" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/date_time_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/date_time"
+            android:textAppearance="?attr/textAppearanceBodySmall"
             android:textColor="?attr/colorOutline"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/name_text" />
+            app:layout_constraintTop_toBottomOf="@id/elaboration_text" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

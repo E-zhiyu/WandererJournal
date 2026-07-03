@@ -9,7 +9,17 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.4.2\n" +
+    private final static String CHANGELOG = "# v1.5.0\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增人生笔记保存功能\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 搜索历史记录清空时添加动画效果\n" +
+            "\n" +
+            "# v1.4.2\n" +
             "\n" +
             "### 优化和修改的内容\n" +
             "\n" +

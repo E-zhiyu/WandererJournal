@@ -13,10 +13,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
+import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
-import com.wanderer.journal.databinding.ViewHolderRoleBinding;
+import com.wanderer.journal.databinding.ViewHolderRoleListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -57,22 +61,8 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         }
     };
 
-    private final OnClickedListener clickedListener;            //单击监听
-    private final OnLongClickedListener longClickedListener;    //长按监听
-
-    public interface ViewHolderListener {
-        void onClicked(int position);
-
-        void onLongClicked(int position, View anchor);
-    }
-
-    public interface OnClickedListener {
-        void onClicked(RoleUiModel model);
-    }
-
-    public interface OnLongClickedListener {
-        void onLongClicked(RoleUiModel model, View anchor);
-    }
+    private final AdapterOnClickListener<RoleEntity> clickListener;            //单击监听
+    private final AdapterOnLongClickListener<RoleEntity> longClickListener;    //长按监听
 
     public static class RelationshipSeparatorViewHolder extends RecyclerView.ViewHolder {
         ViewHolderSeparatorTextChipBinding binding;
@@ -84,9 +74,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     }
 
     public static class RoleViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderRoleBinding binding;
+        ViewHolderRoleListBinding binding;
 
-        public RoleViewHolder(@NonNull ViewHolderRoleBinding binding, ViewHolderListener listener) {
+        public RoleViewHolder(@NonNull ViewHolderRoleListBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -94,23 +84,23 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
             AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
-            binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
+            binding.getRoot().setOnClickListener(view -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
 
             //设置长按监听
             binding.getRoot().setOnLongClickListener(view -> {
-                listener.onLongClicked(getBindingAdapterPosition(), binding.getRoot());
+                listener.onLongClick(getBindingAdapterPosition(), binding.getRoot());
                 return true;
             });
         }
     }
 
     public RoleAdapter(
-            OnClickedListener clickedListener,
-            OnLongClickedListener longClickedListener
+            AdapterOnClickListener<RoleEntity> clickListener,
+            AdapterOnLongClickListener<RoleEntity> longClickListener
     ) {
         super(ITEM_CALLBACK);
-        this.clickedListener = clickedListener;
-        this.longClickedListener = longClickedListener;
+        this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -166,7 +156,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
-            ViewHolderRoleBinding binding = ViewHolderRoleBinding.inflate(
+            ViewHolderRoleListBinding binding = ViewHolderRoleListBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -175,15 +165,19 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
                     binding,
                     new ViewHolderListener() {
                         @Override
-                        public void onClicked(int position) {
+                        public void onClick(int position, View anchor) {
                             RoleUiModel model = getItem(position);
-                            clickedListener.onClicked(model);
+                            if (model instanceof RoleUiModel.Item) {
+                                clickListener.onClick(((RoleUiModel.Item) model).model.getRole(), anchor);
+                            }
                         }
 
                         @Override
-                        public void onLongClicked(int position, View anchor) {
+                        public void onLongClick(int position, View anchor) {
                             RoleUiModel model = getItem(position);
-                            longClickedListener.onLongClicked(model, anchor);
+                            if (model instanceof RoleUiModel.Item) {
+                                longClickListener.onLongClick(((RoleUiModel.Item) model).model.getRole(), anchor);
+                            }
                         }
                     }
             );

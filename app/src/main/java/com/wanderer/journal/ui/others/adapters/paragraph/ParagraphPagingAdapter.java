@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
-import com.wanderer.journal.auxiliary.interfaces.OnRoleClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -48,7 +48,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
     private final Set<Integer> positionSet = new HashSet<>();           //当前高亮的段落下标集合
     private boolean isSelectMode = false;                               //是否是选择模式
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -85,9 +85,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final OnParagraphClickListener paragraphClickListener;  //段落点击监听
-    private final OnMediaClickedListener mediaClickedListener;      //媒体点击监听
-    private final OnRoleClickListener roleClickListener;            //角色富文本点击监听
+    private final AdapterOnClickListener<ParagraphEntityModel> paragraphClickListener;  //段落点击监听
+    private final OnMediaClickedListener mediaClickedListener;                          //媒体点击监听
+    private final AdapterOnClickListener<Long> roleClickListener;                       //角色富文本点击监听
 
     /**
      * 设置多选追踪器
@@ -108,26 +108,12 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
-            return ((ParagraphUiModel.Separator) model).date.format(formatter);
+            return ((ParagraphUiModel.Separator) model).date.format(FORMATTER);
         } else if (model instanceof ParagraphUiModel.Item) {
-            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(FORMATTER);
         } else {
             return context.getString(R.string.not_applicable);
         }
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(ParagraphEntityModel dataModel, View view);
-    }
-
-    public interface OnParagraphClickListener {
-        /**
-         * 段落被点击的回调
-         *
-         * @param dataModel 点击的段落的数据实例
-         * @param view      用于显示PopupMenu的视图
-         */
-        void onClicked(ParagraphEntityModel dataModel, View view);
     }
 
     public interface OnMediaClickedListener {
@@ -189,7 +175,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         ViewHolderParagraphBinding binding;
         private ParagraphEntityModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable ViewHolderListener listener) {
+        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityModel> listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -204,7 +190,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                         return;
                     }
 
-                    listener.onClicked(data, binding.getRoot());
+                    listener.onClick(data, binding.getRoot());
                 });
             }
         }
@@ -258,9 +244,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * @param mediaClickedListener   媒体预览图点击监听
      */
     public ParagraphPagingAdapter(
-            @Nullable OnParagraphClickListener paragraphClickListener,
+            AdapterOnClickListener<ParagraphEntityModel> paragraphClickListener,
             OnMediaClickedListener mediaClickedListener,
-            OnRoleClickListener roleClickListener
+            AdapterOnClickListener<Long> roleClickListener
     ) {
         super(ITEM_CALLBACK);
         this.paragraphClickListener = paragraphClickListener;
@@ -308,21 +294,15 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                     parent,
                     false
             );
-            ViewHolderListener listener;
-            if (paragraphClickListener != null) {
-                listener = (paragraphEntityModel, view) -> {
-                    if (!isSelectMode) {
-                        paragraphClickListener.onClicked(paragraphEntityModel, view);
-                    } else {
-                        selectionTracker.select(paragraphEntityModel.getParagraph().getParagraphId());
-                    }
-                };
-            } else {
-                listener = null;
-            }
             return new ParagraphViewHolder(
                     binding,
-                    listener
+                    (paragraphEntityModel, view) -> {
+                        if (!isSelectMode) {
+                            paragraphClickListener.onClick(paragraphEntityModel, view);
+                        } else {
+                            selectionTracker.select(paragraphEntityModel.getParagraph().getParagraphId());
+                        }
+                    }
             );
         } else {
             ViewHolderSeparatorTextChipBinding binding = ViewHolderSeparatorTextChipBinding.inflate(
@@ -395,7 +375,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                         public void onClick(String clickData) {
                             try {
                                 long roleId = Long.parseLong(clickData);
-                                roleClickListener.onRoleClicked(roleId);
+                                roleClickListener.onClick(roleId, holder.itemView);
                             } catch (NumberFormatException ignored) {
                             }
                         }
@@ -444,7 +424,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
             //分隔符文本
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(FORMATTER);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }

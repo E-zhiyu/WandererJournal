@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.others.adapters.role;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.databinding.ViewHolderChipTextBinding;
 
@@ -24,22 +28,8 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
                     oldItem.getDisplayName().equals(newItem.getDisplayName());
         }
     };
-    private final OnClickListener clickListener;    //点击监听
-    private final OnLongClickListener longClickListener;    //长按监听
-
-    public interface ViewHolderListener {
-        void onClick(int position);
-
-        void onLongClick(int position);
-    }
-
-    public interface OnClickListener {
-        void onClick(RoleEntity role);
-    }
-
-    public interface OnLongClickListener {
-        void onLongClick(RoleEntity role);
-    }
+    private final AdapterOnClickListener<RoleEntity> clickListener;
+    private final AdapterOnLongClickListener<RoleEntity> longClickListener;
 
     public static class RoleSelectViewHolder extends RecyclerView.ViewHolder {
         ViewHolderChipTextBinding binding;
@@ -51,17 +41,20 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
             binding.chip.setCheckable(false);
 
             //设置点击监听
-            binding.chip.setOnClickListener(view -> listener.onClick(getBindingAdapterPosition()));
+            binding.chip.setOnClickListener(view -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
 
             //设置长按监听
             binding.chip.setOnLongClickListener(view -> {
-                listener.onLongClick(getBindingAdapterPosition());
+                listener.onLongClick(getBindingAdapterPosition(), binding.getRoot());
                 return true;
             });
         }
     }
 
-    public CommonRoleSelectAdapter(OnClickListener clickListener, OnLongClickListener longClickListener) {
+    public CommonRoleSelectAdapter(
+            AdapterOnClickListener<RoleEntity> clickListener,
+            AdapterOnLongClickListener<RoleEntity> longClickListener
+    ) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
@@ -79,15 +72,15 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
                 binding,
                 new ViewHolderListener() {
                     @Override
-                    public void onClick(int position) {
+                    public void onClick(int position, View anchor) {
                         RoleEntity role = getItem(position);
-                        clickListener.onClick(role);
+                        clickListener.onClick(role, anchor);
                     }
 
                     @Override
-                    public void onLongClick(int position) {
+                    public void onLongClick(int position, View anchor) {
                         RoleEntity role = getItem(position);
-                        longClickListener.onLongClick(role);
+                        longClickListener.onLongClick(role, anchor);
                     }
                 }
         );

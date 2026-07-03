@@ -16,6 +16,7 @@ public class SearchHistoryPreference {
     private static final String PREF_NAME = "SearchHistoryPreference";
     public static final String KEY_DIARY_CONTENT = "diary_content";     //日记内容
     public static final String KEY_ROLE_INFO = "role_info";             //角色信息
+    public static final String KEY_LIFE_NOTE = "life_note";             //人生笔记
 
     /**
      * 读取搜索历史

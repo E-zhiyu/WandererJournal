@@ -21,7 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.wanderer.journal.auxiliary.classes.RoleShower;
+import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
@@ -219,7 +219,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     startActivity(skip2FullScreen, options.toBundle());
                 },
-                roleId -> RoleShower.showRoleDetail(this, disposable, roleId)
+                (roleId, view) -> InfoShower.showRole(this, disposable, roleId)
         );
         binding.previewRecycler.setAdapter(adapter);
 

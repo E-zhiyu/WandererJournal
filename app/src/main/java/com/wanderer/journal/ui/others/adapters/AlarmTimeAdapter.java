@@ -30,7 +30,7 @@ public class AlarmTimeAdapter extends ListAdapter<LocalTime, AlarmTimeAdapter.Al
     public static class AlarmTimeViewHolder extends RecyclerView.ViewHolder {
         ViewHolderClosableChipBinding binding;
 
-        public AlarmTimeViewHolder(@NonNull ViewHolderClosableChipBinding binding, ViewHolderListener listener) {
+        public AlarmTimeViewHolder(@NonNull ViewHolderClosableChipBinding binding, ChipListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -50,7 +50,7 @@ public class AlarmTimeAdapter extends ListAdapter<LocalTime, AlarmTimeAdapter.Al
         void onClosed(LocalTime time);
     }
 
-    public interface ViewHolderListener {
+    public interface ChipListener {
         void onClose(int position);
     }
 

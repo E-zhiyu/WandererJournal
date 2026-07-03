@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
@@ -33,7 +32,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class EmotionTagManageActivity extends AppCompatActivity {
+public class EmotionTagListActivity extends AppCompatActivity {
     private ActivityEmotionTagManageBinding binding;    //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
@@ -79,9 +78,10 @@ public class EmotionTagManageActivity extends AppCompatActivity {
 
         //情绪标签列表
         EmotionTagAdapter adapter = new EmotionTagAdapter(
-                emotionTag -> {
+                (emotionTag, anchor) -> {
                     Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
-                    Bundle bundle = getEmotionTagModifyBundle(emotionTag);
+                    Bundle bundle = new Bundle();
+                    bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTag.getEmotionId());
                     skip2EmotionTagModify.putExtras(bundle);
                     startActivity(skip2EmotionTagModify);
                 },
@@ -110,27 +110,6 @@ public class EmotionTagManageActivity extends AppCompatActivity {
                 (sBinding, text) -> sBinding.separatorText.setText(text)
         );
         binding.recycler.addItemDecoration(decoration);
-    }
-
-    /**
-     * 将情绪标签实体的属性放到{@link Bundle}中，以便传递给编辑界面
-     *
-     * @param emotionTag 被传递的情绪标签
-     * @return 装有情绪标签数据的{@link Bundle}
-     */
-    @NonNull
-    private static Bundle getEmotionTagModifyBundle(@NonNull EmotionTagEntity emotionTag) {
-        Bundle bundle = new Bundle();
-
-        long emotionTagId = emotionTag.getEmotionId();
-        bundle.putLong(KeyStrings.EMOTION_TAG_ID.getS(), emotionTagId); //情绪标签 ID
-        String name = emotionTag.getName();
-        bundle.putString(KeyStrings.EMOTION_TAG_NAME.getS(), name);     //情绪标签名称
-        String description = emotionTag.getDescription();
-        bundle.putString(KeyStrings.EMOTION_TAG_DESCRIPTION.getS(), description);   //情绪标签描述
-        int emotionTypeOrdinal = emotionTag.getType();
-        bundle.putInt(KeyStrings.EMOTION_TAG_TYPE.getS(), emotionTypeOrdinal);  //情绪标签种类
-        return bundle;
     }
 
     /**
@@ -165,9 +144,9 @@ public class EmotionTagManageActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.action_delete_emotion_tag) {
                 //获取段落数量
                 EmotionTagDao dao = DiaryDatabase
-                        .getInstance(EmotionTagManageActivity.this)
+                        .getInstance(EmotionTagListActivity.this)
                         .emotionTagDao();
-                disposable.add(dao.getParagraphCountSingleByEmotionTagId(emotionTag.getEmotionId())
+                disposable.add(dao.getParagraphCountSingleById(emotionTag.getEmotionId())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(
@@ -185,7 +164,7 @@ public class EmotionTagManageActivity extends AppCompatActivity {
                                     }
 
                                     //显示对话框
-                                    new MaterialAlertDialogBuilder(EmotionTagManageActivity.this)
+                                    new MaterialAlertDialogBuilder(EmotionTagListActivity.this)
                                             .setTitle(R.string.delete_emotion_tag)
                                             .setMessage(message)
                                             .setPositiveButton(

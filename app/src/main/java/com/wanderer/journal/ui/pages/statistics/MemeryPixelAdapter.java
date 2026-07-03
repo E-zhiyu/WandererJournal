@@ -10,13 +10,15 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.databinding.ViewHolderMemeryPixelBinding;
 
 public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
     private final int maxDiaryLength;   //最大日记长度
     private final int avgDiaryLength;   //平均日记长度
-    private final OnClickedListener clickedListener;
+    private final AdapterOnClickListener<DiaryLengthModel> clickListener;
     private final static DiffUtil.ItemCallback<DiaryLengthModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull DiaryLengthModel oldItem, @NonNull DiaryLengthModel newItem) {
@@ -29,24 +31,16 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
         }
     };
 
-    public interface OnClickedListener {
-        void onClicked(DiaryLengthModel model, View view);
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(int position, View view);
-    }
-
     /**
      * 记忆像素适配器构造方法
      *
      * @param maxDiaryLength 最大日记字符数量
      */
-    public MemeryPixelAdapter(int maxDiaryLength, int avgDiaryLength, OnClickedListener clickedListener) {
+    public MemeryPixelAdapter(int maxDiaryLength, int avgDiaryLength, AdapterOnClickListener<DiaryLengthModel> clickListener) {
         super(ITEM_CALLBACK);
         this.maxDiaryLength = maxDiaryLength;
         this.avgDiaryLength = avgDiaryLength;
-        this.clickedListener = clickedListener;
+        this.clickListener = clickListener;
     }
 
     public static class MemeryPixelViewHolder extends RecyclerView.ViewHolder {
@@ -57,7 +51,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
             this.binding = binding;
 
             binding.getRoot().setOnClickListener(view ->
-                    listener.onClicked(getBindingAdapterPosition(), binding.getRoot())
+                    listener.onClick(getBindingAdapterPosition(), binding.getRoot())
             );
         }
     }
@@ -72,9 +66,16 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
         );
         return new MemeryPixelViewHolder(
                 binding,
-                (position, view) -> {
-                    DiaryLengthModel model = getItem(position);
-                    clickedListener.onClicked(model, view);
+                new ViewHolderListener() {
+                    @Override
+                    public void onClick(int pos, View anchor) {
+                        DiaryLengthModel model = getItem(pos);
+                        clickListener.onClick(model, anchor);
+                    }
+
+                    @Override
+                    public void onLongClick(int pos, View anchor) {
+                    }
                 }
         );
     }

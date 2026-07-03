@@ -19,6 +19,8 @@ import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -26,7 +28,7 @@ import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, ParagraphInnerMediaAdapter.MediaViewHolder> {
     private final int spanCount;                        //媒体列数
     private final RequestOptions glideOptions;          //图片显示设置
-    private final OnClickedListener clickedListener;    //点击监听器
+    private final AdapterOnClickListener<Integer> clickListener;
     private final static DiffUtil.ItemCallback<MediaEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull MediaEntity oldItem, @NonNull MediaEntity newItem) {
@@ -51,17 +53,9 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
 
             //设置点击监听器
             binding.getRoot().setOnClickListener(
-                    view -> listener.onClicked(getBindingAdapterPosition(), view)
+                    view -> listener.onClick(getBindingAdapterPosition(), view)
             );
         }
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(int position, View view);
-    }
-
-    public interface OnClickedListener {
-        void onClicked(int position, View view);
     }
 
     /**
@@ -70,10 +64,10 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
      * @param size      显示图片大小
      * @param spanCount 媒体列数
      */
-    protected ParagraphInnerMediaAdapter(int size, int spanCount, OnClickedListener clickedListener) {
+    protected ParagraphInnerMediaAdapter(int size, int spanCount, AdapterOnClickListener<Integer> clickListener) {
         super(ITEM_CALLBACK);
         this.spanCount = spanCount;
-        this.clickedListener = clickedListener;
+        this.clickListener = clickListener;
 
         //初始化Glide设置
         glideOptions = new RequestOptions()
@@ -93,7 +87,16 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
         );
         return new ParagraphInnerMediaAdapter.MediaViewHolder(
                 binding,
-                clickedListener::onClicked
+                new ViewHolderListener() {
+                    @Override
+                    public void onClick(int pos, View anchor) {
+                        clickListener.onClick(pos, anchor);
+                    }
+
+                    @Override
+                    public void onLongClick(int pos, View anchor) {
+                    }
+                }
         );
     }
 
@@ -102,7 +105,6 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
         MediaEntity media = getItem(position);
 
         //设置卡片圆角
-//        setRadius(holder.binding.imageViewCard, position);
         setRadius(holder.binding.imageView, position);
 
         //停止旧图片加载（适配RecyclerView的复用逻辑）

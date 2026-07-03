@@ -1,6 +1,7 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
+    LIFE_NOTE_ID("life_note_id"),                       //人生笔记 ID
     PARAGRAPH_ID("paragraph_id"),                       //日记段落 ID
     KEY_ROLE_GROUP("key_role_group"),                   //角色分组的关键字
     ROLE_ID("role_id"),                                 //角色 ID

@@ -96,6 +96,15 @@ public interface RoleDao {
     Single<Optional<RoleEntityModel>> getRoleAndAliasSingleById(long id);
 
     /**
+     * 判断某个角色 ID 是否在表中
+     *
+     * @param id 角色 ID
+     * @return 该 ID 是否在表中
+     */
+    @Query("SELECT EXISTS(SELECT * FROM roles WHERE roleId = :id)")
+    Single<Boolean> isRoleIdExists(long id);
+
+    /**
      * 插入一条角色记录
      *
      * @param role 新角色记录

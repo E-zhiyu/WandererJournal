@@ -15,14 +15,16 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.ui.pages.emotion.EmotionTagManageActivity;
+import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.role.RoleManageActivity;
+import com.wanderer.journal.ui.pages.role.RoleListActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
 import java.time.LocalDate;
@@ -75,6 +77,7 @@ public class HomeFragment extends Fragment {
         initParagraphCountCard();
         initEmotionTagCountCard();
         initRoleCountCard();
+        initLifeNoteCountCard();
     }
 
     /**
@@ -225,7 +228,7 @@ public class HomeFragment extends Fragment {
 
         //设置情绪标签管理入口
         binding.emotionTagCountCard.setOnClickListener(view -> {
-            Intent skip2EmotionTagManage = new Intent(requireContext(), EmotionTagManageActivity.class);
+            Intent skip2EmotionTagManage = new Intent(requireContext(), EmotionTagListActivity.class);
             startActivity(skip2EmotionTagManage);
         });
 
@@ -256,13 +259,13 @@ public class HomeFragment extends Fragment {
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
                 AppearanceHelper.SMALL_CARD_RADIUS,
-                AppearanceHelper.MEDIUM_CARD_RADIUS
+                AppearanceHelper.SMALL_CARD_RADIUS
         );
         AppearanceHelper.attachMorphAnimation(binding.roleCountCard);
 
         //设置点击监听
         binding.roleCountCard.setOnClickListener(view -> {
-            Intent skip2RoleManage = new Intent(requireContext(), RoleManageActivity.class);
+            Intent skip2RoleManage = new Intent(requireContext(), RoleListActivity.class);
             startActivity(skip2RoleManage);
         });
 
@@ -276,6 +279,37 @@ public class HomeFragment extends Fragment {
                             ExceptionHelper.showExceptionDialog(requireContext(), e);
                             binding.roleCountText.setText(R.string.not_applicable);
                         }
+                )
+        );
+    }
+
+    /**
+     * 初始化认知和感想卡片
+     */
+    private void initLifeNoteCountCard() {
+        AppearanceHelper.setRadius(
+                requireContext(),
+                binding.lifeNoteCountCard,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.SMALL_CARD_RADIUS,
+                AppearanceHelper.MEDIUM_CARD_RADIUS
+        );
+        AppearanceHelper.attachMorphAnimation(binding.lifeNoteCountCard);
+
+        //设置点击监听器
+        binding.lifeNoteCountCard.setOnClickListener(view -> {
+            Intent skip2LifeNote = new Intent(requireContext(), LifeNoteListActivity.class);
+            startActivity(skip2LifeNote);
+        });
+
+        LifeNoteDao dao = DiaryDatabase.getInstance(requireContext()).lifeNoteDao();
+        disposable.add(dao.getLifeNoteCountFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        count -> binding.lifeNoteCountText.setText(String.valueOf(count)),
+                        e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
     }

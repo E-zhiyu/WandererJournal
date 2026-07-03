@@ -13,9 +13,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
-import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
+import com.wanderer.journal.databinding.ViewHolderEmotionTagListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -24,8 +27,8 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
         implements StickyHeaderAdapter<String> {
     private static final int TYPE_ITEM = 1;
     private static final int TYPE_SEPARATOR = 0;
-    private final OnClickedListener clickedListener;            //点击监听器
-    private final OnLongClickedListener longClickedListener;    //长按监听器
+    private final AdapterOnClickListener<EmotionTagEntity> clickListener;           //点击监听器
+    private final AdapterOnLongClickListener<EmotionTagEntity> longClickListener;   //长按监听器
     private static final DiffUtil.ItemCallback<EmotionListUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionListUiModel oldItem, @NonNull EmotionListUiModel newItem) {
@@ -56,9 +59,9 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
     };
 
     public static class EmotionTagViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderEmotionTagBinding binding;
+        ViewHolderEmotionTagListBinding binding;
 
-        public EmotionTagViewHolder(@NonNull ViewHolderEmotionTagBinding binding, ViewHolderListener listener) {
+        public EmotionTagViewHolder(@NonNull ViewHolderEmotionTagListBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -66,11 +69,11 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
             AppearanceHelper.attachMorphAnimation(binding.getRoot());
 
             //设置点击监听
-            binding.getRoot().setOnClickListener(view -> listener.onClicked(getBindingAdapterPosition()));
+            binding.getRoot().setOnClickListener(view -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
 
             //设置长按监听
             binding.getRoot().setOnLongClickListener(view -> {
-                listener.onLongClicked(getBindingAdapterPosition(), view);
+                listener.onLongClick(getBindingAdapterPosition(), view);
                 return true;
             });
         }
@@ -85,40 +88,18 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
         }
     }
 
-    public interface OnClickedListener {
-        /**
-         * 点击监听
-         *
-         * @param emotionTag 电机的情绪标签
-         */
-        void onClicked(EmotionTagEntity emotionTag);
-    }
-
-    public interface OnLongClickedListener {
-        /**
-         * 长按监听
-         *
-         * @param emotionTag 长按的情绪标签
-         * @param view       PopupMenu绑定的视图
-         */
-        void onLongClicked(EmotionTagEntity emotionTag, View view);
-    }
-
-    public interface ViewHolderListener {
-        void onClicked(int position);
-
-        void onLongClicked(int position, View view);
-    }
-
     /**
      * 情绪标签列表适配器构造方法
      *
-     * @param clickedListener 点击监听器
+     * @param clickListener 点击监听器
      */
-    public EmotionTagAdapter(OnClickedListener clickedListener, OnLongClickedListener longClickedListener) {
+    public EmotionTagAdapter(
+            AdapterOnClickListener<EmotionTagEntity> clickListener,
+            AdapterOnLongClickListener<EmotionTagEntity> longClickListener
+    ) {
         super(ITEM_CALLBACK);
-        this.clickedListener = clickedListener;
-        this.longClickedListener = longClickedListener;
+        this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
 
         //注册数据变更监听器，用于自动更新圆角
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -174,7 +155,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
-            ViewHolderEmotionTagBinding binding = ViewHolderEmotionTagBinding.inflate(
+            ViewHolderEmotionTagListBinding binding = ViewHolderEmotionTagListBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
@@ -183,18 +164,18 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
                     binding,
                     new ViewHolderListener() {
                         @Override
-                        public void onClicked(int position) {
+                        public void onClick(int position, View anchor) {
                             EmotionListUiModel emotionTag = getItem(position);
                             if (emotionTag instanceof EmotionListUiModel.Item) {
-                                clickedListener.onClicked(((EmotionListUiModel.Item) emotionTag).entity);
+                                clickListener.onClick(((EmotionListUiModel.Item) emotionTag).entity, anchor);
                             }
                         }
 
                         @Override
-                        public void onLongClicked(int position, View view) {
+                        public void onLongClick(int position, View view) {
                             EmotionListUiModel emotionTag = getItem(position);
                             if (emotionTag instanceof EmotionListUiModel.Item) {
-                                longClickedListener.onLongClicked(((EmotionListUiModel.Item) emotionTag).entity, view);
+                                longClickListener.onLongClick(((EmotionListUiModel.Item) emotionTag).entity, view);
                             }
                         }
                     }

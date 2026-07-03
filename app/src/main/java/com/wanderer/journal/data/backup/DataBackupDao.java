@@ -1,6 +1,5 @@
 package com.wanderer.journal.data.backup;
 
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -8,10 +7,13 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
+import com.wanderer.journal.data.backup.maps.LifeNoteDataMap;
 import com.wanderer.journal.data.backup.maps.RoleDataMap;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
+import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
+import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
@@ -19,6 +21,8 @@ import com.wanderer.journal.data.backup.pojo.RolePojo;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
@@ -74,7 +78,11 @@ public interface DataBackupDao {
      * @param map 日记数据集合
      */
     @Transaction
-    default void importAllDiaryData(@NonNull DiaryDataMap map) {
+    default void importAllDiaryData(DiaryDataMap map) {
+        if (map == null) return;
+
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
         //清空旧数据
         clearEmotionParagraphRef();
         clearEmotionTag();
@@ -85,21 +93,21 @@ public interface DataBackupDao {
         //导入日记数据
         List<DiaryPojo> diaryPojoList = map.getDiaryList();
         if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
-            List<DiaryEntity> diaryEntityList = EntityPojoMapper.INSTANCE.toDiaryEntityList(diaryPojoList);
+            List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
             importDiaryData(diaryEntityList);
         }
 
         //导入段落数据
         List<ParagraphPojo> paragraphPojoList = map.getParagraphList();
         if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
-            List<ParagraphEntity> paragraphEntityList = EntityPojoMapper.INSTANCE.toParagraphEntityList(paragraphPojoList);
+            List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
             importParagraphData(paragraphEntityList);
         }
 
         //导入媒体数据
         List<MediaPojo> mediaPojoList = map.getMediaList();
         if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
-            List<MediaEntity> mediaEntityList = EntityPojoMapper.INSTANCE.toMediaEntityList(mediaPojoList);
+            List<MediaEntity> mediaEntityList = mapper.toMediaEntityList(mediaPojoList);
             importMediaData(mediaEntityList);
         }
 
@@ -107,7 +115,7 @@ public interface DataBackupDao {
         List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
         if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
             List<EmotionTagEntity> emotionTagEntityList =
-                    EntityPojoMapper.INSTANCE.toEmotionTagEntityList(emotionTagPojoList);
+                    mapper.toEmotionTagEntityList(emotionTagPojoList);
             importEmotionTagData(emotionTagEntityList);
         }
 
@@ -115,7 +123,7 @@ public interface DataBackupDao {
         List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = map.getEmotionParagraphRefList();
         if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
             List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
-                    EntityPojoMapper.INSTANCE.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
+                    mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
             importEmotionParagraphRefData(emotionParagraphRefEntityList);
         }
     }
@@ -147,7 +155,11 @@ public interface DataBackupDao {
      * @param map 角色数据集合
      */
     @Transaction
-    default void importAllRoleData(@NonNull RoleDataMap map) {
+    default void importAllRoleData(RoleDataMap map) {
+        if (map == null) return;
+
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
         //清空旧数据
         clearRoleAlia();
         clearRole();
@@ -155,15 +167,66 @@ public interface DataBackupDao {
         //导入角色数据
         List<RolePojo> rolePojoList = map.getRoleList();
         if (rolePojoList != null && !rolePojoList.isEmpty()) {
-            List<RoleEntity> roleEntityList = EntityPojoMapper.INSTANCE.toRoleEntityList(rolePojoList);
+            List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
             importRoleData(roleEntityList);
         }
 
         //导入角色别名数据
         List<RoleAliaPojo> roleAliaPojoList = map.getRoleAliaList();
         if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
-            List<RoleAliaEntity> roleAliaEntityList = EntityPojoMapper.INSTANCE.toRoleAliaEntityList(roleAliaPojoList);
+            List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
             importRoleAliaList(roleAliaEntityList);
+        }
+    }
+
+    /**
+     * 导出所有人生笔记数据
+     *
+     * @return 包含所有人生笔记数据的集合
+     */
+    @Transaction
+    default LifeNoteDataMap exportAllLifeNoteData() {
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
+        //读取人生笔记数据
+        List<LifeNoteEntity> lifeNoteEntityList = exportLifeNoteData();
+        List<LifeNotePojo> lifeNotePojoList = mapper.toLifeNotePojoList(lifeNoteEntityList);
+
+        //读取人生笔记历史记录数据
+        List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = exportLifeNoteHistoryData();
+        List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = mapper.toLifeNoteHistoryPojoList(lifeNoteHistoryEntityList);
+
+        LifeNoteDataMap map = new LifeNoteDataMap();
+        map.setLifeNoteList(lifeNotePojoList);
+        map.setLifeNoteHistoryList(lifeNoteHistoryPojoList);
+        return map;
+    }
+
+    /**
+     * 导入所有人生笔记数据
+     *
+     * @param map 包含所有人生笔记数据的集合
+     */
+    @Transaction
+    default void importAllLifeNoteData(LifeNoteDataMap map) {
+        if (map == null) return;
+
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
+        //清空旧数据
+        clearLifeNote();
+        clearLifeNoteHistory();
+
+        //导入人生笔记数据
+        List<LifeNotePojo> lifeNotePojoList = map.getLifeNoteList();
+        if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
+            importLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
+        }
+
+        //导入人生笔记历史记录数据
+        List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = map.getLifeNoteHistoryList();
+        if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
+            importLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
         }
     }
 
@@ -320,4 +383,48 @@ public interface DataBackupDao {
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void importRoleAliaList(List<RoleAliaEntity> roleAliaEntityList);
+
+    /**
+     * 导出人生笔记数据
+     *
+     * @return 人生笔记列表
+     */
+    @Query("SELECT * FROM lifeNotes")
+    List<LifeNoteEntity> exportLifeNoteData();
+
+    /**
+     * 导出人生笔记历史记录数据
+     *
+     * @return 人生笔记历史记录列表
+     */
+    @Query("SELECT * FROM lifeNoteHistories")
+    List<LifeNoteHistoryEntity> exportLifeNoteHistoryData();
+
+    /**
+     * 清除人生笔记表
+     */
+    @Query("DELETE FROM lifeNotes")
+    void clearLifeNote();
+
+    /**
+     * 清空人生笔记历史记录表
+     */
+    @Query("DELETE FROM lifeNoteHistories")
+    void clearLifeNoteHistory();
+
+    /**
+     * 导入人生笔记数据
+     *
+     * @param list 人生笔记列表
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void importLifeNote(List<LifeNoteEntity> list);
+
+    /**
+     * 导入人生笔记历史记录
+     *
+     * @param list 人生笔记历史记录列表
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void importLifeNoteHistory(List<LifeNoteHistoryEntity> list);
 }

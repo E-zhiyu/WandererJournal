@@ -19,9 +19,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
-import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.data.save.preference.TipPreference;
@@ -33,13 +31,13 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
-import com.wanderer.journal.ui.others.viewmodel.RoleManageViewModel;
+import com.wanderer.journal.ui.others.viewmodel.RoleListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class RoleManageActivity extends AppCompatActivity {
+public class RoleListActivity extends AppCompatActivity {
     private ActivityRoleManageBinding binding;  //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();
     private BackPressedCallbackHelper backHelper;   //返回手势拦截器
@@ -113,7 +111,7 @@ public class RoleManageActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 setSearchMode(false);
-                RoleManageViewModel viewModel = new ViewModelProvider(RoleManageActivity.this).get(RoleManageViewModel.class);
+                RoleListViewModel viewModel = new ViewModelProvider(RoleListActivity.this).get(RoleListViewModel.class);
                 viewModel.executeSearch("");
                 return true;
             }
@@ -144,33 +142,13 @@ public class RoleManageActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         RoleAdapter adapter = new RoleAdapter(
-                model -> {
-                    if (!(model instanceof RoleUiModel.Item)) {
-                        return;
-                    }
-
+                (role, anchor) -> {
                     //解析数据
-                    RoleUiModel.Item item = (RoleUiModel.Item) model;
-                    RoleEntity role = item.model.getRole();
                     long roleId = role.getRoleId();
-                    String roleName = role.getName();
-                    String roleDisplayName = role.getDisplayName();
-                    String identity = role.getIdentity();
-                    String impression = role.getImpression();
-                    int relationship = role.getRelationship();
-                    String[] alias = item.model.getRoleAliaList().stream()
-                            .map(RoleAliaEntity::getAlia)
-                            .toArray(String[]::new);
 
                     //生成数据包
                     Bundle bundle = new Bundle();
                     bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
-                    bundle.putString(KeyStrings.ROLE_NAME.getS(), roleName);
-                    bundle.putString(KeyStrings.ROLE_DISPLAY_NAME.getS(), roleDisplayName);
-                    bundle.putString(KeyStrings.ROLE_IDENTITY.getS(), identity);
-                    bundle.putString(KeyStrings.ROLE_IMPRESSION.getS(), impression);
-                    bundle.putInt(KeyStrings.ROLE_RELATIONSHIP.getS(), relationship);
-                    bundle.putStringArray(KeyStrings.ROLE_ALIAS.getS(), alias);
 
                     //跳转界面
                     Intent skip2RoleInput = new Intent(this, RoleInputActivity.class);
@@ -192,7 +170,7 @@ public class RoleManageActivity extends AppCompatActivity {
 
         //订阅数据
         DiaryDatabase db = DiaryDatabase.getInstance(this);
-        RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+        RoleListViewModel viewModel = new ViewModelProvider(this).get(RoleListViewModel.class);
         disposable.add(viewModel.getRoleListFlowable(db)
                 .subscribe(
                         roleList -> {
@@ -217,7 +195,7 @@ public class RoleManageActivity extends AppCompatActivity {
                 binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_ROLE_INFO,
                 keyword -> {
-                    RoleManageViewModel viewModel = new ViewModelProvider(this).get(RoleManageViewModel.class);
+                    RoleListViewModel viewModel = new ViewModelProvider(this).get(RoleListViewModel.class);
                     viewModel.executeSearch(keyword.trim());
 
                     //根据搜索关键词是否为空开启和关闭搜索模式
@@ -230,15 +208,10 @@ public class RoleManageActivity extends AppCompatActivity {
     /**
      * 显示角色长按菜单
      *
-     * @param model  数据模型
+     * @param role   角色实体
      * @param anchor 锚点视图
      */
-    private void showRolePopupMenu(RoleUiModel model, View anchor) {
-        if (!(model instanceof RoleUiModel.Item)) {
-            return;
-        }
-        RoleUiModel.Item itemModel = (RoleUiModel.Item) model;
-
+    private void showRolePopupMenu(RoleEntity role, View anchor) {
         PopupMenu popupMenu = new PopupMenu(this, anchor, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_role_edit, popupMenu.getMenu());
 
@@ -250,7 +223,7 @@ public class RoleManageActivity extends AppCompatActivity {
                         .setMessage("即将删除该角色，所有引用该角色的段落内容都将发生不可逆的变化，确认继续吗？")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
                             DiaryDatabase db = DiaryDatabase.getInstance(this);
-                            disposable.add(RoleService.deleteRole(itemModel.model.getRole(), db)
+                            disposable.add(RoleService.deleteRole(role, db)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())
                                     .subscribe(

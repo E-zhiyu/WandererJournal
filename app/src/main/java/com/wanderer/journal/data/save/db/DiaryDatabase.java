@@ -12,11 +12,14 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
+import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -31,9 +34,11 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
                 EmotionTagEntity.class,
                 EmotionParagraphRefEntity.class,
                 RoleEntity.class,
-                RoleAliaEntity.class
+                RoleAliaEntity.class,
+                LifeNoteEntity.class,
+                LifeNoteHistoryEntity.class
         },
-        version = 6
+        version = 7
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -62,7 +67,8 @@ public abstract class DiaryDatabase extends RoomDatabase {
                                     DatabaseMigrations.MIGRATION_2_3,
                                     DatabaseMigrations.MIGRATION_3_4,
                                     DatabaseMigrations.MIGRATION_4_5,
-                                    DatabaseMigrations.MIGRATION_5_6
+                                    DatabaseMigrations.MIGRATION_5_6,
+                                    DatabaseMigrations.MIGRATION_6_7
                             )
                             .build();
                 }
@@ -83,4 +89,5 @@ public abstract class DiaryDatabase extends RoomDatabase {
     public abstract RoleDao roleDao();
 
     public abstract DataBackupDao dataBackupDao();
+    public abstract LifeNoteDao lifeNoteDao();
 }

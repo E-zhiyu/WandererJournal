@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
@@ -121,7 +120,7 @@ public interface DiaryDao {
      * 通过多线程获取指定日期的日记
      *
      * @param date 待查询的日期
-     * @return 该日期的日记（无则通过{@link Maybe}返回 null
+     * @return 该日期的日记（无则通过{@link Optional}返回 null
      */
     @Query("SELECT * FROM diaries WHERE diaryDate == :date")
     Single<Optional<DiaryEntity>> getDiarySingleByDate(LocalDate date);

@@ -131,7 +131,7 @@ public class DiaryFragment extends Fragment {
 
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
-                diary -> {
+                (diary, anchor) -> {
                     Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
                     Bundle bundle = new Bundle();
 

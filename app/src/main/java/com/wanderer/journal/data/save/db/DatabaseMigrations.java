@@ -56,4 +56,20 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_displayName` ON `roles` (`displayName`)");
         }
     };
+
+    //添加人生笔记实体及其修改历史表
+    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `lifeNotes` (`noteId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `insight` TEXT, `elaboration` TEXT, `dateTime` INTEGER)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNotes_noteId` ON `lifeNotes` (`noteId`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNotes_insight` ON `lifeNotes` (`insight`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNotes_elaboration` ON `lifeNotes` (`elaboration`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNotes_dateTime` ON `lifeNotes` (`dateTime`)");
+            db.execSQL("CREATE TABLE IF NOT EXISTS `lifeNoteHistories` (`historyId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `noteId` INTEGER NOT NULL, `insight` TEXT, `elaboration` TEXT, `updateDateTime` INTEGER, FOREIGN KEY(`noteId`) REFERENCES `lifeNotes`(`noteId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNoteHistories_historyId` ON `lifeNoteHistories` (`historyId`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNoteHistories_noteId` ON `lifeNoteHistories` (`noteId`)");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNoteHistories_updateDateTime` ON `lifeNoteHistories` (`updateDateTime`)");
+        }
+    };
 }
