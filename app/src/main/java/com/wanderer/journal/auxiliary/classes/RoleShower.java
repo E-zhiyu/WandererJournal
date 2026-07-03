@@ -23,12 +23,12 @@ public class RoleShower {
         }
 
         RoleDao roleDao = DiaryDatabase.getInstance(context).roleDao();
-        disposable.add(roleDao.getRoleAndAliasSingleById(roleId)
+        disposable.add(roleDao.isRoleIdExists(roleId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        roleEntityModelOptional -> {
-                            if (roleEntityModelOptional.isEmpty()) {
+                        isExists -> {
+                            if (!isExists) {
                                 Toast.makeText(context, "无法读取该角色的信息", Toast.LENGTH_SHORT).show();
                                 return;
                             }
