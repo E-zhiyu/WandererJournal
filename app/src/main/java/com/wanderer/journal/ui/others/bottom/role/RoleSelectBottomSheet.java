@@ -138,8 +138,8 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
         //实例化适配器
         CommonRoleSelectAdapter commonRoleAdapter = new CommonRoleSelectAdapter(
-                viewModel::setSelectedRole,
-                role -> {
+                (role, anchor) -> viewModel.setSelectedRole(role),
+                (role, anchor) -> {
                     DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
                     disposable.add(db.roleDao().clearRoleUseCount(role.getRoleId())
                             .observeOn(AndroidSchedulers.mainThread())
