@@ -15,7 +15,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
-import com.wanderer.journal.databinding.ViewHolderEmotionTagBinding;
+import com.wanderer.journal.databinding.ViewHolderEmotionTagListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -56,9 +56,9 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
     };
 
     public static class EmotionTagViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderEmotionTagBinding binding;
+        ViewHolderEmotionTagListBinding binding;
 
-        public EmotionTagViewHolder(@NonNull ViewHolderEmotionTagBinding binding, ViewHolderListener listener) {
+        public EmotionTagViewHolder(@NonNull ViewHolderEmotionTagListBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -174,7 +174,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
-            ViewHolderEmotionTagBinding binding = ViewHolderEmotionTagBinding.inflate(
+            ViewHolderEmotionTagListBinding binding = ViewHolderEmotionTagListBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false

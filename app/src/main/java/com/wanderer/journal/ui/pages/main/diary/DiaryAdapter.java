@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
-import com.wanderer.journal.databinding.ViewHolderDiaryBinding;
+import com.wanderer.journal.databinding.ViewHolderDiaryListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 
@@ -120,9 +120,9 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
     }
 
     public static class ViewHolderDiary extends RecyclerView.ViewHolder {
-        ViewHolderDiaryBinding binding;
+        ViewHolderDiaryListBinding binding;
 
-        public ViewHolderDiary(@NonNull ViewHolderDiaryBinding binding, ViewHolderListener listener) {
+        public ViewHolderDiary(@NonNull ViewHolderDiaryListBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -146,7 +146,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
     @NonNull
     @Override
     public ViewHolderDiary onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ViewHolderDiaryBinding binding = ViewHolderDiaryBinding.inflate(
+        ViewHolderDiaryListBinding binding = ViewHolderDiaryListBinding.inflate(
                 LayoutInflater.from(parent.getContext()),
                 parent,
                 false

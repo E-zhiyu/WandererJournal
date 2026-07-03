@@ -16,7 +16,7 @@ import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
-import com.wanderer.journal.databinding.ViewHolderRoleBinding;
+import com.wanderer.journal.databinding.ViewHolderRoleListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -84,9 +84,9 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     }
 
     public static class RoleViewHolder extends RecyclerView.ViewHolder {
-        ViewHolderRoleBinding binding;
+        ViewHolderRoleListBinding binding;
 
-        public RoleViewHolder(@NonNull ViewHolderRoleBinding binding, ViewHolderListener listener) {
+        public RoleViewHolder(@NonNull ViewHolderRoleListBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -166,7 +166,7 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
-            ViewHolderRoleBinding binding = ViewHolderRoleBinding.inflate(
+            ViewHolderRoleListBinding binding = ViewHolderRoleListBinding.inflate(
                     LayoutInflater.from(parent.getContext()),
                     parent,
                     false
