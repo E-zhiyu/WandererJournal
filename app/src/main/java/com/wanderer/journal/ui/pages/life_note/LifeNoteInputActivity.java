@@ -98,6 +98,11 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )
             );
+        } else {
+            int gone = View.GONE;
+            binding.modifyHistoryTitle.setVisibility(gone);
+            binding.historyRecycler.setVisibility(gone);
+            binding.inputHistoryDivider.setVisibility(gone);
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 

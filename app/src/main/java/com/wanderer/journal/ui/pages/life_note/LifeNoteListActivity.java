@@ -2,17 +2,24 @@ package com.wanderer.journal.ui.pages.life_note;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityLifeNoteListBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
@@ -22,7 +29,9 @@ import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.viewmodel.LifeNoteListViewModel;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class LifeNoteListActivity extends AppCompatActivity {
     private ActivityLifeNoteListBinding binding;   //绑定的 XML 布局
@@ -115,9 +124,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
 
                     startActivity(skip2Input);
                 },
-                (entity, view) -> {
-                    //TODO:展开菜单
-                }
+                this::showEmotionTagPopupMenu
         );
         binding.recycler.setAdapter(adapter);
 
@@ -170,5 +177,43 @@ public class LifeNoteListActivity extends AppCompatActivity {
         } else {
             backHelper.registerHandler(searchBackHandler);
         }
+    }
+
+    /**
+     * 显示PopupMenu
+     *
+     * @param note 需要被操作的人生笔记
+     * @param view PopupMenu 绑定的视图
+     */
+    private void showEmotionTagPopupMenu(LifeNoteEntity note, View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_life_note_edit, popupMenu.getMenu());
+
+        //设置监听
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_delete_life_note) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("删除人生笔记")
+                        .setMessage("确定要删除该人生笔记吗？此操作无法撤销。")
+                        .setPositiveButton("确定", (dialogInterface, i) -> {
+                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            disposable.add(db.lifeNoteDao().deleteLifeNote(note)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            () -> Toast.makeText(this, "人生笔记已删除", Toast.LENGTH_SHORT).show(),
+                                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                                    )
+                            );
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+
+                return true;
+            }
+            return false;
+        });
+
+        popupMenu.show();
     }
 }
