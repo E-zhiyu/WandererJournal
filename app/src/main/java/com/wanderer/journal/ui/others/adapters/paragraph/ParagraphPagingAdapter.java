@@ -116,10 +116,6 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         }
     }
 
-    public interface ViewHolderListener {
-        void onClicked(ParagraphEntityModel dataModel, View view);
-    }
-
     public interface OnMediaClickedListener {
         /**
          * 媒体视图点击监听
@@ -179,7 +175,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         ViewHolderParagraphBinding binding;
         private ParagraphEntityModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable ViewHolderListener listener) {
+        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityModel> listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -194,7 +190,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                         return;
                     }
 
-                    listener.onClicked(data, binding.getRoot());
+                    listener.onClick(data, binding.getRoot());
                 });
             }
         }
