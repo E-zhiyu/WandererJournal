@@ -26,14 +26,14 @@ public class RoleAliasAdapter extends ListAdapter<String, RoleAliasAdapter.AliaV
         }
     };
 
-    public interface ViewHolderListener {
+    public interface OnChipCloseListener {
         void onCloseIconClicked(int position);
     }
 
     public static class AliaViewHolder extends RecyclerView.ViewHolder {
         ViewHolderChipTextBinding binding;
 
-        public AliaViewHolder(@NonNull ViewHolderChipTextBinding binding, ViewHolderListener listener) {
+        public AliaViewHolder(@NonNull ViewHolderChipTextBinding binding, OnChipCloseListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
