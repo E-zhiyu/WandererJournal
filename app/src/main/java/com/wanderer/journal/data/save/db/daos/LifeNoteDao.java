@@ -2,6 +2,7 @@ package com.wanderer.journal.data.save.db.daos;
 
 import androidx.annotation.NonNull;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -10,7 +11,6 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.LifeNoteWithHistoryModel;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,13 +45,22 @@ public interface LifeNoteDao {
     Flowable<List<LifeNoteEntity>> getAllLifeNoteFlowable(String safeKeyword, int filterSearch);
 
     /**
+     * 根据人生笔记 ID 获取修改历史记录
+     *
+     * @param noteId 人生笔记 ID
+     * @return 修改历史记录列表，支持响应式更新
+     */
+    @Query("SELECT * FROM lifeNoteHistories WHERE noteId = :noteId ORDER BY updateDateTime DESC")
+    Flowable<List<LifeNoteHistoryEntity>> getLifeNoteHistoryFlowableByNoteId(long noteId);
+
+    /**
      * 通过 ID 查询人生笔记
      *
      * @param id 需要获取的笔记的 ID
      * @return 人生笔记数据实体
      */
     @Query("SELECT * FROM lifeNotes WHERE noteId = :id")
-    Single<Optional<LifeNoteWithHistoryModel>> getLifeNoteOptionalSingleById(long id);
+    Single<Optional<LifeNoteEntity>> getLifeNoteOptionalSingleById(long id);
 
     /**
      * 通过 ID 查询人生笔记
@@ -107,4 +116,20 @@ public interface LifeNoteDao {
         //更新人生笔记
         updateLifeNote(newLifeNote);
     }
+
+    /**
+     * 删除人生笔记
+     *
+     * @param lifeNote 需要删除的人生笔记
+     */
+    @Delete
+    Completable deleteLifeNote(LifeNoteEntity lifeNote);
+
+    /**
+     * 删除人生笔记历史记录
+     *
+     * @param history 需要删除的历史记录
+     */
+    @Delete
+    Completable deleteLifeNoteHistory(LifeNoteHistoryEntity history);
 }
