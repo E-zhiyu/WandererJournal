@@ -1,11 +1,14 @@
 package com.wanderer.journal.ui.pages.life_note;
 
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -16,6 +19,7 @@ import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.data.save.db.services.LifeNoteService;
 import com.wanderer.journal.databinding.ActivityLifeNoteInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -125,23 +129,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
             long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
             LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
                     (entity, anchor) -> InfoShower.showLifeNoteHistory(this, entity),
-                    (entity, anchor) -> new MaterialAlertDialogBuilder(this)
-                            .setTitle("删除历史记录")
-                            .setMessage("确定要删除该历史记录吗？此操作无法撤销。")
-                            .setPositiveButton("确定", (dialogInterface, i) -> {
-                                DiaryDatabase db = DiaryDatabase.getInstance(this);
-                                disposable.add(db.lifeNoteDao().deleteLifeNoteHistory(entity)
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                () -> Toast.makeText(this, "历史记录已删除", Toast.LENGTH_SHORT).show(),
-                                                e -> ExceptionHelper.showExceptionDialog(this, e)
-                                        )
-                                );
-                            })
-                            .setNegativeButton("取消", null)
-                            .show()
-                    //TODO:应该显示PopupMenu而非直接显示删除对话框
+                    this::showEmotionTagPopupMenu
             );
             binding.historyRecycler.setAdapter(historyListAdapter);
             DiaryDatabase db = DiaryDatabase.getInstance(this);
@@ -154,6 +142,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                                 boolean isVisible = !historyList.isEmpty();
                                 VisibilityHelper.toggleVisibilityWithFade(binding.historyRecycler, isVisible);
                                 VisibilityHelper.toggleVisibilityWithFade(binding.modifyHistoryTitle, isVisible);
+                                VisibilityHelper.toggleVisibilityWithFade(binding.inputHistoryDivider, isVisible);
                             }
                     )
             );
@@ -220,5 +209,43 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                     )
             );
         }
+    }
+
+    /**
+     * 显示PopupMenu
+     *
+     * @param history 需要被操作的历史记录
+     * @param view    PopupMenu绑定的视图
+     */
+    private void showEmotionTagPopupMenu(LifeNoteHistoryEntity history, View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_life_note_history_edit, popupMenu.getMenu());
+
+        //设置监听
+        popupMenu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_delete_life_note_history) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("删除历史记录")
+                        .setMessage("确定要删除该历史记录吗？此操作无法撤销。")
+                        .setPositiveButton("确定", (dialogInterface, i) -> {
+                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            disposable.add(db.lifeNoteDao().deleteLifeNoteHistory(history)
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            () -> Toast.makeText(this, "历史记录已删除", Toast.LENGTH_SHORT).show(),
+                                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                                    )
+                            );
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+
+                return true;
+            }
+            return false;
+        });
+
+        popupMenu.show();
     }
 }

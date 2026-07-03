@@ -97,7 +97,7 @@ public class InfoShower {
         builder.append("\n\n");
 
         //显示对话框
-        MarkdownDialogBuilder dialogBuilder = new MarkdownDialogBuilder(context, "历史记录", builder.toString());
+        MarkdownDialogBuilder dialogBuilder = new MarkdownDialogBuilder(context, "修改历史", builder.toString());
         dialogBuilder
                 .setNegativeButton("关闭", null)
                 .show();
