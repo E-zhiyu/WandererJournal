@@ -149,6 +149,8 @@
     <string name="life_note">人生笔记</string>
     <string name="life_note_search_hint">搜索人生笔记……</string>
     <string name="no_life_note">无人生笔记</string>
+    <string name="life_note_insight">洞见</string>
+    <string name="life_note_elaboration">阐述</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

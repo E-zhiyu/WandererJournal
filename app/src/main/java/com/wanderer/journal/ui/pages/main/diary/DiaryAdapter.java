@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdapter.ViewHolderDiary> {
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final OnClickedListener clickListener;              //点击监听
     private final OnLongClickedListener longClickedListener;    //长按监听
     private static final DiffUtil.ItemCallback<DiaryWithSummaryUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -175,8 +176,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
 
         //日期
         LocalDate date = diaryWithSummaryUiModel.getDiary().getDiaryDate();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
-        holder.binding.dateText.setText(date.format(formatter));
+        holder.binding.dateText.setText(date.format(DATE_TIME_FORMATTER));
 
         //片段摘要
         String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();
