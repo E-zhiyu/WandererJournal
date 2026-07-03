@@ -70,6 +70,24 @@ public class LifeNoteInputActivity extends AppCompatActivity {
         //工具栏
         if (initBundle != null) {
             binding.toolbar.setTitle(R.string.modify_life_note);
+
+            //初始化输入框内容
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
+            disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            noteOptional -> {
+                                if (noteOptional.isEmpty()) return;
+
+                                LifeNoteEntity lifeNote = noteOptional.get();
+                                binding.insightInput.setText(lifeNote.getInsight());            //洞见
+                                binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
@@ -95,26 +113,6 @@ public class LifeNoteInputActivity extends AppCompatActivity {
 
             onConfirm();
         });
-
-        //初始化输入框内容
-        if (initBundle != null) {
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
-            disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            noteOptional -> {
-                                if (noteOptional.isEmpty()) return;
-
-                                LifeNoteEntity lifeNote = noteOptional.get();
-                                binding.insightInput.setText(lifeNote.getInsight());            //洞见
-                                binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
-                            },
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
-            );
-        }
     }
 
     /**
