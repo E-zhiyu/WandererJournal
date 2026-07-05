@@ -11,6 +11,7 @@ public class RolePojo {
     private String impression;
     private int relationship;
     private int useCount;
+    private long latestUseTime;
 
     public RolePojo() {
     }
@@ -70,5 +71,13 @@ public class RolePojo {
 
     public void setUseCount(int useCount) {
         this.useCount = useCount;
+    }
+
+    public long getLatestUseTime() {
+        return latestUseTime;
+    }
+
+    public void setLatestUseTime(long latestUseTime) {
+        this.latestUseTime = latestUseTime;
     }
 }

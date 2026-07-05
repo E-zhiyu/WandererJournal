@@ -9,7 +9,18 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.1\n" +
+    private final static String CHANGELOG = "# v1.5.2\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复部分列表元素变化后视图圆角不对的BUG\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 优化常用角色的显示逻辑，现在根据最后使用时间显示而非使用次数\n" +
+            "- 写日记界面收起键盘时段落列表会缓慢下降而不是瞬间下降\n" +
+            "\n" +
+            "# v1.5.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

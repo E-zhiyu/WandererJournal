@@ -46,16 +46,6 @@ public interface EntityPojoMapper {
         return DateTimeConverter.fromLocalDateTime(time);
     }
 
-    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "longToDate")
-    DiaryEntity toDiaryEntity(DiaryPojo pojo);
-
-    List<DiaryEntity> toDiaryEntityList(List<DiaryPojo> pojoList);
-
-    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "dateToLong")
-    DiaryPojo toDiaryPojo(DiaryEntity entity);
-
-    List<DiaryPojo> toDiaryPojoList(List<DiaryEntity> entityList);
-
     @Named("longToDate")
     default LocalDate longToDate(long timeMillis) {
         return DateTimeConverter.toLocalDate(timeMillis);
@@ -65,6 +55,26 @@ public interface EntityPojoMapper {
     default long dateToLong(LocalDate date) {
         return DateTimeConverter.fromLocalDate(date);
     }
+
+    @Named("strToUri")
+    default Uri strToUri(String string) {
+        return UriConverter.toUri(string);
+    }
+
+    @Named("uriToStr")
+    default String uriToStr(Uri uri) {
+        return UriConverter.fromUri(uri);
+    }
+
+    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "longToDate")
+    DiaryEntity toDiaryEntity(DiaryPojo pojo);
+
+    List<DiaryEntity> toDiaryEntityList(List<DiaryPojo> pojoList);
+
+    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "dateToLong")
+    DiaryPojo toDiaryPojo(DiaryEntity entity);
+
+    List<DiaryPojo> toDiaryPojoList(List<DiaryEntity> entityList);
 
     @Mapping(target = "createTime", source = "createTime", qualifiedByName = "longToTime")
     ParagraphEntity toParagraphEntity(ParagraphPojo pojo);
@@ -86,16 +96,6 @@ public interface EntityPojoMapper {
 
     List<MediaPojo> toMediaPojoList(List<MediaEntity> entityList);
 
-    @Named("strToUri")
-    default Uri strToUri(String string) {
-        return UriConverter.toUri(string);
-    }
-
-    @Named("uriToStr")
-    default String uriToStr(Uri uri) {
-        return UriConverter.fromUri(uri);
-    }
-
     EmotionTagEntity toEmotionTagEntity(EmotionTagPojo pojo);
 
     List<EmotionTagEntity> toEmotionTagEntityList(List<EmotionTagPojo> pojoList);
@@ -112,10 +112,12 @@ public interface EntityPojoMapper {
 
     List<EmotionParagraphRefPojo> toEmotionParagraphRefPojoList(List<EmotionParagraphRefEntity> entityList);
 
+    @Mapping(target = "latestUseTime", source = "latestUseTime", qualifiedByName = "longToTime")
     RoleEntity toRoleEntity(RolePojo pojo);
 
     List<RoleEntity> toRoleEntityList(List<RolePojo> pojoList);
 
+    @Mapping(target = "latestUseTime", source = "latestUseTime", qualifiedByName = "timeToLong")
     RolePojo toRolePojo(RoleEntity entity);
 
     List<RolePojo> toRolePojoList(List<RoleEntity> entityList);

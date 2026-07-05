@@ -143,7 +143,6 @@ public class WriteActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             //底部输入框卡片
@@ -152,15 +151,6 @@ public class WriteActivity extends AppCompatActivity {
                     AppearanceHelper.dpToPx(this, 10),
                     AppearanceHelper.dpToPx(this, 10),
                     systemBars.bottom
-            );
-
-            //内容 RecyclerView 额外增加5dp的底部内边距
-            int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-            binding.contentRecycler.setPadding(
-                    systemBars.left,
-                    0,
-                    systemBars.right,
-                    keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
             );
 
             return insets;
@@ -180,6 +170,12 @@ public class WriteActivity extends AppCompatActivity {
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
                 binding.bottomLayout.setTranslationY(-keyboardHeight);
+                binding.contentRecycler.setPadding(
+                        0,
+                        0,
+                        0,
+                        keyboardHeight+ AppearanceHelper.dpToPx(WriteActivity.this, 5)
+                );
                 binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
                 return insets;

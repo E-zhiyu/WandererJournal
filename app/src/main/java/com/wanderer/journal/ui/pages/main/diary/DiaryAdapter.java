@@ -57,28 +57,23 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
         registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                // 如果在顶部插入了数据，通知原先的第一项（现在的第 itemCount 项）更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(itemCount);
-                }
-
-                // 如果在末尾追加了数据，通知原先的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(positionStart - 1);
-                }
+                notifyItemChanged(positionStart - 1);           //更新前面的
+                notifyItemChanged(positionStart + itemCount);   //更新后面的
             }
 
             @Override
             public void onItemRangeRemoved(int positionStart, int itemCount) {
-                // 如果在顶部删除了数据，通知现在的第一项更新圆角
-                if (positionStart == 0 && getItemCount() > itemCount) {
-                    notifyItemChanged(0);
-                }
+                notifyItemChanged(positionStart - 1);   //更新前面的
+                notifyItemChanged(positionStart);               //更新后面的
+            }
 
-                // 如果在末尾删除了数据，通知现在的最后一项更新圆角
-                if (positionStart > 0) {
-                    notifyItemChanged(getItemCount() - 1);
-                }
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                notifyItemChanged(fromPosition - 1);    //更新前面的
+                notifyItemChanged(fromPosition);                //更新后面的
+
+                notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition + 1);      //更新后面的
             }
         });
     }
