@@ -3,6 +3,7 @@ package com.wanderer.journal.helpers.appearance;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +31,7 @@ public class ScrollHelper {
             int targetPosition,
             int distanceThresholder,
             int offset,
-            RecyclerViewScrollListener listener
+            @Nullable RecyclerViewScrollListener listener
     ) {
         //判断布局管理器
         if (layoutManager == null) {
@@ -55,22 +56,18 @@ public class ScrollHelper {
         }
 
         //获取可见位置并比较
-        int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
-        int lastVisiblePos = layoutManager.findLastVisibleItemPosition();
+        int firstCompletePos = layoutManager.findFirstCompletelyVisibleItemPosition();
+        int lastCompletePos = layoutManager.findLastCompletelyVisibleItemPosition();
+        int firstVisiblePos = firstCompletePos == RecyclerView.NO_POSITION ?
+                layoutManager.findFirstVisibleItemPosition() :
+                firstCompletePos;
+        int lastVisiblePos = lastCompletePos == RecyclerView.NO_POSITION ?
+                layoutManager.findLastVisibleItemPosition() :
+                lastCompletePos;
         if (firstVisiblePos == RecyclerView.NO_POSITION || lastVisiblePos == RecyclerView.NO_POSITION) {
             //处理没有可见视图的情况
             if (listener != null) {
                 listener.onFailed("没有可见视图");
-            }
-            return;
-        } else if (targetPosition >= firstVisiblePos && targetPosition <= lastVisiblePos) {
-            //处理不需要滚动的情况
-            RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForAdapterPosition(targetPosition);
-            if (viewHolder != null) {
-                AnimationHelper.blink(viewHolder.itemView);
-            }
-            if (listener != null) {
-                listener.onSucceed();
             }
             return;
         }
@@ -231,8 +228,6 @@ public class ScrollHelper {
                         recyclerView.postDelayed(new Runnable() {
                             private int failCount = 0;
                             private boolean scrollBottomOrTop = true;   //true:下次滚动到底部，false:下次滚动到顶部
-                            private int retryTopCount = 0;      //重试滚动到顶部次数
-                            private int retryBottomCount = 0;   //重试滚动到底部次数
 
                             @Override
                             public void run() {
@@ -247,12 +242,9 @@ public class ScrollHelper {
                                 //计算下次重试的滚动位置
                                 int nextRetryPosition;
                                 if (scrollBottomOrTop) {
-                                    int bottom = adapter.getItemCount() - 1;
-                                    nextRetryPosition = bottom - (bottom - targetPosition) * retryBottomCount / maxRetryCount;
-                                    retryBottomCount++;
+                                    nextRetryPosition = adapter.getItemCount() - 1;
                                 } else {
-                                    nextRetryPosition = targetPosition * retryTopCount / maxRetryCount;
-                                    retryTopCount++;
+                                    nextRetryPosition = 0;
                                 }
 
                                 if (object != null) {

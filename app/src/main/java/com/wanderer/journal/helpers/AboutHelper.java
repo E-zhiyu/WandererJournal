@@ -9,7 +9,13 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.0\n" +
+    private final static String CHANGELOG = "# v1.5.1\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 优化列表滚动逻辑，现在滚动列表时永远会尝试将目标视图滚动到顶部\n" +
+            "\n" +
+            "# v1.5.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +
