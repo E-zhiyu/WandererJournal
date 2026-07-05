@@ -97,6 +97,7 @@ public interface ParagraphDao {
     /**
      * 使用 RawQuery 动态计算匹配搜索的段落位置
      * * @param query 支持响应式更新的 SupportSQLiteQuery
+     *
      * @return 包含所有匹配位置的列表，支持 Flowable 响应式
      */
     @RawQuery(observedEntities = {ParagraphEntity.class, DiaryEntity.class})
@@ -134,7 +135,7 @@ public interface ParagraphDao {
                     "LIMIT 1" +
                     "), 0)"
     )
-    Single<Integer> getMaxDiaryLengthSingle();
+    Flowable<Integer> getMaxDiaryLengthFlowable();
 
     /**
      * 查询平均日记长度
@@ -148,7 +149,24 @@ public interface ParagraphDao {
                     "GROUP BY parentDiaryId" +
                     ")"
     )
-    Single<Integer> getAverageDiaryLengthSingle();
+    Flowable<Integer> getAverageDiaryLengthFlowable();
+
+    /**
+     * 获取某段时间的平均日记长度
+     *
+     * @param start 起始时间（包含）
+     * @param end   结束时间（不包含）
+     * @return 该时间段内的平均日记长度
+     */
+    @Query(
+            "SELECT COALESCE(AVG(length), 0) FROM (" +
+                    "SELECT TOTAL(LENGTH(content)) AS length " +
+                    "FROM paragraphs " +
+                    "WHERE createTime >= :start AND createTime < :end " +
+                    "GROUP BY parentDiaryId" +
+                    ")"
+    )
+    Single<Integer> getAverageDiaryLengthSingleInTimeRange(LocalDateTime start, LocalDateTime end);
 
     /**
      * 插入一条日记段落

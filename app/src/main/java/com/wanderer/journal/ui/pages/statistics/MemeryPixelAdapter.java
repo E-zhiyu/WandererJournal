@@ -16,7 +16,6 @@ import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
 import com.wanderer.journal.databinding.ViewHolderMemeryPixelBinding;
 
 public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
-    private final int maxDiaryLength;   //最大日记长度
     private final int avgDiaryLength;   //平均日记长度
     private final AdapterOnClickListener<DiaryLengthModel> clickListener;
     private final static DiffUtil.ItemCallback<DiaryLengthModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -34,11 +33,9 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
     /**
      * 记忆像素适配器构造方法
      *
-     * @param maxDiaryLength 最大日记字符数量
      */
-    public MemeryPixelAdapter(int maxDiaryLength, int avgDiaryLength, AdapterOnClickListener<DiaryLengthModel> clickListener) {
+    public MemeryPixelAdapter(int avgDiaryLength, AdapterOnClickListener<DiaryLengthModel> clickListener) {
         super(ITEM_CALLBACK);
-        this.maxDiaryLength = maxDiaryLength;
         this.avgDiaryLength = avgDiaryLength;
         this.clickListener = clickListener;
     }
@@ -94,7 +91,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
 
         //生成等级分隔符
         int lv1 = avgDiaryLength / 2;
-        int lv3 = (avgDiaryLength + maxDiaryLength) / 2;
+        int lv3 = avgDiaryLength + avgDiaryLength /2;
 
         //根据内容多少分配颜色
         int diaryLength = model.getDiaryLength();
