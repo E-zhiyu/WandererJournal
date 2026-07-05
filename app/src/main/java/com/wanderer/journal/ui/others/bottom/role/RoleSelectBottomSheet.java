@@ -119,7 +119,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
             //添加角色使用次数
             DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-            disposable.add(db.roleDao().addRoleUseCount(role.getRoleId())
+            disposable.add(db.roleDao().updateRoleUseData(role.getRoleId())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
@@ -141,7 +141,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 (role, anchor) -> viewModel.setSelectedRole(role),
                 (role, anchor) -> {
                     DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
-                    disposable.add(db.roleDao().clearRoleUseCount(role.getRoleId())
+                    disposable.add(db.roleDao().clearRoleLatestUseTime(role.getRoleId())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
