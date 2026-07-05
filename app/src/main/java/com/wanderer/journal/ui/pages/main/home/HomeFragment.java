@@ -6,6 +6,10 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.transition.ChangeBounds;
+import androidx.transition.TransitionManager;
+import androidx.transition.TransitionSet;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -338,6 +342,14 @@ public class HomeFragment extends Fragment {
             randomNum = -randomNum;
         }
         int tipIndex = randomNum % tipsList.size();
+
+        //设置高度变化的动画
+        TransitionSet set = new TransitionSet()
+                .setOrdering(TransitionSet.ORDERING_TOGETHER)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .addTransition(new ChangeBounds())
+                .setDuration(250);
+        TransitionManager.beginDelayedTransition(binding.scrollViewLayout, set);
 
         //显示对应的文本
         String tip = "tip : " + tipsList.get(tipIndex);

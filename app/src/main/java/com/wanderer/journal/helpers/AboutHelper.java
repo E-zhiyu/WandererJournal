@@ -9,7 +9,19 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.0\n" +
+    private final static String CHANGELOG = "# v1.5.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复人生笔记列表项圆角大小不对的BUG\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 主页的随机提示文本点击后会有平滑动画效果\n" +
+            "- 优化列表滚动逻辑，现在滚动列表时永远会尝试将目标视图滚动到顶部\n" +
+            "- 修改文本输入对话框的清空按钮的样式\n" +
+            "\n" +
+            "# v1.5.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

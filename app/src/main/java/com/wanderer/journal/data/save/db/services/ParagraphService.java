@@ -103,11 +103,11 @@ public class ParagraphService {
      * @param db 数据库实例
      * @return 包含日记长度等数据的实例
      */
-    public static Single<DiaryLength> getDiaryLengthData(@NonNull DiaryDatabase db) {
+    public static Flowable<DiaryLength> getDiaryLengthData(@NonNull DiaryDatabase db) {
         ParagraphDao paragraphDao = db.paragraphDao();
-        return Single.zip(
-                paragraphDao.getMaxDiaryLengthSingle(),
-                paragraphDao.getAverageDiaryLengthSingle(),
+        return Flowable.zip(
+                paragraphDao.getMaxDiaryLengthFlowable(),
+                paragraphDao.getAverageDiaryLengthFlowable(),
                 DiaryLength::new
         );
     }

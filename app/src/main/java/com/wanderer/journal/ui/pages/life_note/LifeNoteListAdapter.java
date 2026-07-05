@@ -133,5 +133,8 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
 
         //时间
         holder.binding.dateTimeText.setText(entity.getDateTime().format(DATE_TIME_FORMATTER));
+
+        //设置圆角
+        AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), holder.getBindingAdapterPosition());
     }
 }

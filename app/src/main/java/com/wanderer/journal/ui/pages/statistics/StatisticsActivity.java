@@ -38,6 +38,7 @@ import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
 import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
@@ -119,7 +120,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 )
         );
 
-        //最大段落字符数量
+        //最大和平均段落字符数量
         DiaryDatabase db = DiaryDatabase.getInstance(this);
         AppearanceHelper.setRadius(
                 this,
@@ -149,9 +150,19 @@ public class StatisticsActivity extends AppCompatActivity {
                             String avgStr = avg + "字";
                             binding.maxCharacterCountText.setText(maxStr);
                             binding.averageCharacterCountText.setText(avgStr);
-
-                            initMemeryPixelRecycler(max, avg);
                         },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+
+        //记忆像素
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime lastYear = now.plusYears(-1);
+        disposable.add(db.paragraphDao().getAverageDiaryLengthSingleInTimeRange(lastYear, now)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        this::initMemeryPixelRecycler,
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
@@ -219,10 +230,9 @@ public class StatisticsActivity extends AppCompatActivity {
     /**
      * 初始化记忆像素
      *
-     * @param maxDiaryLength 最大日记长度
-     * @param avgDiaryLength 平均日记长度
+     * @param avgDiaryLength 平均日记长度，作为长度分级的依据
      */
-    private void initMemeryPixelRecycler(int maxDiaryLength, int avgDiaryLength) {
+    private void initMemeryPixelRecycler(int avgDiaryLength) {
         //实例化一个7行的网格布局并应用于Recycler
         GridLayoutManager layoutManager = new GridLayoutManager(
                 this,
@@ -233,7 +243,6 @@ public class StatisticsActivity extends AppCompatActivity {
         binding.memeryPixelRecycler.setLayoutManager(layoutManager);
 
         MemeryPixelAdapter adapter = new MemeryPixelAdapter(
-                maxDiaryLength,
                 avgDiaryLength,
                 (model, view) -> {
                     if (model == null) {
@@ -304,7 +313,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        modelList -> {
+                            modelList -> {
                             adapter.submitList(modelList, () ->
                                     layoutManager.scrollToPositionWithOffset(adapter.getItemCount() - 1, 0)
                             );
