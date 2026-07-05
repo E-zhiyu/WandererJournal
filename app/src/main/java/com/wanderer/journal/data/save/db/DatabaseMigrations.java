@@ -72,4 +72,13 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_lifeNoteHistories_updateDateTime` ON `lifeNoteHistories` (`updateDateTime`)");
         }
     };
+
+    //角色添加最后使用时间字段
+    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE roles ADD COLUMN latestUseTime INTEGER DEFAULT 0");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_latestUseTime` ON `roles` (`latestUseTime`)");
+        }
+    };
 }
