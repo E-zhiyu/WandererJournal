@@ -96,8 +96,8 @@ public interface ParagraphDao {
 
     /**
      * 使用 RawQuery 动态计算匹配搜索的段落位置
-     * * @param query 支持响应式更新的 SupportSQLiteQuery
      *
+     * @param query 支持响应式更新的 SupportSQLiteQuery
      * @return 包含所有匹配位置的列表，支持 Flowable 响应式
      */
     @RawQuery(observedEntities = {ParagraphEntity.class, DiaryEntity.class})
