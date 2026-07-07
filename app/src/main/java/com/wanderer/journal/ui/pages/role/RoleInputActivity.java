@@ -136,11 +136,11 @@ public class RoleInputActivity extends AppCompatActivity {
         //显示名称
         binding.displayNameInput.setOnFocusChangeListener((view, b) -> {
             if (b) {
-                binding.nameLayout.setError(null);
+                binding.displayNameLayout.setError(null);
             } else {
-                String input = String.valueOf(binding.nameInput.getText());
+                String input = String.valueOf(binding.displayNameInput.getText());
                 if (input.contains("[") || input.contains("]")) {
-                    binding.nameLayout.setError("名称不能包含英文中括号");
+                    binding.displayNameLayout.setError("显示名称不能包含英文中括号");
                 }
             }
         });
