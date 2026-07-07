@@ -9,7 +9,14 @@ import androidx.annotation.NonNull;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.2\n" +
+    private final static String CHANGELOG = "# v1.5.3\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复上个版本添加角色会失败的BUG\n" +
+            "- 修复角色输入界面点击显示名称输入框会清空名称输入框的错误提示的BUG\n" +
+            "\n" +
+            "# v1.5.2\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

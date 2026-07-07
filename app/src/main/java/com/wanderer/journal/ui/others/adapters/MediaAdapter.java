@@ -39,7 +39,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         }
     };
 
-    public class MediaViewHolder extends RecyclerView.ViewHolder {
+    public static class MediaViewHolder extends RecyclerView.ViewHolder {
         ViewHolderMediaBinding binding;
         private final SpringAnimation scaleXAnim;           //X轴缩放动画
         private final SpringAnimation scaleYAnim;           //Y轴缩放动画
@@ -114,9 +114,15 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                 @Override
                 public Long getSelectionKey() {
                     int pos = getBindingAdapterPosition();
-                    // 必须严格过滤 NO_POSITION
-                    return (pos != RecyclerView.NO_POSITION && pos < getItemCount()) ?
-                            media.getItemId() : null;
+
+                    if (getBindingAdapter() instanceof MediaAdapter) {
+                        // 必须严格过滤 NO_POSITION
+                        return (pos != RecyclerView.NO_POSITION && pos < getBindingAdapter().getItemCount()) ?
+                                media.getItemId() :
+                                null;
+                    } else {
+                        return null;
+                    }
                 }
             };
         }
