@@ -174,7 +174,7 @@ public class WriteActivity extends AppCompatActivity {
                         0,
                         0,
                         0,
-                        keyboardHeight+ AppearanceHelper.dpToPx(WriteActivity.this, 5)
+                        keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
                 );
                 binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
 
@@ -1132,7 +1132,13 @@ public class WriteActivity extends AppCompatActivity {
                             //修改滚动位置标识符
                             scrollPosition.set(position);
                         },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                        e -> {
+                            //失败则删除刚刚复制的媒体文件
+                            for (Uri uri : newMediaList) {
+                                FileHelper.deleteFile(uri, this);
+                            }
+                            ExceptionHelper.showExceptionDialog(this, e);
+                        }
                 )
         );
     }
