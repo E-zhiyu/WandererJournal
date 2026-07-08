@@ -25,7 +25,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.databinding.ActivityMediaBinding;
+import com.wanderer.journal.databinding.ActivityFullScreenMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -43,14 +43,14 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class FullScreenMediaActivity extends AppCompatActivity {
-    private ActivityMediaBinding binding;   //绑定的 XML 布局
+    private ActivityFullScreenMediaBinding binding;   //绑定的 XML 布局
     private Bundle initBundle = null;       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityMediaBinding.inflate(getLayoutInflater());
+        binding = ActivityFullScreenMediaBinding.inflate(getLayoutInflater());
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
