@@ -166,18 +166,15 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                                 binding.commonRoleTitle.setVisibility(View.GONE);
                                 VisibilityHelper.toggleViewExpansion(
                                         binding.getRoot(),
-                                        binding.commonRoleRecycler,
                                         false,
-                                        Gravity.TOP,
-                                        () -> commonRoleAdapter.submitList(roleList)
+                                        () -> commonRoleAdapter.submitList(roleList),
+                                        binding.commonRoleRecycler
                                 );
                             } else {
                                 binding.commonRoleTitle.setVisibility(View.VISIBLE);
                                 VisibilityHelper.toggleViewExpansion(
                                         binding.getRoot(),
-                                        binding.commonRoleRecycler,
                                         true,
-                                        Gravity.TOP,
                                         () -> {
                                             commonRoleAdapter.submitList(roleList);
                                             TipPreference.showTip(
@@ -187,7 +184,8 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
                                                     TipPreference.KEY_CLEAR_ROLE_USE_COUNT,
                                                     1
                                             );
-                                        }
+                                        },
+                                        binding.commonRoleRecycler
                                 );
                             }
                         },

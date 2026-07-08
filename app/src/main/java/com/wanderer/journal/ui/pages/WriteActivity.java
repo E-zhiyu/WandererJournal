@@ -1287,7 +1287,12 @@ public class WriteActivity extends AppCompatActivity {
 
         //执行状态改变
         if (isEditMode) {
-            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, true, Gravity.BOTTOM, null);
+            VisibilityHelper.toggleViewExpansion(
+                    binding.bottomLayout,
+                    true,
+                    null,
+                    binding.contentEditCard
+            );
             this.modifyingParagraph = modifyingParagraph;
             CharSequence richText = TextHelper.hierarchicFromString(
                     this,
@@ -1306,7 +1311,12 @@ public class WriteActivity extends AppCompatActivity {
             //自动显示输入法
             ImmHelper.showImm(binding.contentTextInput);
         } else {
-            VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.contentEditCard, false, Gravity.BOTTOM, null);
+            VisibilityHelper.toggleViewExpansion(
+                    binding.bottomLayout,
+                    false,
+                    null,
+                    binding.contentEditCard
+            );
             this.modifyingParagraph = null;
             binding.contentTextInput.setText(null);         //清空输入框
         }
@@ -1340,7 +1350,12 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         //切换视图可见性
-        VisibilityHelper.toggleViewExpansion(binding.bottomLayout, binding.mediaCard, isVisible, Gravity.BOTTOM, null);
+        VisibilityHelper.toggleViewExpansion(
+                binding.bottomLayout,
+                isVisible,
+                null,
+                binding.mediaCard
+        );
     }
 
     /**

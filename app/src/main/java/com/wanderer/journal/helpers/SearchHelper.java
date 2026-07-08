@@ -1,7 +1,6 @@
 package com.wanderer.journal.helpers;
 
 import android.content.Context;
-import android.view.Gravity;
 import android.view.inputmethod.EditorInfo;
 
 import androidx.annotation.NonNull;
@@ -56,10 +55,9 @@ public class SearchHelper {
                     boolean isVisible = !keywordList.isEmpty();
                     VisibilityHelper.toggleViewExpansion(
                             searchView,
-                            searchHistoryRecyclerView,
                             isVisible,
-                            Gravity.TOP,
-                            () -> adapter.submitList(new ArrayList<>(keywordList))
+                            () -> adapter.submitList(new ArrayList<>(keywordList)),
+                            searchHistoryRecyclerView
                     );
                 }
         );
@@ -78,10 +76,9 @@ public class SearchHelper {
             );
             VisibilityHelper.toggleViewExpansion(
                     searchView,
-                    searchHistoryRecyclerView,
                     false,
-                    Gravity.TOP,
-                    () -> historyAdapter.submitList(new ArrayList<>())
+                    () -> historyAdapter.submitList(new ArrayList<>()),
+                    searchHistoryRecyclerView
             );
         });
 

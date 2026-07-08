@@ -985,9 +985,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
             VisibilityHelper.toggleViewExpansion(
                     binding.getRoot(),
-                    binding.emotionTagInAppbarRecycler,
                     true,
-                    Gravity.TOP,
                     250,
                     () -> {
                         EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
@@ -999,16 +997,16 @@ public class DiaryReadActivity extends AppCompatActivity {
                                         e -> ExceptionHelper.showExceptionDialog(this, e)
                                 )
                         );
-                    }
+                    },
+                    binding.emotionTagInAppbarRecycler
             );
         } else {
             VisibilityHelper.toggleViewExpansion(
                     binding.getRoot(),
-                    binding.emotionTagInAppbarRecycler,
                     false,
-                    Gravity.TOP,
                     250,
-                    () -> appbarEmotionAdapter.submitList(new ArrayList<>())
+                    () -> appbarEmotionAdapter.submitList(new ArrayList<>()),
+                    binding.emotionTagInAppbarRecycler
             );
         }
     }
