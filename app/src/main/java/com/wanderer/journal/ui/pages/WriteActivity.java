@@ -125,7 +125,6 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private Uri cameraFileUri = null;                       //相机拍照得到的临时图片 File 类型的 Uri
     private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
@@ -853,12 +852,15 @@ public class WriteActivity extends AppCompatActivity {
                 new ActivityResultContracts.TakePicture(),
                 result -> {
                     if (result) {
-                        onCameraPictureUriReceived(cameraFileUri);
+                        MediaAddOptionViewModel viewModel = new ViewModelProvider(this)
+                                .get(MediaAddOptionViewModel.class);
+                        onCameraPictureUriReceived(viewModel.getCameraFileUri());
                     } else {
                         Toast.makeText(this, "拍照已取消", Toast.LENGTH_SHORT).show();
 
                         //删除刚刚创建的照片文件
-                        FileHelper.deleteFile(cameraFileUri, this);
+                        MediaAddOptionViewModel viewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
+                        FileHelper.deleteFile(viewModel.getCameraFileUri(), this);
                     }
                 }
         );
@@ -977,7 +979,8 @@ public class WriteActivity extends AppCompatActivity {
                     ".jpg",
                     DirectoryPaths.MEDIA_TEMP.getDir(this)
             );
-            cameraFileUri = Uri.fromFile(photoFile);    //保存 File 类型的 Uri
+            MediaAddOptionViewModel viewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
+            viewModel.setCameraFileUri(Uri.fromFile(photoFile));    //保存 File 类型的 Uri
 
             //通过 FileProvider 获取 Content URI
             Uri contentUri = FileProvider.getUriForFile(
