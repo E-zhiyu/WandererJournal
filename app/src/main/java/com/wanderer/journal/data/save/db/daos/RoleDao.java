@@ -187,6 +187,8 @@ public interface RoleDao {
         String oldDisplayName = oldRole.getDisplayName();
 
         //更新角色
+        role.setLatestUseTime(oldRole.getLatestUseTime());
+        role.setUseCount(oldRole.getUseCount());
         updateRole(role);
 
         //先删除旧的别名
