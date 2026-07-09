@@ -77,7 +77,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
         AppearanceHelper.attachMorphAnimation(binding.addFab);
 
         //情绪标签列表
-        EmotionTagAdapter adapter = new EmotionTagAdapter(
+        EmotionTagListAdapter adapter = new EmotionTagListAdapter(
                 (emotionTag, anchor) -> {
                     Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
                     Bundle bundle = new Bundle();
