@@ -5,15 +5,13 @@
     android:layout_height="wrap_content"
     android:clipToPadding="false"
     android:minHeight="200dp"
-    android:orientation="vertical"
     android:paddingTop="10dp">
 
     <com.google.android.material.bottomsheet.BottomSheetDragHandleView
         android:id="@+id/drag_handle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 标题文本 -->
     <com.google.android.material.textview.MaterialTextView

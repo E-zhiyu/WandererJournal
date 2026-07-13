@@ -85,7 +85,6 @@
         android:id="@+id/group_pager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/role_group_tab_layout" />
 </androidx.constraintlayout.widget.ConstraintLayout>
