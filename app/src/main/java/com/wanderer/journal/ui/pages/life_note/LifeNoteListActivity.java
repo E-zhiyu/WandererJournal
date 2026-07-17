@@ -34,7 +34,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class LifeNoteListActivity extends AppCompatActivity {
-    private ActivityLifeNoteListBinding binding;   //绑定的 XML 布局
+    private ActivityLifeNoteListBinding binding;    //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();
     private BackPressedCallbackHelper backHelper;   //返回手势拦截器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;    //搜索返回处理器
@@ -54,6 +54,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
 
         initBackHandlers();
         initViews();
+        observeLiveData();
     }
 
     @Override
@@ -81,9 +82,8 @@ public class LifeNoteListActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setSearchMode(false);
                 LifeNoteListViewModel viewModel = new ViewModelProvider(LifeNoteListActivity.this).get(LifeNoteListViewModel.class);
-                viewModel.executeSearch("");
+                viewModel.clearFilter();
                 return true;
             }
 
@@ -92,6 +92,16 @@ public class LifeNoteListActivity extends AppCompatActivity {
                 return 1;
             }
         };
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        LifeNoteListViewModel listViewModel = new ViewModelProvider(this).get(LifeNoteListViewModel.class);
+        listViewModel.getFilterUpdatedLiveData().observe(this, v ->
+                setSearchMode(!listViewModel.isNoFilter())
+        );
     }
 
     /**
@@ -157,9 +167,6 @@ public class LifeNoteListActivity extends AppCompatActivity {
                 keyword -> {
                     LifeNoteListViewModel viewModel = new ViewModelProvider(this).get(LifeNoteListViewModel.class);
                     viewModel.executeSearch(keyword);
-
-                    //根据搜索关键词是否为空开启和关闭搜索模式
-                    setSearchMode(!keyword.isEmpty());
                 },
                 null
         );
