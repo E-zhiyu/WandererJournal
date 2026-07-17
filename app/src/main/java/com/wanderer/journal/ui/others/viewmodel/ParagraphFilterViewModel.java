@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.others.viewmodel;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
@@ -18,28 +17,38 @@ import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphFilterViewModel extends ViewModel {
+    private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
+    private final BehaviorProcessor<String> searchKeywordProcessor =
+            BehaviorProcessor.createDefault("");    //搜索关键词处理器（包含空格）
+    private final BehaviorProcessor<Boolean> filterUpdateProcessor =
+            BehaviorProcessor.createDefault(true);
+    private final BehaviorProcessor<Boolean> keywordModeProcessor =
+            BehaviorProcessor.createDefault(true);  //多词搜索是否为“与”模式处理器
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
-    private String searchText = "";
-    private final MutableLiveData<Boolean> needExecuteSearch = new MutableLiveData<>(false);  //是否需要进行搜索
-    private final MutableLiveData<List<Integer>> matchedPositions = new MutableLiveData<>(null);    //匹配搜索的位置列表
-    private final MutableLiveData<Integer> currentMatchIndex = new MutableLiveData<>(-1);           //当前所在的匹配搜索位置的下标
 
-    public MutableLiveData<Integer> getCurrentMatchIndex() {
-        return currentMatchIndex;
-    }
+    private static class FilterQuery {
+        final boolean isAndMode;    //多词搜索是否为“与”模式
+        final String keyword;       //搜索关键词（包含空格）
 
-    public MutableLiveData<List<Integer>> getMatchedPositions() {
-        return matchedPositions;
+        public FilterQuery(boolean isAndMode, String keyword) {
+            this.isAndMode = isAndMode;
+            this.keyword = keyword;
+        }
     }
 
     public Boolean getFilterMedia() {
@@ -54,20 +63,20 @@ public class ParagraphFilterViewModel extends ViewModel {
         this.filterMedia = filterMedia;
     }
 
-    public String getSearchText() {
-        return searchText;
+    public boolean isAndMode() {
+        Boolean isAndMode = keywordModeProcessor.getValue();
+        return isAndMode == null || isAndMode;
     }
 
-    public void setSearchText(String searchText) {
-        this.searchText = searchText;
+    public List<String> getValidKeywordList() {
+        String[] words = searchKeywordProcessor.getValue().split("\\s+"); // 按空格拆分
+        return Arrays.stream(words)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
-    public MutableLiveData<Boolean> getNeedExecuteSearch() {
-        return needExecuteSearch;
-    }
-
-    public void setNeedExecuteSearch(boolean needExecuteSearch) {
-        this.needExecuteSearch.setValue(needExecuteSearch);
+    public MutableLiveData<Void> getFilterUpdatedLiveData() {
+        return filterUpdatedLiveData;
     }
 
     /**
@@ -180,87 +189,59 @@ public class ParagraphFilterViewModel extends ViewModel {
     }
 
     /**
-     * 清空搜索
-     */
-    private void clearSearch() {
-        matchedPositions.postValue(null);
-        currentMatchIndex.postValue(-1);
-    }
-
-    /**
-     * 执行搜索逻辑
+     * 获取符合过滤条件的段落的位置
      *
-     * @param keywordList 搜索的关键词列表
-     * @param db          数据库实例
-     * @param isAndMode   多词搜索模式是否为“与”模式
-     * @return 从数据库中获取符合搜索条件的下标
+     * @param db 数据库实例
+     * @return 从数据库中获取符合过滤条件的段落下标
      */
-    public Flowable<List<Integer>> executeSearch(
-            @Nullable List<String> keywordList,
-            DiaryDatabase db,
-            boolean isAndMode
-    ) {
-        //判断是否没有过滤选项
-        if (!isHasFilter()) {
-            return Flowable.empty();
-        }
-
-        //清空上次的搜索结果，重置 matchedPositions 和 currentMatchIndex
-        clearSearch();
-
-        // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
-        return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
-                        keywordList,
-                        checkedEmotionIdSet,
-                        filterMedia,
-                        db,
-                        isAndMode
+    public Flowable<List<Integer>> getFilteredParagraphPosition(DiaryDatabase db) {
+        return Flowable.combineLatest(
+                        searchKeywordProcessor,
+                        filterUpdateProcessor,
+                        keywordModeProcessor.debounce(50, TimeUnit.MILLISECONDS),
+                        (keyword, b, isAndMode) -> new FilterQuery(isAndMode, keyword)
                 )
-                .doOnNext(positionList -> {
-                    // 每次收到新数据时更新 UI 状态
-                    matchedPositions.postValue(positionList);
-
-                    Integer currentIndex = currentMatchIndex.getValue();
-                    if (!positionList.isEmpty()) {
-                        if (currentIndex != null && currentIndex == -1) {
-                            currentMatchIndex.postValue(positionList.size() - 1);
-                        }
-                    } else {
-                        currentMatchIndex.postValue(-1);
+                .switchMap(filterQuery -> {
+                    //判断是否没有过滤选项
+                    if (isNoFilter()) {
+                        return Flowable.just(new ArrayList<>());
                     }
+
+                    // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
+                    return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
+                            getValidKeywordList(),
+                            checkedEmotionIdSet,
+                            filterMedia,
+                            db,
+                            filterQuery.isAndMode
+                    );
                 });
     }
 
     /**
-     * 跳转至下一个搜索匹配项
+     * 执行一次搜索
+     *
+     * @param keyword 搜索文本
      */
-    public void jumpToNext() {
-        List<Integer> positions = matchedPositions.getValue();
-        Integer currentIndex = currentMatchIndex.getValue();
-        if (positions != null && !positions.isEmpty() && currentIndex != null) {
-            int nextIndex = currentIndex == -1 ?
-                    0 :
-                    (currentIndex + 1) % positions.size(); // 循环滚动
-            currentMatchIndex.postValue(nextIndex);
-        } else {
-            currentMatchIndex.postValue(-1);
-        }
+    public void executeSearch(String keyword) {
+        searchKeywordProcessor.onNext(keyword);
+        filterUpdatedLiveData.setValue(null);
     }
 
     /**
-     * 跳转至上一个搜索匹配项
+     * 提醒过滤条件已更新
      */
-    public void jumpToPrevious() {
-        List<Integer> positions = matchedPositions.getValue();
-        Integer currentIndex = currentMatchIndex.getValue();
-        if (positions != null && !positions.isEmpty() && currentIndex != null) {
-            int prevIndex = currentIndex == -1 ?
-                    positions.size() - 1 :
-                    (currentIndex - 1 + positions.size()) % positions.size();
-            currentMatchIndex.postValue(prevIndex);
-        } else {
-            currentMatchIndex.postValue(-1);
-        }
+    public void notifyFilterUpdated() {
+        filterUpdateProcessor.onNext(true);
+        filterUpdatedLiveData.setValue(null);
+    }
+
+    /**
+     * 切换多词搜索模式
+     */
+    public void toggleKeywordMode() {
+        keywordModeProcessor.onNext(!isAndMode());
+        filterUpdatedLiveData.setValue(null);
     }
 
     /**
@@ -268,8 +249,11 @@ public class ParagraphFilterViewModel extends ViewModel {
      *
      * @return 是否有过滤条件
      */
-    public boolean isHasFilter() {
-        return !checkedEmotionIdSet.isEmpty() || filterMedia || !searchText.isEmpty();
+    public boolean isNoFilter() {
+        String searchText = searchKeywordProcessor.getValue();
+        return checkedEmotionIdSet.isEmpty() &&
+                !filterMedia &&
+                (searchText == null || searchText.isEmpty());
     }
 
     /**
@@ -278,6 +262,8 @@ public class ParagraphFilterViewModel extends ViewModel {
     public void clearFilter() {
         filterMedia = false;
         checkedEmotionIdSet.clear();
-        searchText = "";
+        searchKeywordProcessor.onNext("");
+
+        filterUpdatedLiveData.setValue(null);
     }
 }
