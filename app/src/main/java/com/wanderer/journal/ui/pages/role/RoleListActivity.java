@@ -62,6 +62,7 @@ public class RoleListActivity extends AppCompatActivity {
 
         initViews();
         initBackHandlers();
+        observeLiveData();
 
         binding.getRoot().postDelayed(this::initGuide, 250);
     }
@@ -110,9 +111,8 @@ public class RoleListActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setSearchMode(false);
                 RoleListViewModel viewModel = new ViewModelProvider(RoleListActivity.this).get(RoleListViewModel.class);
-                viewModel.executeSearch("");
+                viewModel.clearFilter();
                 return true;
             }
 
@@ -121,6 +121,16 @@ public class RoleListActivity extends AppCompatActivity {
                 return 1;
             }
         };
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        RoleListViewModel roleListViewModel = new ViewModelProvider(RoleListActivity.this).get(RoleListViewModel.class);
+        roleListViewModel.getFilterUpdatedLiveData().observe(this, v ->
+                setSearchMode(!roleListViewModel.isNoFilter())
+        );
     }
 
     /**
