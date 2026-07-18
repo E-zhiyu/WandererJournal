@@ -25,12 +25,12 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
 
     @Override
     protected DiaryDataMap getAllDataInMap() {
-        return db.dataBackupDao().exportAllDiaryData();
+        return db.dataBackupDao().exportDiaryData();
     }
 
     @Override
     protected void saveDataInMapToDb(@NonNull DiaryDataMap map) {
-        db.dataBackupDao().importAllDiaryData(map);
+        db.dataBackupDao().importDiaryData(map);
     }
 
     @Override

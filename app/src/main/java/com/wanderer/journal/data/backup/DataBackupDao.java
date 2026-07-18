@@ -38,26 +38,26 @@ public interface DataBackupDao {
      * @return 日记数据集合
      */
     @Transaction
-    default DiaryDataMap exportAllDiaryData() {
+    default DiaryDataMap exportDiaryData() {
         //读取日记数据
-        List<DiaryEntity> diaryEntityList = exportDiaryData();
+        List<DiaryEntity> diaryEntityList = readDiaryData();
         List<DiaryPojo> diaryPojoList = EntityPojoMapper.INSTANCE.toDiaryPojoList(diaryEntityList);
 
         //读取段落数据
-        List<ParagraphEntity> paragraphEntityList = exportParagraphData();
+        List<ParagraphEntity> paragraphEntityList = readParagraphData();
         List<ParagraphPojo> paragraphPojoList = EntityPojoMapper.INSTANCE.toParagraphPojoList(paragraphEntityList);
 
         //读取媒体数据
-        List<MediaEntity> mediaEntityList = exportMediaData();
+        List<MediaEntity> mediaEntityList = readMediaData();
         List<MediaPojo> mediaPojoList = EntityPojoMapper.INSTANCE.toMediaPojoList(mediaEntityList);
 
         //读取情绪标签数据
-        List<EmotionTagEntity> emotionTagWithParagraphList = exportEmotionData();
+        List<EmotionTagEntity> emotionTagWithParagraphList = readEmotionData();
         List<EmotionTagPojo> emotionTagPojoList =
                 EntityPojoMapper.INSTANCE.toEmotionTagPojoList(emotionTagWithParagraphList);
 
         //读取情绪标签与段落关系数据
-        List<EmotionParagraphRefEntity> emotionParagraphRefEntityList = exportEmotionRefData();
+        List<EmotionParagraphRefEntity> emotionParagraphRefEntityList = readEmotionRefData();
         List<EmotionParagraphRefPojo> emotionParagraphRefPojoList =
                 EntityPojoMapper.INSTANCE.toEmotionParagraphRefPojoList(emotionParagraphRefEntityList);
 
@@ -78,7 +78,7 @@ public interface DataBackupDao {
      * @param map 日记数据集合
      */
     @Transaction
-    default void importAllDiaryData(DiaryDataMap map) {
+    default void importDiaryData(DiaryDataMap map) {
         if (map == null) return;
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
@@ -94,21 +94,21 @@ public interface DataBackupDao {
         List<DiaryPojo> diaryPojoList = map.getDiaryList();
         if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
             List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
-            importDiaryData(diaryEntityList);
+            writeDiaryData(diaryEntityList);
         }
 
         //导入段落数据
         List<ParagraphPojo> paragraphPojoList = map.getParagraphList();
         if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
             List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
-            importParagraphData(paragraphEntityList);
+            writeParagraphData(paragraphEntityList);
         }
 
         //导入媒体数据
         List<MediaPojo> mediaPojoList = map.getMediaList();
         if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
             List<MediaEntity> mediaEntityList = mapper.toMediaEntityList(mediaPojoList);
-            importMediaData(mediaEntityList);
+            writeMediaData(mediaEntityList);
         }
 
         //导入情绪标签数据
@@ -116,7 +116,7 @@ public interface DataBackupDao {
         if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
             List<EmotionTagEntity> emotionTagEntityList =
                     mapper.toEmotionTagEntityList(emotionTagPojoList);
-            importEmotionTagData(emotionTagEntityList);
+            writeEmotionTagData(emotionTagEntityList);
         }
 
         //导入情绪标签与段落关系数据
@@ -124,7 +124,7 @@ public interface DataBackupDao {
         if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
             List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
                     mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
-            importEmotionParagraphRefData(emotionParagraphRefEntityList);
+            writeEmotionParagraphRefData(emotionParagraphRefEntityList);
         }
     }
 
@@ -134,13 +134,13 @@ public interface DataBackupDao {
      * @return 角色数据集合
      */
     @Transaction
-    default RoleDataMap exportAllRoleData() {
+    default RoleDataMap exportRoleData() {
         //读取角色数据
-        List<RoleEntity> roleEntityList = exportRoleData();
+        List<RoleEntity> roleEntityList = readRoleData();
         List<RolePojo> rolePojoList = EntityPojoMapper.INSTANCE.toRolePojoList(roleEntityList);
 
         //读取角色别名数据
-        List<RoleAliaEntity> roleAliaEntityList = exportRoleAliaData();
+        List<RoleAliaEntity> roleAliaEntityList = readRoleAliaData();
         List<RoleAliaPojo> roleAliaPojoList = EntityPojoMapper.INSTANCE.toRoleAliaPojoList(roleAliaEntityList);
 
         RoleDataMap map = new RoleDataMap();
@@ -155,7 +155,7 @@ public interface DataBackupDao {
      * @param map 角色数据集合
      */
     @Transaction
-    default void importAllRoleData(RoleDataMap map) {
+    default void importRoleData(RoleDataMap map) {
         if (map == null) return;
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
@@ -168,14 +168,14 @@ public interface DataBackupDao {
         List<RolePojo> rolePojoList = map.getRoleList();
         if (rolePojoList != null && !rolePojoList.isEmpty()) {
             List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
-            importRoleData(roleEntityList);
+            writeRoleData(roleEntityList);
         }
 
         //导入角色别名数据
         List<RoleAliaPojo> roleAliaPojoList = map.getRoleAliaList();
         if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
             List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
-            importRoleAliaList(roleAliaEntityList);
+            writeRoleAliaList(roleAliaEntityList);
         }
     }
 
@@ -185,15 +185,15 @@ public interface DataBackupDao {
      * @return 包含所有人生笔记数据的集合
      */
     @Transaction
-    default LifeNoteDataMap exportAllLifeNoteData() {
+    default LifeNoteDataMap exportLifeNoteData() {
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
 
         //读取人生笔记数据
-        List<LifeNoteEntity> lifeNoteEntityList = exportLifeNoteData();
+        List<LifeNoteEntity> lifeNoteEntityList = readLifeNoteData();
         List<LifeNotePojo> lifeNotePojoList = mapper.toLifeNotePojoList(lifeNoteEntityList);
 
         //读取人生笔记历史记录数据
-        List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = exportLifeNoteHistoryData();
+        List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = readLifeNoteHistoryData();
         List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = mapper.toLifeNoteHistoryPojoList(lifeNoteHistoryEntityList);
 
         LifeNoteDataMap map = new LifeNoteDataMap();
@@ -208,7 +208,7 @@ public interface DataBackupDao {
      * @param map 包含所有人生笔记数据的集合
      */
     @Transaction
-    default void importAllLifeNoteData(LifeNoteDataMap map) {
+    default void importLifeNoteData(LifeNoteDataMap map) {
         if (map == null) return;
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
@@ -220,13 +220,13 @@ public interface DataBackupDao {
         //导入人生笔记数据
         List<LifeNotePojo> lifeNotePojoList = map.getLifeNoteList();
         if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
-            importLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
+            writeLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
         }
 
         //导入人生笔记历史记录数据
         List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = map.getLifeNoteHistoryList();
         if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
-            importLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
+            writeLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
         }
     }
 
@@ -236,7 +236,7 @@ public interface DataBackupDao {
      * @return 日记实体列表
      */
     @Query("SELECT * FROM diaries")
-    List<DiaryEntity> exportDiaryData();
+    List<DiaryEntity> readDiaryData();
 
     /**
      * 导入日记表
@@ -244,7 +244,7 @@ public interface DataBackupDao {
      * @param diaryEntityList 待导入的日记数据列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importDiaryData(List<DiaryEntity> diaryEntityList);
+    void writeDiaryData(List<DiaryEntity> diaryEntityList);
 
     /**
      * 清空日记表
@@ -258,7 +258,7 @@ public interface DataBackupDao {
      * @return 段落实体列表
      */
     @Query("SELECT * FROM paragraphs")
-    List<ParagraphEntity> exportParagraphData();
+    List<ParagraphEntity> readParagraphData();
 
     /**
      * 清空段落表
@@ -272,7 +272,7 @@ public interface DataBackupDao {
      * @param paragraphEntityList 待导入数据的实体列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importParagraphData(List<ParagraphEntity> paragraphEntityList);
+    void writeParagraphData(List<ParagraphEntity> paragraphEntityList);
 
     /**
      * 导出情绪标签数据
@@ -280,7 +280,7 @@ public interface DataBackupDao {
      * @return 情绪标签实体列表
      */
     @Query("SELECT * FROM emotionTags")
-    List<EmotionTagEntity> exportEmotionData();
+    List<EmotionTagEntity> readEmotionData();
 
     /**
      * 导出情绪标签与段落对应关系数据
@@ -288,7 +288,7 @@ public interface DataBackupDao {
      * @return 映射实体列表
      */
     @Query("SELECT * FROM emotionParagraphCrossRef")
-    List<EmotionParagraphRefEntity> exportEmotionRefData();
+    List<EmotionParagraphRefEntity> readEmotionRefData();
 
     /**
      * 清空情绪标签表
@@ -308,7 +308,7 @@ public interface DataBackupDao {
      * @param emotionTagEntityList 情绪标签实体列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importEmotionTagData(List<EmotionTagEntity> emotionTagEntityList);
+    void writeEmotionTagData(List<EmotionTagEntity> emotionTagEntityList);
 
     /**
      * 导入情绪标签与日记段落关系的数据
@@ -316,7 +316,7 @@ public interface DataBackupDao {
      * @param refList 关系列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importEmotionParagraphRefData(List<EmotionParagraphRefEntity> refList);
+    void writeEmotionParagraphRefData(List<EmotionParagraphRefEntity> refList);
 
     /**
      * 导出媒体表
@@ -324,7 +324,7 @@ public interface DataBackupDao {
      * @return 媒体实体列表
      */
     @Query("SELECT * FROM medias")
-    List<MediaEntity> exportMediaData();
+    List<MediaEntity> readMediaData();
 
     /**
      * 清空媒体表
@@ -338,7 +338,7 @@ public interface DataBackupDao {
      * @param mediaEntityList 新数据实体列表
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void importMediaData(List<MediaEntity> mediaEntityList);
+    void writeMediaData(List<MediaEntity> mediaEntityList);
 
     /**
      * 导出角色数据
@@ -346,7 +346,7 @@ public interface DataBackupDao {
      * @return 角色列表
      */
     @Query("SELECT * FROM roles")
-    List<RoleEntity> exportRoleData();
+    List<RoleEntity> readRoleData();
 
     /**
      * 导出角色别称数据
@@ -354,7 +354,7 @@ public interface DataBackupDao {
      * @return 角色别称列表
      */
     @Query("SELECT * FROM roleAlias")
-    List<RoleAliaEntity> exportRoleAliaData();
+    List<RoleAliaEntity> readRoleAliaData();
 
     /**
      * 清空角色表
@@ -374,7 +374,7 @@ public interface DataBackupDao {
      * @param roleList 角色列表
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void importRoleData(List<RoleEntity> roleList);
+    void writeRoleData(List<RoleEntity> roleList);
 
     /**
      * 导入角色别名数据
@@ -382,7 +382,7 @@ public interface DataBackupDao {
      * @param roleAliaEntityList 角色别名列表
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void importRoleAliaList(List<RoleAliaEntity> roleAliaEntityList);
+    void writeRoleAliaList(List<RoleAliaEntity> roleAliaEntityList);
 
     /**
      * 导出人生笔记数据
@@ -390,7 +390,7 @@ public interface DataBackupDao {
      * @return 人生笔记列表
      */
     @Query("SELECT * FROM lifeNotes")
-    List<LifeNoteEntity> exportLifeNoteData();
+    List<LifeNoteEntity> readLifeNoteData();
 
     /**
      * 导出人生笔记历史记录数据
@@ -398,7 +398,7 @@ public interface DataBackupDao {
      * @return 人生笔记历史记录列表
      */
     @Query("SELECT * FROM lifeNoteHistories")
-    List<LifeNoteHistoryEntity> exportLifeNoteHistoryData();
+    List<LifeNoteHistoryEntity> readLifeNoteHistoryData();
 
     /**
      * 清除人生笔记表
@@ -418,7 +418,7 @@ public interface DataBackupDao {
      * @param list 人生笔记列表
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void importLifeNote(List<LifeNoteEntity> list);
+    void writeLifeNote(List<LifeNoteEntity> list);
 
     /**
      * 导入人生笔记历史记录
@@ -426,5 +426,5 @@ public interface DataBackupDao {
      * @param list 人生笔记历史记录列表
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void importLifeNoteHistory(List<LifeNoteHistoryEntity> list);
+    void writeLifeNoteHistory(List<LifeNoteHistoryEntity> list);
 }
