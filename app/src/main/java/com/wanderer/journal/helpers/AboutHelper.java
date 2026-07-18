@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
@@ -325,7 +326,7 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        new MarkdownDialogBuilder(context, "更新日志", CHANGELOG)
+        new MarkdownDialogBuilder(context, context.getString(R.string.changelog), CHANGELOG)
                 .setPositiveButton("关闭", null)
                 .show();
     }
