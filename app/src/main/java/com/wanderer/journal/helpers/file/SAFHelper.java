@@ -65,7 +65,7 @@ public class SAFHelper {
             @Nullable String initialUri,
             ActivityResultLauncher<Intent> launcher
     ) {
-        ManagerAssistant.lockLifecycleObserver();
+        WandererJournal.lockLifecycleObserver();
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         if (initialUri != null) {
             intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri);
