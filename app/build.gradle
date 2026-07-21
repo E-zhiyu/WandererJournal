@@ -55,6 +55,8 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
     implementation libs.rxjava                      //多线程
+    implementation libs.work.runtime                //自动任务执行
+    implementation libs.work.rxjava3                // WorkManager 的 RxJava 支持
     implementation libs.rxandroid                   //线程切换
     implementation libs.viewpager2
     implementation libs.swiperefreshlayout

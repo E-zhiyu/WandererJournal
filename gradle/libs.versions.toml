@@ -28,6 +28,7 @@ biometric = "1.1.0"
 flexbox = "3.0.0"
 jacksonDatabind = "2.22.0"
 core = "4.6.2"
+workRuntime = "2.11.2"
 
 [libraries]
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
@@ -62,6 +63,8 @@ biometric = { group = "androidx.biometric", name = "biometric", version.ref = "b
 flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbox" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
 core = { module = "io.noties.markwon:core", version.ref = "core" }
+work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
+work-rxjava3 = { module = "androidx.work:work-rxjava3", version.ref = "workRuntime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
