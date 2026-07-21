@@ -57,6 +57,26 @@
                 android:id="@+id/import_data_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 自动备份 -->
+            <include
+                android:id="@+id/auto_backup_option"
+                layout="@layout/view_setting_option"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp" />
+
+            <!-- 自动备份频率 -->
+            <include
+                android:id="@+id/backup_frequency_option"
+                layout="@layout/view_setting_option" />
+
+            <!-- 自动备份目录 -->
+            <include
+                android:id="@+id/backup_directory_option"
+                layout="@layout/view_setting_option" />
+
             <!-- 从文本文件中追加 -->
             <include
                 android:id="@+id/append_from_file_option"

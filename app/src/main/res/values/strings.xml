@@ -157,6 +157,9 @@
     <string name="life_note_elaboration_helper">将您的洞见用通俗的话讲解一遍</string>
     <string name="modify_history_record">修改历史记录</string>
     <string name="time">时间</string>
+    <string name="auto_backup">自动备份</string>
+    <string name="backup_frequency">备份频率</string>
+    <string name="backup_directory">备份目录</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

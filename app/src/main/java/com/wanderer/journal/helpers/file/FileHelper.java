@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.classes.TextFileData;
@@ -37,6 +38,20 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 生成备份文件名称
+     *
+     * @return 备份文件名称
+     */
+    @NonNull
+    public static String generateBackupFileName() {
+        return String.format(
+                Locale.getDefault(),
+                "WandererJournalBackup_%s.zip",
+                LocalDateTime.now().format(CustomDateTimeFormatter.BACKUP)
+        );
+    }
+
     /**
      * 分享单个图片
      *

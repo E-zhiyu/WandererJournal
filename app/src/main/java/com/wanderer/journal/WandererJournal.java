@@ -12,18 +12,26 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
+import com.wanderer.journal.automation.worker.BackupWorker;
+import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
+import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.ui.pages.AuthActivity;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class WandererJournal extends Application {
     private static boolean isLifecycleObserverLocked = false;   //生命周期观察者是否被锁定
@@ -48,6 +56,21 @@ public class WandererJournal extends Application {
             //初始化主题模式
             int themeMode = AppSettingsPreference.getThemeMode(this);
             ThemeHelper.applyTheme(themeMode);
+
+            //安排自动备份任务
+            if (AutoBackupPreference.getSwitchStat(this)) {
+                int frequency = AutoBackupPreference.getBackupFrequency(this);
+                long intervalMillis = BackupFrequency.values()[frequency].getIntervalMillis();
+                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+
+                //打印任务状态日志
+                try {
+                    WorkInfo info = WorkManager.getInstance(this).getWorkInfosForUniqueWork(TagStrings.BACKUP_WORKER.t()).get().get(0);
+                    Log.d(LogTags.WORK_STATS.n(), "State: " + info.getState());
+                } catch (ExecutionException | InterruptedException e) {
+                    Log.d(LogTags.WORK_STATS.n(), "State: " + BackupWorker.class + "未正常工作");
+                }
+            }
 
             //注册应用级的生命周期观察者
             ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
