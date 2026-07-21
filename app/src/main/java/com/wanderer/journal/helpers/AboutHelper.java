@@ -12,6 +12,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.5.4\n" +
             "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 数据管理设置界面新增自动备份功能\n" +
+            "\n" +
             "### 修改内容\n" +
             "\n" +
             "- 去除读日记界面顶部的情绪标签列表\n" +
