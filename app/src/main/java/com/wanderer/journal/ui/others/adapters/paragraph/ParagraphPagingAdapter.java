@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
@@ -35,7 +36,6 @@ import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +48,6 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
     private final Set<Integer> positionSet = new HashSet<>();           //当前高亮的段落下标集合
     private boolean isSelectMode = false;                               //是否是选择模式
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -108,9 +107,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
-            return ((ParagraphUiModel.Separator) model).date.format(FORMATTER);
+            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
         } else if (model instanceof ParagraphUiModel.Item) {
-            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(FORMATTER);
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DATE_WITH_WEEK);
         } else {
             return context.getString(R.string.not_applicable);
         }
@@ -415,8 +414,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
+            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.TIME));
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
@@ -424,7 +422,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
 
             //分隔符文本
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(FORMATTER);
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }

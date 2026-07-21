@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 public class AlarmTimeAdapter extends ListAdapter<LocalTime, AlarmTimeAdapter.AlarmTimeViewHolder> {
     private final static DiffUtil.ItemCallback<LocalTime> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -84,7 +84,6 @@ public class AlarmTimeAdapter extends ListAdapter<LocalTime, AlarmTimeAdapter.Al
     @Override
     public void onBindViewHolder(@NonNull AlarmTimeViewHolder holder, int position) {
         LocalTime time = getItem(position);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        holder.binding.chip.setText(time.format(formatter));
+        holder.binding.chip.setText(time.format(CustomDateTimeFormatter.TIME));
     }
 }

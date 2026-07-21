@@ -8,9 +8,9 @@ import androidx.annotation.NonNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,9 +64,8 @@ public class DiaryAlarmPreference {
         }
 
         //转换为 LocalTime 类型并返回
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         return timeStrList.stream()
-                .map(str -> LocalTime.parse(str, formatter)).sorted()
+                .map(str -> LocalTime.parse(str, CustomDateTimeFormatter.TIME)).sorted()
                 .collect(Collectors.toList());
     }
 
@@ -77,9 +76,8 @@ public class DiaryAlarmPreference {
      * @param timeList 时间列表
      */
     public static void setAlarmTime(Context context, @NonNull List<LocalTime> timeList) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         List<String> timeStrList = timeList.stream()
-                .map(localTime -> localTime.format(formatter))
+                .map(localTime -> localTime.format(CustomDateTimeFormatter.TIME))
                 .collect(Collectors.toList());
 
         //将列表转换为JSON

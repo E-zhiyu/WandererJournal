@@ -337,7 +337,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 item -> {
                     if (item.getItemId() == R.id.action_emotion_select) {
                         ParagraphFilterBottomSheet bottomSheet = new ParagraphFilterBottomSheet();
-                        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
+                        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.t());
 
                         return true;
                     } else if (item.getItemId() == R.id.action_share) {
@@ -530,7 +530,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //为适配器绑定选择追踪器
         selectionTracker = new SelectionTracker.Builder<>(
-                TagStrings.PARAGRAPH_SELECTION.getTag(),
+                TagStrings.PARAGRAPH_SELECTION.t(),
                 binding.contentRecycler,
                 new ParagraphKeyProvider(adapter),
                 new ParagraphLookup(binding.contentRecycler),
@@ -856,7 +856,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
         //实例化底部对话框并显示
         EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());
     }
 
     /**

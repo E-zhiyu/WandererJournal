@@ -326,7 +326,7 @@ public class WriteActivity extends AppCompatActivity {
         //媒体添加按钮
         binding.mediaAddBtn.setOnClickListener(view -> {
             MediaAddBottomSheet bottomSheet = new MediaAddBottomSheet();
-            bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.getTag());
+            bottomSheet.show(getSupportFragmentManager(), TagStrings.MEDIA_ADD_BOTTOM_SHEET.t());
         });
 
         //媒体删除按钮
@@ -520,7 +520,7 @@ public class WriteActivity extends AppCompatActivity {
                 //当输入“@”时弹出角色选择对话框
                 if (i2 == 1 && charSequence.charAt(i) == '@') {
                     RoleSelectBottomSheet bottomSheet = new RoleSelectBottomSheet();
-                    bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.getTag());
+                    bottomSheet.show(getSupportFragmentManager(), TagStrings.ROLE_SELECT_BOTTOM_SHEET.t());
                 } else if (i2 >= RichTextRegex.getShortestPatternLength()) {    //只有新增的文本大于最短正则表达式长度才富文本化
                     //计算光标与文本末尾的距离
                     Editable editable = binding.contentTextInput.getEditableText();
@@ -805,7 +805,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //构建选择追踪器
         selectionTracker = new SelectionTracker.Builder<>(
-                TagStrings.MEDIA_SELECTION.getTag(),
+                TagStrings.MEDIA_SELECTION.t(),
                 binding.mediaRecycler,
                 new MediaIdKeyProvider(mediaAdapter),
                 new MediaLookup(binding.mediaRecycler),
@@ -1238,7 +1238,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //实例化底部对话框并显示
         EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());
     }
 
     /**

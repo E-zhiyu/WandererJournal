@@ -98,7 +98,7 @@ public class DateTimePickerHelper {
         dateRangePicker.addOnPositiveButtonClickListener(listener);
 
         //显示对话框
-        dateRangePicker.show(fragmentManager, TagStrings.DATE_PICKER.getTag());
+        dateRangePicker.show(fragmentManager, TagStrings.DATE_PICKER.t());
     }
 
     /**
@@ -153,7 +153,7 @@ public class DateTimePickerHelper {
         datePicker.addOnPositiveButtonClickListener(listener);
 
         //显示对话框
-        datePicker.show(fragmentManager, TagStrings.DATE_PICKER.getTag());
+        datePicker.show(fragmentManager, TagStrings.DATE_PICKER.t());
     }
 
     /**
@@ -187,7 +187,7 @@ public class DateTimePickerHelper {
         timePicker.addOnPositiveButtonClickListener(v -> listener.onClicked(timePicker));
 
         //显示时间选择器
-        timePicker.show(fragmentManager, TagStrings.TIME_PICKER.getTag());
+        timePicker.show(fragmentManager, TagStrings.TIME_PICKER.t());
     }
 
     /**

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
@@ -31,7 +32,6 @@ import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
@@ -74,7 +74,6 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
     private final ParagraphListAdapter.OnMediaClickedListener mediaClickedListener;     //媒体点击监听
     private final AdapterOnClickListener<Long> roleClickListener;                       //角色富文本点击监听
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
 
     @Override
     public boolean isHeader(int position) {
@@ -86,9 +85,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
-            return ((ParagraphUiModel.Separator) model).date.format(formatter);
+            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
         } else if (model instanceof ParagraphUiModel.Item) {
-            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(formatter);
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DATE_WITH_WEEK);
         } else {
             return context.getString(R.string.not_applicable);
         }
@@ -262,8 +261,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            itemHolder.binding.dateTimeText.setText(dateTime.format(formatter));
+            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.TIME));
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
@@ -271,7 +269,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
             //分隔符文字
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(formatter);
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }
