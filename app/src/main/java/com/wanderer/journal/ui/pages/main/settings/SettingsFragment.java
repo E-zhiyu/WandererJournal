@@ -16,7 +16,6 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
@@ -115,7 +114,6 @@ public class SettingsFragment extends Fragment {
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
                 (buttonView, isChecked) -> {
-                    WandererJournal.lockLifecycleObserver();
                     AppSettingsPreference.setDynamicColorStat(requireContext(), isChecked);
                     ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
                 }
@@ -326,7 +324,6 @@ public class SettingsFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("主题模式")
                 .setSingleChoiceItems(themeModeStr, themeMode, (dialog, which) -> {
-                    WandererJournal.lockLifecycleObserver();
                     AppSettingsPreference.setThemeMode(requireContext(), which);
                     ThemeHelper.switchNightModeWithAnimation(requireActivity(), which);
                     dialog.dismiss();

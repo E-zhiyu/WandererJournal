@@ -76,9 +76,9 @@ public class WandererJournal extends Application {
             ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
                 @Override
                 public void onStart(@NonNull LifecycleOwner owner) {
-                    Log.d(LogTags.WANDERER_JOURNAL.n(), "触发全局生命周期观察者的onStart()");
+                    Log.d(LogTags.APPLICATION.n(), "触发全局生命周期观察者的onStart()");
                     if (isLifecycleObserverLocked) {
-                        Log.d(LogTags.WANDERER_JOURNAL.n(), "消费掉生命周期观察者的锁");
+                        Log.d(LogTags.APPLICATION.n(), "消费掉生命周期观察者的锁");
                         isLifecycleObserverLocked = false;  //重新启动时消费掉锁定
                         return;
                     }
@@ -101,6 +101,7 @@ public class WandererJournal extends Application {
                 }
             });
 
+            //注册活动生命周期监听器，用于更新活动数量
             registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
                 @Override
                 public void onActivityStarted(@NonNull Activity activity) {
@@ -150,7 +151,7 @@ public class WandererJournal extends Application {
      * 从最近任务中隐藏
      */
     private void removeTaskFromRecents() {
-        Log.d(LogTags.WANDERER_JOURNAL.n(), "触发最近任务隐藏");
+        Log.d(LogTags.APPLICATION.n(), "触发最近任务隐藏");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
             List<ActivityManager.AppTask> taskList = am.getAppTasks();

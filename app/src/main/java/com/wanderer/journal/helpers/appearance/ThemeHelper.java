@@ -32,6 +32,8 @@ public class ThemeHelper {
      * @param modeIndex {@link ThemeMode}的枚举序数
      */
     public static void switchNightModeWithAnimation(@NonNull Activity activity, int modeIndex) {
+        WandererJournal.lockLifecycleObserver();
+
         // 1. 获取根布局
         ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView().getRootView();
 
@@ -92,6 +94,8 @@ public class ThemeHelper {
      * @param isOpened 是否启用动态配色
      */
     public static void switchDynamicColorWithAnimation(@NonNull Activity activity, boolean isOpened) {
+        WandererJournal.lockLifecycleObserver();
+
         // 1. 获取根布局
         ViewGroup rootView = (ViewGroup) activity.getWindow().getDecorView().getRootView();
 
