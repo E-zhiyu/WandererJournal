@@ -27,6 +27,7 @@
             android:stepSize="1"
             android:value="1.0"
             android:valueFrom="1"
+            app:tickVisibilityMode="autoHide"
             android:valueTo="5"
             app:labelBehavior="floating" />
     </LinearLayout>
