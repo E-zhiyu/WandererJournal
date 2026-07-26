@@ -1,40 +1,55 @@
 package com.wanderer.journal.auxiliary.enums;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
+
+import androidx.arch.core.util.Function;
 
 public enum ChannelInfo {
     DIARY_ALARM(
             "diary_alarm_channel",
-            "日记提醒",
-            "忘记记日记时发送提醒通知",
-            NotificationManager.IMPORTANCE_HIGH
+            info -> {
+                NotificationChannel channel = new NotificationChannel(
+                        info.getId(),
+                        "日记提醒",
+                        NotificationManager.IMPORTANCE_HIGH
+                );
+
+                channel.enableLights(true);                             //灯光
+                channel.setDescription("忘记记日记时发送提醒通知");         //描述
+
+                //声音
+                Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build();
+                channel.setSound(defaultSoundUri, audioAttributes);
+
+                return channel;
+            }
     );
+    private final String id;
+    private final Function<ChannelInfo, NotificationChannel> channelBuilder;
 
-    private final String id;            //通道标识符
-    private final String name;          //通道名称
-    private final String description;   //通道描述
-    private final int importance;       //通知重要性
-
-    ChannelInfo(String id, String name, String description, int importance) {
+    ChannelInfo(String id, Function<ChannelInfo, NotificationChannel> channelBuilder) {
         this.id = id;
-        this.name = name;
-        this.description = description;
-        this.importance = importance;
+        this.channelBuilder = channelBuilder;
+    }
+
+    /**
+     * 获取通知渠道实例
+     *
+     * @return 通知渠道实例
+     */
+    public NotificationChannel getNotificationChannel() {
+        return channelBuilder.apply(this);
     }
 
     public String getId() {
         return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public int getImportance() {
-        return importance;
     }
 }
