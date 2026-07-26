@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.popupwindow;
+package com.wanderer.journal.ui.others.popup;
 
 import android.content.Context;
 import android.view.Gravity;
@@ -35,7 +35,7 @@ public class TextPopupWindow {
         );
         window.setOutsideTouchable(true);
 
-        // 🔴 关键：禁用系统自动裁剪/贴边，完全由我们手动控制宽高
+        //禁用系统自动裁剪/贴边，完全由我们手动控制宽高
         window.setClippingEnabled(false);
 
         // 获取没有限制时的理想测量宽高

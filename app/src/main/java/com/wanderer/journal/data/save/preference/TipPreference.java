@@ -7,7 +7,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.ui.others.popupwindow.TextPopupWindow;
+import com.wanderer.journal.ui.others.popup.TextPopupWindow;
 
 public class TipPreference {
     private static final String PREF_NAME = "TipPreference";
