@@ -15,8 +15,6 @@
     <string name="origin_text">原始文本</string>
     <string name="modify_content">修改内容</string>
     <string name="modify_time">修改时间</string>
-    <string name="delete_diary">删除日记</string>
-    <string name="delete_paragraph">删除段落</string>
     <string name="write_diary">写日记</string>
     <string name="theme_mode">主题模式</string>
     <string name="dynamic_color">动态配色</string>
@@ -48,7 +46,6 @@
     <string name="name">名称</string>
     <string name="description">描述</string>
     <string name="no_emotion_tag">无情绪标签</string>
-    <string name="delete_emotion_tag">删除情绪标签</string>
     <string name="add_emotion_tag">新建情绪标签</string>
     <string name="emotion_tag_name_helper">情绪标签的名称</string>
     <string name="emotion_tag_description_helper">对该情绪做一个简要的描述</string>
@@ -119,7 +116,6 @@
     <string name="role_relationship_helper">您与该角色的关系好坏程度</string>
     <string name="add_alia">添加别名</string>
     <string name="modify_role">修改角色</string>
-    <string name="delete_role">删除角色</string>
     <string name="select_role">选择角色</string>
     <string name="ignore_battery_optimization">忽略电池优化</string>
     <string name="copy_paragraph">复制段落内容</string>

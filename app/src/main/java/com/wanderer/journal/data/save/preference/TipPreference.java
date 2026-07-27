@@ -61,4 +61,18 @@ public class TipPreference {
             setValue(context, key, currentValue + 1);
         }
     }
+
+    /**
+     * 手动显示提示文本窗口，没有显示次数限制
+     *
+     * @param anchor  提示浮窗锚点
+     * @param gravity 浮窗显示的方位，具体参考{@link Gravity}中的静态常量
+     * @param message 提示文本
+     */
+    public static void showTipWithoutKey(@NonNull View anchor, int gravity, String message) {
+        Context context = anchor.getContext();
+        TextPopupWindow window = new TextPopupWindow(message, context);
+        window.show(anchor, gravity);
+        //TODO:各个列表界面添加说明按钮
+    }
 }
