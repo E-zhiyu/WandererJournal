@@ -109,7 +109,7 @@
     <string name="no_role">无角色</string>
     <string name="add_role">新建角色</string>
     <string name="identity">身份</string>
-    <string name="role_name_helper">该角色的通用称呼，建议填真实名称</string>
+    <string name="role_name_helper">该角色的通用称呼，建议填正式称呼</string>
     <string name="role_identity_helper">该角色相对于您的身份描述（如：同学、老师）</string>
     <string name="impression">印象</string>
     <string name="role_impression_helper">您对该角色的印象和评价</string>
@@ -156,6 +156,12 @@
     <string name="auto_backup">自动备份</string>
     <string name="backup_frequency">备份频率</string>
     <string name="backup_directory">备份目录</string>
+    <string name="get_help">获取帮助</string>
+    <string name="delete_paragraph">删除段落</string>
+    <string name="delete_emotion_tag">删除情绪标签</string>
+    <string name="delete_diary">删除日记</string>
+    <string name="delete_role">删除角色</string>
+    <string name="btn_of_explanation">功能说明按钮</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

@@ -31,6 +31,7 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.others.viewmodel.RoleListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -211,7 +212,31 @@ public class RoleListActivity extends AppCompatActivity {
                     //根据搜索关键词是否为空开启和关闭搜索模式
                     setSearchMode(!keyword.trim().isEmpty());
                 },
-                null
+                item -> {
+                    int id = item.getItemId();
+                    if (id == R.id.action_help) {
+                        final String EXPLANATION = "### 1. 主要功能\n" +
+                                "此模块主要用于保存日记中提到的人物和组织，便于回顾日记时快速了解日记中提到的人物或组织，避免因时间久远导致遗忘。\n" +
+                                "### 2. 使用方法\n" +
+                                "1. 点击右下角的按钮添加角色；\n" +
+                                "2. 在写日记时输入“@”，在弹出的角色选择对话框中选择角色；\n" +
+                                "3. 段落内容编写完毕后点击发送按钮保存段落内容；\n" +
+                                "4. 点击段落内容中高亮的`@角色名`可查看或修改角色数据。\n" +
+                                "\n" +
+                                "### 3. 角色名称的显示\n" +
+                                "\n" +
+                                "- 角色可设置`名称`和`显示名称`；\n" +
+                                "- `名称`通常设置为角色的正式称呼，且作为该角色显示的默认名称；\n" +
+                                "- 当填写了`显示名称`时，角色在日记段落中仅显示“@显示名称”，在其他地方显示“名称（显示名称）”；\n" +
+                                "> 例：某角色的`名称`为“张三”，`显示名称`为“小张”。则他在日记段落中显示为“@张三”，而在其他地方（如角色列表和角色选择对话框）显示为“小张（张三）”。\n";
+                        new MarkdownDialogBuilder(this, "功能说明", EXPLANATION)
+                                .setNegativeButton("关闭", null)
+                                .show();
+                        return true;
+                    }
+
+                    return false;
+                }
         );
     }
 
