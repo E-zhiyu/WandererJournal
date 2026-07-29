@@ -20,10 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep class com.wanderer.journal.data.save.** { *; }            # 保护数据保存相关的类
--keep class com.wanderer.journal.data.backup.** { *; }          # 保护POJO类
--keep class com.wanderer.journal.auxiliary.classes.** { *; }    # 保护辅助类
-
 # 保持带有 @JavascriptInterface 注解的方法和类不被混淆
 -keepattributes *Annotation*
 -keepattributes JavascriptInterface
