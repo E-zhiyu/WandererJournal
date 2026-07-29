@@ -477,13 +477,13 @@ public class DataManageActivity extends AppCompatActivity {
         disposables.add(ZipHelper.scanBackupFile(uri, this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(fileNameList -> {
+                .subscribe(fileNameSet -> {
                     progressDialog.dismiss();
 
                     //实例化选项列表
                     List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                             .map(backupDataType -> {
-                                if (fileNameList.contains(backupDataType.getFileName())) {
+                                if (fileNameSet.contains(backupDataType.getFileName())) {
                                     return new MultiChoiceDialogBuilder.ChoiceItem(
                                             true,
                                             backupDataType.getTitle(),
