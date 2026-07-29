@@ -17,7 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -135,11 +137,11 @@ public class ZipHelper {
      *
      * @param uri     需要扫描的压缩文件的 Uri
      * @param context 上下文
-     * @return 可通过 RxJava 观察的文件名字符串列表
+     * @return 可通过 RxJava 观察的文件名字符串集合
      */
-    public static Single<List<String>> scanBackupFile(Uri uri, @NonNull Context context) {
+    public static Single<Set<String>> scanBackupFile(Uri uri, @NonNull Context context) {
         return Single.fromCallable(() -> {
-            List<String> fileNameList = new ArrayList<>();
+            Set<String> fileNameList = new HashSet<>();
             try (InputStream is = context.getContentResolver().openInputStream(uri);
                  ZipInputStream zis = new ZipInputStream(is)) {
 
