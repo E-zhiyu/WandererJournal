@@ -21,6 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
@@ -52,7 +53,6 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -129,7 +129,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         //导出按钮
         binding.shareBtn.setOnClickListener(view -> {
             DiaryShareBottomSheet bottomSheet = new DiaryShareBottomSheet();
-            bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.getTag());
+            bottomSheet.show(getSupportFragmentManager(), TagStrings.DIARY_SHARE_BOTTOM_SHEET.t());
         });
         AppearanceHelper.attachMorphAnimation(binding.shareBtn);
         AppearanceHelper.setMarginToNavigation(binding.shareBtn, this);
@@ -304,9 +304,6 @@ public class SharePreviewActivity extends AppCompatActivity {
      */
     @NonNull
     private List<String> formatToJson() {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");   //日期转换器
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");             //时间转换器
-
         //获取数据
         List<ParagraphUiModel> uiModelList = adapter.getCurrentList();
 
@@ -328,7 +325,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                 if (model instanceof ParagraphUiModel.Separator) {
                     builder.append("\"type\":\"date\",\"content\":");
                     builder.append("\"");
-                    String date = ((ParagraphUiModel.Separator) model).date.format(dateFormatter);
+                    String date = ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
                     builder.append(date);
                     builder.append("\"");
                 } else if (model instanceof ParagraphUiModel.Item) {
@@ -389,7 +386,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //添加时间字段
                     if (enableTime) {
-                        String time = paragraph.getCreateTime().format(timeFormatter);
+                        String time = paragraph.getCreateTime().format(CustomDateTimeFormatter.TIME);
                         builder.append(",");
                         builder.append("\"time\":");
                         builder.append("\"");

@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.chip.Chip;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
@@ -39,8 +40,6 @@ import com.wanderer.journal.ui.pages.DiaryReadActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -261,8 +260,7 @@ public class StatisticsActivity extends AppCompatActivity {
                     );
 
                     //设置文本和按钮可见性
-                    DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
-                    windowBinding.dateText.setText(model.getDiaryDate().format(formatter));
+                    windowBinding.dateText.setText(model.getDiaryDate().format(CustomDateTimeFormatter.LOCAL_DATE));
                     String lenStr;
                     if (model.getDiaryLength() == 0) {
                         lenStr = "无日记";

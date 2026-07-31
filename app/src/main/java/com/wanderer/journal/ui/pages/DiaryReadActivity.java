@@ -40,7 +40,6 @@ import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
-import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -63,7 +62,6 @@ import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagInAppBarAdapter;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
@@ -77,35 +75,29 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
-    private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
-    private Disposable searchDisposable;                                    //搜索模式下获取匹配项下标的 Disposable 对象
-    private ParagraphPagingAdapter adapter;                                       //段落列表适配器
-    private final AtomicInteger initScrollPosition = new AtomicInteger(-1); //界面加载时初始滚动到的位置
-    private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;   //滚动到初始位置的 Runnable 实例
+    private final CompositeDisposable disposable = new CompositeDisposable();           //多线程任务订阅队列
+    private ParagraphPagingAdapter adapter;                                 //段落列表适配器
+    private List<Integer> filteredParagraphPositionList;                    //符合过滤条件的段落的位置列表
+    private int currentPosListIndex = -1;                                   //位置列表当前元素的下标
+    private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
+    private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;           //滚动到初始位置的 Runnable 实例
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
-    private EmotionTagInAppBarAdapter appbarEmotionAdapter;                 //过滤情绪标签的显示适配器
     private SelectionTracker<Long> selectionTracker;                        //段落分享选择器
-    private boolean isAndMode = true;                                       //多词搜索是否为“与”模式
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -153,35 +145,62 @@ public class DiaryReadActivity extends AppCompatActivity {
         //搜索组件
         initSearchComponents();
 
-        //顶部情绪标签视图
-        appbarEmotionAdapter = new EmotionTagInAppBarAdapter(
-                emotionTag -> {
-                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-
-                    //移除已选择的情绪标签 ID
-                    Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
-                    checkedEmotionIdSet.remove(emotionTag.getEmotionId());
-
-                    //执行一次搜索
-                    executeSearch();
-                }
-        );
-        binding.emotionTagInAppbarRecycler.setAdapter(appbarEmotionAdapter);
-
         //日记段落列表
         initRecyclerView();
 
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-            viewModel.jumpToPrevious();
+            //判空
+            if (filteredParagraphPositionList == null || filteredParagraphPositionList.isEmpty()) {
+                return;
+            }
+
+            //滚动列表
+            int model = filteredParagraphPositionList.size();
+            currentPosListIndex = (currentPosListIndex + model - 1) % model;
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
+            scrollContentRecycler(
+                    filteredParagraphPositionList.get(currentPosListIndex),
+                    true,
+                    null
+            );
+
+            //更新计数器
+            String counterText = String.format(
+                    Locale.getDefault(),
+                    "%d/%d",
+                    currentPosListIndex + 1,
+                    model
+            );
+            binding.filteredParagraphCounterText.setText(counterText);
         });
         AppearanceHelper.attachMorphAnimation(binding.upFab);
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-            viewModel.jumpToNext();
+            //判空
+            if (filteredParagraphPositionList == null || filteredParagraphPositionList.isEmpty()) {
+                return;
+            }
+
+            //滚动视图
+            int model = filteredParagraphPositionList.size();
+            currentPosListIndex = (currentPosListIndex + model + 1) % model;
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
+            scrollContentRecycler(
+                    filteredParagraphPositionList.get(currentPosListIndex),
+                    true,
+                    null
+            );
+
+            //更新计数器
+            String counterText = String.format(
+                    Locale.getDefault(),
+                    "%d/%d",
+                    currentPosListIndex + 1,
+                    model
+            );
+            binding.filteredParagraphCounterText.setText(counterText);
         });
         AppearanceHelper.attachMorphAnimation(binding.downFab);
 
@@ -190,14 +209,59 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //多词搜索模式切换按钮
         binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
-            isAndMode = !isAndMode;
-
-            if (isAndMode) {
+            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+            viewModel.toggleKeywordMode();
+            if (viewModel.isAndMode()) {
                 binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
             } else {
                 binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_or);
             }
         });
+
+        //符合过滤条件的段落的下标
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        disposable.add(viewModel.getFilteredParagraphPosition(db)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        positionList -> {
+                            filteredParagraphPositionList = positionList;
+
+                            //高亮段落
+                            if (!positionList.isEmpty()) {
+                                adapter.setHighlightTarget(
+                                        viewModel.getValidKeywordList(),
+                                        viewModel.getCheckedEmotionIdSet(),
+                                        positionList
+                                );
+                            } else {
+                                adapter.clearHighlight();
+                            }
+
+                            //设置跳转位置卡片文本
+                            currentPosListIndex = positionList.size() - 1;
+                            if (positionList.isEmpty()) {
+                                binding.filteredParagraphCounterText.setText(R.string.not_applicable);
+                            } else {
+                                String counterText = String.format(
+                                        Locale.getDefault(),
+                                        "%d/%d",
+                                        currentPosListIndex + 1,
+                                        positionList.size()
+                                );
+                                binding.filteredParagraphCounterText.setText(counterText);
+
+                                scrollContentRecycler(
+                                        positionList.get(positionList.size() - 1),
+                                        true,
+                                        null
+                                );
+                            }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
     }
 
     /**
@@ -232,7 +296,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             public boolean handleBack() {
                 ParagraphFilterViewModel viewModel = new ViewModelProvider(DiaryReadActivity.this).get(ParagraphFilterViewModel.class);
                 viewModel.clearFilter();
-                executeSearch();    //清空后执行一次查询（没有过滤条件不会触发滚动）
                 return true;
             }
 
@@ -269,14 +332,12 @@ public class DiaryReadActivity extends AppCompatActivity {
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
                     ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-                    viewModel.setSearchText(keyword);
-
-                    //执行一次搜索
-                    executeSearch();
+                    viewModel.executeSearch(keyword);
                 },
                 item -> {
                     if (item.getItemId() == R.id.action_emotion_select) {
-                        showFilterBottomSheet();
+                        ParagraphFilterBottomSheet bottomSheet = new ParagraphFilterBottomSheet();
+                        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.t());
 
                         return true;
                     } else if (item.getItemId() == R.id.action_share) {
@@ -392,14 +453,6 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
-     * 显示过滤选项对话框
-     */
-    private void showFilterBottomSheet() {
-        ParagraphFilterBottomSheet bottomSheet = new ParagraphFilterBottomSheet();
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_FILTER_BOTTOM_SHEET.getTag());
-    }
-
-    /**
      * 初始化 RecyclerView
      */
     private void initRecyclerView() {
@@ -477,7 +530,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //为适配器绑定选择追踪器
         selectionTracker = new SelectionTracker.Builder<>(
-                TagStrings.PARAGRAPH_SELECTION.getTag(),
+                TagStrings.PARAGRAPH_SELECTION.t(),
                 binding.contentRecycler,
                 new ParagraphKeyProvider(adapter),
                 new ParagraphLookup(binding.contentRecycler),
@@ -634,64 +687,12 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ParagraphFilterViewModel filterViewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        filterViewModel.getFilterUpdatedLiveData().observe(this, v ->
+                setSearchMode(!filterViewModel.isNoFilter())
+        );
 
-        //执行搜索的标识符
-        viewModel.getNeedExecuteSearch().observe(this, bool -> {
-            if (bool) {
-                executeSearch();
-            }
-        });
-
-        //匹配项的位置列表
-        viewModel.getMatchedPositions().observe(this, positionList -> {
-            Integer index = viewModel.getCurrentMatchIndex().getValue();
-            if (positionList == null || index == null) {
-                return;
-            }
-
-            if (positionList.isEmpty()) {
-                binding.counterText.setText(R.string.not_applicable);
-                Toast.makeText(this, "未找到匹配的搜索项", Toast.LENGTH_SHORT).show();
-            } else {
-                //更新跳转数量指示器
-                String counterText = String.format(
-                        Locale.getDefault(),
-                        "%d/%d",
-                        positionList.size() - index,
-                        positionList.size()
-                );
-                binding.counterText.setText(counterText);
-            }
-        });
-
-        //当前匹配项下标
-        viewModel.getCurrentMatchIndex().observe(this, index -> {
-            //判断是否为默认占位符
-            if (index == -1) {
-                return;
-            }
-
-            //获取目标下标
-            List<Integer> positionList = viewModel.getMatchedPositions().getValue();
-            if (index >= 0 && positionList != null && !positionList.isEmpty() && index < positionList.size()) {
-                int targetPosition = positionList.get(index);
-
-                //更新跳转数量指示器
-                String counterText = String.format(
-                        Locale.getDefault(),
-                        "%d/%d",
-                        positionList.size() - index,
-                        positionList.size()
-                );
-                binding.counterText.setText(counterText);
-
-                //滚动列表
-                scrollContentRecycler(targetPosition, true, null);
-            }
-        });
-
-        //情绪标签选择状态
+        //段落的情绪标签选择状态
         EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
         emotionTagSelectViewModel.getCheckedEmotionTag().observe(this, emotionTagEntity -> {
             long paragraphId = emotionTagSelectViewModel.getParagraphId();
@@ -805,49 +806,6 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
-     * 执行 ViewModel 的搜索方法并根据返回的数据更新 UI
-     */
-    private void executeSearch() {
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-        String keyword = viewModel.getSearchText();
-
-        //每次搜索前先清除之前的搜索订阅
-        if (searchDisposable != null) {
-            disposable.remove(searchDisposable);
-            searchDisposable = null;
-        }
-
-        //拆分输入的字符串
-        String[] words = keyword.split("\\s+"); // 按空格拆分
-        List<String> validKeywordList = Arrays.stream(words)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-
-        //开始搜索
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
-        disposable.add((searchDisposable = viewModel.executeSearch(validKeywordList, db, isAndMode)
-                .defaultIfEmpty(new ArrayList<>())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        positionList -> {
-                            if (!positionList.isEmpty()) {
-                                adapter.setHighlightTarget(validKeywordList, checkedEmotionIdSet, positionList);
-                            } else {
-                                adapter.clearHighlight();
-                            }
-                            setSearchMode(viewModel.isHasFilter());
-                        },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                ))
-        );
-
-        //更新情绪标签列表
-        binding.getRoot().post(() -> refreshFilterEmotionTagGroup(checkedEmotionIdSet));
-    }
-
-    /**
      * 更新段落创建日期
      *
      * @param paragraph 原来的段落实例
@@ -898,7 +856,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
         //实例化底部对话框并显示
         EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
-        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.getTag());
+        bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());
     }
 
     /**
@@ -947,9 +905,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             binding.searchSkipLayout.setVisibility(View.GONE);
 
             backHelper.unregisterHandler(searchBackHandler);
-            adapter.clearHighlight();                               //清除文本高亮
-
-            disposable.remove(searchDisposable);
         } else {
             binding.searchSkipLayout.setVisibility(View.VISIBLE);
 
@@ -973,43 +928,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             backHelper.unregisterHandler(shareChoiceBackHandler);
 
             selectionTracker.clearSelection();  //清空多选
-        }
-    }
-
-    /**
-     * 刷新选中的情绪标签显示视图
-     *
-     * @param checkedEmotionTagIdSet 需要获取的情绪标签的 ID 集合
-     */
-    private void refreshFilterEmotionTagGroup(@Nullable Set<Long> checkedEmotionTagIdSet) {
-        if (checkedEmotionTagIdSet != null && !checkedEmotionTagIdSet.isEmpty()) {
-            VisibilityHelper.toggleViewExpansion(
-                    binding.getRoot(),
-                    binding.emotionTagInAppbarRecycler,
-                    true,
-                    Gravity.TOP,
-                    250,
-                    () -> {
-                        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
-                        disposable.add(emotionTagDao.getEmotionTagSingleByIdSet(checkedEmotionTagIdSet)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribeOn(Schedulers.io())
-                                .subscribe(
-                                        emotionTagList -> appbarEmotionAdapter.submitList(emotionTagList),
-                                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                                )
-                        );
-                    }
-            );
-        } else {
-            VisibilityHelper.toggleViewExpansion(
-                    binding.getRoot(),
-                    binding.emotionTagInAppbarRecycler,
-                    false,
-                    Gravity.TOP,
-                    250,
-                    () -> appbarEmotionAdapter.submitList(new ArrayList<>())
-            );
         }
     }
 }

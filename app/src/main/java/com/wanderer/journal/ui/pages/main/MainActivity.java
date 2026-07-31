@@ -12,6 +12,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.databinding.ActivityMainBinding;
+import com.wanderer.journal.helpers.UpdateHelper;
 import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
 import com.wanderer.journal.ui.pages.main.diary.DiaryFragment;
 import com.wanderer.journal.ui.pages.main.home.HomeFragment;
@@ -20,8 +21,11 @@ import com.wanderer.journal.ui.pages.main.settings.SettingsFragment;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;    //绑定的XML布局
+    private final CompositeDisposable disposable = new CompositeDisposable();      //多线程任务列表
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,20 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
             return insets;
         });
+
+        //启动主界面时自动检测更新（不一定触发）
+        final int MODULAR = 2;
+        if (System.currentTimeMillis() % MODULAR == 0) {
+            UpdateHelper.checkUpdate(this, disposable, false);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        disposable.dispose();
+        binding = null;
     }
 
     /**

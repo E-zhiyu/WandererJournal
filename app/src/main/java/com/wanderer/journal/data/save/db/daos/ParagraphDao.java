@@ -24,8 +24,10 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -190,16 +192,16 @@ public interface ParagraphDao {
     /**
      * 插入段落的事务
      *
-     * @param startDate       写日记界面的起始日期
-     * @param paragraph       新段落实例
-     * @param newMediaUriList 该段落新添加的媒体 Uri 列表
-     * @param db              数据库实例
+     * @param startDate 写日记界面的起始日期
+     * @param paragraph 新段落实例
+     * @param mediaList 该段落新添加的媒体列表
+     * @param db        数据库实例
      */
     @Transaction
-    default int insertParagraph(
+    default int addParagraph(
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
-            @NonNull List<Uri> newMediaUriList,
+            @NonNull List<MediaEntity> mediaList,
             @NonNull DiaryDatabase db
     ) {
         //获取从起始日期开始，有多少个段落日期小于等于该段落
@@ -215,11 +217,11 @@ public interface ParagraphDao {
         long paragraphId = insertParagraph(paragraph);
 
         //插入新媒体
-        List<MediaEntity> mediaEntityList = newMediaUriList.stream()
-                .map(uri -> new MediaEntity(paragraphId, uri))
+        List<MediaEntity> availableMediaList = mediaList.stream()
+                .peek(media -> media.setParentParagraphId(paragraphId))
                 .collect(Collectors.toList());
         MediaDao mediaDao = db.mediaDao();
-        mediaDao.insertMedia(mediaEntityList);
+        mediaDao.insertMedia(availableMediaList);
 
         return earlierThanNewParagraph + dateSeparatorCount;
     }
@@ -267,27 +269,45 @@ public interface ParagraphDao {
     void updateParagraph(ParagraphEntity paragraph);
 
     /**
+     * 通过段落编号获取媒体文件的 Uri
+     *
+     * @param paragraphId 段落编号
+     * @return 该段落的所有媒体文件的 Uri
+     */
+    @Query("SELECT fileUri FROM medias WHERE parentParagraphId = :paragraphId")
+    List<Uri> getMediaUriByParagraphId(long paragraphId);
+
+    /**
      * 段落更新事务
      *
-     * @param paragraph       更新后的段落实体
-     * @param newMediaUriList 新添加的媒体文件的 Uri 列表
-     * @param db              数据库实例
+     * @param paragraph 更新后的段落实体
+     * @param mediaList 最终的媒体列表
+     * @param db        数据库实例
      */
     @Transaction
-    default void updateParagraph(
-            ParagraphEntity paragraph,
-            @NonNull List<Uri> newMediaUriList,
+    default Set<Uri> modifyParagraph(
+            @NonNull ParagraphEntity paragraph,
+            @NonNull List<MediaEntity> mediaList,
             @NonNull DiaryDatabase db
     ) {
+        long paragraphId = paragraph.getParagraphId();
+
+        //获取在数据库中的媒体文件 Uri，并计算需要删除的媒体文件的 Uri
+        Set<Uri> oldMediaUriSet = new HashSet<>(getMediaUriByParagraphId(paragraphId));
+        Set<Uri> newMediaUriSet = mediaList.stream()
+                .map(MediaEntity::getFileUri)
+                .collect(Collectors.toSet());
+        oldMediaUriSet.removeAll(newMediaUriSet);
+
         //更新段落
         updateParagraph(paragraph);
 
-        //插入新媒体
-        List<MediaEntity> newMediaList = newMediaUriList.stream()
-                .map(uri -> new MediaEntity(paragraph.getParagraphId(), uri))
-                .collect(Collectors.toList());
+        //更新媒体
         MediaDao mediaDao = db.mediaDao();
-        mediaDao.insertMedia(newMediaList);
+        mediaDao.deleteMediaByParagraphId(paragraphId);
+        mediaDao.insertMedia(mediaList);
+
+        return oldMediaUriSet;
     }
 
     /**
@@ -308,7 +328,7 @@ public interface ParagraphDao {
     void deleteParagraphByDateRange(LocalDate start, LocalDate end);
 
     @Transaction
-    default void insertDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
+    default void addDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
         DiaryDatabase db = DiaryDatabase.getInstance(context);
         DiaryDao diaryDao = db.diaryDao();
 

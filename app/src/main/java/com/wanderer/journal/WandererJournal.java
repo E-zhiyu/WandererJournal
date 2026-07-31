@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -12,18 +13,28 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ProcessLifecycleOwner;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
+import com.wanderer.journal.automation.worker.BackupWorker;
+import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
+import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
+import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.pages.AuthActivity;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class WandererJournal extends Application {
     private static boolean isLifecycleObserverLocked = false;   //生命周期观察者是否被锁定
@@ -49,13 +60,28 @@ public class WandererJournal extends Application {
             int themeMode = AppSettingsPreference.getThemeMode(this);
             ThemeHelper.applyTheme(themeMode);
 
+            //安排自动备份任务
+            if (AutoBackupPreference.getSwitchStat(this)) {
+                int frequency = AutoBackupPreference.getBackupFrequency(this);
+                long intervalMillis = BackupFrequency.values()[frequency].getIntervalMillis();
+                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+
+                //打印任务状态日志
+                try {
+                    WorkInfo info = WorkManager.getInstance(this).getWorkInfosForUniqueWork(TagStrings.BACKUP_WORKER.t()).get().get(0);
+                    Log.d(LogTags.WORK_STATS.n(), "State: " + info.getState());
+                } catch (ExecutionException | InterruptedException e) {
+                    Log.d(LogTags.WORK_STATS.n(), "State: " + BackupWorker.class + "未正常工作");
+                }
+            }
+
             //注册应用级的生命周期观察者
             ProcessLifecycleOwner.get().getLifecycle().addObserver(new DefaultLifecycleObserver() {
                 @Override
                 public void onStart(@NonNull LifecycleOwner owner) {
-                    Log.d(LogTags.WANDERER_JOURNAL.n(), "触发全局生命周期观察者的onStart()");
+                    Log.d(LogTags.APPLICATION.n(), "触发全局生命周期观察者的onStart()");
                     if (isLifecycleObserverLocked) {
-                        Log.d(LogTags.WANDERER_JOURNAL.n(), "消费掉生命周期观察者的锁");
+                        Log.d(LogTags.APPLICATION.n(), "消费掉生命周期观察者的锁");
                         isLifecycleObserverLocked = false;  //重新启动时消费掉锁定
                         return;
                     }
@@ -78,6 +104,7 @@ public class WandererJournal extends Application {
                 }
             });
 
+            //注册活动生命周期监听器，用于更新活动数量
             registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
                 @Override
                 public void onActivityStarted(@NonNull Activity activity) {
@@ -121,13 +148,21 @@ public class WandererJournal extends Application {
                 }
             });
         }
+
+        //启动时检测是否有需要删除的安装包
+        String apkUri = VersionPreference.getApkUri(this);
+        if (!apkUri.isEmpty()) {
+            Uri contentUri = Uri.parse(apkUri);
+            FileHelper.deleteFile(contentUri, this);
+            VersionPreference.setApkUri(this, "");
+        }
     }
 
     /**
      * 从最近任务中隐藏
      */
     private void removeTaskFromRecents() {
-        Log.d(LogTags.WANDERER_JOURNAL.n(), "触发最近任务隐藏");
+        Log.d(LogTags.APPLICATION.n(), "触发最近任务隐藏");
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
             List<ActivityManager.AppTask> taskList = am.getAppTasks();

@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.others.viewmodel;
 
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.wanderer.journal.data.save.db.DiaryDatabase;
@@ -15,8 +16,13 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleListViewModel extends ViewModel {
+    private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
     private final BehaviorProcessor<String> searchKeywordProcessor =
             BehaviorProcessor.createDefault("");    //搜索关键词处理器
+
+    public MutableLiveData<Void> getFilterUpdatedLiveData() {
+        return filterUpdatedLiveData;
+    }
 
     /**
      * 获取角色数据
@@ -41,5 +47,24 @@ public class RoleListViewModel extends ViewModel {
      */
     public void executeSearch(String keyword) {
         searchKeywordProcessor.onNext(keyword);
+        filterUpdatedLiveData.setValue(null);
+    }
+
+    /**
+     * 清空过滤条件
+     */
+    public void clearFilter() {
+        searchKeywordProcessor.onNext("");
+
+        filterUpdatedLiveData.setValue(null);
+    }
+
+    /**
+     * 判断是否没有过滤条件
+     * @return 是否没有过滤条件
+     */
+    public boolean isNoFilter() {
+        String searchText = searchKeywordProcessor.getValue();
+        return searchText == null || searchText.isEmpty();
     }
 }

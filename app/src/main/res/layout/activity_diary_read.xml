@@ -24,20 +24,6 @@
             android:hint="@string/diary_read_search_hint"
             app:layout_scrollFlags="scroll|enterAlways|snap"
             app:menu="@menu/menu_diary_read_search_bar" />
-
-        <!-- 选中的情绪标签显示 -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/emotion_tag_in_appbar_recycler"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:orientation="horizontal"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="10dp"
-            android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_scrollFlags="scroll|enterAlways|snap" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- 段落列表 -->
@@ -105,7 +91,7 @@
                 android:paddingBottom="7dp">
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/counter_text"
+                    android:id="@+id/filtered_paragraph_counter_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/not_applicable"

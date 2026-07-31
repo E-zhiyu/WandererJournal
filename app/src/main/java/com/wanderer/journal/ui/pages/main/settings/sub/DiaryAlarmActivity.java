@@ -33,7 +33,6 @@ import java.util.List;
 public class DiaryAlarmActivity extends AppCompatActivity {
     private ActivityDiaryAlarmBinding binding;  //绑定的 XML 布局
     private AlarmTimeAdapter adapter;           //提醒时间显示适配器
-    private PermissionHelper permissionHelper;  //权限申请帮助器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,15 +52,8 @@ public class DiaryAlarmActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        permissionHelper.start();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-
         binding = null;
     }
 
@@ -211,7 +203,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
      * 向 PermissionHelper 提交需要申请的权限
      */
     private void addPermissions() {
-        permissionHelper = new PermissionHelper(this);
+        PermissionHelper permissionHelper = new PermissionHelper(this);
 
         //通知权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

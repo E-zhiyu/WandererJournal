@@ -34,6 +34,14 @@ public interface MediaDao {
     void deleteMedia(List<MediaEntity> mediaEntityList);
 
     /**
+     * 通过段落编号删除媒体记录
+     *
+     * @param paragraphId 需要删除媒体记录的段落编号
+     */
+    @Query("DELETE FROM medias WHERE parentParagraphId = :paragraphId")
+    void deleteMediaByParagraphId(long paragraphId);
+
+    /**
      * 媒体删除事务，同时删除数据库中的记录和文件系统中的文件
      *
      * @param mediaEntityList 需要删除的媒体列表

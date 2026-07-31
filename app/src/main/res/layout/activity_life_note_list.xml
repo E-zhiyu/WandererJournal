@@ -22,7 +22,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/life_note_search_hint"
-            app:layout_scrollFlags="scroll|enterAlways|snap" />
+            app:layout_scrollFlags="scroll|enterAlways|snap"
+            app:menu="@menu/menu_help_search_bar" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- 段落列表 -->
@@ -59,7 +60,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:contentDescription="@string/button_to_add"
+        android:contentDescription="@string/btn_add"
         app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior" />
 
     <!-- 搜索视图 -->

@@ -21,6 +21,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.DefaultLifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
@@ -35,6 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -70,28 +73,32 @@ public class PermissionHelper {
                 PermissionHelper::isAutoStartHinted,
                 PermissionHelper::buildAutoStartPermissionIntent
         );
-        private final Checker checker;              //如何检查权限是否授予
-        private final IntentBuilder intentBuilder;  //跳转权限界面所需的Intent构建器
+        private final Function<Context, Boolean> checker;              //如何检查权限是否授予
+        private final Function<Context, Intent> intentBuilder;  //跳转权限界面所需的Intent构建器
 
-        SpecialPermissionType(Checker c, IntentBuilder i) {
+        SpecialPermissionType(Function<Context, Boolean> c, Function<Context, Intent> i) {
             this.checker = c;
             this.intentBuilder = i;
         }
 
+        /**
+         * 判断权限是否授予
+         *
+         * @param c 上下文
+         * @return 是否授予
+         */
         public boolean isGranted(Context c) {
-            return checker.check(c);
+            return checker.apply(c);
         }
 
-        Intent getIntent(Context c) {
-            return intentBuilder.build(c);
-        }
-
-        interface Checker {
-            boolean check(Context c);
-        }
-
-        interface IntentBuilder {
-            Intent build(Context c);
+        /**
+         * 获取跳转到特殊权限设置界面的 Intent
+         *
+         * @param c 上下文
+         * @return 跳转到权限设置界面的 Intent
+         */
+        public Intent getIntent(Context c) {
+            return intentBuilder.apply(c);
         }
     }
 
@@ -123,6 +130,19 @@ public class PermissionHelper {
                             @Nullable ActivityResultLauncher<String[]> customLauncher) {
         this.activity = activity;
 
+        //注册活动生命周期监听器，用于申请权限
+        activity.getLifecycle().addObserver(new DefaultLifecycleObserver() {
+            @Override
+            public void onResume(@NonNull LifecycleOwner owner) {
+                start();    //每当 Activity 重新运行时，都检查一遍权限
+            }
+
+            @Override
+            public void onDestroy(@NonNull LifecycleOwner owner) {
+                activity.getLifecycle().removeObserver(this);
+            }
+        });
+
         if (customLauncher != null) {
             this.runtimeLauncher = customLauncher;
         } else {
@@ -151,8 +171,6 @@ public class PermissionHelper {
                             rationaleRuntimePermissions.remove(permission);
                         }
                     }
-
-                    start();
                 }
         );
     }
@@ -189,7 +207,7 @@ public class PermissionHelper {
     /**
      * 开始申请权限
      */
-    public void start() {
+    private void start() {
         //检查是否正在处理权限，如果是则直接结束
         if (isProcessing) {
             return;

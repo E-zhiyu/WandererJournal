@@ -12,16 +12,23 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.automation.worker.BackupWorker;
+import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
+import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
@@ -36,13 +43,14 @@ import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingSpinnerView;
+import com.wanderer.journal.ui.pages.main.settings.components.SettingSwitchView;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,6 +71,7 @@ public class DataManageActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> importDiaryLauncher;                     //导入日记启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
     private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
+    private ActivityResultLauncher<Intent> backupDirSelectLauncher;                 //自动备份目录选择启动器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +155,31 @@ public class DataManageActivity extends AppCompatActivity {
                     showImportDiaryDialog(data.getData());
                 }
         );
+
+        backupDirSelectLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    int resultCode = result.getResultCode();
+                    Intent data = result.getData();
+                    if (resultCode != Activity.RESULT_OK || data == null || data.getData() == null) {
+                        return;
+                    }
+
+                    //请求持久化权限
+                    Uri backupDirUri = data.getData();
+                    getContentResolver().takePersistableUriPermission(
+                            backupDirUri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    );
+
+                    //保存备份目录 Uri
+                    AutoBackupPreference.setBackupDirectoryUri(this, backupDirUri.toString());
+
+                    //显示备份目录
+                    String display = SAFHelper.getReadablePathFromSafUri(this, backupDirUri);
+                    binding.backupDirectoryOption.descriptionText.setText(display);
+                }
+        );
     }
 
     /**
@@ -192,6 +226,127 @@ public class DataManageActivity extends AppCompatActivity {
                 new String[]{"application/zip"},
                 importDataLauncher
         ));
+
+        //自动备份开关
+        SettingSwitchView autoBackupSwitchOption = new SettingSwitchView(
+                this,
+                binding.autoBackupOption,
+                R.string.auto_backup,
+                "自动生成备份文件至指定位置",
+                R.drawable.outline_settings_backup_restore_24,
+                RadiusStyle.TOP
+        );
+        String backupDir = AutoBackupPreference.getBackupDirectoryUri(this);
+        boolean switchStat = AutoBackupPreference.getSwitchStat(this);
+        autoBackupSwitchOption.setChecked(!backupDir.isEmpty() && switchStat);
+        autoBackupSwitchOption.setFunctionListener((buttonView, isChecked) -> {
+            String oldDir = AutoBackupPreference.getBackupDirectoryUri(this);
+            if (oldDir.isEmpty() && isChecked) {    //备份目录无效则先提示设置
+                buttonView.setChecked(false);
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("未设置备份目录")
+                        .setMessage("该功能需要先设置备份文件存储目录，请点击“确定”按钮设置存储目录，然后再开启该功能。")
+                        .setNegativeButton("取消", (dialog, which) -> dialog.cancel())
+                        .setPositiveButton("确定", (dialog, which) -> {
+                            String backupDirUri = AutoBackupPreference.getBackupDirectoryUri(this);
+                            SAFHelper.openDocumentTreeViaSAF(backupDirUri, backupDirSelectLauncher);
+                        })
+                        .show();
+                return;
+            } else if (isChecked) {
+                int frequencyIndex = AutoBackupPreference.getBackupFrequency(this);
+                long intervalMillis = BackupFrequency.values()[frequencyIndex].getIntervalMillis();
+                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+            } else {
+                WorkerScheduler.cancelPeriodicBackup(this, TagStrings.BACKUP_WORKER.t());
+            }
+
+            AutoBackupPreference.setSwitchStat(this, isChecked);
+        });
+
+        //备份频率
+        SettingSpinnerView backupFrequencyOption = new SettingSpinnerView(
+                this,
+                binding.backupFrequencyOption,
+                R.string.backup_frequency,
+                "自动备份的时间间隔",
+                R.drawable.outline_timer_24,
+                RadiusStyle.MIDDLE
+        );
+        int frequencyIndex = AutoBackupPreference.getBackupFrequency(this);
+        backupFrequencyOption.setSpinnerText(
+                BackupFrequency.values()[frequencyIndex].getTitle()
+        );
+        backupFrequencyOption.setFunctionListener(v -> {
+            PopupMenu frequencyMenu = new PopupMenu(this, backupFrequencyOption.getFunctionComponent());
+
+            //填充选项
+            for (BackupFrequency frequency : BackupFrequency.values()) {
+                int groupId = frequency.getGroupId();
+                int itemId = frequency.getItemId();
+                int order = frequency.getOrder();
+                String title = frequency.getTitle();
+                frequencyMenu.getMenu().add(groupId, itemId, order, title);
+            }
+
+            //设置监听
+            frequencyMenu.setOnMenuItemClickListener(item -> {
+                boolean isItemClicked = false;
+
+                //获取选项编号列表
+                List<Integer> itemIdList = Arrays.stream(BackupFrequency.values())
+                        .map(BackupFrequency::getItemId)
+                        .collect(Collectors.toList());
+
+                //判断是否选中
+                if (itemIdList.contains(item.getItemId())) {
+                    int index = itemIdList.indexOf(item.getItemId());
+                    backupFrequencyOption.setSpinnerText(item.getTitle());
+                    isItemClicked = true;
+
+                    int oldIndex = AutoBackupPreference.getBackupFrequency(this);  //获取之前的频率代码防止重复更新工作
+                    if (oldIndex != index) {
+                        BackupFrequency frequency = BackupFrequency.values()[index];
+                        String title = frequency.getTitle();
+                        backupFrequencyOption.setSpinnerText(title);
+                        AutoBackupPreference.setBackupFrequency(this, index);
+
+                        //只有开关打开时才更新工作内容并安排一次备份
+                        if (AutoBackupPreference.getSwitchStat(this)) {
+                            //更新工作内容
+                            long intervalMillis = frequency.getIntervalMillis();
+                            WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+
+                            //立即备份一次
+                            WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class);
+                        }
+                    }
+                }
+
+                return isItemClicked;
+            });
+
+            frequencyMenu.show();
+        });
+
+        //备份目录
+        SettingClickableTextView backupDirectoryOption = new SettingClickableTextView(
+                this,
+                binding.backupDirectoryOption,
+                R.string.backup_directory,
+                "备份文件存储的位置",
+                R.drawable.outline_folder_data_24,
+                RadiusStyle.BOTTOM
+        );
+        backupDirectoryOption.setFunctionListener(v -> {
+            String backupDirUri = AutoBackupPreference.getBackupDirectoryUri(this);
+            SAFHelper.openDocumentTreeViaSAF(backupDirUri, backupDirSelectLauncher);
+        });
+        String uriStr = AutoBackupPreference.getBackupDirectoryUri(this);
+        if (!uriStr.isEmpty()) {
+            String path = SAFHelper.getReadablePathFromSafUri(this, Uri.parse(uriStr));
+            binding.backupDirectoryOption.descriptionText.setText(path);
+        }
     }
 
     /**
@@ -251,18 +406,10 @@ public class DataManageActivity extends AppCompatActivity {
                     exportChoiceStatList = checkedStatList;
                     exportIncludeMedia = checkedStatList.get(0);
 
-                    //生成默认文件名
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd(HHmmss)");
-                    String fileName = String.format(
-                            Locale.getDefault(),
-                            "WandererJournalBackup_%s.zip",
-                            LocalDateTime.now().format(formatter)
-                    );
-
                     //打开 SAF 用于创建压缩包文件
                     SAFHelper.createDocumentViaSAF(
                             "application/zip",
-                            fileName,
+                            FileHelper.generateBackupFileName(),
                             exportDataLauncher
                     );
                 })
@@ -330,13 +477,13 @@ public class DataManageActivity extends AppCompatActivity {
         disposables.add(ZipHelper.scanBackupFile(uri, this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .subscribe(fileNameList -> {
+                .subscribe(fileNameSet -> {
                     progressDialog.dismiss();
 
                     //实例化选项列表
                     List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
                             .map(backupDataType -> {
-                                if (fileNameList.contains(backupDataType.getFileName())) {
+                                if (fileNameSet.contains(backupDataType.getFileName())) {
                                     return new MultiChoiceDialogBuilder.ChoiceItem(
                                             true,
                                             backupDataType.getTitle(),
@@ -445,11 +592,10 @@ public class DataManageActivity extends AppCompatActivity {
                             }
 
                             //生成提示消息
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                             String message = String.format(
                                     Locale.getDefault(),
                                     "所选文件信息如下：\n行数：%d\n最后编辑时间：%s\n确认追加该文件中的所有内容吗？",
-                                    lineCount, lastModifyTime.format(formatter)
+                                    lineCount, lastModifyTime.format(CustomDateTimeFormatter.DATE_TIME)
                             );
 
                             new MaterialAlertDialogBuilder(this)
@@ -566,7 +712,7 @@ public class DataManageActivity extends AppCompatActivity {
                     LocalDate parsedDate = DateParseHelper.parseFlexible(line);
                     if (parsedDate != null) {
                         if (currentDate != null && !currentParagraphs.isEmpty()) {
-                            paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                            paragraphDao.addDiaryWithParagraphs(currentDate, currentParagraphs, this);
                             currentParagraphs.clear();
                         }
                         currentDate = parsedDate;
@@ -589,7 +735,7 @@ public class DataManageActivity extends AppCompatActivity {
             } finally {
                 // 收尾工作
                 if (currentDate != null && !currentParagraphs.isEmpty()) {
-                    paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                    paragraphDao.addDiaryWithParagraphs(currentDate, currentParagraphs, this);
                 }
 
                 emitter.onNext(processedLines);

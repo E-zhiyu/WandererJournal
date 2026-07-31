@@ -27,6 +27,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.others.viewmodel.LifeNoteListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -34,7 +35,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class LifeNoteListActivity extends AppCompatActivity {
-    private ActivityLifeNoteListBinding binding;   //绑定的 XML 布局
+    private ActivityLifeNoteListBinding binding;    //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();
     private BackPressedCallbackHelper backHelper;   //返回手势拦截器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;    //搜索返回处理器
@@ -54,6 +55,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
 
         initBackHandlers();
         initViews();
+        observeLiveData();
     }
 
     @Override
@@ -81,9 +83,8 @@ public class LifeNoteListActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setSearchMode(false);
                 LifeNoteListViewModel viewModel = new ViewModelProvider(LifeNoteListActivity.this).get(LifeNoteListViewModel.class);
-                viewModel.executeSearch("");
+                viewModel.clearFilter();
                 return true;
             }
 
@@ -92,6 +93,16 @@ public class LifeNoteListActivity extends AppCompatActivity {
                 return 1;
             }
         };
+    }
+
+    /**
+     * 观察 ViewModel 的 LiveData
+     */
+    private void observeLiveData() {
+        LifeNoteListViewModel listViewModel = new ViewModelProvider(this).get(LifeNoteListViewModel.class);
+        listViewModel.getFilterUpdatedLiveData().observe(this, v ->
+                setSearchMode(!listViewModel.isNoFilter())
+        );
     }
 
     /**
@@ -157,11 +168,31 @@ public class LifeNoteListActivity extends AppCompatActivity {
                 keyword -> {
                     LifeNoteListViewModel viewModel = new ViewModelProvider(this).get(LifeNoteListViewModel.class);
                     viewModel.executeSearch(keyword);
-
-                    //根据搜索关键词是否为空开启和关闭搜索模式
-                    setSearchMode(!keyword.isEmpty());
                 },
-                null
+                item -> {
+                    int id = item.getItemId();
+                    if (id == R.id.action_help) {
+                        final String EXPLANATION = "### 1. 设计理念\n" +
+                                "在日常生活中时不时会悟出一些道理，如果不加以记录很快就会忘记。此模块专为记录各种想法而设计，您可以将各种想法记录于此，并且支持查看修改记录，反映您思维的变化。\n" +
+                                "\n" +
+                                "### 2. 使用方法\n" +
+                                "\n" +
+                                "1. 点击右下角的添加按钮进入输入界面，输入相应的内容并保存后即可显示在当前界面的列表中；\n" +
+                                "2. 点击列表中的内容可以进入修改界面，保存后列表将显示修改后的信息；\n" +
+                                "3. 若某条人生笔记有修改记录，进入其修改界面后可以在输入框下方看到修改历史列表，点击修改历史列表中的项可以查看修改历史详情。\n" +
+                                "\n"+
+                                "### 3. 人生笔记修改历史\n" +
+                                "- 每次修改现存的人生笔记后，都会新增修改历史记录；\n" +
+                                "- 修改历史保存了修改的具体时间和修改前的内容等信息，便于您回顾思维变化的过程；\n" +
+                                "- 若某条人生笔记带有修改历史，进入其修改界面后会在输入框下方显示修改历史记录。\n";
+                        new MarkdownDialogBuilder(this, "功能说明", EXPLANATION)
+                                .setNegativeButton("关闭", null)
+                                .show();
+                        return true;
+                    }
+
+                    return false;
+                }
         );
     }
 

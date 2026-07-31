@@ -23,12 +23,12 @@ public class LifeNoteBackupHelper extends BackupHelperBase<DiaryDatabase, LifeNo
 
     @Override
     protected LifeNoteDataMap getAllDataInMap() {
-        return db.dataBackupDao().exportAllLifeNoteData();
+        return db.dataBackupDao().exportLifeNoteData();
     }
 
     @Override
     protected void saveDataInMapToDb(LifeNoteDataMap map) {
-        db.dataBackupDao().importAllLifeNoteData(map);
+        db.dataBackupDao().importLifeNoteData(map);
     }
 
     @Override

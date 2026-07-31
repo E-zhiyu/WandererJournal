@@ -6,10 +6,28 @@ import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.3\n" +
+    private final static String CHANGELOG = "# v1.5.4\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 数据管理设置界面新增自动备份功能\n" +
+            "- 设置界面添加更新选项\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 优化部分界面的用户引导\n" +
+            "- 去除读日记界面顶部的情绪标签列表\n" +
+            "- 修改媒体删除逻辑，现在需要点击发送按钮才会删除媒体\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复修改角色信息后会意外清空使用次数和最后使用时间的BUG\n" +
+            "\n" +
+            "# v1.5.3\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
@@ -310,12 +328,25 @@ public class AboutHelper {
     }
 
     /**
+     * 获取当前版本代码
+     *
+     * @param context 上下文
+     * @return 版本代码整数值
+     * @throws PackageManager.NameNotFoundException 包名未找到引发的异常
+     */
+    public static long getVersionCode(@NonNull Context context) throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfo = context.getPackageManager()
+                .getPackageInfo(context.getPackageName(), 0);
+        return packageInfo.getLongVersionCode();
+    }
+
+    /**
      * 显示更新日志对话框
      *
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        new MarkdownDialogBuilder(context, "更新日志", CHANGELOG)
+        new MarkdownDialogBuilder(context, context.getString(R.string.changelog), CHANGELOG)
                 .setPositiveButton("关闭", null)
                 .show();
     }

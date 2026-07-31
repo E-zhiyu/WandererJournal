@@ -23,7 +23,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:title="@string/emotion_tag" />
+                app:title="@string/emotion_tag">
+
+                <ImageButton
+                    android:id="@+id/help_btn"
+                    style="@style/ImageButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="15dp"
+                    android:contentDescription="@string/btn_of_explanation"
+                    android:src="@drawable/outline_help_24" />
+            </com.google.android.material.appbar.MaterialToolbar>
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -50,6 +61,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:contentDescription="@string/button_to_add"
+        android:contentDescription="@string/btn_add"
         app:layout_behavior="com.google.android.material.behavior.HideViewOnScrollBehavior" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -25,12 +25,12 @@ public class RoleBackupHelper extends BackupHelperBase<DiaryDatabase, RoleDataMa
 
     @Override
     protected RoleDataMap getAllDataInMap() {
-        return db.dataBackupDao().exportAllRoleData();
+        return db.dataBackupDao().exportRoleData();
     }
 
     @Override
     protected void saveDataInMapToDb(@NonNull RoleDataMap map) {
-        db.dataBackupDao().importAllRoleData(map);
+        db.dataBackupDao().importRoleData(map);
     }
 
     @Override

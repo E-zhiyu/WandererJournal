@@ -125,8 +125,7 @@
                         app:layout_constraintBottom_toBottomOf="@id/start_date_title"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@id/start_date_title"
-                        app:layout_constraintTop_toBottomOf="@id/date_difference_text"
-                        app:layout_constraintTop_toTopOf="@id/start_date_title" />
+                        app:layout_constraintTop_toBottomOf="@id/date_difference_text" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 

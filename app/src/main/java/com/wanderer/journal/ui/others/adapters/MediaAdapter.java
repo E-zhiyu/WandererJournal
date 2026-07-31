@@ -142,8 +142,8 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                 .error(R.drawable.outline_error_24)             //错误图
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC) //缓存策略
                 .override(
-                        AppearanceHelper.dpToPx(context, 200),
-                        AppearanceHelper.dpToPx(context, 200)
+                        AppearanceHelper.dpToPx(context, 75),
+                        AppearanceHelper.dpToPx(context, 75)
                 );                                              //图片尺寸
 
         //启用Stable Ids

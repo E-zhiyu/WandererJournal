@@ -17,7 +17,6 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.role.RoleInputActivity;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -78,26 +77,24 @@ public class InfoShower {
         LocalDateTime updateDateTime = historyEntity.getUpdateDateTime();
 
         //生成 Markdown 文本
-        StringBuilder builder = new StringBuilder();
+        String info =
+                //插入洞见
+                "**" + context.getString(R.string.life_note_insight) + ":** " +
+                insight +
+                "\n\n" +
 
-        //插入洞见
-        builder.append("**").append(context.getString(R.string.life_note_insight)).append(":** ");
-        builder.append(insight);
-        builder.append("\n\n");
+                //插入阐述
+                "**" + context.getString(R.string.life_note_elaboration) + ":** " +
+                (elaboration.isEmpty() ? "<无阐述>" : elaboration) +
+                "\n\n" +
 
-        //插入阐述
-        builder.append("**").append(context.getString(R.string.life_note_elaboration)).append(":** ");
-        builder.append(elaboration.isEmpty() ? "<无阐述>" : elaboration);
-        builder.append("\n\n");
-
-        //插入时间
-        builder.append("**").append(context.getString(R.string.time)).append(":** ");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        builder.append(updateDateTime.format(formatter));
-        builder.append("\n\n");
+                //插入时间
+                "**" + context.getString(R.string.time) + ":** " +
+                updateDateTime.format(CustomDateTimeFormatter.DATE_TIME) +
+                "\n\n";
 
         //显示对话框
-        MarkdownDialogBuilder dialogBuilder = new MarkdownDialogBuilder(context, "修改历史", builder.toString());
+        MarkdownDialogBuilder dialogBuilder = new MarkdownDialogBuilder(context, "修改历史", info);
         dialogBuilder
                 .setNegativeButton("关闭", null)
                 .show();

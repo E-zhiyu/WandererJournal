@@ -189,16 +189,16 @@ public class DiaryFragment extends Fragment {
         RecyclerView.Adapter<?> adapter = binding.diaryRecycler.getAdapter();
         if (adapter == null || targetPosition >= adapter.getItemCount()) {
             targetPosition -= 1;    //防止超出范围
-            Toast.makeText(requireContext(), "已跳转至最早的日记", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "已跳转至最早的日期", Toast.LENGTH_SHORT).show();
         } else if (targetPosition == 0) {
-            Toast.makeText(requireContext(), "已跳转至最晚的日记", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "已跳转至最晚的日期", Toast.LENGTH_SHORT).show();
         } else {
             //判断跳转到的位置是否是目标日期
             if (adapter instanceof DiaryAdapter) {
                 DiaryWithSummaryUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
                 LocalDate exactDate = diaryModel.getDiary().getDiaryDate();
                 if (!exactDate.isEqual(targetDate)) {
-                    Toast.makeText(requireContext(), "未找到日记，已跳转至相邻日记", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "当天无日记，已跳转至相邻日期", Toast.LENGTH_SHORT).show();
                 }
             }
         }

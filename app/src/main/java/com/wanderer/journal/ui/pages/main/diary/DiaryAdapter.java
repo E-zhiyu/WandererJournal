@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
@@ -21,10 +22,8 @@ import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdapter.ViewHolderDiary> {
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     private final AdapterOnClickListener<DiaryEntity> clickListener;
     private final AdapterOnLongClickListener<DiaryEntity> longClickListener;
     private static final DiffUtil.ItemCallback<DiaryWithSummaryUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -134,7 +133,7 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
 
         //日期
         LocalDate date = diaryWithSummaryUiModel.getDiary().getDiaryDate();
-        holder.binding.dateText.setText(date.format(DATE_TIME_FORMATTER));
+        holder.binding.dateText.setText(date.format(CustomDateTimeFormatter.DATE_WITH_WEEK));
 
         //片段摘要
         String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();

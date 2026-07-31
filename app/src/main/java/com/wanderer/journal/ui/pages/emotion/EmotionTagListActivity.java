@@ -19,12 +19,13 @@ import com.wanderer.journal.data.save.db.DiaryDatabase;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
-import com.wanderer.journal.databinding.ActivityEmotionTagManageBinding;
+import com.wanderer.journal.databinding.ActivityEmotionTagListBinding;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 import java.util.Locale;
 
@@ -33,13 +34,13 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagListActivity extends AppCompatActivity {
-    private ActivityEmotionTagManageBinding binding;    //绑定的XML布局
+    private ActivityEmotionTagListBinding binding;    //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityEmotionTagManageBinding.inflate(getLayoutInflater());
+        binding = ActivityEmotionTagListBinding.inflate(getLayoutInflater());
 
         EdgeToEdge.enable(this);
         setContentView(binding.getRoot());
@@ -68,6 +69,28 @@ public class EmotionTagListActivity extends AppCompatActivity {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
+        //功能说明按钮
+        binding.helpBtn.setOnClickListener(view -> {
+            final String EXPLANATION = "### 1. 主要功能\n" +
+                    "情绪标签用于为日记段落标记情绪，方便阅读时了解当时的心情，同时也可作为段落筛选条件实现快速查找。\n" +
+                    "\n" +
+                    "### 2. 使用方法\n" +
+                    "以下场景可以使用到情绪标签：\n" +
+                    "\n" +
+                    "- 在`读日记`和`写日记`界面点击段落，在弹出的菜单中点击“修改情绪标签”为段落标记情绪标签；\n" +
+                    "- 在`读日记`界面中搜索段落时通过情绪标签缩小搜索范围。" +
+                    "\n" +
+                    "### 3. 强烈程度\n" +
+                    "\n" +
+                    "- 当`日记段落`被`情绪标签`标记时，可以选择情绪标签的强烈程度以反映了当时的`心情`；\n" +
+                    "> 例：某个段落记录了特别令人高兴的事情时，可以为其标记“高兴”，并将强烈程度设置为5。\n" +
+                    "- 情绪标签的强烈程度会以`罗马数字`的形式显示在`标签名称`后面。\n" +
+                    "> 例：某个段落被标记为“伤心”，且该标签强烈程度为3，在段落内容下方会显示“伤心 III”字样。\n";
+            new MarkdownDialogBuilder(this, "功能介绍", EXPLANATION)
+                    .setNegativeButton("关闭", null)
+                    .show();
+        });
+
         //添加按钮
         binding.addFab.setOnClickListener(view -> {
             Intent skip2EmotionTagAdd = new Intent(this, EmotionTagInputActivity.class);
@@ -77,7 +100,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
         AppearanceHelper.attachMorphAnimation(binding.addFab);
 
         //情绪标签列表
-        EmotionTagAdapter adapter = new EmotionTagAdapter(
+        EmotionTagListAdapter adapter = new EmotionTagListAdapter(
                 (emotionTag, anchor) -> {
                     Intent skip2EmotionTagModify = new Intent(this, EmotionTagInputActivity.class);
                     Bundle bundle = new Bundle();

@@ -23,7 +23,7 @@ import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
 
-public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerView.ViewHolder>
+public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private static final int TYPE_ITEM = 1;
     private static final int TYPE_SEPARATOR = 0;
@@ -93,7 +93,7 @@ public class EmotionTagAdapter extends ListAdapter<EmotionListUiModel, RecyclerV
      *
      * @param clickListener 点击监听器
      */
-    public EmotionTagAdapter(
+    public EmotionTagListAdapter(
             AdapterOnClickListener<EmotionTagEntity> clickListener,
             AdapterOnLongClickListener<EmotionTagEntity> longClickListener
     ) {

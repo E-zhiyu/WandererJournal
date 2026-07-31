@@ -89,12 +89,6 @@ public class CommonRoleSelectAdapter extends ListAdapter<RoleEntity, CommonRoleS
     @Override
     public void onBindViewHolder(@NonNull RoleSelectViewHolder holder, int position) {
         RoleEntity role = getItem(position);
-        String displayName = role.getDisplayName();
-        if (displayName.isEmpty()) {
-            holder.binding.chip.setText(role.getName());
-        } else {
-            String finalDisplay = role.generateDisplayName();
-            holder.binding.chip.setText(finalDisplay);
-        }
+        holder.binding.chip.setText(role.generateDisplayName());
     }
 }

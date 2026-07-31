@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
@@ -16,10 +17,7 @@ import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.databinding.ViewHolderLifeNoteListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
-import java.time.format.DateTimeFormatter;
-
 public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteListAdapter.LifeNoteListViewHolder> {
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private static final DiffUtil.ItemCallback<LifeNoteEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull LifeNoteEntity oldItem, @NonNull LifeNoteEntity newItem) {
@@ -127,7 +125,7 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
         holder.binding.elaborationText.setText(entity.getElaboration().isEmpty() ? "<无阐述>" : entity.getElaboration());
 
         //时间
-        holder.binding.dateTimeText.setText(entity.getDateTime().format(DATE_TIME_FORMATTER));
+        holder.binding.dateTimeText.setText(entity.getDateTime().format(CustomDateTimeFormatter.DATE_TIME));
 
         //设置圆角
         AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), holder.getBindingAdapterPosition());

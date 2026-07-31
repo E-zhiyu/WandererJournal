@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 
 import com.wanderer.journal.automation.broadcast.DiaryAlarmReceiver;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.intent.RequestResultCode;
+import com.wanderer.journal.auxiliary.enums.intent.PendingRequestCode;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 
 import java.time.LocalDateTime;
@@ -130,7 +130,7 @@ public class AlarmHelper {
         if (now.isBefore(todayAlarmDateTime)) {
             setAlarm(
                     todayAlarmDateTime,
-                    RequestResultCode.REQUEST_SET_DIARY_ALARM.ordinal(),
+                    PendingRequestCode.REQUEST_SET_DIARY_ALARM.ordinal(),
                     toDiaryAlarmReceiver,
                     context
             );
@@ -146,7 +146,7 @@ public class AlarmHelper {
             //设置第二天的提醒闹钟
             setAlarm(
                     now.plusDays(1).toLocalDate().atTime(tomorrowTime),
-                    RequestResultCode.REQUEST_SET_DIARY_ALARM.ordinal(),
+                    PendingRequestCode.REQUEST_SET_DIARY_ALARM.ordinal(),
                     toDiaryAlarmReceiver,
                     context
             );
@@ -161,6 +161,6 @@ public class AlarmHelper {
     public static void cancelDiaryAlarm(Context context) {
         Intent toDiaryAlarmReceiver = new Intent(context, DiaryAlarmReceiver.class);
 
-        cancelAlarm(RequestResultCode.REQUEST_SET_DIARY_ALARM.ordinal(), toDiaryAlarmReceiver, context);
+        cancelAlarm(PendingRequestCode.REQUEST_SET_DIARY_ALARM.ordinal(), toDiaryAlarmReceiver, context);
     }
 }
