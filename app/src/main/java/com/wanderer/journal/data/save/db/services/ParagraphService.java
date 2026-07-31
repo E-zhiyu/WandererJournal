@@ -27,23 +27,23 @@ public class ParagraphService {
     /**
      * 插入新日记段落并插入新添加的媒体
      *
-     * @param startDate    写日记界面的起始日期
-     * @param paragraph    新段落实体
-     * @param newMediaList 新媒体文件的Uri列表
-     * @param db           数据库实例
+     * @param startDate 写日记界面的起始日期
+     * @param paragraph 新段落实体
+     * @param mediaList 媒体列表
+     * @param db        数据库实例
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
-    public static Single<Integer> insertParagraphWithMedia(
+    public static Single<Integer> addParagraph(
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
-            List<Uri> newMediaList,
+            List<MediaEntity> mediaList,
             @NonNull DiaryDatabase db
     ) {
         paragraph.setContent(paragraph.getContent().trim());
         return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.insertParagraph(startDate, paragraph, newMediaList, db);
+                return paragraphDao.addParagraph(startDate, paragraph, mediaList, db);
             } else {
                 return -1;
             }
@@ -53,19 +53,25 @@ public class ParagraphService {
     /**
      * 更新段落并插入新添加的媒体
      *
-     * @param paragraph    更新后的段落
-     * @param newMediaList 新媒体文件的 Uri 列表
-     * @param db           数据库实例
+     * @param paragraph 更新后的段落
+     * @param mediaList 最终的媒体列表
+     * @param context   上下文
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
-    public static Completable updateParagraphWithMedia(
+    public static Completable modifyParagraph(
             ParagraphEntity paragraph,
-            List<Uri> newMediaList,
-            DiaryDatabase db
+            List<MediaEntity> mediaList,
+            Context context
     ) {
         return Completable.fromAction(() -> {
+            DiaryDatabase db = DiaryDatabase.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
-            paragraphDao.updateParagraph(paragraph, newMediaList, db);
+            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, db);
+
+            //删除旧媒体文件
+            for (Uri uri : oldMediaUriSet) {
+                FileHelper.deleteFile(uri, context);
+            }
         });
     }
 

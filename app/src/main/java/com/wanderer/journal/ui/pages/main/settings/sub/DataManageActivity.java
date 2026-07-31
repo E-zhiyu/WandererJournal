@@ -712,7 +712,7 @@ public class DataManageActivity extends AppCompatActivity {
                     LocalDate parsedDate = DateParseHelper.parseFlexible(line);
                     if (parsedDate != null) {
                         if (currentDate != null && !currentParagraphs.isEmpty()) {
-                            paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                            paragraphDao.addDiaryWithParagraphs(currentDate, currentParagraphs, this);
                             currentParagraphs.clear();
                         }
                         currentDate = parsedDate;
@@ -735,7 +735,7 @@ public class DataManageActivity extends AppCompatActivity {
             } finally {
                 // 收尾工作
                 if (currentDate != null && !currentParagraphs.isEmpty()) {
-                    paragraphDao.insertDiaryWithParagraphs(currentDate, currentParagraphs, this);
+                    paragraphDao.addDiaryWithParagraphs(currentDate, currentParagraphs, this);
                 }
 
                 emitter.onNext(processedLines);

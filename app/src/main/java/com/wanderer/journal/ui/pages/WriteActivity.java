@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.TransitionManager;
@@ -58,7 +59,6 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
-import com.wanderer.journal.data.save.db.services.MediaService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
 import com.wanderer.journal.databinding.ActivityWriteBinding;
@@ -101,8 +101,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -331,7 +331,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //媒体删除按钮
         binding.mediaDeleteBtn.setOnClickListener(view -> {
-                    //获取需要删除的媒体
+                    //获取需要被删除的媒体
                     List<MediaEntity> mediaListToBeDeleted = new ArrayList<>();
                     for (long id : selectionTracker.getSelection()) {
                         MediaEntity media = mediaAdapter.getItemById(id);
@@ -340,52 +340,69 @@ public class WriteActivity extends AppCompatActivity {
                         }
                     }
 
-                    //显示对话框
-                    String message = String.format(
-                            Locale.getDefault(),
-                            "即将删除%d个媒体文件，此操作无法撤销，确认继续吗？",
-                            mediaListToBeDeleted.size()
-                    );
-                    new MaterialAlertDialogBuilder(this)
-                            .setTitle("删除媒体")
-                            .setMessage(message)
-                            .setPositiveButton("确定", (dialogInterface, i) -> {
-                                //退出多选
-                                selectionTracker.clearSelection();
+                    //退出多选
+                    selectionTracker.clearSelection();
 
-                                //多线程删除媒体
-                                disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribeOn(Schedulers.io())
-                                        .subscribe(
-                                                () -> {
-                                                    //显示提示
-                                                    String tip = String.format(
-                                                            Locale.getDefault(),
-                                                            "删除了%d个媒体",
-                                                            mediaListToBeDeleted.size()
-                                                    );
-                                                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+                    //更新适配器列表
+                    List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+                    mediaList.removeAll(mediaListToBeDeleted);
+                    mediaAdapter.submitList(mediaList);
 
-                                                    //更新适配器列表
-                                                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-                                                    currentMediaList.removeAll(mediaListToBeDeleted);
-                                                    mediaAdapter.submitList(currentMediaList);
-
-                                                    //没有媒体时隐藏（延迟270ms）防止因动画竞争导致删除按钮和媒体添加重叠
-                                                    if (currentMediaList.isEmpty()) {
-                                                        new Handler(Looper.getMainLooper()).postDelayed(
-                                                                () -> setMediaRecyclerVisible(false),
-                                                                270
-                                                        );
-                                                    }
-                                                },
-                                                e -> ExceptionHelper.showExceptionDialog(this, e)
-                                        )
-                                );
-                            })
-                            .setNegativeButton("取消", null)
-                            .show();
+//                    //获取需要删除的媒体
+//                    List<MediaEntity> mediaListToBeDeleted = new ArrayList<>();
+//                    for (long id : selectionTracker.getSelection()) {
+//                        MediaEntity media = mediaAdapter.getItemById(id);
+//                        if (media != null) {
+//                            mediaListToBeDeleted.add(media);
+//                        }
+//                    }
+//
+//                    //显示对话框
+//                    String message = String.format(
+//                            Locale.getDefault(),
+//                            "即将删除%d个媒体文件，此操作无法撤销，确认继续吗？",
+//                            mediaListToBeDeleted.size()
+//                    );
+//                    new MaterialAlertDialogBuilder(this)
+//                            .setTitle("删除媒体")
+//                            .setMessage(message)
+//                            .setPositiveButton("确定", (dialogInterface, i) -> {
+//                                //退出多选
+//                                selectionTracker.clearSelection();
+//
+//                                //多线程删除媒体
+//                                disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
+//                                        .observeOn(AndroidSchedulers.mainThread())
+//                                        .subscribeOn(Schedulers.io())
+//                                        .subscribe(
+//                                                () -> {
+//                                                    //显示提示
+//                                                    String tip = String.format(
+//                                                            Locale.getDefault(),
+//                                                            "删除了%d个媒体",
+//                                                            mediaListToBeDeleted.size()
+//                                                    );
+//                                                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+//
+//                                                    //更新适配器列表
+//                                                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
+//                                                    currentMediaList.removeAll(mediaListToBeDeleted);
+//                                                    mediaAdapter.submitList(currentMediaList);
+//
+//                                                    //没有媒体时隐藏（延迟270ms）防止因动画竞争导致删除按钮和媒体添加重叠
+//                                                    if (currentMediaList.isEmpty()) {
+//                                                        new Handler(Looper.getMainLooper()).postDelayed(
+//                                                                () -> setMediaRecyclerVisible(false),
+//                                                                270
+//                                                        );
+//                                                    }
+//                                                },
+//                                                e -> ExceptionHelper.showExceptionDialog(this, e)
+//                                        )
+//                                );
+//                            })
+//                            .setNegativeButton("取消", null)
+//                            .show();
                 }
         );
 
@@ -413,39 +430,42 @@ public class WriteActivity extends AppCompatActivity {
                     })
                     .create();
 
-            //获取新添加的媒体的 Uri
-            List<Uri> newMediaUriList = mediaAdapter.getCurrentList().stream()
-                    .filter(media -> media.getMediaId() == 0)   //只需要新添加的
-                    .map(MediaEntity::getFileUri)
-                    .collect(Collectors.toList());
-
             //如果有新媒体，则显示对话框
-            if (!newMediaUriList.isEmpty()) {
+            List<MediaEntity> currentMediaList = mediaAdapter.getCurrentList();
+            Set<MediaEntity> newMediaSet = currentMediaList.stream()    //获取新添加的媒体
+                    .filter(mediaEntity -> mediaEntity.getMediaId() == 0)
+                    .collect(Collectors.toSet());
+            if (!newMediaSet.isEmpty()) {
                 dialog.show();
             }
 
             //创建移动任务，并逐个返回移动成功的 File 型 Uri
-            Observable<Uri> moveTask = Observable.create(emitter -> {
+            Observable<MediaEntity> moveTask = Observable.create(emitter -> {
                 File targetDir = DirectoryPaths.MEDIA.getDir(this);
 
-                for (Uri originUri : newMediaUriList) {
-                    File originFile = new File(Objects.requireNonNull(originUri.getPath()));
-                    File movedFile = FileHelper.moveFile(originFile, targetDir);
-                    emitter.onNext(Uri.fromFile(movedFile));    //不论是否成功都返回
+                for (MediaEntity originMedia : currentMediaList) {
+                    long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+                    if (newMediaSet.contains(originMedia)) {
+                        File originFile = new File(Objects.requireNonNull(originMedia.getFileUri().getPath()));
+                        File movedFile = FileHelper.moveFile(originFile, targetDir);
+                        emitter.onNext(new MediaEntity(paragraphId, Uri.fromFile(movedFile)));  //不论是否成功都返回
+                    } else {
+                        emitter.onNext(originMedia);
+                    }
                 }
 
                 emitter.onComplete();
             });
 
             //多线程执行任务并调用段落添加/更新方法
-            List<Uri> resultList = new ArrayList<>();   //移动结果列表（可能包含 null）
+            List<MediaEntity> resultList = new ArrayList<>();   //移动结果列表（可能包含 null）
             disposable.add(moveTask
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
-                            uri -> {
-                                resultList.add(uri);
-                                dialogBuilder.updateProgress(resultList.size(), newMediaUriList.size(), "正在移动媒体文件……");
+                            media -> {
+                                resultList.add(media);
+                                dialogBuilder.updateProgress(resultList.size(), currentMediaList.size(), "正在移动媒体文件……");
                             },
                             e -> {
                                 ExceptionHelper.showExceptionDialog(this, e);
@@ -455,17 +475,12 @@ public class WriteActivity extends AppCompatActivity {
                                 dialog.dismiss();
 
                                 //排除移动失败的文件
-                                List<Uri> succeedFileUriList = resultList.stream()
-                                        .filter(Objects::nonNull)
+                                List<MediaEntity> succeedMediaList = resultList.stream()
+                                        .filter(mediaEntity -> mediaEntity.getFileUri() != null)
                                         .collect(Collectors.toList());
 
                                 //调用数据写入方法
-                                if (modifyingParagraph == null) {
-                                    addParagraph(content, succeedFileUriList);
-                                } else {
-                                    updateParagraphContent(content, modifyingParagraph, succeedFileUriList);
-                                    setEditMode(false, null, null);
-                                }
+                                saveData(content, succeedMediaList);
                             }
                     )
             );
@@ -1095,93 +1110,91 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 添加新段落
+     * 保存段落数据
      *
-     * @param content      新段落的内容
-     * @param newMediaList 新添加到段落的媒体文件列表
+     * @param content         最终的段落文本内容
+     * @param mediaEntityList 最终处于永久目录下的媒体实体列表
      */
-    private void addParagraph(String content, List<Uri> newMediaList) {
-        //执行写入操作
+    private void saveData(String content, List<MediaEntity> mediaEntityList) {
+        //生成段落各属性
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
-                .flatMap(diaryId -> {
-                    //实例化新段落对象
-                    ParagraphEntity newParagraph = new ParagraphEntity(
-                            diaryId,
-                            content.trim(),
-                            paragraphDateTime
-                    );
 
-                    //获取传递的起始日期
-                    LocalDate startDate;
-                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
-                        startDate = LocalDate.now();
-                    } else {
-                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
-                        startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
-                    }
+        //保存数据
+        if (modifyingParagraph == null) {
+            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
+                    .flatMap(diaryId -> {
+                        //实例化新段落对象
+                        ParagraphEntity paragraph = new ParagraphEntity(
+                                diaryId,
+                                content.trim(),
+                                paragraphDateTime
+                        );
 
-                    //返回查询到的下标
-                    return ParagraphService.insertParagraphWithMedia(startDate, newParagraph, newMediaList, db);
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        position -> {
-                            binding.contentTextInput.setText(null);
+                        //获取传递的起始日期
+                        LocalDate startDate;
+                        if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                            startDate = LocalDate.now();
+                        } else {
+                            long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                            startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                        }
 
-                            //修改滚动位置标识符
-                            scrollPosition.set(position);
-                        },
-                        e -> {
-                            //失败则删除刚刚复制的媒体文件
-                            for (Uri uri : newMediaList) {
-                                FileHelper.deleteFile(uri, this);
+                        //返回查询到的下标
+                        return ParagraphService.addParagraph(startDate, paragraph, mediaEntityList, db);
+                    })
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            position -> {
+                                binding.contentTextInput.setText(null);
+
+                                //修改滚动位置标识符
+                                scrollPosition.set(position);
+                            },
+                            e -> {
+                                for (MediaEntity mediaEntity : mediaEntityList) {
+                                    //删除新添加的媒体文件
+                                    if (mediaEntity.getMediaId() == 0) {
+                                        FileHelper.deleteFile(mediaEntity.getFileUri(), this);
+                                    }
+                                }
+                                ExceptionHelper.showExceptionDialog(this, e);
                             }
-                            ExceptionHelper.showExceptionDialog(this, e);
-                        }
-                )
-        );
-    }
+                    )
+            );
+        } else {
+            //生成更新后的段落实例
+            ParagraphEntity paragraph = new ParagraphEntity(
+                    modifyingParagraph.getParentDiaryId(),
+                    content,
+                    modifyingParagraph.getCreateTime()
+            );
+            paragraph.setParagraphId(modifyingParagraph.getParagraphId());
 
-    /**
-     * 更新段落内容
-     *
-     * @param newContent      新内容
-     * @param originParagraph 原本的段落实体
-     * @param newMediaList    新添加到段落的文件
-     */
-    private void updateParagraphContent(
-            String newContent,
-            @NonNull ParagraphEntity originParagraph,
-            List<Uri> newMediaList
-    ) {
-        //生成更新后的段落实例
-        ParagraphEntity newParagraph = new ParagraphEntity(
-                originParagraph.getParentDiaryId(),
-                newContent,
-                originParagraph.getCreateTime()
-        );
-        newParagraph.setParagraphId(originParagraph.getParagraphId());
+            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, this)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> {
+                                binding.contentTextInput.setText(null);
+                                setEditMode(false, null, null);
+                            },
+                            throwable -> {
+                                setEditMode(false, null, null);
+                                ExceptionHelper.showExceptionDialog(this, throwable);
 
-        //更新段落
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
-        disposable.add(ParagraphService.updateParagraphWithMedia(newParagraph, newMediaList, db)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        () -> {
-                            Toast.makeText(this, "段落内容修改成功", Toast.LENGTH_SHORT).show();
-                            Log.i(LogTags.WRITE_ACTIVITY.n(), "段落内容修改成功");
-                        },
-                        throwable -> {
-                            ExceptionHelper.showExceptionDialog(this, throwable);
-                            Log.e(LogTags.WRITE_ACTIVITY.n(), "段落内容修改失败");
-                        }
-                )
-        );
+                                for (MediaEntity mediaEntity : mediaEntityList) {
+                                    //删除新添加的媒体文件
+                                    if (mediaEntity.getMediaId() == 0) {
+                                        FileHelper.deleteFile(mediaEntity.getFileUri(), this);
+                                    }
+                                }
+                            }
+                    )
+            );
+        }
     }
 
     /**
@@ -1280,7 +1293,7 @@ public class WriteActivity extends AppCompatActivity {
      * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
      * @param mediaList          正在编辑的段落的媒体列表
      */
-    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph, List<MediaEntity> mediaList) {
+    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph, @Nullable List<MediaEntity> mediaList) {
         //如果启用则注册返回处理器
         if (isEditMode) {
             backHelper.registerHandler(editBackHandler);
