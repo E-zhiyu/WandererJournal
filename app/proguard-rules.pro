@@ -33,3 +33,6 @@
 
 # 如果你的 Bridge 类是内部类，也要确保它所在的 Activity 或管理类不被混淆（或者单独提出来作为一个独立类）
 -keep class com.wanderer.journal.helpers.appearance.HtmlHelper { *; }
+
+# 保护更新信息类
+-keep class com.wanderer.journal.helpers.UpdateHelper$VersionInfo { *; }

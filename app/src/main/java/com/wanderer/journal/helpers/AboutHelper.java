@@ -15,6 +15,7 @@ public class AboutHelper {
             "### 新增内容\n" +
             "\n" +
             "- 数据管理设置界面新增自动备份功能\n" +
+            "- 设置界面添加更新选项\n" +
             "\n" +
             "### 优化和修改的内容\n" +
             "\n" +
@@ -324,6 +325,19 @@ public class AboutHelper {
         PackageInfo packageInfo = context.getPackageManager()
                 .getPackageInfo(context.getPackageName(), 0);
         return packageInfo.versionName;
+    }
+
+    /**
+     * 获取当前版本代码
+     *
+     * @param context 上下文
+     * @return 版本代码整数值
+     * @throws PackageManager.NameNotFoundException 包名未找到引发的异常
+     */
+    public static long getVersionCode(@NonNull Context context) throws PackageManager.NameNotFoundException {
+        PackageInfo packageInfo = context.getPackageManager()
+                .getPackageInfo(context.getPackageName(), 0);
+        return packageInfo.getLongVersionCode();
     }
 
     /**

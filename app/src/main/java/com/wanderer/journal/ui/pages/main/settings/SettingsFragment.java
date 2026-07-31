@@ -24,6 +24,7 @@ import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.AboutHelper;
+import com.wanderer.journal.helpers.UpdateHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingSpinnerView;
@@ -38,8 +39,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+
 public class SettingsFragment extends Fragment {
     private FragmentSettingsBinding binding;    //绑定的XML布局
+    private final CompositeDisposable disposable = new CompositeDisposable();       //多线程任务列表
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -51,6 +55,13 @@ public class SettingsFragment extends Fragment {
         return binding.getRoot();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        disposable.dispose();
+        binding = null;
+    }
+
     /**
      * 初始化视图
      */
@@ -58,33 +69,7 @@ public class SettingsFragment extends Fragment {
         initAppSettings();
         initCommonSettings();
         initPrivacySettings();
-
-        //更新日志
-        SettingClickableTextView changelogOption = new SettingClickableTextView(
-                requireContext(),
-                binding.changelogOption,
-                R.string.changelog,
-                null,
-                R.drawable.outline_lab_profile_24,
-                RadiusStyle.TOP
-        );
-        changelogOption.setFunctionListener(
-                view -> AboutHelper.showChangelog(requireContext())
-        );
-
-        //关于软件
-        SettingClickableTextView aboutOption = new SettingClickableTextView(
-                requireContext(),
-                binding.aboutOption,
-                R.string.about_software,
-                null,
-                R.drawable.outline_info_24,
-                RadiusStyle.BOTTOM
-        );
-        aboutOption.setFunctionListener(view -> {
-            Intent skip2About = new Intent(requireContext(), AboutActivity.class);
-            startActivity(skip2About);
-        });
+        initAboutSettings();
     }
 
     /**
@@ -309,6 +294,54 @@ public class SettingsFragment extends Fragment {
         hideRecentTask.setFunctionListener(
                 (compoundButton, checked) ->
                         SecurityPreference.setHideRecentTask(checked, requireContext())
+        );
+    }
+
+    /**
+     * 初始化关于软件设置
+     */
+    private void initAboutSettings() {
+        //更新日志
+        SettingClickableTextView changelogOption = new SettingClickableTextView(
+                requireContext(),
+                binding.changelogOption,
+                R.string.changelog,
+                null,
+                R.drawable.outline_lab_profile_24,
+                RadiusStyle.TOP
+        );
+        changelogOption.setFunctionListener(
+                view -> AboutHelper.showChangelog(requireContext())
+        );
+
+        //关于软件
+        SettingClickableTextView aboutOption = new SettingClickableTextView(
+                requireContext(),
+                binding.aboutOption,
+                R.string.about_software,
+                null,
+                R.drawable.outline_info_24,
+                RadiusStyle.MIDDLE
+        );
+        aboutOption.setFunctionListener(view -> {
+            Intent skip2About = new Intent(requireContext(), AboutActivity.class);
+            startActivity(skip2About);
+        });
+
+        //更新检测
+        SettingClickableTextView updateCheckOption = new SettingClickableTextView(
+                requireContext(),
+                binding.updateCheckOption,
+                R.string.update_check,
+                null,
+                R.drawable.outline_update_24,
+                RadiusStyle.BOTTOM
+        );
+        updateCheckOption.setFunctionListener(
+                v -> {
+                    Toast.makeText(requireContext(), "正在检查更新……", Toast.LENGTH_SHORT).show();
+                    UpdateHelper.checkUpdate(requireContext(), disposable, true);
+                }
         );
     }
 

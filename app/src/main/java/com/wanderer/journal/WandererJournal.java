@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -26,8 +27,10 @@ import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
+import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.pages.AuthActivity;
 
 import java.util.List;
@@ -144,6 +147,14 @@ public class WandererJournal extends Application {
                 public void onActivityDestroyed(@NonNull Activity activity) {
                 }
             });
+        }
+
+        //启动时检测是否有需要删除的安装包
+        String apkUri = VersionPreference.getApkUri(this);
+        if (!apkUri.isEmpty()) {
+            Uri contentUri = Uri.parse(apkUri);
+            FileHelper.deleteFile(contentUri, this);
+            VersionPreference.setApkUri(this, "");
         }
     }
 
