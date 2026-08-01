@@ -14,7 +14,6 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -120,18 +119,10 @@ public interface EmotionTagDao {
                     "    COALESCE(r.degree, 1) AS degree " +
                     "FROM emotionTags e " +
                     "LEFT JOIN emotionParagraphCrossRef r " +
-                    "    ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId "
+                    "ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId " +
+                    "ORDER BY type"
     )
     Flowable<List<EmotionTagUiModel>> getSelectableEmotionTagFlowable(long paragraphId);
-
-    /**
-     * 获取在 ID 集合中的情绪标签
-     *
-     * @param emotionIdList 需要获取的标签对应的 ID 列表
-     * @return ID 在列表中的情绪标签实例
-     */
-    @Query("SELECT * FROM emotionTags WHERE emotionId IN (:emotionIdList)")
-    Single<List<EmotionTagEntity>> getEmotionTagSingleByIdSet(Set<Long> emotionIdList);
 
     /**
      * 通过 ID 获取情绪标签
