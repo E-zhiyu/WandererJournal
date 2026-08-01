@@ -4,9 +4,9 @@ import android.content.Context;
 
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.data.backup.maps.LifeNoteDataMap;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 
-public class LifeNoteBackupHelper extends BackupHelperBase<DiaryDatabase, LifeNoteDataMap> {
+public class LifeNoteBackupHelper extends BackupHelperBase<DiaryDb, LifeNoteDataMap> {
     public LifeNoteBackupHelper(Context context) {
         super(context);
     }
@@ -17,8 +17,8 @@ public class LifeNoteBackupHelper extends BackupHelperBase<DiaryDatabase, LifeNo
     }
 
     @Override
-    protected DiaryDatabase getDatabase(Context context) {
-        return DiaryDatabase.getInstance(context);
+    protected DiaryDb getDatabase(Context context) {
+        return DiaryDb.getInstance(context);
     }
 
     @Override

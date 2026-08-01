@@ -44,8 +44,8 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
         DateTimeConverter.class,
         UriConverter.class
 })
-public abstract class DiaryDatabase extends RoomDatabase {
-    private static volatile DiaryDatabase INSTANCE; //单例实例
+public abstract class DiaryDb extends RoomDatabase {
+    private static volatile DiaryDb INSTANCE; //单例实例
 
     /**
      * 获取数据库实例
@@ -53,13 +53,13 @@ public abstract class DiaryDatabase extends RoomDatabase {
      * @param context 上下文
      * @return 数据库实例
      */
-    public static DiaryDatabase getInstance(Context context) {
+    public static DiaryDb getInstance(Context context) {
         if (INSTANCE == null) {
-            synchronized (DiaryDatabase.class) {
+            synchronized (DiaryDb.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(
                                     context.getApplicationContext(),
-                                    DiaryDatabase.class,
+                                    DiaryDb.class,
                                     "diary_database"
                             )
                             .addMigrations(

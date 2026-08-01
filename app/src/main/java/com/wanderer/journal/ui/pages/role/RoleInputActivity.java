@@ -15,7 +15,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
@@ -91,7 +91,7 @@ public class RoleInputActivity extends AppCompatActivity {
             binding.toolbar.setTitle(R.string.modify_role);
 
             //初始化文本框内容
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             long roleId = initBundle.getLong(KeyStrings.ROLE_ID.getS());
             disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -243,7 +243,7 @@ public class RoleInputActivity extends AppCompatActivity {
         //插入数据
         RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
         role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));  //设置传递过来的角色 ID
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -279,7 +279,7 @@ public class RoleInputActivity extends AppCompatActivity {
      * @param aliaList 需要写入的别名数据
      */
     private void doConfirmAction(RoleEntity role, List<String> aliaList) {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         if (initBundle == null) {
             //添加角色
             disposable.add(RoleService.addRole(db, role, aliaList)

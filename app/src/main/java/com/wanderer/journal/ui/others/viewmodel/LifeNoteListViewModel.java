@@ -3,7 +3,7 @@ package com.wanderer.journal.ui.others.viewmodel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.services.LifeNoteService;
 
@@ -30,7 +30,7 @@ public class LifeNoteListViewModel extends ViewModel {
      * @param db 数据库实例
      * @return 人生笔记数据列表，支持响应式更新
      */
-    public Flowable<List<LifeNoteEntity>> getLifeNoteListFlowable(DiaryDatabase db) {
+    public Flowable<List<LifeNoteEntity>> getLifeNoteListFlowable(DiaryDb db) {
         return searchKeywordProcessor
                 .debounce(50, TimeUnit.MILLISECONDS)
                 .switchMap(

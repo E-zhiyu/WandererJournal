@@ -37,7 +37,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -220,7 +220,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //符合过滤条件的段落的下标
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(viewModel.getFilteredParagraphPosition(db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -397,7 +397,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                     LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
 
                                     //跳转到对应位置
-                                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                                    DiaryDb db = DiaryDb.getInstance(this);
                                     DiaryDao diaryDao = db.diaryDao();
                                     disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
                                             .observeOn(AndroidSchedulers.mainThread())
@@ -594,7 +594,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         });
 
         //监听数据库的响应
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) != -1) {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS());
@@ -701,7 +701,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             boolean isChecked = emotionTagSelectViewModel.isChecked();
 
             EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             if (isChecked) {
                 disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
                         .observeOn(AndroidSchedulers.mainThread())
@@ -828,7 +828,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     );
                     newParagraph.setParagraphId(paragraph.getParagraphId());
 
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    DiaryDb db = DiaryDb.getInstance(this);
                     ParagraphDao paragraphDao = db.paragraphDao();
                     disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                             .observeOn(AndroidSchedulers.mainThread())

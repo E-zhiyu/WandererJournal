@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -39,7 +39,7 @@ public class InfoShower {
             return;
         }
 
-        RoleDao roleDao = DiaryDatabase.getInstance(context).roleDao();
+        RoleDao roleDao = DiaryDb.getInstance(context).roleDao();
         disposable.add(roleDao.isRoleIdExists(roleId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

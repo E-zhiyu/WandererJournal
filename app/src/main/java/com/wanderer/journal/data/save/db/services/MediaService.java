@@ -2,7 +2,7 @@ package com.wanderer.journal.data.save.db.services;
 
 import android.content.Context;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 
@@ -19,7 +19,7 @@ public class MediaService {
      * @return 是否完成
      */
     public static Completable deleteMedia(List<MediaEntity> mediaList, Context context) {
-        MediaDao mediaDao = DiaryDatabase.getInstance(context).mediaDao();
+        MediaDao mediaDao = DiaryDb.getInstance(context).mediaDao();
         return Completable.fromAction(() -> mediaDao.deleteMediasAndFiles(mediaList, context));
     }
 }

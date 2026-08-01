@@ -13,7 +13,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -87,7 +87,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         binding.emotionTagRecycler.setAdapter(adapter);
 
         //获取数据源
-        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(requireContext()).emotionTagDao();
+        EmotionTagDao emotionTagDao = DiaryDb.getInstance(requireContext()).emotionTagDao();
         disposable.add(emotionTagDao.getAllEmotionTagFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

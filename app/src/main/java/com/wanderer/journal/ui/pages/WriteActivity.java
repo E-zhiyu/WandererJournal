@@ -50,7 +50,7 @@ import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -281,7 +281,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //待编辑的段落的 ID
         long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
-        ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
+        ParagraphDao paragraphDao = DiaryDb.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -641,7 +641,7 @@ public class WriteActivity extends AppCompatActivity {
             boolean isChecked = emotionTagSelectViewModel.isChecked();
 
             EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             if (isChecked) {
                 disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
                         .observeOn(AndroidSchedulers.mainThread())
@@ -797,7 +797,7 @@ public class WriteActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
@@ -1122,7 +1122,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //保存数据
         if (modifyingParagraph == null) {
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                     .flatMap(diaryId -> {
                         //实例化新段落对象
@@ -1220,7 +1220,7 @@ public class WriteActivity extends AppCompatActivity {
                     );
                     newParagraph.setParagraphId(paragraph.getParagraphId());
 
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    DiaryDb db = DiaryDb.getInstance(this);
                     ParagraphDao paragraphDao = db.paragraphDao();
                     disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                             .observeOn(AndroidSchedulers.mainThread())

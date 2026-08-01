@@ -3,7 +3,7 @@ package com.wanderer.journal.data.save.db.services;
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
@@ -26,7 +26,7 @@ public class RoleService {
      * @param keyword 角色信息的搜索关键词，为空时表示不进行搜索
      * @return 符合搜索结果的角色数据，包含分隔符，支持响应式更新
      */
-    public static Flowable<List<RoleUiModel>> getAllRoleFlowable(@NonNull DiaryDatabase db, String keyword) {
+    public static Flowable<List<RoleUiModel>> getAllRoleFlowable(@NonNull DiaryDb db, String keyword) {
         RoleDao roleDao = db.roleDao();
         String safeKeyword = "";
 
@@ -81,7 +81,7 @@ public class RoleService {
      * @param aliaList 角色别名列表
      * @return 是否完成
      */
-    public static Completable addRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
+    public static Completable addRole(@NonNull DiaryDb db, RoleEntity role, List<String> aliaList) {
         RoleDao roleDao = db.roleDao();
         return Completable.defer(() -> {
             roleDao.addRole(role, aliaList);
@@ -96,7 +96,7 @@ public class RoleService {
      * @param aliaList 角色别名列表
      * @return 是否完成
      */
-    public static Completable updateRole(@NonNull DiaryDatabase db, RoleEntity role, List<String> aliaList) {
+    public static Completable updateRole(@NonNull DiaryDb db, RoleEntity role, List<String> aliaList) {
         RoleDao roleDao = db.roleDao();
         return Completable.defer(() -> {
             roleDao.updateRoleAndAlia(role, aliaList);
@@ -110,7 +110,7 @@ public class RoleService {
      * @param role 需要删除的角色
      * @return 是否完成
      */
-    public static Completable deleteRole(RoleEntity role, @NonNull DiaryDatabase db) {
+    public static Completable deleteRole(RoleEntity role, @NonNull DiaryDb db) {
         RoleDao roleDao = db.roleDao();
         return Completable.defer(() -> {
             roleDao.deleteRoleAndWash(role);
