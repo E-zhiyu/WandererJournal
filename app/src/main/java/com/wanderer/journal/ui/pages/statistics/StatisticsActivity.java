@@ -23,7 +23,7 @@ import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
@@ -109,7 +109,7 @@ public class StatisticsActivity extends AppCompatActivity {
         );
 
         //连续日期数据
-        DiaryDao dao = DiaryDatabase.getInstance(this).diaryDao();
+        DiaryDao dao = DiaryDb.getInstance(this).diaryDao();
         disposable.add(dao.getDiaryDateSingle(LocalDate.now())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -120,7 +120,7 @@ public class StatisticsActivity extends AppCompatActivity {
         );
 
         //最大和平均段落字符数量
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         AppearanceHelper.setRadius(
                 this,
                 binding.maxCharacterCountCard,
@@ -306,7 +306,7 @@ public class StatisticsActivity extends AppCompatActivity {
         //查询数据
         LocalDate end = LocalDate.now();    //直到今天
         LocalDate start = end.plusYears(-1).plusDays(1);    //从去年的今天的第二天开始
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(DiaryService.getMemeryPixelData(start, end, db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -332,7 +332,7 @@ public class StatisticsActivity extends AppCompatActivity {
      * 初始化角色统计卡片
      */
     private void initRoleStatisticsCard() {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(db.roleDao().getAllRoleFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -405,7 +405,7 @@ public class StatisticsActivity extends AppCompatActivity {
      * 初始化情绪标签统计数据
      */
     private void initEmotionStatisticsCard() {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(db.emotionTagDao().getUsedEmotionTagFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

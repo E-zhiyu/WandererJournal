@@ -29,7 +29,7 @@ import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
@@ -232,7 +232,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         binding.previewRecycler.addItemDecoration(decoration);
 
         //获取数据源
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
         disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
                 .flatMap(paragraphEntityModels ->

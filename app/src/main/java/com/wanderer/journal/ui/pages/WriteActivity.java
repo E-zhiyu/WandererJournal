@@ -44,13 +44,14 @@ import androidx.recyclerview.selection.StorageStrategy;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -166,6 +167,8 @@ public class WriteActivity extends AppCompatActivity {
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
+                binding.bottomLayout.clearAnimation();
+
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
                 binding.bottomLayout.setTranslationY(-keyboardHeight);
@@ -230,6 +233,7 @@ public class WriteActivity extends AppCompatActivity {
                         binding.bottomLayout
                                 .animate()
                                 .translationY(-moveDistance)
+                                .setInterpolator(new FastOutSlowInInterpolator())
                                 .setDuration(250)
                                 .start();
 
@@ -281,7 +285,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //待编辑的段落的 ID
         long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
-        ParagraphDao paragraphDao = DiaryDatabase.getInstance(this).paragraphDao();
+        ParagraphDao paragraphDao = DiaryDb.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -347,62 +351,6 @@ public class WriteActivity extends AppCompatActivity {
                     List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
                     mediaList.removeAll(mediaListToBeDeleted);
                     mediaAdapter.submitList(mediaList);
-
-//                    //获取需要删除的媒体
-//                    List<MediaEntity> mediaListToBeDeleted = new ArrayList<>();
-//                    for (long id : selectionTracker.getSelection()) {
-//                        MediaEntity media = mediaAdapter.getItemById(id);
-//                        if (media != null) {
-//                            mediaListToBeDeleted.add(media);
-//                        }
-//                    }
-//
-//                    //显示对话框
-//                    String message = String.format(
-//                            Locale.getDefault(),
-//                            "即将删除%d个媒体文件，此操作无法撤销，确认继续吗？",
-//                            mediaListToBeDeleted.size()
-//                    );
-//                    new MaterialAlertDialogBuilder(this)
-//                            .setTitle("删除媒体")
-//                            .setMessage(message)
-//                            .setPositiveButton("确定", (dialogInterface, i) -> {
-//                                //退出多选
-//                                selectionTracker.clearSelection();
-//
-//                                //多线程删除媒体
-//                                disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
-//                                        .observeOn(AndroidSchedulers.mainThread())
-//                                        .subscribeOn(Schedulers.io())
-//                                        .subscribe(
-//                                                () -> {
-//                                                    //显示提示
-//                                                    String tip = String.format(
-//                                                            Locale.getDefault(),
-//                                                            "删除了%d个媒体",
-//                                                            mediaListToBeDeleted.size()
-//                                                    );
-//                                                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
-//
-//                                                    //更新适配器列表
-//                                                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-//                                                    currentMediaList.removeAll(mediaListToBeDeleted);
-//                                                    mediaAdapter.submitList(currentMediaList);
-//
-//                                                    //没有媒体时隐藏（延迟270ms）防止因动画竞争导致删除按钮和媒体添加重叠
-//                                                    if (currentMediaList.isEmpty()) {
-//                                                        new Handler(Looper.getMainLooper()).postDelayed(
-//                                                                () -> setMediaRecyclerVisible(false),
-//                                                                270
-//                                                        );
-//                                                    }
-//                                                },
-//                                                e -> ExceptionHelper.showExceptionDialog(this, e)
-//                                        )
-//                                );
-//                            })
-//                            .setNegativeButton("取消", null)
-//                            .show();
                 }
         );
 
@@ -641,7 +589,7 @@ public class WriteActivity extends AppCompatActivity {
             boolean isChecked = emotionTagSelectViewModel.isChecked();
 
             EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             if (isChecked) {
                 disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
                         .observeOn(AndroidSchedulers.mainThread())
@@ -797,7 +745,7 @@ public class WriteActivity extends AppCompatActivity {
         binding.contentRecycler.setAdapter(adapter);
 
         //监听数据库的响应
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
@@ -1005,6 +953,7 @@ public class WriteActivity extends AppCompatActivity {
             );
 
             //启动相机
+            WandererJournal.lockLifecycleObserver();
             takePictureLauncher.launch(contentUri);
         } catch (IOException e) {
             Toast.makeText(this, "无法创建相片文件", Toast.LENGTH_SHORT).show();
@@ -1122,7 +1071,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //保存数据
         if (modifyingParagraph == null) {
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                     .flatMap(diaryId -> {
                         //实例化新段落对象
@@ -1220,7 +1169,7 @@ public class WriteActivity extends AppCompatActivity {
                     );
                     newParagraph.setParagraphId(paragraph.getParagraphId());
 
-                    DiaryDatabase db = DiaryDatabase.getInstance(this);
+                    DiaryDb db = DiaryDb.getInstance(this);
                     ParagraphDao paragraphDao = db.paragraphDao();
                     disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
                             .observeOn(AndroidSchedulers.mainThread())

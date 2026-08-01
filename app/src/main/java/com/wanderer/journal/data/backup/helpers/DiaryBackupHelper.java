@@ -5,10 +5,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 
-public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryDataMap> {
+public class DiaryBackupHelper extends BackupHelperBase<DiaryDb, DiaryDataMap> {
     public DiaryBackupHelper(Context context) {
         super(context);
     }
@@ -19,8 +19,8 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDatabase, DiaryData
     }
 
     @Override
-    protected DiaryDatabase getDatabase(Context context) {
-        return DiaryDatabase.getInstance(context);
+    protected DiaryDb getDatabase(Context context) {
+        return DiaryDb.getInstance(context);
     }
 
     @Override

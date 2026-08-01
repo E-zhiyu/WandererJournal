@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.slider.Slider;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
@@ -126,7 +126,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         binding.recycler.setAdapter(adapter);
 
         //获取数据源
-        EmotionTagDao dao = DiaryDatabase.getInstance(requireContext()).emotionTagDao();
+        EmotionTagDao dao = DiaryDb.getInstance(requireContext()).emotionTagDao();
         disposable.add(dao.getSelectableEmotionTagFlowable(paragraphId)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

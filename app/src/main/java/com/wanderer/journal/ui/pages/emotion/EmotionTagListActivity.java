@@ -15,7 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
@@ -111,7 +111,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
                 this::showEmotionTagPopupMenu
         );
         binding.recycler.setAdapter(adapter);
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(EmotionTagService.getAllEmotionTagWithSeparator(db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -141,7 +141,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
      * @param emotionTag 待删除的情绪标签
      */
     private void deleteEmotionTag(EmotionTagEntity emotionTag) {
-        EmotionTagDao emotionTagDao = DiaryDatabase.getInstance(this).emotionTagDao();
+        EmotionTagDao emotionTagDao = DiaryDb.getInstance(this).emotionTagDao();
         disposable.add(emotionTagDao.deleteEmotionTagCompletable(emotionTag)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -166,7 +166,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
         popupMenu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_delete_emotion_tag) {
                 //获取段落数量
-                EmotionTagDao dao = DiaryDatabase
+                EmotionTagDao dao = DiaryDb
                         .getInstance(EmotionTagListActivity.this)
                         .emotionTagDao();
                 disposable.add(dao.getParagraphCountSingleById(emotionTag.getEmotionId())

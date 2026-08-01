@@ -17,7 +17,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
 import com.wanderer.journal.data.save.db.services.LifeNoteService;
@@ -82,7 +82,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
             binding.toolbar.setTitle(R.string.modify_life_note);
 
             //初始化输入框内容
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
             disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -137,7 +137,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                     this::showEmotionTagPopupMenu
             );
             binding.historyRecycler.setAdapter(historyListAdapter);
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(db.lifeNoteDao().getLifeNoteHistoryFlowableByNoteId(noteId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -186,7 +186,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
         LifeNoteEntity lifeNote = new LifeNoteEntity(insight, elaboration, dateTime);
 
         //更新数据库
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         if (initBundle == null) {
             disposable.add(db.lifeNoteDao().insertLifeNote(lifeNote)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -233,7 +233,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                         .setTitle("删除历史记录")
                         .setMessage("确定要删除该历史记录吗？此操作无法撤销。")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
-                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            DiaryDb db = DiaryDb.getInstance(this);
                             disposable.add(db.lifeNoteDao().deleteLifeNoteHistory(history)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())

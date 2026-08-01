@@ -15,7 +15,7 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -202,7 +202,7 @@ public interface ParagraphDao {
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             @NonNull List<MediaEntity> mediaList,
-            @NonNull DiaryDatabase db
+            @NonNull DiaryDb db
     ) {
         //获取从起始日期开始，有多少个段落日期小于等于该段落
         int earlierThanNewParagraph = getNewParagraphPosition(
@@ -288,7 +288,7 @@ public interface ParagraphDao {
     default Set<Uri> modifyParagraph(
             @NonNull ParagraphEntity paragraph,
             @NonNull List<MediaEntity> mediaList,
-            @NonNull DiaryDatabase db
+            @NonNull DiaryDb db
     ) {
         long paragraphId = paragraph.getParagraphId();
 
@@ -329,7 +329,7 @@ public interface ParagraphDao {
 
     @Transaction
     default void addDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
-        DiaryDatabase db = DiaryDatabase.getInstance(context);
+        DiaryDb db = DiaryDb.getInstance(context);
         DiaryDao diaryDao = db.diaryDao();
 
         if (paragraphList.isEmpty()) return;

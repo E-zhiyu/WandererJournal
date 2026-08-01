@@ -4,7 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -33,7 +33,7 @@ public class DiaryService {
      * @return 日记编号
      */
     public static Single<Long> getOrCreateDiaryIdByDate(LocalDate date, Context context) {
-        DiaryDao diaryDao = DiaryDatabase.getInstance(context).diaryDao();
+        DiaryDao diaryDao = DiaryDb.getInstance(context).diaryDao();
         return Single.defer(() -> Single.just(diaryDao.getOrCreateDiaryIdByDate(date)));
     }
 
@@ -46,7 +46,7 @@ public class DiaryService {
      * @return 受影响的段落数量
      */
     public static Completable updateDiaryDate(long diaryId, LocalDate date, Context context) {
-        DiaryDatabase db = DiaryDatabase.getInstance(context);
+        DiaryDb db = DiaryDb.getInstance(context);
         ParagraphDao paragraphDao = db.paragraphDao();
         DiaryDao diaryDao = db.diaryDao();
         return Completable.defer(() -> {
@@ -67,7 +67,7 @@ public class DiaryService {
             Context context
     ) {
         return Completable.fromAction(() -> {
-            DiaryDatabase db = DiaryDatabase.getInstance(context);
+            DiaryDb db = DiaryDb.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
             DiaryDao diaryDao = db.diaryDao();
             MediaDao mediaDao = db.mediaDao();
@@ -99,7 +99,7 @@ public class DiaryService {
     public static Flowable<List<DiaryLengthModel>> getMemeryPixelData(
             LocalDate start,
             LocalDate end,
-            @NonNull DiaryDatabase db
+            @NonNull DiaryDb db
     ) {
         DiaryDao diaryDao = db.diaryDao();
         return diaryDao.getDiaryParagraphWordCountFlowable(start, end)

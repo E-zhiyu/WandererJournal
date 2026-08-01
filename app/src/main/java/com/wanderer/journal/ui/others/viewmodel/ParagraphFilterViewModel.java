@@ -10,7 +10,7 @@ import androidx.paging.PagingData;
 import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -115,7 +115,7 @@ public class ParagraphFilterViewModel extends ViewModel {
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
             @NonNull LocalDate start,
             @NonNull LocalDate end,
-            DiaryDatabase db
+            DiaryDb db
     ) {
         return Flowable.fromCallable(() -> {
                     // 配置 PagingConfig
@@ -148,7 +148,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      *
      * @return 段落分页数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDatabase db) {
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
         return Flowable.fromCallable(() -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
@@ -194,7 +194,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @param db 数据库实例
      * @return 从数据库中获取符合过滤条件的段落下标
      */
-    public Flowable<List<Integer>> getFilteredParagraphPosition(DiaryDatabase db) {
+    public Flowable<List<Integer>> getFilteredParagraphPosition(DiaryDb db) {
         return Flowable.combineLatest(
                         searchKeywordProcessor,
                         filterUpdateProcessor,

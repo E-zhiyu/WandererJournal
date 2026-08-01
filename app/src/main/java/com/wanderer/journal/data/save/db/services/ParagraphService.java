@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 
 import com.wanderer.journal.auxiliary.classes.DiaryLength;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -37,7 +37,7 @@ public class ParagraphService {
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
-            @NonNull DiaryDatabase db
+            @NonNull DiaryDb db
     ) {
         paragraph.setContent(paragraph.getContent().trim());
         return Single.fromCallable(() -> {
@@ -64,7 +64,7 @@ public class ParagraphService {
             Context context
     ) {
         return Completable.fromAction(() -> {
-            DiaryDatabase db = DiaryDatabase.getInstance(context);
+            DiaryDb db = DiaryDb.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
             Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, db);
 
@@ -87,7 +87,7 @@ public class ParagraphService {
             Context context
     ) {
         return Completable.fromAction(() -> {
-            DiaryDatabase db = DiaryDatabase.getInstance(context);
+            DiaryDb db = DiaryDb.getInstance(context);
             MediaDao mediaDao = db.mediaDao();
             ParagraphDao paragraphDao = db.paragraphDao();
 
@@ -109,7 +109,7 @@ public class ParagraphService {
      * @param db 数据库实例
      * @return 包含日记长度等数据的实例
      */
-    public static Flowable<DiaryLength> getDiaryLengthData(@NonNull DiaryDatabase db) {
+    public static Flowable<DiaryLength> getDiaryLengthData(@NonNull DiaryDb db) {
         ParagraphDao paragraphDao = db.paragraphDao();
         return Flowable.zip(
                 paragraphDao.getMaxDiaryLengthFlowable(),
@@ -133,7 +133,7 @@ public class ParagraphService {
             List<String> keywordList,
             Set<Long> emotionIds,
             boolean useMediaFilter,
-            @NonNull DiaryDatabase db,
+            @NonNull DiaryDb db,
             boolean isAndMode
     ) {
         ParagraphDao paragraphDao = db.paragraphDao();

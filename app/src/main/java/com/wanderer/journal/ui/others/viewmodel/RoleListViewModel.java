@@ -3,7 +3,7 @@ package com.wanderer.journal.ui.others.viewmodel;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.data.save.db.services.RoleService;
 
@@ -30,7 +30,7 @@ public class RoleListViewModel extends ViewModel {
      * @param db 数据库实例
      * @return 角色数据列表，包含分隔符
      */
-    public Flowable<List<RoleUiModel>> getRoleListFlowable(DiaryDatabase db) {
+    public Flowable<List<RoleUiModel>> getRoleListFlowable(DiaryDb db) {
         return searchKeywordProcessor
                 .debounce(50, TimeUnit.MILLISECONDS)
                 .switchMap(

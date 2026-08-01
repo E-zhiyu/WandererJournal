@@ -24,7 +24,7 @@ import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.services.DiaryService;
@@ -618,7 +618,7 @@ public class DataManageActivity extends AppCompatActivity {
      * @param time    文件最后编辑时间
      */
     private void appendParagraphsFromFile(@NonNull String content, @NonNull LocalDateTime time) {
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
 
         LocalDate date = time.toLocalDate();
@@ -694,7 +694,7 @@ public class DataManageActivity extends AppCompatActivity {
                 .show();
 
         //获取数据库实例
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         ParagraphDao paragraphDao = db.paragraphDao();
 
         //创建导入任务

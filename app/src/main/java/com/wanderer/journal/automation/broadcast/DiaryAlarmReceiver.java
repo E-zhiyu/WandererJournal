@@ -17,7 +17,7 @@ import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.intent.PendingRequestCode;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -48,7 +48,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
         //检查日记并决定是否发送通知
         LocalDate now = LocalDate.now();
         LocalDate tomorrow = now.plusDays(1);
-        ParagraphDao paragraphDao = DiaryDatabase.getInstance(context).paragraphDao();
+        ParagraphDao paragraphDao = DiaryDb.getInstance(context).paragraphDao();
         disposable.add(paragraphDao.getParagraphCountByDateRange(now, tomorrow)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

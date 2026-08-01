@@ -6,9 +6,9 @@ import androidx.annotation.NonNull;
 
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.data.backup.maps.RoleDataMap;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 
-public class RoleBackupHelper extends BackupHelperBase<DiaryDatabase, RoleDataMap> {
+public class RoleBackupHelper extends BackupHelperBase<DiaryDb, RoleDataMap> {
     public RoleBackupHelper(Context context) {
         super(context);
     }
@@ -19,8 +19,8 @@ public class RoleBackupHelper extends BackupHelperBase<DiaryDatabase, RoleDataMa
     }
 
     @Override
-    protected DiaryDatabase getDatabase(Context context) {
-        return DiaryDatabase.getInstance(context);
+    protected DiaryDb getDatabase(Context context) {
+        return DiaryDb.getInstance(context);
     }
 
     @Override

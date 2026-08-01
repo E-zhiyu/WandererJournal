@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
 import com.wanderer.journal.databinding.ActivityLifeNoteListBinding;
@@ -140,7 +140,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
         binding.recycler.setAdapter(adapter);
 
         //获取数据源
-        DiaryDatabase db = DiaryDatabase.getInstance(this);
+        DiaryDb db = DiaryDb.getInstance(this);
         LifeNoteListViewModel viewModel = new ViewModelProvider(this).get(LifeNoteListViewModel.class);
         disposable.add(viewModel.getLifeNoteListFlowable(db)
                 .subscribe(
@@ -227,7 +227,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
                         .setTitle("删除人生笔记")
                         .setMessage("确定要删除该人生笔记吗？此操作无法撤销。")
                         .setPositiveButton("确定", (dialogInterface, i) -> {
-                            DiaryDatabase db = DiaryDatabase.getInstance(this);
+                            DiaryDb db = DiaryDb.getInstance(this);
                             disposable.add(db.lifeNoteDao().deleteLifeNote(note)
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribeOn(Schedulers.io())

@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.wanderer.journal.R;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
@@ -105,7 +105,7 @@ public class HomeFragment extends Fragment {
         });
         AppearanceHelper.attachMorphAnimation(binding.diaryDateCard);
 
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         DiaryDao diaryDao = db.diaryDao();
 
         //日记开始日期
@@ -161,7 +161,7 @@ public class HomeFragment extends Fragment {
         });
         AppearanceHelper.attachMorphAnimation(binding.diaryCountCard);
 
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         DiaryDao diaryDao = db.diaryDao();
 
         //日记数量
@@ -200,7 +200,7 @@ public class HomeFragment extends Fragment {
         AppearanceHelper.attachMorphAnimation(binding.paragraphCountCard);
 
         //段落数量
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         ParagraphDao paragraphDao = db.paragraphDao();
         disposable.add(paragraphDao.getParagraphCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -237,7 +237,7 @@ public class HomeFragment extends Fragment {
         });
 
         //情绪标签数量
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         EmotionTagDao emotionTagDao = db.emotionTagDao();
         disposable.add(emotionTagDao.getEmotionTagCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
@@ -273,7 +273,7 @@ public class HomeFragment extends Fragment {
             startActivity(skip2RoleManage);
         });
 
-        RoleDao roleDao = DiaryDatabase.getInstance(requireContext()).roleDao();
+        RoleDao roleDao = DiaryDb.getInstance(requireContext()).roleDao();
         disposable.add(roleDao.getRoleCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -307,7 +307,7 @@ public class HomeFragment extends Fragment {
             startActivity(skip2LifeNote);
         });
 
-        LifeNoteDao dao = DiaryDatabase.getInstance(requireContext()).lifeNoteDao();
+        LifeNoteDao dao = DiaryDb.getInstance(requireContext()).lifeNoteDao();
         disposable.add(dao.getLifeNoteCountFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

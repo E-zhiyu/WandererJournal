@@ -3,7 +3,7 @@ package com.wanderer.journal.data.save.db.services;
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
@@ -25,7 +25,7 @@ public class EmotionTagService {
      * @param refEntity 引用关系实体
      * @param db        数据库实例
      */
-    public static Completable addOrUpdateEmotionTagRef(EmotionParagraphRefEntity refEntity, DiaryDatabase db) {
+    public static Completable addOrUpdateEmotionTagRef(EmotionParagraphRefEntity refEntity, DiaryDb db) {
         return Completable.defer(() -> {
             EmotionTagDao dao = db.emotionTagDao();
             long emotionId = refEntity.getEmotionId();
@@ -44,7 +44,7 @@ public class EmotionTagService {
      * @param db 数据库实例
      * @return 带哟分隔符的情绪标签 Flowable 流
      */
-    public static Flowable<List<EmotionListUiModel>> getAllEmotionTagWithSeparator(@NonNull DiaryDatabase db) {
+    public static Flowable<List<EmotionListUiModel>> getAllEmotionTagWithSeparator(@NonNull DiaryDb db) {
         EmotionTagDao dao = db.emotionTagDao();
         EmotionType[] types = EmotionType.values();
         return dao.getAllEmotionTagFlowable()

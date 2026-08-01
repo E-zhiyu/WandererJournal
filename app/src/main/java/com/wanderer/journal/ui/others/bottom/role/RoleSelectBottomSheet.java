@@ -19,7 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.BottomSheetRoleSelectBinding;
@@ -118,7 +118,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
             disposable.clear();
 
             //添加角色使用次数
-            DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+            DiaryDb db = DiaryDb.getInstance(requireContext());
             disposable.add(db.roleDao().updateRoleUseData(role.getRoleId())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -140,7 +140,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         CommonRoleSelectAdapter commonRoleAdapter = new CommonRoleSelectAdapter(
                 (role, anchor) -> viewModel.setSelectedRole(role),
                 (role, anchor) -> {
-                    DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+                    DiaryDb db = DiaryDb.getInstance(requireContext());
                     disposable.add(db.roleDao().clearRoleLatestUseTime(role.getRoleId())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
@@ -155,7 +155,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         binding.commonRoleRecycler.setAdapter(commonRoleAdapter);
 
         //订阅数据
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         final int MAX_COMMON_ROLE_COUNT = 10;
         disposable.add(db.roleDao().getCommonRoleFlowable(MAX_COMMON_ROLE_COUNT)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -204,7 +204,7 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
         binding.groupPager.setOffscreenPageLimit(2);
 
         //绑定数据
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         disposable.add(db.roleDao().getAllRoleFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

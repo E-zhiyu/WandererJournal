@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.R;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
@@ -81,7 +81,7 @@ public class EmotionTagInputActivity extends AppCompatActivity {
             binding.toolbar.setTitle(R.string.modify_emotion_tag);
 
             //初始化输入框内容
-            DiaryDatabase db = DiaryDatabase.getInstance(this);
+            DiaryDb db = DiaryDb.getInstance(this);
             long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
             disposable.add(db.emotionTagDao().getEmotionTagOptionalSingleById(emotionId)
                     .observeOn(AndroidSchedulers.mainThread())
@@ -166,7 +166,7 @@ public class EmotionTagInputActivity extends AppCompatActivity {
 
         //实例化情绪标签并获取Dao接口
         EmotionTagEntity emotionTag = new EmotionTagEntity(name, description, emotionType.ordinal());
-        EmotionTagDao dao = DiaryDatabase.getInstance(this).emotionTagDao();
+        EmotionTagDao dao = DiaryDb.getInstance(this).emotionTagDao();
 
         //保存到数据库
         if (initBundle != null) {

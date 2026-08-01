@@ -19,7 +19,7 @@ import android.widget.Toast;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
-import com.wanderer.journal.data.save.db.DiaryDatabase;
+import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
@@ -116,7 +116,7 @@ public class DiaryFragment extends Fragment {
                     "选择跳转到的日期",
                     selection -> {
                         LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                        DiaryDao dao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                        DiaryDao dao = DiaryDb.getInstance(requireContext()).diaryDao();
                         disposable.add(dao.getDiaryCountBeforeDateSingle(selectedDate)
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
@@ -143,7 +143,7 @@ public class DiaryFragment extends Fragment {
                 this::showDiaryPopupMenu
         );
         binding.diaryRecycler.setAdapter(adapter);
-        DiaryDatabase db = DiaryDatabase.getInstance(requireContext());
+        DiaryDb db = DiaryDb.getInstance(requireContext());
         disposable.add(db.diaryDao().getAllDiariesFlowable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -262,7 +262,7 @@ public class DiaryFragment extends Fragment {
                 getParentFragmentManager(),
                 selection -> {
                     LocalDate targetDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
-                    DiaryDao diaryDao = DiaryDatabase.getInstance(requireContext()).diaryDao();
+                    DiaryDao diaryDao = DiaryDb.getInstance(requireContext()).diaryDao();
                     disposable.add(diaryDao.getDiarySingleByDate(targetDate)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
