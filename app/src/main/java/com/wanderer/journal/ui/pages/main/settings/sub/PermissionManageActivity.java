@@ -42,7 +42,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                         }
                     }
             );
-    private SettingClickableTextView camera, notification, alarm;   //权限申请视图
+    private SettingClickableTextView camera, notification, battery, alarm;  //权限申请视图
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +103,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                 () -> requestRuntimePermission(Manifest.permission.CAMERA)
         ));
         camera.setOnLongClickListener(view -> {
+            WandererJournal.lockLifecycleObserver();
             Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             Uri uri = Uri.fromParts("package", getPackageName(), null);
             skip2Settings.setData(uri);
@@ -133,6 +134,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                 )
         );
         notification.setOnLongClickListener(view -> {
+            WandererJournal.lockLifecycleObserver();
             Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
             Uri uri = Uri.fromParts("package", getPackageName(), null);
             skip2Settings.setData(uri);
@@ -166,7 +168,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         }
 
         //电池优化策略
-        SettingClickableTextView batteryOptimizations = new SettingClickableTextView(
+        battery = new SettingClickableTextView(
                 this,
                 binding.batteryOption,
                 R.string.ignore_battery_optimization,
@@ -174,7 +176,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.drawable.outline_battery_android_4_24,
                 RadiusStyle.MIDDLE
         );
-        batteryOptimizations.setFunctionListener(v -> showExplanationDialog(
+        battery.setFunctionListener(v -> showExplanationDialog(
                 R.string.ignore_battery_optimization,
                 "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。",
                 () -> {
@@ -191,7 +193,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
         ));
-        batteryOptimizations.setOnLongClickListener(view -> {
+        battery.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver();
             Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             startActivity(intent);
@@ -255,27 +257,19 @@ public class PermissionManageActivity extends AppCompatActivity {
 
         //相机权限
         boolean isCameraGranted = PermissionHelper.isRuntimePermissionGranted(Manifest.permission.CAMERA, this);
-        if (isCameraGranted) {
-            camera.getFunctionComponent().setText(GRANTED);
-        } else {
-            camera.getFunctionComponent().setText(NOT_GRANTED);
-        }
+        camera.getFunctionComponent().setText(isCameraGranted ? GRANTED : NOT_GRANTED);
 
         //通知权限
         boolean isNotificationGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
                 PermissionHelper.isRuntimePermissionGranted(Manifest.permission.POST_NOTIFICATIONS, this);
-        if (isNotificationGranted) {
-            notification.getFunctionComponent().setText(GRANTED);
-        } else {
-            notification.getFunctionComponent().setText(NOT_GRANTED);
-        }
+        notification.getFunctionComponent().setText(isNotificationGranted ? GRANTED : NOT_GRANTED);
+
+        //电池优化
+        boolean isBatteryIgnored = PermissionHelper.SpecialPermissionType.BATTERY.isGranted(this);
+        battery.getFunctionComponent().setText(isBatteryIgnored ? "已忽略" : "未忽略");
 
         //精确闹钟权限
         boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
-        if (isAlarmGranted) {
-            alarm.getFunctionComponent().setText(GRANTED);
-        } else {
-            alarm.getFunctionComponent().setText(NOT_GRANTED);
-        }
+        alarm.getFunctionComponent().setText(isAlarmGranted ? GRANTED : NOT_GRANTED);
     }
 }
