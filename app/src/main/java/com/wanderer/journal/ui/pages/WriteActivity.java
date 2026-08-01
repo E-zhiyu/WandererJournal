@@ -166,6 +166,8 @@ public class WriteActivity extends AppCompatActivity {
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
+                binding.bottomLayout.clearAnimation();
+
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
                 binding.bottomLayout.setTranslationY(-keyboardHeight);
@@ -230,6 +232,7 @@ public class WriteActivity extends AppCompatActivity {
                         binding.bottomLayout
                                 .animate()
                                 .translationY(-moveDistance)
+                                .setInterpolator(new FastOutSlowInInterpolator())
                                 .setDuration(250)
                                 .start();
 
@@ -347,62 +350,6 @@ public class WriteActivity extends AppCompatActivity {
                     List<MediaEntity> mediaList = new ArrayList<>(mediaAdapter.getCurrentList());
                     mediaList.removeAll(mediaListToBeDeleted);
                     mediaAdapter.submitList(mediaList);
-
-//                    //获取需要删除的媒体
-//                    List<MediaEntity> mediaListToBeDeleted = new ArrayList<>();
-//                    for (long id : selectionTracker.getSelection()) {
-//                        MediaEntity media = mediaAdapter.getItemById(id);
-//                        if (media != null) {
-//                            mediaListToBeDeleted.add(media);
-//                        }
-//                    }
-//
-//                    //显示对话框
-//                    String message = String.format(
-//                            Locale.getDefault(),
-//                            "即将删除%d个媒体文件，此操作无法撤销，确认继续吗？",
-//                            mediaListToBeDeleted.size()
-//                    );
-//                    new MaterialAlertDialogBuilder(this)
-//                            .setTitle("删除媒体")
-//                            .setMessage(message)
-//                            .setPositiveButton("确定", (dialogInterface, i) -> {
-//                                //退出多选
-//                                selectionTracker.clearSelection();
-//
-//                                //多线程删除媒体
-//                                disposable.add(MediaService.deleteMedia(mediaListToBeDeleted, this)
-//                                        .observeOn(AndroidSchedulers.mainThread())
-//                                        .subscribeOn(Schedulers.io())
-//                                        .subscribe(
-//                                                () -> {
-//                                                    //显示提示
-//                                                    String tip = String.format(
-//                                                            Locale.getDefault(),
-//                                                            "删除了%d个媒体",
-//                                                            mediaListToBeDeleted.size()
-//                                                    );
-//                                                    Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
-//
-//                                                    //更新适配器列表
-//                                                    List<MediaEntity> currentMediaList = new ArrayList<>(mediaAdapter.getCurrentList());
-//                                                    currentMediaList.removeAll(mediaListToBeDeleted);
-//                                                    mediaAdapter.submitList(currentMediaList);
-//
-//                                                    //没有媒体时隐藏（延迟270ms）防止因动画竞争导致删除按钮和媒体添加重叠
-//                                                    if (currentMediaList.isEmpty()) {
-//                                                        new Handler(Looper.getMainLooper()).postDelayed(
-//                                                                () -> setMediaRecyclerVisible(false),
-//                                                                270
-//                                                        );
-//                                                    }
-//                                                },
-//                                                e -> ExceptionHelper.showExceptionDialog(this, e)
-//                                        )
-//                                );
-//                            })
-//                            .setNegativeButton("取消", null)
-//                            .show();
                 }
         );
 
