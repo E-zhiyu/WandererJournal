@@ -121,14 +121,14 @@
                 android:text="@string/about_software"
                 android:textAppearance="?attr/textAppearanceBodyLarge" />
 
-            <!-- 更新日志 -->
-            <include
-                android:id="@+id/changelog_option"
-                layout="@layout/view_setting_option" />
-
             <!-- 关于软件 -->
             <include
                 android:id="@+id/about_option"
+                layout="@layout/view_setting_option" />
+
+            <!-- 更新日志 -->
+            <include
+                android:id="@+id/changelog_option"
                 layout="@layout/view_setting_option" />
 
             <!-- 检测更新 -->
