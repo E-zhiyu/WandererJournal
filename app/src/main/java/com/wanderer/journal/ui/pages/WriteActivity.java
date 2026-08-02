@@ -72,7 +72,6 @@ import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.helpers.appearance.KeyboardAttachmentHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
@@ -130,8 +129,6 @@ public class WriteActivity extends AppCompatActivity {
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
-    private static final int DRAFT_SAVING_DELAY = 3000;     //3s没有修改文本则保存草稿
-    private KeyboardAttachmentHelper keyboardAttachmentHelper;  //失去焦点时的键盘监听器
     private boolean needCursorSkipToTail = false;           //输入框文本变化时需要让光标移动到末尾
 
     @Override
@@ -160,14 +157,17 @@ public class WriteActivity extends AppCompatActivity {
         ViewCompat.setWindowInsetsAnimationCallback(binding.getRoot(), new WindowInsetsAnimationCompat.Callback(
                 WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP
         ) {
+            @Override
+            public void onPrepare(@NonNull WindowInsetsAnimationCompat animation) {
+                binding.bottomLayout.clearAnimation();
+            }
+
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
                 // 获取当前帧键盘（IME）和系统栏的高度
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                binding.bottomLayout.clearAnimation();
 
                 // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
                 int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
@@ -182,12 +182,6 @@ public class WriteActivity extends AppCompatActivity {
 
                 return insets;
             }
-
-            @Override
-            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-                super.onEnd(animation);
-                // 动画结束时，如果需要将 Translation 转换为永久的 Padding，可以在这里处理
-            }
         });
 
         receiveIntent();
@@ -197,7 +191,6 @@ public class WriteActivity extends AppCompatActivity {
         initOnBackPressedHandlers();
 
         //实例化键盘监听器
-        keyboardAttachmentHelper = new KeyboardAttachmentHelper(binding.getRoot());
 
         //第一次加载界面时显示草稿恢复对话框
         if (savedInstanceState == null) {
@@ -218,43 +211,15 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.startLegacyTracking(
-                    (currentHeight, previousHeight) -> binding.getRoot().postDelayed(() -> {
-                        if (hasWindowFocus()) return;
-
-                        int moveDistance = Math.max(
-                                0,
-                                currentHeight - binding.contentInputLayout.getPaddingBottom()
-                        );
-                        binding.bottomLayout
-                                .animate()
-                                .translationY(-moveDistance)
-                                .setInterpolator(new FastOutSlowInInterpolator())
-                                .setDuration(250)
-                                .start();
-
-                        //内容 RecyclerView 额外增加5dp的底部内边距
-                        binding.contentRecycler.setPadding(
-                                0,
-                                0,
-                                0,
-                                currentHeight + AppearanceHelper.dpToPx(this, 5)
-                        );
-                    }, 50)
-            );
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (keyboardAttachmentHelper != null) {
-            keyboardAttachmentHelper.stopTracking();
+    public void onWindowFocusChanged(boolean hasFocus) {
+        binding.bottomLayout.clearAnimation();
+        if (!hasFocus) {
+            binding.bottomLayout
+                    .animate()
+                    .translationY(0)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250)
+                    .start();
         }
     }
 
@@ -477,6 +442,7 @@ public class WriteActivity extends AppCompatActivity {
                 if (isChanging) return;
 
                 //处理草稿保存任务
+                final int DRAFT_SAVING_DELAY = 3000;    //3s没有修改文本则保存草稿
                 draftSavingHandler.removeCallbacks(draftSavingRunnable);
                 draftSavingHandler.postDelayed(draftSavingRunnable, DRAFT_SAVING_DELAY);
 
