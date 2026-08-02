@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.settings.FirstScreen;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
@@ -94,7 +95,7 @@ public class SettingsFragment extends Fragment {
                 R.string.dynamic_color,
                 "将壁纸颜色作为APP主题色",
                 R.drawable.outline_colorize_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
         dynamicColorOption.setFunctionListener(
@@ -103,6 +104,50 @@ public class SettingsFragment extends Fragment {
                     ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
                 }
         );
+
+        //首页选项
+        SettingSpinnerView firstScreenOption = new SettingSpinnerView(
+                requireContext(),
+                binding.firstScreenOption,
+                R.string.select_first_screen,
+                "选择启动的第一屏",
+                R.drawable.outline_mobile_24,
+                RadiusStyle.BOTTOM
+        );
+        int screenCode = AppSettingsPreference.getFirstScreen(requireContext());
+        firstScreenOption.setSpinnerText(FirstScreen.values()[screenCode].getTitle());
+        firstScreenOption.setFunctionListener(v -> {
+            PopupMenu firstScreenMenu = new PopupMenu(requireContext(), firstScreenOption.getFunctionComponent());
+
+            //填充菜单选项
+            for (FirstScreen firstScreen : FirstScreen.values()) {
+                int groupId = firstScreen.getGroupId();
+                int itemId = firstScreen.getItemId();
+                int order = firstScreen.getOrder();
+                String title = firstScreen.getTitle();
+                firstScreenMenu.getMenu().add(groupId, itemId, order, title);
+            }
+
+            //设置点击监听
+            firstScreenMenu.setOnMenuItemClickListener(item -> {
+                //获取选项编号列表
+                List<Integer> itemIdList = Arrays.stream(FirstScreen.values())
+                        .map(FirstScreen::getItemId)
+                        .collect(Collectors.toList());
+
+                //判断是否选中
+                if (itemIdList.contains(item.getItemId())) {
+                    int index = itemIdList.indexOf(item.getItemId());
+                    AppSettingsPreference.setFirstScreen(requireContext(), index);
+                    firstScreenOption.setSpinnerText(item.getTitle());
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+
+            firstScreenMenu.show();
+        });
     }
 
     /**

@@ -158,6 +158,7 @@
     <string name="delete_role">删除角色</string>
     <string name="btn_of_explanation">功能说明按钮</string>
     <string name="update_check">检测更新</string>
+    <string name="select_first_screen">启动页选择</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

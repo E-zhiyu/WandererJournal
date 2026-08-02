@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.databinding.ActivityMainBinding;
 import com.wanderer.journal.helpers.UpdateHelper;
 import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
@@ -67,7 +68,10 @@ public class MainActivity extends AppCompatActivity {
         fragmentList.add(new HomeFragment());
         fragmentList.add(new SettingsFragment());
         initViewPager2(fragmentList);
-        binding.viewPager2.setCurrentItem(1, false);
+
+        //设置APP启动第一屏
+        int firstScreenCode = AppSettingsPreference.getFirstScreen(this);
+        binding.viewPager2.setCurrentItem(firstScreenCode, false);
 
         //底部导航栏
         binding.bottomNavi.setOnItemSelectedListener(menuItem -> {
