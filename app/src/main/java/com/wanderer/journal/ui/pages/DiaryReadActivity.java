@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -63,6 +64,7 @@ import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
+import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
@@ -90,7 +92,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();           //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                 //段落列表适配器
-    private List<Integer> filteredParagraphPositionList;                    //符合过滤条件的段落的位置列表
+    private List<Integer> paragraphPositionList;                    //符合过滤条件的段落的位置列表
     private int currentPosListIndex = -1;                                   //位置列表当前元素的下标
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;           //滚动到初始位置的 Runnable 实例
@@ -148,19 +150,58 @@ public class DiaryReadActivity extends AppCompatActivity {
         //日记段落列表
         initRecyclerView();
 
+        //数量指示器
+        binding.matchedItemsCounter.setOnClickListener(view ->
+                new EditTextDialogBuilder(this, "跳转位置", null)
+                        .setInputType(InputType.TYPE_CLASS_NUMBER)
+                        .setNegativeButton("取消", null)
+                        .setPositiveButton("确定", input -> {
+                            //判断是否有内容
+                            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
+                                Toast.makeText(this, "无匹配的搜索项，无法跳转", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            //判断范围
+                            int pos = Integer.parseInt(input);
+                            if (pos <= 0 || pos > paragraphPositionList.size()) {
+                                Toast.makeText(this, "请输入有效范围内的位置", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            //执行跳转逻辑
+                            currentPosListIndex = pos - 1;
+                            scrollContentRecycler(
+                                    paragraphPositionList.get(currentPosListIndex),
+                                    true,
+                                    null
+                            );
+
+                            //更新计数器
+                            String counterText = String.format(
+                                    Locale.getDefault(),
+                                    "%d/%d",
+                                    currentPosListIndex + 1,
+                                    paragraphPositionList.size()
+                            );
+                            binding.filteredParagraphCounterText.setText(counterText);
+                        })
+                        .show());
+        AppearanceHelper.attachMorphAnimation(binding.matchedItemsCounter);
+
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
             //判空
-            if (filteredParagraphPositionList == null || filteredParagraphPositionList.isEmpty()) {
+            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
                 return;
             }
 
             //滚动列表
-            int model = filteredParagraphPositionList.size();
+            int model = paragraphPositionList.size();
             currentPosListIndex = (currentPosListIndex + model - 1) % model;
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
             scrollContentRecycler(
-                    filteredParagraphPositionList.get(currentPosListIndex),
+                    paragraphPositionList.get(currentPosListIndex),
                     true,
                     null
             );
@@ -179,16 +220,16 @@ public class DiaryReadActivity extends AppCompatActivity {
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
             //判空
-            if (filteredParagraphPositionList == null || filteredParagraphPositionList.isEmpty()) {
+            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
                 return;
             }
 
             //滚动视图
-            int model = filteredParagraphPositionList.size();
+            int model = paragraphPositionList.size();
             currentPosListIndex = (currentPosListIndex + model + 1) % model;
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
             scrollContentRecycler(
-                    filteredParagraphPositionList.get(currentPosListIndex),
+                    paragraphPositionList.get(currentPosListIndex),
                     true,
                     null
             );
@@ -226,7 +267,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         positionList -> {
-                            filteredParagraphPositionList = positionList;
+                            paragraphPositionList = positionList;
 
                             //高亮段落
                             if (!positionList.isEmpty()) {

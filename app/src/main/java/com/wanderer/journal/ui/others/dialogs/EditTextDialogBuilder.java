@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.others.dialogs;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.text.InputType;
 import android.view.LayoutInflater;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,16 @@ public class EditTextDialogBuilder
         super(context, dialogTitle);
         binding.textLayout.setHint(hint);
         binding.textInput.setText(initText);
+    }
+
+    /**
+     * 设置输入种类
+     *
+     * @param type 输入种类，具体参考{@link InputType}中的静态变量
+     */
+    public EditTextDialogBuilder setInputType(int type) {
+        binding.textInput.setInputType(type);
+        return this;
     }
 
     @Override
