@@ -29,6 +29,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:resizeableActivity="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WandererJournal.Static"
@@ -45,8 +46,8 @@
         <activity
             android:name=".ui.pages.emotion.EmotionTagInputActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:parentActivityName=".ui.pages.emotion.EmotionTagListActivity" />
+            android:parentActivityName=".ui.pages.emotion.EmotionTagListActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagListActivity"
             android:exported="false" />
@@ -73,13 +74,13 @@
             android:parentActivityName=".ui.pages.DiaryReadActivity" />
         <activity
             android:name=".ui.pages.role.RoleListActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.role.RoleInputActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:parentActivityName=".ui.pages.role.RoleListActivity" />
+            android:parentActivityName=".ui.pages.role.RoleListActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.AuthActivity"
             android:exported="false"
