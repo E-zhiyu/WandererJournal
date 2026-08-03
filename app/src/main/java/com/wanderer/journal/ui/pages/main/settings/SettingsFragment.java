@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.settings;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.settings.FirstScreen;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
@@ -88,21 +90,69 @@ public class SettingsFragment extends Fragment {
         themeModeOption.setFunctionListener(v -> showThemeModeSelectDialog());
 
         //动态配色
-        SettingSwitchView dynamicColorOption = new SettingSwitchView(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+            SettingSwitchView dynamicColorOption = new SettingSwitchView(
+                    requireContext(),
+                    binding.dynamicColorOption,
+                    R.string.dynamic_color,
+                    "将壁纸颜色作为APP主题色",
+                    R.drawable.outline_colorize_24,
+                    RadiusStyle.MIDDLE
+            );
+            dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
+            dynamicColorOption.setFunctionListener(
+                    (buttonView, isChecked) -> {
+                        AppSettingsPreference.setDynamicColorStat(requireContext(), isChecked);
+                        ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
+                    }
+            );
+        } else {
+            binding.dynamicColorOption.getRoot().setVisibility(View.GONE);
+        }
+
+        //首页选项
+        SettingSpinnerView firstScreenOption = new SettingSpinnerView(
                 requireContext(),
-                binding.dynamicColorOption,
-                R.string.dynamic_color,
-                "将壁纸颜色作为APP主题色",
-                R.drawable.outline_colorize_24,
+                binding.firstScreenOption,
+                R.string.select_first_screen,
+                "选择启动的第一屏",
+                R.drawable.outline_mobile_24,
                 RadiusStyle.BOTTOM
         );
-        dynamicColorOption.setChecked(AppSettingsPreference.getDynamicColorStat(requireContext()));
-        dynamicColorOption.setFunctionListener(
-                (buttonView, isChecked) -> {
-                    AppSettingsPreference.setDynamicColorStat(requireContext(), isChecked);
-                    ThemeHelper.switchDynamicColorWithAnimation(requireActivity(), isChecked);
+        int screenCode = AppSettingsPreference.getFirstScreen(requireContext());
+        firstScreenOption.setSpinnerText(FirstScreen.values()[screenCode].getTitle());
+        firstScreenOption.setFunctionListener(v -> {
+            PopupMenu firstScreenMenu = new PopupMenu(requireContext(), firstScreenOption.getFunctionComponent());
+
+            //填充菜单选项
+            for (FirstScreen firstScreen : FirstScreen.values()) {
+                int groupId = firstScreen.getGroupId();
+                int itemId = firstScreen.getItemId();
+                int order = firstScreen.getOrder();
+                String title = firstScreen.getTitle();
+                firstScreenMenu.getMenu().add(groupId, itemId, order, title);
+            }
+
+            //设置点击监听
+            firstScreenMenu.setOnMenuItemClickListener(item -> {
+                //获取选项编号列表
+                List<Integer> itemIdList = Arrays.stream(FirstScreen.values())
+                        .map(FirstScreen::getItemId)
+                        .collect(Collectors.toList());
+
+                //判断是否选中
+                if (itemIdList.contains(item.getItemId())) {
+                    int index = itemIdList.indexOf(item.getItemId());
+                    AppSettingsPreference.setFirstScreen(requireContext(), index);
+                    firstScreenOption.setSpinnerText(item.getTitle());
+                    return true;
+                } else {
+                    return false;
                 }
-        );
+            });
+
+            firstScreenMenu.show();
+        });
     }
 
     /**

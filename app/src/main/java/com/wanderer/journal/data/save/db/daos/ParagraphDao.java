@@ -23,7 +23,6 @@ import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -184,10 +183,11 @@ public interface ParagraphDao {
      *
      * @param startDate     段落所属日记的日期
      * @param paragraphTime 段落插入的时间
+     * @param paragraphId   需要排除的段落的 ID
      * @return 插入的段落在当天的位置
      */
-    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime <= :paragraphTime")
-    int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime);
+    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime <= :paragraphTime AND paragraphId != :paragraphId")
+    int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime, long paragraphId);
 
     /**
      * 插入段落的事务
@@ -199,19 +199,20 @@ public interface ParagraphDao {
      */
     @Transaction
     default int addParagraph(
-            LocalDate startDate,
+            @NonNull LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             @NonNull List<MediaEntity> mediaList,
             @NonNull DiaryDb db
     ) {
         //获取从起始日期开始，有多少个段落日期小于等于该段落
         int earlierThanNewParagraph = getNewParagraphPosition(
-                paragraph.getCreateTime().toLocalDate(),
-                paragraph.getCreateTime()
+                startDate,
+                paragraph.getCreateTime(),
+                paragraph.getParagraphId()
         );
 
         //计算有几个日期分隔符
-        int dateSeparatorCount = Math.toIntExact(ChronoUnit.DAYS.between(startDate, paragraph.getCreateTime())) + 1;
+        int dateSeparatorCount = getDiaryCountByTimeRange(startDate.atStartOfDay(), paragraph.getCreateTime());
 
         //插入段落
         long paragraphId = insertParagraph(paragraph);
@@ -244,13 +245,52 @@ public interface ParagraphDao {
     void insertParagraphWhenImportingDiary(List<ParagraphEntity> paragraphEntityList);
 
     /**
-     * 更新段落
+     * 根据段落 ID 更新段落创建时间
      *
-     * @param paragraph 修改后的段落
-     * @return 是否成功
+     * @param paragraphId 需要更新的段落的 ID
+     * @param time        更新后的创建时间
      */
-    @Update
-    Completable updateParagraphCompletable(ParagraphEntity paragraph);
+    @Query("UPDATE paragraphs SET createTime = :time WHERE paragraphId = :paragraphId")
+    void updateCreateTimeById(long paragraphId, LocalDateTime time);
+
+    /**
+     * 获取处于时间范围内的日记数量
+     *
+     * @param start 起始时间（包含）
+     * @param end   结束时间
+     * @return 在时间范围内的日记数量
+     */
+    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate >= :start AND diaryDate < :end")
+    int getDiaryCountByTimeRange(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * 修改段落创建时间
+     *
+     * @param startDate     列表中最开始的日期
+     * @param newCreateTime 修改后的创建时间
+     * @param paragraphId   需要修改的段落的 ID
+     * @return 修改后的段落在列表中的下标
+     */
+    default int modifyCreateTime(
+            @NonNull LocalDate startDate,
+            LocalDateTime newCreateTime,
+            long paragraphId
+    ) {
+        //获取从起始日期开始，有多少个段落日期小于等于该段落
+        int earlierThanNewParagraph = getNewParagraphPosition(
+                startDate,
+                newCreateTime,
+                paragraphId
+        );
+
+        //计算有几个日期分隔符
+        int dateSeparatorCount = getDiaryCountByTimeRange(startDate.atStartOfDay(), newCreateTime);
+
+        //更新段落
+        updateCreateTimeById(paragraphId, newCreateTime);
+
+        return earlierThanNewParagraph + dateSeparatorCount;
+    }
 
     /**
      * 单线程更新段落

@@ -10,7 +10,19 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.5\n" +
+    private final static String CHANGELOG = "# v1.5.6\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 设置界面新增启动页设置项\n" +
+            "- 读日记界面点击搜索匹配项计数文本可以直接输入想要跳转到的位置\n" +
+            "- 关于软件界面可以选择前往的仓库地址\n" +
+            "\n" +
+            "### 优化内容\n" +
+            "\n" +
+            "- 写日记界面修改段落时间后会跳转至修改后的位置\n" +
+            "\n" +
+            "# v1.5.5\n" +
             "\n" +
             "### 优化内容\n" +
             "\n" +
