@@ -607,7 +607,7 @@ public class WriteActivity extends AppCompatActivity {
 
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
-                            updateParagraphCreateTime(paragraph);
+                            modifyCreateTime(paragraph);
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
@@ -1117,33 +1117,38 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param paragraph 原来的段落实例
      */
-    private void updateParagraphCreateTime(@NonNull ParagraphEntity paragraph) {
+    private void modifyCreateTime(@NonNull ParagraphEntity paragraph) {
         DateTimePickerHelper.selectTime(
                 paragraph.getCreateTime(),
                 getSupportFragmentManager(),
                 timePicker -> {
+                    //获取选择的时间
                     int hour = timePicker.getHour();
                     int minute = timePicker.getMinute();
                     LocalDateTime newDateTime = paragraph.getCreateTime()
                             .withHour(hour)
                             .withMinute(minute);
 
-                    ParagraphEntity newParagraph = new ParagraphEntity(
-                            paragraph.getParentDiaryId(),
-                            paragraph.getContent(),
-                            newDateTime
-                    );
-                    newParagraph.setParagraphId(paragraph.getParagraphId());
+                    //获取传递的起始日期
+                    LocalDate startDate;
+                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                        startDate = LocalDate.now();
+                    } else {
+                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                        startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                    }
 
+                    //更新数据
                     DiaryDb db = DiaryDb.getInstance(this);
-                    ParagraphDao paragraphDao = db.paragraphDao();
-                    disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
+                    disposable.add(ParagraphService.modifyCreateTime(paragraph.getParagraphId(), startDate, newDateTime, db)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    () -> {
+                                    pos -> {
                                         Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
                                         Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
+
+                                        scrollPosition.set(pos);
                                     },
                                     throwable -> {
                                         ExceptionHelper.showExceptionDialog(this, throwable);

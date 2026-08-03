@@ -54,6 +54,14 @@ public interface DiaryDao {
     Flowable<Optional<LocalDate>> getEarliestDiaryDateFlowable();
 
     /**
+     * 获取最早的日记日期
+     *
+     * @return 最早的日记日期
+     */
+    @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
+    Single<Optional<LocalDate>> getEarliestDiaryDateSingle();
+
+    /**
      * 获取所有日记
      *
      * @return 由{@link DiaryWithSummaryUiModel}组成的列表，支持响应式更新

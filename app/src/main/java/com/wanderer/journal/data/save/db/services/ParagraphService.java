@@ -15,6 +15,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.helpers.file.FileHelper;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -72,6 +73,28 @@ public class ParagraphService {
             for (Uri uri : oldMediaUriSet) {
                 FileHelper.deleteFile(uri, context);
             }
+        });
+    }
+
+    /**
+     * 根据段落编号更新创建时间
+     *
+     * @param paragraphId   需要更新的段落的编号
+     * @param startDate     列表中最开始的日期
+     * @param newCreateTime 更新后的创建时间
+     * @param db            数据库实例
+     * @return 更新后段落在列表中的下标
+     */
+    public static Single<Integer> modifyCreateTime(
+            long paragraphId,
+            LocalDate startDate,
+            LocalDateTime newCreateTime,
+            DiaryDb db
+    ) {
+        return Single.defer(() -> {
+            ParagraphDao dao = db.paragraphDao();
+            int pos = dao.modifyCreateTime(startDate, newCreateTime, paragraphId);
+            return Single.just(pos);
         });
     }
 

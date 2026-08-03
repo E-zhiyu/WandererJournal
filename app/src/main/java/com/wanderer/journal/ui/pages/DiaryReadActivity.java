@@ -41,7 +41,6 @@ import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
-import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -517,7 +516,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             startActivity(skip2Write);
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
-                            updateParagraphCreateTime(paragraph);
+                            modifyCreateTime(paragraph);
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
@@ -851,7 +850,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      *
      * @param paragraph 原来的段落实例
      */
-    private void updateParagraphCreateTime(@NonNull ParagraphEntity paragraph) {
+    private void modifyCreateTime(@NonNull ParagraphEntity paragraph) {
         DateTimePickerHelper.selectTime(
                 paragraph.getCreateTime(),
                 getSupportFragmentManager(),
@@ -862,20 +861,16 @@ public class DiaryReadActivity extends AppCompatActivity {
                             .withHour(hour)
                             .withMinute(minute);
 
-                    ParagraphEntity newParagraph = new ParagraphEntity(
-                            paragraph.getParentDiaryId(),
-                            paragraph.getContent(),
-                            newDateTime
-                    );
-                    newParagraph.setParagraphId(paragraph.getParagraphId());
-
                     DiaryDb db = DiaryDb.getInstance(this);
-                    ParagraphDao paragraphDao = db.paragraphDao();
-                    disposable.add(paragraphDao.updateParagraphCompletable(newParagraph)
+                    disposable.add(db.diaryDao().getEarliestDiaryDateSingle()
+                            .flatMap(optional -> {
+                                LocalDate startDate = optional.orElseGet(LocalDate::now);
+                                return ParagraphService.modifyCreateTime(paragraph.getParagraphId(), startDate, newDateTime, db);
+                            })
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    () -> {
+                                    pos -> {
                                         Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落创建时间修改成功");
                                         Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
                                     },
