@@ -155,7 +155,7 @@ public class PermissionManageActivity extends AppCompatActivity {
             autoStart.setFunctionListener(v -> showExplanationDialog(
                             R.string.auto_start_permission,
                             "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
-                                    "- 在退出应用后自动启动通知监听服务，确保自动记账功能能够运行\n",
+                                    "- 确保定时任务能够在后台自动执行\n",
                             () -> {
                                 WandererJournal.lockLifecycleObserver();
                                 Intent skip2AutoStartPermission = PermissionHelper.buildAutoStartPermissionIntent(this);

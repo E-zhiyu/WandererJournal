@@ -12,6 +12,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.5.7\n" +
             "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复自启动权限说明文本错误的BUG\n" +
+            "\n" +
             "### 修改内容\n" +
             "\n" +
             "- 略微修改角色输入界面的布局\n" +
