@@ -76,6 +76,5 @@ public class TipPreference {
         Context context = anchor.getContext();
         TextPopupWindow window = new TextPopupWindow(message, context);
         window.show(anchor, gravity);
-        //TODO:角色别名使用这个
     }
 }
