@@ -109,7 +109,7 @@
     <string name="impression">印象</string>
     <string name="role_impression_helper">您对该角色的印象和评价</string>
     <string name="role_relationship_helper">您与该角色的关系好坏程度</string>
-    <string name="add_alia">添加别名</string>
+    <string name="role_alia">角色别名</string>
     <string name="modify_role">修改角色</string>
     <string name="select_role">选择角色</string>
     <string name="ignore_battery_optimization">忽略电池优化</string>

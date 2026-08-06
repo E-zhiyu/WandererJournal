@@ -52,14 +52,17 @@ public class TipPreference {
      * @param maxTipCount 最大提醒次数
      */
     public static void showTip(@NonNull View anchor, int gravity, String tipMessage, String key, int maxTipCount) {
-        Context context = anchor.getContext();
-        int currentValue = getValue(context, key);
-        if (currentValue < maxTipCount) {
-            TextPopupWindow window = new TextPopupWindow(tipMessage, context);
-            window.show(anchor, gravity);
+        anchor.postDelayed(() -> {
+                    Context context = anchor.getContext();
+                    int currentValue = getValue(context, key);
+                    if (currentValue < maxTipCount) {
+                        TextPopupWindow window = new TextPopupWindow(tipMessage, context);
+                        window.show(anchor, gravity);
 
-            setValue(context, key, currentValue + 1);
-        }
+                        setValue(context, key, currentValue + 1);
+                    }
+                },
+                100);
     }
 
     /**
@@ -73,6 +76,6 @@ public class TipPreference {
         Context context = anchor.getContext();
         TextPopupWindow window = new TextPopupWindow(message, context);
         window.show(anchor, gravity);
-        //TODO:各个列表界面添加说明按钮
+        //TODO:角色别名使用这个
     }
 }

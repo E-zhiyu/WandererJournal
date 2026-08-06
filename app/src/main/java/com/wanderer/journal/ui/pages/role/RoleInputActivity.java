@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.role;
 
 import android.os.Bundle;
+import android.view.Gravity;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -20,6 +21,7 @@ import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.services.RoleService;
 import com.wanderer.journal.data.save.preference.DraftPreference;
+import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.ActivityRoleInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -159,7 +161,7 @@ public class RoleInputActivity extends AppCompatActivity {
         });
 
         //添加别名
-        binding.addAliaChip.setOnClickListener(view -> new EditTextDialogBuilder(this, "输入别名", "别名")
+        binding.aliaAddBtn.setOnClickListener(view -> new EditTextDialogBuilder(this, "输入别名", "别名")
                 .setNegativeButton("取消", null)
                 .setPositiveButton("确定", inputStr -> {
                     if (inputStr.trim().isEmpty()) {
@@ -183,6 +185,12 @@ public class RoleInputActivity extends AppCompatActivity {
                 })
                 .show()
         );
+
+        //别名文本帮助按钮
+        binding.roleAliaExplainBtn.setOnClickListener(view -> {
+            final String EXPLANATION = "添加任何属于该角色的称呼";
+            TipPreference.showTipWithoutKey(view, Gravity.START, EXPLANATION);
+        });
 
         //确认按钮
         binding.confirmButton.setOnClickListener(view -> {

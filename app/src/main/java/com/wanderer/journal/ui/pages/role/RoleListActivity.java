@@ -65,15 +65,15 @@ public class RoleListActivity extends AppCompatActivity {
         initBackHandlers();
         observeLiveData();
 
-        binding.getRoot().postDelayed(this::initGuide, 250);
+        initGuide();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**

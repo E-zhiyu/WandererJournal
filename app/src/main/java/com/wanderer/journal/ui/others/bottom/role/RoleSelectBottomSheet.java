@@ -88,8 +88,8 @@ public class RoleSelectBottomSheet extends BaseBottomSheetDialogFragment {
     public void onDestroyView() {
         super.onDestroyView();
 
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**

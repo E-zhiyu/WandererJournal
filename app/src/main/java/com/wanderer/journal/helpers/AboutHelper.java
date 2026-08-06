@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.6\n" +
+    private final static String CHANGELOG = "# v1.5.7\n" +
+            "\n" +
+            "### 修改内容\n" +
+            "\n" +
+            "- 略微修改角色输入界面的布局\n" +
+            "\n" +
+            "# v1.5.6\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +
