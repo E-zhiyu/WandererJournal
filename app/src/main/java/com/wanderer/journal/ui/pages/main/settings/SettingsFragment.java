@@ -351,19 +351,6 @@ public class SettingsFragment extends Fragment {
      * 初始化关于软件设置
      */
     private void initAboutSettings() {
-        //更新日志
-        SettingClickableTextView changelogOption = new SettingClickableTextView(
-                requireContext(),
-                binding.changelogOption,
-                R.string.changelog,
-                null,
-                R.drawable.outline_lab_profile_24,
-                RadiusStyle.TOP
-        );
-        changelogOption.setFunctionListener(
-                view -> AboutHelper.showChangelog(requireContext())
-        );
-
         //关于软件
         SettingClickableTextView aboutOption = new SettingClickableTextView(
                 requireContext(),
@@ -371,12 +358,25 @@ public class SettingsFragment extends Fragment {
                 R.string.about_software,
                 null,
                 R.drawable.outline_info_24,
-                RadiusStyle.MIDDLE
+                RadiusStyle.TOP
         );
         aboutOption.setFunctionListener(view -> {
             Intent skip2About = new Intent(requireContext(), AboutActivity.class);
             startActivity(skip2About);
         });
+
+        //更新日志
+        SettingClickableTextView changelogOption = new SettingClickableTextView(
+                requireContext(),
+                binding.changelogOption,
+                R.string.changelog,
+                null,
+                R.drawable.outline_lab_profile_24,
+                RadiusStyle.MIDDLE
+        );
+        changelogOption.setFunctionListener(
+                view -> AboutHelper.showChangelog(requireContext())
+        );
 
         //更新检测
         SettingClickableTextView updateCheckOption = new SettingClickableTextView(
