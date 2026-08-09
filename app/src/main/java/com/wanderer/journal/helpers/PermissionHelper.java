@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -36,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -62,11 +62,6 @@ public class PermissionHelper {
         BATTERY(
                 PermissionHelper::isIgnoringBatteryOptimizations,
                 PermissionHelper::buildIgnoringBatteryOptimizationsIntent
-        ),
-        //通知监听权限
-        NOTIFICATION_LISTENER(
-                PermissionHelper::isNotificationServiceEnabled,
-                c -> buildNotificationListenerIntent()
         ),
         //自启动权限
         AUTO_START(
@@ -97,8 +92,10 @@ public class PermissionHelper {
          * @param c 上下文
          * @return 跳转到权限设置界面的 Intent
          */
+        @NonNull
         public Intent getIntent(Context c) {
-            return intentBuilder.apply(c);
+            Intent intent = intentBuilder.apply(c);
+            return Objects.requireNonNullElseGet(intent, () -> new Intent(Settings.ACTION_SETTINGS));
         }
     }
 
@@ -345,7 +342,7 @@ public class PermissionHelper {
      * @param context 上下文
      * @return 是否拥有精确闹钟权限
      */
-    public static boolean isExactAlarmEnabled(Context context) {
+    private static boolean isExactAlarmEnabled(Context context) {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
                 context.getSystemService(android.app.AlarmManager.class).canScheduleExactAlarms();
     }
@@ -356,7 +353,7 @@ public class PermissionHelper {
      * @param context 上下文
      * @return 是否提醒了需要开启自启动权限
      */
-    public static boolean isAutoStartHinted(Context context) {
+    private static boolean isAutoStartHinted(Context context) {
         return !isAutoStartDefined() || AppSettingsPreference.getHintAutoStart(context);
     }
 
@@ -376,36 +373,12 @@ public class PermissionHelper {
     }
 
     /**
-     * 检查通知使用权的授予情况
-     *
-     * @param context 上下文
-     * @return 是否授予通知使用权
-     */
-    public static boolean isNotificationServiceEnabled(@NonNull Context context) {
-        String pkgName = context.getPackageName();
-        final String flat = Settings.Secure.getString(context.getContentResolver(),
-                "enabled_notification_listeners");
-        if (!TextUtils.isEmpty(flat)) {
-            final String[] names = flat.split(":");
-            for (String name : names) {
-                final ComponentName cn = ComponentName.unflattenFromString(name);
-                if (cn != null) {
-                    if (TextUtils.equals(pkgName, cn.getPackageName())) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * 判断是否在电池优化白名单中
      *
      * @param context 上下文
      * @return 是否在电池优化白名单
      */
-    public static boolean isIgnoringBatteryOptimizations(@NonNull Context context) {
+    private static boolean isIgnoringBatteryOptimizations(@NonNull Context context) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         return pm.isIgnoringBatteryOptimizations(context.getPackageName());
     }
@@ -415,7 +388,7 @@ public class PermissionHelper {
      *
      * @return 是否能跳转原生界面
      */
-    public static boolean canSkip2ProtogeneticBatteryOptimizationsPage() {
+    private static boolean canSkip2ProtogeneticBatteryOptimizationsPage() {
         return !DeviceOs.isHyperOs() && !DeviceOs.isMiui();    //小米系统无法弹出允许电池优化对话框
     }
 
@@ -426,7 +399,7 @@ public class PermissionHelper {
      * @return 用于申请精确闹钟权限的Intent
      */
     @Nullable
-    public static Intent buildExactAlarmIntent(Context context) {
+    private static Intent buildExactAlarmIntent(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             return new Intent(
                     Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
@@ -437,25 +410,13 @@ public class PermissionHelper {
     }
 
     /**
-     * 构建申请通知监听权限的Intent
-     *
-     * @return 申请通知监听权限的Intent
-     */
-    @NonNull
-    public static Intent buildNotificationListenerIntent() {
-        Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        return intent;
-    }
-
-    /**
      * 构建用于申请电池优化白名单的Intent
      *
      * @param context 上下文
      * @return 用于申请电池优化白名单的Intent
      */
     @NonNull
-    public static Intent buildIgnoringBatteryOptimizationsIntent(Context context) {
+    private static Intent buildIgnoringBatteryOptimizationsIntent(Context context) {
         if (canSkip2ProtogeneticBatteryOptimizationsPage()) {
             @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + context.getPackageName()));
@@ -472,7 +433,7 @@ public class PermissionHelper {
      * @return 跳转自启动界面的Intent
      */
     @NonNull
-    public static Intent buildAutoStartPermissionIntent(Context context) {
+    private static Intent buildAutoStartPermissionIntent(Context context) {
         String manufacturer = Build.MANUFACTURER.toLowerCase();
         if (manufacturer.contains("xiaomi")) {
             Intent intent = new Intent();
