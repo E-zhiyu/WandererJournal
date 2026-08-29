@@ -243,7 +243,7 @@ public class RoleInputActivity extends AppCompatActivity {
         List<String> aliaList;
         if (binding.aliaRecycler.getAdapter() instanceof RoleAliasAdapter) {
             RoleAliasAdapter aliasAdapter = (RoleAliasAdapter) binding.aliaRecycler.getAdapter();
-            aliaList = aliasAdapter.getCurrentList();
+            aliaList = new ArrayList<>(aliasAdapter.getCurrentList());
         } else {
             aliaList = new ArrayList<>();
         }
