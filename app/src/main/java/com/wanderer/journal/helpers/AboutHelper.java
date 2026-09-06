@@ -12,6 +12,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.5.7\n" +
             "\n" +
+            "### 修改的内容\n" +
+            "\n" +
+            "- 移除情绪标签输入界面中标签名称输入框的长度计数器\n" +
+            "\n" +
             "### BUG修复\n" +
             "\n" +
             "- 修复自启动权限说明文本错误的BUG\n" +

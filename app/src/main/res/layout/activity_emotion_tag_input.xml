@@ -59,8 +59,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/name"
-                app:counterEnabled="true"
-                app:counterMaxLength="10"
                 app:helperText="@string/emotion_tag_name_helper">
 
                 <com.google.android.material.textfield.TextInputEditText
