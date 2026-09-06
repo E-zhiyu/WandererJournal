@@ -68,14 +68,14 @@ public interface RoleDao {
     Flowable<List<RoleEntity>> getCommonRoleFlowable(int limit);
 
     /**
-     * 将角色使用次数加一
+     * 将角色使用次数加一，并且将上一次使用时间调为现在
      *
-     * @param roleId 需要增加使用次数的角色 ID
+     * @param roleId 需要更新的角色 ID
      * @return 是否完成
      */
     @Query("UPDATE roles SET " +
             "useCount = useCount + 1, " +
-            "latestUseTime = CURRENT_TIMESTAMP " +
+            "latestUseTime = CAST(unixepoch('subsec') AS INTEGER) " +
             "WHERE roleId = :roleId")
     Completable updateRoleUseData(long roleId);
 
