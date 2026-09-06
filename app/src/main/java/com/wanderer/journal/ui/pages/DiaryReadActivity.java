@@ -73,6 +73,7 @@ import com.wanderer.journal.ui.others.bottom.ParagraphFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
+import com.wanderer.journal.ui.pages.share.SharePreviewActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -123,7 +124,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
-        binding.getRoot().postDelayed(this::initGuide, 250);
+        initGuide();
         observeLiveData();
         initBackHandlers();
     }
@@ -135,8 +136,8 @@ public class DiaryReadActivity extends AppCompatActivity {
         //移除待滚动的任务
         binding.contentRecycler.removeCallbacks(scrollToInit);
 
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**

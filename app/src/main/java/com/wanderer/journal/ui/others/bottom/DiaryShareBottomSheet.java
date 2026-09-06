@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.databinding.BottomSheetDiaryShareBinding;
-import com.wanderer.journal.ui.others.viewmodel.DiaryShareViewModel;
+import com.wanderer.journal.ui.pages.share.DiaryShareViewModel;
 
 public class DiaryShareBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetDiaryShareBinding binding;

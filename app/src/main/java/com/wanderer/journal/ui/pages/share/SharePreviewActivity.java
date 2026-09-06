@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages;
+package com.wanderer.journal.ui.pages.share;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -48,7 +48,6 @@ import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphListAdapter;
 import com.wanderer.journal.ui.others.bottom.DiaryShareBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
-import com.wanderer.journal.ui.others.viewmodel.DiaryShareViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;

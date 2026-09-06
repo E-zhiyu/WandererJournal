@@ -2,19 +2,28 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> <!-- 精确闹钟设置权限 -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- 开机监听权限 -->
+    <!-- 精确闹钟设置权限 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- 开机监听权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 安装APK权限 -->
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
-        tools:ignore="RequestInstallPackagesPolicy" /> <!-- 安装APK权限 -->
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 网络权限 -->
-    <uses-permission android:name="android.permission.CAMERA" /> <!-- 相机权限 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- 通知权限 -->
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" /> <!-- 生物验证使用权限 -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" /> <!-- 请求忽略电池优化 -->
+        tools:ignore="RequestInstallPackagesPolicy" />
+    <!-- 网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 相机权限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera"
-        android:required="false" /> <!-- 声明需要交互的应用 -->
+        android:required="true" />
+    <!-- 通知权限 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 生物验证使用权限 -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- 请求忽略电池优化 -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 声明需要交互的应用 -->
     <queries>
         <intent>
             <action android:name="android.intent.action.SEND" /> <!-- 分享文件 -->
@@ -36,13 +45,15 @@
         tools:targetApi="33">
         <activity
             android:name=".ui.pages.main.settings.sub.DiaryAlarmActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.media.FullScreenMediaActivity"
             android:exported="false" />
         <activity
             android:name=".ui.pages.statistics.StatisticsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagInputActivity"
             android:exported="false"
@@ -50,10 +61,12 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.emotion.EmotionTagListActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.AboutActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.WriteActivity"
             android:exported="false"
@@ -64,17 +77,20 @@
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.PermissionManageActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
-            android:name=".ui.pages.SharePreviewActivity"
+            android:name=".ui.pages.share.SharePreviewActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.DiaryReadActivity" />
         <activity
             android:name=".ui.pages.role.RoleListActivity"
             android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.role.RoleInputActivity"
@@ -87,14 +103,17 @@
             android:launchMode="singleTop" />
         <activity
             android:name=".ui.pages.main.settings.sub.ShareSettingsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.life_note.LifeNoteListActivity"
             android:exported="false"
+            android:parentActivityName=".ui.pages.main.MainActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.life_note.LifeNoteInputActivity"
             android:exported="false"
+            android:parentActivityName=".ui.pages.life_note.LifeNoteListActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ui.pages.main.MainActivity"

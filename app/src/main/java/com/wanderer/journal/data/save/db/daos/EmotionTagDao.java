@@ -102,7 +102,7 @@ public interface EmotionTagDao {
                     "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
                     "FROM emotionTags e " +
                     "WHERE useCount > 0 " +
-                    "ORDER BY e.type"
+                    "ORDER BY useCount DESC"
     )
     Flowable<List<EmotionTagUseCountModel>> getUsedEmotionTagFlowable();
 

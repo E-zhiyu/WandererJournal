@@ -28,7 +28,6 @@ import com.wanderer.journal.helpers.SearchHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
-import com.wanderer.journal.ui.others.viewmodel.LifeNoteListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -50,6 +49,10 @@ public class LifeNoteListActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            //RecyclerView
+            binding.recycler.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+
             return insets;
         });
 

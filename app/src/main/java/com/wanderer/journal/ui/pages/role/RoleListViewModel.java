@@ -1,11 +1,11 @@
-package com.wanderer.journal.ui.others.viewmodel;
+package com.wanderer.journal.ui.pages.role;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
-import com.wanderer.journal.data.save.db.services.LifeNoteService;
+import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
+import com.wanderer.journal.data.save.db.services.RoleService;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +15,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class LifeNoteListViewModel extends ViewModel {
+public class RoleListViewModel extends ViewModel {
     private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
     private final BehaviorProcessor<String> searchKeywordProcessor =
             BehaviorProcessor.createDefault("");    //搜索关键词处理器
@@ -25,16 +25,16 @@ public class LifeNoteListViewModel extends ViewModel {
     }
 
     /**
-     * 获取人生笔记数据，并支持搜索防抖
+     * 获取角色数据
      *
      * @param db 数据库实例
-     * @return 人生笔记数据列表，支持响应式更新
+     * @return 角色数据列表，包含分隔符
      */
-    public Flowable<List<LifeNoteEntity>> getLifeNoteListFlowable(DiaryDb db) {
+    public Flowable<List<RoleUiModel>> getRoleListFlowable(DiaryDb db) {
         return searchKeywordProcessor
                 .debounce(50, TimeUnit.MILLISECONDS)
                 .switchMap(
-                        keyword -> LifeNoteService.getAllLifeNoteFlowable(db, keyword)
+                        keyword -> RoleService.getAllRoleFlowable(db, keyword)
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribeOn(Schedulers.io())
                 );

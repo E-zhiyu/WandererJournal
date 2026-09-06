@@ -10,7 +10,24 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.6\n" +
+    private final static String CHANGELOG = "# v1.5.7\n" +
+            "\n" +
+            "### 修改的内容\n" +
+            "\n" +
+            "- 移除情绪标签输入界面中标签名称输入框的长度计数器\n" +
+            "- 移除写日记界面输入框不能手动换行的限制\n" +
+            "- 略微修改角色输入界面的布局\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复自启动权限说明文本错误的BUG\n" +
+            "- 修复设置界面关于软件和更新日志选项圆角大小不正确的BUG\n" +
+            "- 修复修改角色会导致其从角色选择对话框的常用角色中移除的BUG\n" +
+            "- 修复人生笔记列表界面无法自适应系统底部导航栏的高度的BUG\n" +
+            "- 修复最近使用的情绪标签不会按照使用次数排序的BUG\n" +
+            "- 尝试修复处于写日记界面时焦点变更会导致输入框位置不正确的BUG\n" +
+            "\n" +
+            "# v1.5.6\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

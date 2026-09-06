@@ -155,10 +155,10 @@ public class PermissionManageActivity extends AppCompatActivity {
             autoStart.setFunctionListener(v -> showExplanationDialog(
                             R.string.auto_start_permission,
                             "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
-                                    "- 在退出应用后自动启动通知监听服务，确保自动记账功能能够运行\n",
+                                    "- 确保定时任务能够在后台自动执行\n",
                             () -> {
                                 WandererJournal.lockLifecycleObserver();
-                                Intent skip2AutoStartPermission = PermissionHelper.buildAutoStartPermissionIntent(this);
+                                Intent skip2AutoStartPermission = PermissionHelper.SpecialPermissionType.AUTO_START.getIntent(this);
                                 startActivity(skip2AutoStartPermission);
                             }
                     )
@@ -180,12 +180,12 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.string.ignore_battery_optimization,
                 "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。",
                 () -> {
-                    if (PermissionHelper.isIgnoringBatteryOptimizations(this)) {
+                    if (PermissionHelper.SpecialPermissionType.BATTERY.isGranted(this)) {
                         Toast.makeText(this, "已忽略电池优化，长按强制跳转电池优化界面", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    Intent intent = PermissionHelper.buildIgnoringBatteryOptimizationsIntent(this);
+                    Intent intent = PermissionHelper.SpecialPermissionType.BATTERY.getIntent(this);
                     if (Objects.equals(intent.getAction(), Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) {
                         Toast.makeText(this, "请找到本应用并设置电池优化策略为“无限制”", Toast.LENGTH_SHORT).show();
                     }
@@ -215,7 +215,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                         "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
                 () -> {
                     WandererJournal.lockLifecycleObserver();
-                    Intent skip2ExactAlarm = PermissionHelper.buildExactAlarmIntent(this);
+                    Intent skip2ExactAlarm = PermissionHelper.SpecialPermissionType.ALARM.getIntent(this);
                     startActivity(skip2ExactAlarm);
                 }
         ));

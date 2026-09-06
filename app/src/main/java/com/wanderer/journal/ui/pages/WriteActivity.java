@@ -220,6 +220,15 @@ public class WriteActivity extends AppCompatActivity {
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
+            binding.emptyText
+                    .animate()
+                    .translationY(0)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250)
+                    .start();
+            ImmHelper.hideImm(binding.contentTextInput);
+        } else {
+            ImmHelper.showImm(binding.contentTextInput);
         }
     }
 
@@ -410,31 +419,10 @@ public class WriteActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (isChanging) return;
-
-                if (s != null && s.toString().contains("\n")) {
-                    isChanging = true;
-
-                    //将所有换行符替换为空字符串
-                    int selectionStart = binding.contentTextInput.getSelectionStart();
-                    int replacedCount = TextHelper.getKeywordCount(
-                            s.toString(),
-                            selectionStart,
-                            "\n"
-                    ); //计算换行符的数量（只计算在光标前面的）
-                    String cleanString = s.toString().replace("\n", "");
-
-                    //重新设置文本并移动光标
-                    binding.contentTextInput.setText(cleanString);
-                    binding.contentTextInput.setSelection(selectionStart - replacedCount);
-
-                    isChanging = false;
-                }
             }
 
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override

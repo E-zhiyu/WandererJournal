@@ -32,7 +32,6 @@ import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
-import com.wanderer.journal.ui.others.viewmodel.RoleListViewModel;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -65,15 +64,15 @@ public class RoleListActivity extends AppCompatActivity {
         initBackHandlers();
         observeLiveData();
 
-        binding.getRoot().postDelayed(this::initGuide, 250);
+        initGuide();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**
