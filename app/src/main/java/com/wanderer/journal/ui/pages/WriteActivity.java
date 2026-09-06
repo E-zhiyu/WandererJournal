@@ -220,6 +220,15 @@ public class WriteActivity extends AppCompatActivity {
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
+            binding.emptyText
+                    .animate()
+                    .translationY(0)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250)
+                    .start();
+            ImmHelper.hideImm(binding.contentTextInput);
+        } else {
+            ImmHelper.showImm(binding.contentTextInput);
         }
     }
 
