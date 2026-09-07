@@ -104,7 +104,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void initViews() {
         //翻页视图
-        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.getS()) : null;
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         FullScreenMediaAdapter adapter = new FullScreenMediaAdapter(mediaUriStrings);
         binding.viewPager2.setAdapter(adapter);
         List<Uri> mediaUriList;
@@ -138,7 +138,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         binding.viewPager2.registerOnPageChangeCallback(pageChangeCallback);
 
         //设置初始位置
-        int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), 0);
+        int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.v(), 0);
         binding.viewPager2.setCurrentItem(startIndex, false);
 
         //保存媒体
@@ -192,7 +192,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void savePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.getS()) : null;
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         if (mediaUriStrings != null) {
             Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
             disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
@@ -211,7 +211,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void sharePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.getS()) : null;
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         if (mediaUriStrings != null) {
             Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
             File pictureFile = new File(Objects.requireNonNull(currentUri.getPath()));

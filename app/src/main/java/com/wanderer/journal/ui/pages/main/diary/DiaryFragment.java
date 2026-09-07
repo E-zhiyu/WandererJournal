@@ -86,7 +86,7 @@ public class DiaryFragment extends Fragment {
                         //跳转到写日记界面并传递选择的日期
                         Intent skip2DiaryContent = new Intent(requireContext(), WriteActivity.class);
                         Bundle bundle = new Bundle();
-                        bundle.putLong(KeyStrings.INIT_DATE.getS(), selection);
+                        bundle.putLong(KeyStrings.INIT_DATE.v(), selection);
                         skip2DiaryContent.putExtras(bundle);
                         startActivity(skip2DiaryContent);
                     }
@@ -135,7 +135,7 @@ public class DiaryFragment extends Fragment {
                     Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
                     Bundle bundle = new Bundle();
 
-                    bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDate(diary.getDiaryDate()));
+                    bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDate(diary.getDiaryDate()));
 
                     skip2Read.putExtras(bundle);
                     startActivity(skip2Read);

@@ -42,7 +42,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            paragraphId = getArguments().getLong(KeyStrings.PARAGRAPH_ID.getS());
+            paragraphId = getArguments().getLong(KeyStrings.PARAGRAPH_ID.v());
             EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
             viewModel.setParagraphId(paragraphId);
         }
@@ -80,7 +80,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     public static EmotionTagSelectBottomSheet newInstance(long paragraphId) {
         EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet();
         Bundle bundle = new Bundle();
-        bundle.putLong(KeyStrings.PARAGRAPH_ID.getS(), paragraphId);
+        bundle.putLong(KeyStrings.PARAGRAPH_ID.v(), paragraphId);
         bottomSheet.setArguments(bundle);
         return bottomSheet;
     }

@@ -26,7 +26,7 @@ public enum KeyStrings {
         this.s = s;
     }
 
-    public String getS() {
+    public String v() {
         return s;
     }
 }

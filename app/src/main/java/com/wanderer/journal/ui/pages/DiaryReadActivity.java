@@ -408,7 +408,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             //创建 Intent
                             Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
                             Bundle bundle = new Bundle();
-                            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS(), selectedIds);
+                            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v(), selectedIds);
                             skip2SharePreview.putExtras(bundle);
 
                             //跳转界面
@@ -510,8 +510,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                             Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
                             Bundle bundle = new Bundle();
 
-                            bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
-                            bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS(), paragraph.getParagraphId());    //段落 ID
+                            bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
+                            bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v(), paragraph.getParagraphId());    //段落 ID
 
                             skip2Write.putExtras(bundle);
                             startActivity(skip2Write);
@@ -545,8 +545,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), position);
                     skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
@@ -637,8 +637,8 @@ public class DiaryReadActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDb db = DiaryDb.getInstance(this);
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-        if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) != -1) {
-            long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+        if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) != -1) {
+            long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
             LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
             disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)

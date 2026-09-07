@@ -38,7 +38,7 @@ public class RoleGroupFragment extends Fragment {
     public static RoleGroupFragment newInstance(int groupKey) {
         RoleGroupFragment fragment = new RoleGroupFragment();
         Bundle bundle = new Bundle();
-        bundle.putInt(KeyStrings.KEY_ROLE_GROUP.getS(), groupKey);
+        bundle.putInt(KeyStrings.KEY_ROLE_GROUP.v(), groupKey);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -48,7 +48,7 @@ public class RoleGroupFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             //取出需要获取的分组关键字
-            groupKey = getArguments().getInt(KeyStrings.KEY_ROLE_GROUP.getS());
+            groupKey = getArguments().getInt(KeyStrings.KEY_ROLE_GROUP.v());
         }
     }
 

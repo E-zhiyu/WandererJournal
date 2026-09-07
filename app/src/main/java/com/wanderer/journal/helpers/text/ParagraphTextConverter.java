@@ -30,7 +30,7 @@ public class ParagraphTextConverter {
                 editable,
                 (annotation, raw) -> {
                     String key = annotation.getKey();
-                    if (key.equals(KeyStrings.ROLE_ID.getS())) {    //角色引用
+                    if (key.equals(KeyStrings.ROLE_ID.v())) {    //角色引用
                         String roleIdStr = annotation.getValue();
                         String roleName = raw.trim().replace("@", "");
                         return String.format(

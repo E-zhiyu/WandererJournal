@@ -52,7 +52,7 @@ public class InfoShower {
 
                             //生成数据包
                             Bundle bundle = new Bundle();
-                            bundle.putLong(KeyStrings.ROLE_ID.getS(), roleId);
+                            bundle.putLong(KeyStrings.ROLE_ID.v(), roleId);
 
                             //跳转界面
                             Intent skip2RoleInput = new Intent(context, RoleInputActivity.class);

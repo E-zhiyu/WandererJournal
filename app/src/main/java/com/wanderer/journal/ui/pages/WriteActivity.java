@@ -258,7 +258,7 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         //待编辑的段落的 ID
-        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
+        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v());
         ParagraphDao paragraphDao = DiaryDb.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -287,7 +287,7 @@ public class WriteActivity extends AppCompatActivity {
     private LocalDate getParentDiaryDate() {
         if (initBundle == null) return LocalDate.now();
 
-        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v(), -1);
         return initDateTimestamp == -1 ? LocalDate.now() : DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
@@ -496,7 +496,7 @@ public class WriteActivity extends AppCompatActivity {
                     WriteActivity.this,
                     null,
                     display,
-                    KeyStrings.ROLE_ID.getS(),
+                    KeyStrings.ROLE_ID.v(),
                     value
             );
 
@@ -623,8 +623,8 @@ public class WriteActivity extends AppCompatActivity {
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), position);
                     skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
@@ -1037,10 +1037,10 @@ public class WriteActivity extends AppCompatActivity {
 
                         //获取传递的起始日期
                         LocalDate startDate;
-                        if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                        if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) == -1) {
                             startDate = LocalDate.now();
                         } else {
-                            long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                            long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
                             startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
                         }
 
@@ -1119,10 +1119,10 @@ public class WriteActivity extends AppCompatActivity {
 
                     //获取传递的起始日期
                     LocalDate startDate;
-                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) == -1) {
                         startDate = LocalDate.now();
                     } else {
-                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
                         startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
                     }
 

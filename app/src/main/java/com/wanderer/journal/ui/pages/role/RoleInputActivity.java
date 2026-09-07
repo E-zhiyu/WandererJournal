@@ -94,7 +94,7 @@ public class RoleInputActivity extends AppCompatActivity {
 
             //初始化文本框内容
             DiaryDb db = DiaryDb.getInstance(this);
-            long roleId = initBundle.getLong(KeyStrings.ROLE_ID.getS());
+            long roleId = initBundle.getLong(KeyStrings.ROLE_ID.v());
             disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -250,7 +250,7 @@ public class RoleInputActivity extends AppCompatActivity {
 
         //插入数据
         RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
-        role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.getS(), 0));  //设置传递过来的角色 ID
+        role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.v(), 0));  //设置传递过来的角色 ID
         DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
                 .observeOn(AndroidSchedulers.mainThread())

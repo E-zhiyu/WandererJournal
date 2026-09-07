@@ -83,7 +83,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
 
             //初始化输入框内容
             DiaryDb db = DiaryDb.getInstance(this);
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
             disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -131,7 +131,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
 
         //修改历史列表
         if (initBundle != null) {
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS(), 0);
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
             LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
                     (entity, anchor) -> InfoShower.showLifeNoteHistory(this, entity),
                     this::showEmotionTagPopupMenu
@@ -200,7 +200,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                     )
             );
         } else {
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.getS());
+            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v());
             lifeNote.setNoteId(noteId);
             disposable.add(LifeNoteService.modifyLifeNoteCompletable(db, lifeNote)
                     .observeOn(AndroidSchedulers.mainThread())
