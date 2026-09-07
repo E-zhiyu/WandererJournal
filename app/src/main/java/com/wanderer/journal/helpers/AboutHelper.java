@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.7\n" +
+    private final static String CHANGELOG = "# v1.5.8\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 支持显示图片的HDR效果\n" +
+            "\n" +
+            "# v1.5.7\n" +
             "\n" +
             "### 修改的内容\n" +
             "\n" +
