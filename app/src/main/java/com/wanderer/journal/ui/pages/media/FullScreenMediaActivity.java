@@ -148,9 +148,6 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         //分享媒体
         binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
         AppearanceHelper.attachMorphAnimation(binding.shareMediaBtn);
-
-        //按钮分组设置到底部的边距
-        AppearanceHelper.setMarginToNavigation(binding.btnGroup, 30, this);
     }
 
     /**
@@ -174,6 +171,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             if (controller != null) {
                 //隐藏状态栏
                 controller.hide(WindowInsets.Type.statusBars());
+                controller.hide(WindowInsets.Type.navigationBars());
 
                 //设置状态栏行为：用户从边缘滑动手势时，临时半透明拉出系统栏，不影响应用本身的布局
                 controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
