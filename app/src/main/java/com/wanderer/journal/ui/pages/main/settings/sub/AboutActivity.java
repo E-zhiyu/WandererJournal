@@ -35,7 +35,12 @@ public class AboutActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
-            binding.scrollView.setPadding(0, 0, 0, systemBars.bottom);
+            binding.scrollView.setPadding(
+                    0,
+                    0,
+                    0,
+                    systemBars.bottom + AppearanceHelper.dpToPx(this, 15)
+            );
             return insets;
         });
 

@@ -18,6 +18,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
 import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
@@ -43,7 +44,12 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+            binding.scrollView.setPadding(
+                    0,
+                    0,
+                    0,
+                    systemBars.bottom + AppearanceHelper.dpToPx(this, 15)
+            );
             return insets;
         });
 

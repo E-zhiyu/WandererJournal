@@ -14,6 +14,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivityShareSettingsBinding;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingSwitchView;
@@ -31,6 +32,12 @@ public class ShareSettingsActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
+            binding.scrollView.setPadding(
+                    0,
+                    0,
+                    0,
+                    systemBars.bottom + AppearanceHelper.dpToPx(this, 15)
+            );
             return insets;
         });
 
