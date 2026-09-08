@@ -4,12 +4,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.selection.ItemKeyProvider;
 
-import com.wanderer.journal.ui.others.adapters.MediaAdapter;
+import com.wanderer.journal.ui.others.adapters.WriteMediaAdapter;
 
 public class MediaIdKeyProvider extends ItemKeyProvider<Long> {
-    private final MediaAdapter adapter;
+    private final WriteMediaAdapter adapter;
 
-    public MediaIdKeyProvider(MediaAdapter adapter) {
+    public MediaIdKeyProvider(WriteMediaAdapter adapter) {
         super(SCOPE_MAPPED);
         this.adapter = adapter;
     }

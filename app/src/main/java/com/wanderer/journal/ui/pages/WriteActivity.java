@@ -79,7 +79,7 @@ import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.MediaAdapter;
+import com.wanderer.journal.ui.others.adapters.WriteMediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
@@ -125,7 +125,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
+    private WriteMediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
@@ -717,7 +717,7 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initMediaRecycler() {
         //实例化媒体适配器并分配给 RecyclerView
-        mediaAdapter = new MediaAdapter(this);
+        mediaAdapter = new WriteMediaAdapter(this);
         binding.mediaRecycler.setAdapter(mediaAdapter);
 
         //构建选择追踪器

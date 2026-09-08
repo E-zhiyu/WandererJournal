@@ -23,7 +23,7 @@ import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
-public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaViewHolder> {
+public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapter.MediaViewHolder> {
     private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
     private final RequestOptions glideOptions;          //图片显示设置
     private boolean isSelectMode = false;               //是否是选择模式
@@ -105,9 +105,9 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
                 public Long getSelectionKey() {
                     int pos = getBindingAdapterPosition();
 
-                    if (getBindingAdapter() instanceof MediaAdapter) {
+                    if (getBindingAdapter() instanceof WriteMediaAdapter) {
                         // 必须严格过滤 NO_POSITION
-                        MediaAdapter adapter = (MediaAdapter) getBindingAdapter();
+                        WriteMediaAdapter adapter = (WriteMediaAdapter) getBindingAdapter();
                         return (pos != RecyclerView.NO_POSITION && pos < adapter.getItemCount()) ?
                                 adapter.getCurrentList().get(pos).getItemId() :
                                 null;
@@ -124,7 +124,7 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
      *
      * @param context 上下文
      */
-    public MediaAdapter(Context context) {
+    public WriteMediaAdapter(Context context) {
         super(ITEM_CALLBACK);
 
         //初始化Glide设置
