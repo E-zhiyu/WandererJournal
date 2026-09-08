@@ -44,7 +44,6 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         private final SpringAnimation scaleXAnim;           //X轴缩放动画
         private final SpringAnimation scaleYAnim;           //Y轴缩放动画
         private static final float PRESSED_SCALE = 0.9f;    //按下时缩放程度
-        private MediaEntity media;                          //媒体实例
 
         public MediaViewHolder(@NonNull ViewHolderMediaBinding binding) {
             super(binding.getRoot());
@@ -54,15 +53,6 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
             scaleXAnim = new SpringAnimation(binding.imageCard, SpringAnimation.SCALE_X);
             scaleYAnim = new SpringAnimation(binding.imageCard, SpringAnimation.SCALE_Y);
             initScaleAnimation();
-        }
-
-        /**
-         * 绑定媒体实例
-         *
-         * @param media 媒体实例
-         */
-        public void bindMedia(MediaEntity media) {
-            this.media = media;
         }
 
         /**
@@ -117,8 +107,9 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
 
                     if (getBindingAdapter() instanceof MediaAdapter) {
                         // 必须严格过滤 NO_POSITION
-                        return (pos != RecyclerView.NO_POSITION && pos < getBindingAdapter().getItemCount()) ?
-                                media.getItemId() :
+                        MediaAdapter adapter = (MediaAdapter) getBindingAdapter();
+                        return (pos != RecyclerView.NO_POSITION && pos < adapter.getItemCount()) ?
+                                adapter.getCurrentList().get(pos).getItemId() :
                                 null;
                     } else {
                         return null;
@@ -191,7 +182,6 @@ public class MediaAdapter extends ListAdapter<MediaEntity, MediaAdapter.MediaVie
         holder.setChecked(isChecked);
 
         //通过 Glide 显示图片
-        holder.bindMedia(media);
         Glide.with(holder.itemView.getContext())
                 .load(media.getFileUri())
                 .apply(glideOptions)
