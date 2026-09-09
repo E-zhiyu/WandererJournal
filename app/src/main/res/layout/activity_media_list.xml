@@ -82,5 +82,5 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/no_media"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
+        android:textAppearance="?attr/textAppearanceBodyLarge" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

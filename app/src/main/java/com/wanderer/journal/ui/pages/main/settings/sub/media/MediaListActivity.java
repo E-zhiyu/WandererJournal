@@ -156,9 +156,11 @@ public class MediaListActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.action_sort_in_order) {
                 viewModel.setInOrder(true);
+                item.setChecked(true);
                 return true;
             } else if (id == R.id.action_sort_in_reverse) {
                 viewModel.setInOrder(false);
+                item.setChecked(true);
                 return true;
             }
 
