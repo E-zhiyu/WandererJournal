@@ -6,19 +6,21 @@ import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
-import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -39,16 +41,12 @@ public class MediaListActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
-            binding.recycler.setPadding(
-                    AppearanceHelper.dpToPx(this, 10),
-                    AppearanceHelper.dpToPx(this, 10),
-                    AppearanceHelper.dpToPx(this, 10),
-                    systemBars.bottom
-            );
+            binding.scrollView.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 
         initViews();
+        observeLiveData();
     }
 
     @Override
@@ -97,7 +95,8 @@ public class MediaListActivity extends AppCompatActivity {
         binding.recycler.setLayoutManager(layoutManager);
 
         //读取文件数据并加载列表
-        disposable.add(MediaHelper.readMediaDir(this)
+        MediaListViewModel viewModel = new ViewModelProvider(this).get(MediaListViewModel.class);
+        disposable.add(viewModel.getMediaFileInfoFlowable(this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -109,18 +108,64 @@ public class MediaListActivity extends AppCompatActivity {
                 )
         );
 
-        //刷新按钮
-        binding.refreshBtn.setOnClickListener(view -> disposable.add(MediaHelper.readMediaDir(this)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        infoList -> {
-                            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, infoList.isEmpty());
-                            adapter.submitList(infoList);
-                        },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        ));
-        AppearanceHelper.attachMorphAnimation(binding.refreshBtn);
+        //排序菜单按钮
+        binding.orderSelectBtn.addOnCheckedChangeListener((materialButton, b) -> {
+            if (b) {
+                showOrderingMenu();
+            }
+        });
+    }
+
+    /**
+     * 观察 ViewModel 中的 LiveData
+     */
+    private void observeLiveData() {
+        MediaListViewModel mediaListViewModel = new ViewModelProvider(this).get(MediaListViewModel.class);
+        mediaListViewModel.getOrdering().observe(this, ordering ->
+                binding.orderLeadingBtn.setText(ordering.getTitle(this))
+        );
+    }
+
+    /**
+     * 显示排序菜单
+     */
+    private void showOrderingMenu() {
+        PopupMenu popupMenu = new PopupMenu(this, binding.orderSelectBtn);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_media_list_ordering, popupMenu.getMenu());
+
+        //初始化选中的对象
+        MediaListViewModel viewModel = new ViewModelProvider(this).get(MediaListViewModel.class);
+        boolean isInOrder = viewModel.isInOrder();
+        if (isInOrder) {
+            popupMenu.getMenu().getItem(3).setChecked(true);
+        } else {
+            popupMenu.getMenu().getItem(4).setChecked(true);
+        }
+
+        //设置监听
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_order_by_name) {
+                viewModel.setOrdering(Ordering.NAME);
+                return true;
+            } else if (id == R.id.action_order_by_size) {
+                viewModel.setOrdering(Ordering.SIZE);
+                return true;
+            } else if (id == R.id.action_order_by_time) {
+                viewModel.setOrdering(Ordering.TIME);
+                return true;
+            } else if (id == R.id.action_sort_in_order) {
+                viewModel.setInOrder(true);
+                return true;
+            } else if (id == R.id.action_sort_in_reverse) {
+                viewModel.setInOrder(false);
+                return true;
+            }
+
+            return false;
+        });
+
+        popupMenu.setOnDismissListener(menu -> binding.orderSelectBtn.setChecked(false));
+        popupMenu.show();
     }
 }

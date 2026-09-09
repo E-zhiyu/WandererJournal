@@ -24,28 +24,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:title="@string/media_list">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/refresh_btn"
-                    style="@style/Widget.Material3Expressive.Button.IconButton.Tonal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end|center_vertical"
-                    android:layout_marginEnd="10dp"
-                    app:icon="@drawable/outline_refresh_24" />
-            </com.google.android.material.appbar.MaterialToolbar>
+                app:title="@string/media_list" />
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:scrollbars="none"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp">
+
+            <com.google.android.material.button.MaterialSplitButton
+                android:id="@+id/date_select_split_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/order_leading_btn"
+                    style="?attr/materialSplitButtonLeadingFilledStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/order_by_time" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/order_select_btn"
+                    style="?attr/materialSplitButtonIconFilledStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon="@drawable/outline_unfold_more_24" />
+            </com.google.android.material.button.MaterialSplitButton>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/empty_text"

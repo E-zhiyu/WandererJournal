@@ -262,33 +262,32 @@ public class MediaHelper {
      * @param context 上下文
      * @return 读取到的媒体文件信息
      */
-    public static Single<List<MediaFileInfo>> readMediaDir(Context context) {
-        return Single.fromCallable(() -> {
-            //获取媒体文件目录
-            List<MediaFileInfo> result = new ArrayList<>();
-            File mediaDir = DirectoryPaths.MEDIA.getDir(context);
-            if (mediaDir == null) {
-                return result;
-            }
-
-            //读取目录下的文件
-            File[] childFiles = mediaDir.listFiles((file, s) ->
-                    s.endsWith("jpg") || s.endsWith("png")
-            );
-            if (childFiles == null) {
-                return result;
-            }
-
-            //解析文件信息
-            for (File file : childFiles) {
-                String fileName = file.getName();
-                long size = Files.size(Paths.get(file.getPath()));
-                Uri uri = Uri.fromFile(file);
-
-                result.add(new MediaFileInfo(uri, size, fileName));
-            }
-
+    @NonNull
+    public static List<MediaFileInfo> readMediaDir(Context context) throws IOException {
+        //获取媒体文件目录
+        List<MediaFileInfo> result = new ArrayList<>();
+        File mediaDir = DirectoryPaths.MEDIA.getDir(context);
+        if (mediaDir == null) {
             return result;
-        });
+        }
+
+        //读取目录下的文件
+        File[] childFiles = mediaDir.listFiles((file, s) ->
+                s.endsWith(".jpg") || s.endsWith(".png")
+        );
+        if (childFiles == null) {
+            return result;
+        }
+
+        //解析文件信息
+        for (File file : childFiles) {
+            String fileName = file.getName();
+            long size = Files.size(Paths.get(file.getPath()));
+            Uri uri = Uri.fromFile(file);
+
+            result.add(new MediaFileInfo(uri, size, fileName));
+        }
+
+        return result;
     }
 }
