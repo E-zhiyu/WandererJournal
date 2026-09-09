@@ -46,10 +46,7 @@ public class TextHelper {
      */
     @NonNull
     public static String shortenFileSize(long fileSize) {
-        // 处理负数
-        boolean negative = fileSize < 0;
         double absValue = Math.abs(fileSize);
-
         int divisor = 1000;
 
         // 计算应该使用哪个单位
@@ -67,7 +64,7 @@ public class TextHelper {
         String formatted = df.format(scaledValue);
 
         // 组装结果
-        return (negative ? "-" : "") + formatted + FILE_SIZE_CHAR[index];
+        return formatted + FILE_SIZE_CHAR[index];
     }
 
     /**
