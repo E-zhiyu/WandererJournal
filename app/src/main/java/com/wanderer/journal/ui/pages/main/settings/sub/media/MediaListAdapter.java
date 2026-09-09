@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.settings.sub.media;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +16,13 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
-import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.databinding.ViewHolderMediaListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapter.ItemViewHolder> {
     private static final DiffUtil.ItemCallback<MediaFileInfo> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
@@ -34,8 +37,19 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
                     oldItem.getSize() == newItem.getSize();
         }
     };
-    private final AdapterOnClickListener<MediaFileInfo> clickListener;
+    private final OnClickListener clickListener;
     private final RequestOptions glideOptions;          //图片显示设置
+
+    public interface OnClickListener {
+        /**
+         * 点击回调
+         *
+         * @param pos     被点击的元素在列表中的位置
+         * @param uriList 当前的媒体文件 Uri 列表
+         * @param view    被点击的视图
+         */
+        void onClick(int pos, List<Uri> uriList, View view);
+    }
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         ViewHolderMediaListBinding binding;
@@ -49,7 +63,7 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
         }
     }
 
-    public MediaListAdapter(Context context, AdapterOnClickListener<MediaFileInfo> clickListener) {
+    public MediaListAdapter(Context context, OnClickListener clickListener) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
 
@@ -77,8 +91,10 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
                 new ViewHolderListener() {
                     @Override
                     public void onClick(int pos, View anchor) {
-                        MediaFileInfo info = getItem(pos);
-                        clickListener.onClick(info, anchor);
+                        List<Uri> uriList = getCurrentList().stream()
+                                .map(MediaFileInfo::getUri)
+                                .collect(Collectors.toList());
+                        clickListener.onClick(pos, uriList, anchor);
                     }
 
                     @Override

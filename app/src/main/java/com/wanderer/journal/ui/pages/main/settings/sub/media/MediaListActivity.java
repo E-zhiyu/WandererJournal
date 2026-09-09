@@ -1,19 +1,25 @@
 package com.wanderer.journal.ui.pages.main.settings.sub.media;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.TransitionName;
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
+import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -60,11 +66,28 @@ public class MediaListActivity extends AppCompatActivity {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
-        //TODO:媒体列表
+        //媒体列表
         MediaListAdapter adapter = new MediaListAdapter(
                 this,
-                (entity, anchor) -> {
-                    //TODO:完成点击监听
+                (pos, uriList, view) -> {
+                    String[] uriStrArray = uriList.stream()
+                            .map(Uri::toString)
+                            .toArray(String[]::new);
+
+                    //实例化 Intent 并放入数据
+                    Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), pos);
+                    skip2FullScreen.putExtras(bundle);
+
+                    //添加动画并启动
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            this,
+                            view,
+                            TransitionName.FULLSCREEN_MEDIA.getS()
+                    );
+                    startActivity(skip2FullScreen, options.toBundle());
                 }
         );
         binding.recycler.setAdapter(adapter);
@@ -73,7 +96,7 @@ public class MediaListActivity extends AppCompatActivity {
         GridLayoutManager layoutManager = new GridLayoutManager(this, SPAN_COUNT);
         binding.recycler.setLayoutManager(layoutManager);
 
-        //读取文件数据
+        //读取文件数据并加载列表
         disposable.add(MediaHelper.readMediaDir(this)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())

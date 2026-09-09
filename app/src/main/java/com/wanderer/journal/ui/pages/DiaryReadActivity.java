@@ -552,7 +552,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
                             mediaView,
-                            TransitionName.PARAGRAPH_MEDIA.getS()
+                            TransitionName.FULLSCREEN_MEDIA.getS()
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());

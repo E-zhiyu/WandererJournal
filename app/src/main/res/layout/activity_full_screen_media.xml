@@ -11,7 +11,7 @@
         android:id="@+id/view_pager_2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:transitionName="paragraph_media" />
+        android:transitionName="fullscreen_media" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/hdr_text_card"
