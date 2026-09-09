@@ -16,6 +16,8 @@ import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.classes.TextFileData;
 
+import org.jetbrains.annotations.Contract;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -28,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -38,6 +41,40 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 重定向私有目录下的文件，防止由于包名变化导致无法正确读取文件
+     *
+     * @param originUri 原始 file 类型的 Uri
+     * @param target    目标私有目录
+     * @param context   上下文
+     * @return 重定向后只想正确位置的 Uri
+     */
+    @Contract("null, _, _ -> param1")
+    public static Uri redirectFileFromUri(Uri originUri, @NonNull DirectoryPaths target, Context context) {
+        //如果 Uri 类型不是 file 类型，直接返回原始 Uri
+        if (originUri == null || !ContentResolver.SCHEME_FILE.equals(originUri.getScheme())) {
+            return originUri;
+        }
+
+        //若无法获取私有目录则返回原始 Uri
+        File targetDir = target.getDir(context);
+        if (targetDir == null) {
+            return originUri;
+        }
+
+        //若父目录就是目标目录，则返回原始 Uri
+        Path targetDirPath = targetDir.toPath();
+        Path originPath = Paths.get(originUri.getPath());
+        if (originPath.getParent() != null && originPath.getParent().equals(targetDirPath)) {
+            return originUri;
+        }
+
+        //替换路径中的包名
+        String fileName = String.valueOf(originPath.getFileName());
+        File redirected = new File(targetDir, fileName);
+        return Uri.fromFile(redirected);
+    }
+
     /**
      * 获取文件扩展名
      */

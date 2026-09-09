@@ -19,9 +19,11 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 
 public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapter.MediaViewHolder> {
     private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
@@ -183,7 +185,7 @@ public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapte
 
         //通过 Glide 显示图片
         Glide.with(holder.itemView.getContext())
-                .load(media.getFileUri())
+                .load(FileHelper.redirectFileFromUri(media.getFileUri(), DirectoryPaths.MEDIA, holder.itemView.getContext()))
                 .apply(glideOptions)
                 .into(holder.binding.imageView);
 

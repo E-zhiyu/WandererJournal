@@ -16,9 +16,11 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
+import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.databinding.ViewHolderMediaListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 
 import java.util.List;
@@ -110,7 +112,7 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
 
         //通过 Glide 显示图片
         Glide.with(holder.itemView.getContext())
-                .load(info.getUri())
+                .load(FileHelper.redirectFileFromUri(info.getUri(), DirectoryPaths.MEDIA, holder.itemView.getContext()))
                 .apply(glideOptions)
                 .into(holder.binding.imageView);
 
