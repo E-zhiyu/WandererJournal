@@ -37,6 +37,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -249,7 +250,8 @@ public class SettingsFragment extends Fragment {
                 RadiusStyle.BOTTOM
         );
         mediaList.setFunctionListener(view -> {
-            //TODO:跳转到媒体列表
+            Intent intent = new Intent(requireContext(), MediaListActivity.class);
+            startActivity(intent);
         });
     }
 

@@ -117,7 +117,7 @@
             android:parentActivityName=".ui.pages.life_note.LifeNoteListActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".ui.pages.main.settings.sub.MediaListActivity"
+            android:name=".ui.pages.main.settings.sub.media.MediaListActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity"
             android:windowSoftInputMode="adjustResize" />

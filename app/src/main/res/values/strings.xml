@@ -163,6 +163,7 @@
     <string name="media_settings">媒体设置</string>
     <string name="hdr_display_effect">HDR显示效果</string>
     <string name="media_list">媒体列表</string>
+    <string name="no_media">无媒体</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -27,6 +28,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -243,14 +248,47 @@ public class MediaHelper {
                     bitmap.recycle();
                 }
                 if (inputStream != null) {
-                    try {
-                        inputStream.close();
-                    } catch (Exception ignored) {
-                    }
+                    inputStream.close();
                 }
             }
 
             return false;
+        });
+    }
+
+    /**
+     * 读取媒体文件夹中的文件
+     *
+     * @param context 上下文
+     * @return 读取到的媒体文件信息
+     */
+    public static Single<List<MediaFileInfo>> readMediaDir(Context context) {
+        return Single.fromCallable(() -> {
+            //获取媒体文件目录
+            List<MediaFileInfo> result = new ArrayList<>();
+            File mediaDir = DirectoryPaths.MEDIA.getDir(context);
+            if (mediaDir == null) {
+                return result;
+            }
+
+            //读取目录下的文件
+            File[] childFiles = mediaDir.listFiles((file, s) ->
+                    s.endsWith("jpg") || s.endsWith("png")
+            );
+            if (childFiles == null) {
+                return result;
+            }
+
+            //解析文件信息
+            for (File file : childFiles) {
+                String fileName = file.getName();
+                long size = Files.size(Paths.get(file.getPath()));
+                Uri uri = Uri.fromFile(file);
+
+                result.add(new MediaFileInfo(uri, size, fileName));
+            }
+
+            return result;
         });
     }
 }
