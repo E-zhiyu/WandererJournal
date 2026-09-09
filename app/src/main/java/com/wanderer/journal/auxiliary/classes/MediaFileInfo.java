@@ -6,11 +6,13 @@ public class MediaFileInfo {
     private final Uri uri;      //文件 Uri
     private final long size;    //大小(B)
     private final String name;  //文件名
+    private final long createdTimeStamp;    //创建时间的时间戳
 
-    public MediaFileInfo(Uri uri, long size, String name) {
+    public MediaFileInfo(Uri uri, long size, String name, long createdTimeStamp) {
         this.uri = uri;
         this.size = size;
         this.name = name;
+        this.createdTimeStamp = createdTimeStamp;
     }
 
     public Uri getUri() {
@@ -23,5 +25,9 @@ public class MediaFileInfo {
 
     public String getName() {
         return name;
+    }
+
+    public long getCreatedTimeStamp() {
+        return createdTimeStamp;
     }
 }

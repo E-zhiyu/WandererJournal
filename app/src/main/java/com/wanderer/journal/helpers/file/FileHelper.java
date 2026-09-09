@@ -39,6 +39,18 @@ import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
     /**
+     * 获取文件扩展名
+     */
+    @Nullable
+    public static String getFileExtension(@NonNull String fileName) {
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+            return fileName.substring(lastDotIndex + 1);
+        }
+        return null;
+    }
+
+    /**
      * 生成备份文件名称
      *
      * @return 备份文件名称

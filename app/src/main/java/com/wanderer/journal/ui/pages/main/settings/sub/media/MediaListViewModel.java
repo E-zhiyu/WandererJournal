@@ -65,7 +65,7 @@ public class MediaListViewModel extends ViewModel {
                             break;
                         case TIME:
                         default:
-                            infoList.sort(Comparator.comparing(MediaFileInfo::getName));
+                            infoList.sort(Comparator.comparing(MediaFileInfo::getCreatedTimeStamp));
                     }
 
                     if (!isInOrder) {

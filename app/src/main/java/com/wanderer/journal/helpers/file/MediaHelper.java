@@ -29,9 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -264,28 +267,45 @@ public class MediaHelper {
      */
     @NonNull
     public static List<MediaFileInfo> readMediaDir(Context context) throws IOException {
-        //获取媒体文件目录
         List<MediaFileInfo> result = new ArrayList<>();
         File mediaDir = DirectoryPaths.MEDIA.getDir(context);
-        if (mediaDir == null) {
+        if (mediaDir == null || !mediaDir.exists() || !mediaDir.isDirectory()) {
             return result;
         }
 
-        //读取目录下的文件
-        File[] childFiles = mediaDir.listFiles((file, s) ->
-                s.endsWith(".jpg") || s.endsWith(".png")
-        );
+        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+
+        // 读取目录下的图片文件
+        File[] childFiles = mediaDir.listFiles((dir, name) -> {
+            String extension = FileHelper.getFileExtension(name);
+            if (extension == null) {
+                return false;
+            }
+            // 根据扩展名查询 MIME 类型
+            String mimeType = mimeTypeMap.getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
+            // 判断 MIME 类型是否为 image/*
+            return mimeType != null && mimeType.startsWith("image/");
+        });
+
         if (childFiles == null) {
             return result;
         }
 
-        //解析文件信息
+        // 解析文件信息
         for (File file : childFiles) {
+            Path path = file.toPath();
+            // 一次性获取文件大小与时间信息
+            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+
+            long size = attrs.size();
+            // 优先获取创建时间，若不支持则降级为最后修改时间
+            FileTime creationTime = attrs.creationTime();
+            long creationTimestamp = (creationTime != null) ? creationTime.toMillis() : attrs.lastModifiedTime().toMillis();
+
             String fileName = file.getName();
-            long size = Files.size(Paths.get(file.getPath()));
             Uri uri = Uri.fromFile(file);
 
-            result.add(new MediaFileInfo(uri, size, fileName));
+            result.add(new MediaFileInfo(uri, size, fileName, creationTimestamp));
         }
 
         return result;
