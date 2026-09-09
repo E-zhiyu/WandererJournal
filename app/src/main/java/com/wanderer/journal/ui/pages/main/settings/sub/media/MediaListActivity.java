@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -34,7 +35,7 @@ public class MediaListActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
             binding.recycler.setPadding(
                     AppearanceHelper.dpToPx(this, 10),
-                    0,
+                    AppearanceHelper.dpToPx(this, 10),
                     AppearanceHelper.dpToPx(this, 10),
                     systemBars.bottom
             );
@@ -67,6 +68,10 @@ public class MediaListActivity extends AppCompatActivity {
                 }
         );
         binding.recycler.setAdapter(adapter);
+        final int SPAN_COUNT = AppearanceHelper.getScreenHeight(this) > AppearanceHelper.getScreenWidth(this) ?
+                4 : 9;
+        GridLayoutManager layoutManager = new GridLayoutManager(this, SPAN_COUNT);
+        binding.recycler.setLayoutManager(layoutManager);
 
         //读取文件数据
         disposable.add(MediaHelper.readMediaDir(this)

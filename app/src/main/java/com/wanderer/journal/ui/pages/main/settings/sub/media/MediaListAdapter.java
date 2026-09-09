@@ -93,8 +93,6 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
         MediaFileInfo info = getItem(position);
 
         //通过 Glide 显示图片
-        holder.binding.imageView.setMinimumHeight(100);
-        holder.binding.imageView.setMinimumWidth(100);
         Glide.with(holder.itemView.getContext())
                 .load(info.getUri())
                 .apply(glideOptions)
