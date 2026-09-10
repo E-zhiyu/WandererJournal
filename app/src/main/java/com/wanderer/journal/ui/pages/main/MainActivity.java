@@ -46,11 +46,8 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        //启动主界面时自动检测更新（不一定触发）
-        final int MODULAR = 2;
-        if (System.currentTimeMillis() % MODULAR == 0) {
-            UpdateHelper.checkUpdate(this, disposable, false);
-        }
+        //启动主界面时自动检测更新
+        UpdateHelper.checkUpdate(this, disposable, false);
     }
 
     @Override
