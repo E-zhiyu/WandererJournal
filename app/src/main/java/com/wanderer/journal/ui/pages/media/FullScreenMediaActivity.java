@@ -28,6 +28,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.data.save.preference.MediaPreference;
 import com.wanderer.journal.databinding.ActivityFullScreenMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -123,7 +124,8 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                 super.onPageSelected(position);
 
                 //设置 HDR 显示效果
-                if (position >= 0 && position < mediaUriList.size()) {
+                if (position >= 0 && position < mediaUriList.size() &&
+                        MediaPreference.getHdrDisplay(FullScreenMediaActivity.this)) {
                     Uri mediaUri = mediaUriList.get(position);
                     disposable.add(MediaHelper.isHdrImage(
                                             FullScreenMediaActivity.this,
@@ -139,6 +141,8 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                                             }
                                     )
                     );
+                } else {
+                    setHDR(false);
                 }
             }
         };
