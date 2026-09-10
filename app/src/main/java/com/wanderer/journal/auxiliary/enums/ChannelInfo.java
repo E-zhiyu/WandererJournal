@@ -31,6 +31,19 @@ public enum ChannelInfo {
 
                 return channel;
             }
+    ),
+    BACKUP_AND_RESTORE(
+            "backup_channel",
+            info -> {
+                NotificationChannel channel = new NotificationChannel(
+                        info.getId(),
+                        "备份与恢复",
+                        NotificationManager.IMPORTANCE_DEFAULT
+                );
+                channel.setDescription("进行数据备份与恢复操作时的通知");
+
+                return channel;
+            }
     );
     private final String id;
     private final Function<ChannelInfo, NotificationChannel> channelBuilder;

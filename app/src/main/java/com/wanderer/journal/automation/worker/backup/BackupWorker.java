@@ -12,8 +12,10 @@ import androidx.work.rxjava3.RxWorker;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.data.save.preference.AutoBackupPreference;
+import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 
@@ -89,6 +91,7 @@ public class BackupWorker extends RxWorker {
                 .onErrorReturn(e -> {
                     Log.e(LogTags.BACKUP_WORKER.n(), "备份失败");
                     return Result.failure();
-                });
+                })
+                .doFinally(() -> NotificationHelper.cancelNotification(NotificationID.BACKUP_AND_RESTORE.ordinal(), context));
     }
 }

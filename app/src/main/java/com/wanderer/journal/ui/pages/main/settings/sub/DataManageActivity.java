@@ -1,8 +1,10 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -13,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -25,8 +28,10 @@ import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.automation.worker.backup.RestoreWorker;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -37,6 +42,8 @@ import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.NotificationHelper;
+import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
@@ -96,6 +103,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         initActivityLaunchers();
         initViews();
+        initPermissionRequests();
     }
 
     /**
@@ -196,6 +204,16 @@ public class DataManageActivity extends AppCompatActivity {
 
         //初始化日记数据设置
         initDiaryDataSettings();
+    }
+
+    /**
+     * 初始化权限请求
+     */
+    private void initPermissionRequests() {
+        PermissionHelper helper = new PermissionHelper(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            helper.addPermission(Manifest.permission.POST_NOTIFICATIONS, "请授予通知权限以发送操作进度通知");
+        }
     }
 
     /**
@@ -435,15 +453,20 @@ public class DataManageActivity extends AppCompatActivity {
                 .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choices)
                 .build();
 
+        //执行一次任务
+        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class, data);
+
         //显示进度条对话框
         AlertDialog progressDialog = new ProgressDialogBuilder(this, "导出数据", "正在导出数据……")
+                .setPositiveButton("后台执行", (dialogInterface, i) ->
+                        sendBackgroundProgress("导出数据", "正在导出数据……")
+                )
                 .setNegativeButton("取消", (dialogInterface, i) -> {
                     //TODO:取消逻辑
                 })
                 .show();
 
-        //执行一次任务并监听运行状态
-        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class, data);
+        //监听运行状态
         WorkManager.getInstance(this)
                 .getWorkInfoByIdLiveData(uuid)
                 .observe(this, workInfo -> {
@@ -451,19 +474,39 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //判断 Worker 是否运行结束
                     if (workInfo.getState().isFinished()) {
-                        progressDialog.dismiss();
-
+                        String text;
                         switch (workInfo.getState()) {
                             case SUCCEEDED:
-                                Toast.makeText(this, "数据导出成功", Toast.LENGTH_SHORT).show();
+                                text = "数据导出成功";
                                 break;
                             case CANCELLED:
-                                Toast.makeText(this, "数据导出已取消", Toast.LENGTH_SHORT).show();
+                                text = "数据导出已取消";
                                 break;
                             case FAILED:
                             default:
-                                Toast.makeText(this, "数据导出失败", Toast.LENGTH_SHORT).show();
+                                text = "数据导出失败";
                         }
+
+                        if (progressDialog.isShowing()) {
+                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            //构建通知
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle("导出数据")
+                                    .setContentText(text)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+                            //发送通知
+                            NotificationHelper.sendNotification(
+                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                                    builder,
+                                    this
+                            );
+                        }
+
+                        progressDialog.dismiss();
                     }
                 });
     }
@@ -545,15 +588,20 @@ public class DataManageActivity extends AppCompatActivity {
                 .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choices)
                 .build();
 
+        //执行一次任务
+        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, RestoreWorker.class, data);
+
         //显示扫描文件的进度条对话框
         AlertDialog progressDialog = new ProgressDialogBuilder(this, "导入数据", "正在导入数据……")
+                .setPositiveButton("后台执行", (dialogInterface, i) ->
+                        sendBackgroundProgress("导入数据", "正在导入数据……")
+                )
                 .setNegativeButton("取消", (dialogInterface, i) -> {
                     //TODO:取消逻辑
                 })
                 .show();
 
-        //执行一次任务并监听运行状态
-        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, RestoreWorker.class, data);
+        //监听运行状态
         WorkManager.getInstance(this)
                 .getWorkInfoByIdLiveData(uuid)
                 .observe(this, workInfo -> {
@@ -561,19 +609,39 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //判断 Worker 是否运行结束
                     if (workInfo.getState().isFinished()) {
-                        progressDialog.dismiss();
-
+                        String text;
                         switch (workInfo.getState()) {
                             case SUCCEEDED:
-                                Toast.makeText(this, "数据导入成功", Toast.LENGTH_SHORT).show();
+                                text = "数据导入成功";
                                 break;
                             case CANCELLED:
-                                Toast.makeText(this, "数据导出已取消", Toast.LENGTH_SHORT).show();
+                                text = "数据导入已取消";
                                 break;
                             case FAILED:
                             default:
-                                Toast.makeText(this, "数据导入失败", Toast.LENGTH_SHORT).show();
+                                text = "数据导入失败";
                         }
+
+                        if (progressDialog.isShowing()) {
+                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            //构建通知
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle("导入数据")
+                                    .setContentText(text)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+                            //发送通知
+                            NotificationHelper.sendNotification(
+                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                                    builder,
+                                    this
+                            );
+                        }
+
+                        progressDialog.dismiss();
                     }
                 });
     }
@@ -773,6 +841,31 @@ public class DataManageActivity extends AppCompatActivity {
                             Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show();
                         }
                 )
+        );
+    }
+
+    /**
+     * 发送处于后台运行状态的进度条通知
+     *
+     * @param title   标题
+     * @param content 文本内容
+     */
+    private void sendBackgroundProgress(String title, String content) {
+        //构建通知
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setProgress(0, 0, true)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+        //发送通知
+        NotificationHelper.sendNotification(
+                NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                builder,
+                this
         );
     }
 }
