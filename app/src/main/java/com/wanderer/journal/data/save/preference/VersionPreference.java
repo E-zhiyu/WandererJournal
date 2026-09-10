@@ -9,6 +9,7 @@ public class VersionPreference {
     private static final String PREF_NAME = "VersionPreference";
     private static final String KEY_SKIP_VERSION_CODE = "skip_version_code";    //跳过更新的版本代码
     private static final String KEY_APK_URI = "apk_uri";                        //安装包Uri
+    private static final String KEY_AUTO_UPDATE_CHECK = "auto_update_check";    //自动更新检测
 
     /**
      * 设置跳过的版本代码
@@ -52,5 +53,27 @@ public class VersionPreference {
     public static String getApkUri(@NonNull Context context) {
         SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         return pref.getString(KEY_APK_URI, "");
+    }
+
+    /**
+     * 设置安装包Uri
+     *
+     * @param context  上下文
+     * @param isOpened 是否自动检测更新
+     */
+    public static void setAutoUpdateCheck(@NonNull Context context, boolean isOpened) {
+        SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        pref.edit().putBoolean(KEY_AUTO_UPDATE_CHECK, isOpened).apply();
+    }
+
+    /**
+     * 获取安装包Uri
+     *
+     * @param context 上下文
+     * @return 是否自动检测更新
+     */
+    public static boolean getAutoUpdateCheck(@NonNull Context context) {
+        SharedPreferences pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return pref.getBoolean(KEY_AUTO_UPDATE_CHECK, true);
     }
 }

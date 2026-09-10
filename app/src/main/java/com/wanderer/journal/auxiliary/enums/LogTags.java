@@ -6,6 +6,7 @@ public enum LogTags {
     APPLICATION("WandererJournal"),
     DIARY_FRAGMENT("DiaryFragment"),
     WRITE_ACTIVITY("WriteActivity"),
+    MAIN_ACTIVITY("MainActivity"),
     DIARY_READ_ACTIVITY("DiaryReadActivity"),
     ROLE_SELECT_BOTTOM_SHEET("RoleSelectBottomSheet"),
     SAF_HELPER("SAFHelper"),

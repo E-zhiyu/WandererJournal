@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
@@ -12,7 +13,9 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.databinding.ActivityMainBinding;
 import com.wanderer.journal.helpers.UpdateHelper;
 import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
@@ -47,7 +50,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //启动主界面时自动检测更新
-        UpdateHelper.checkUpdate(this, disposable, false);
+        if (VersionPreference.getAutoUpdateCheck(this)) {
+            Log.d(LogTags.MAIN_ACTIVITY.n(), "自动检测更新中……");
+            UpdateHelper.checkUpdate(this, disposable, false);
+        }
     }
 
     @Override

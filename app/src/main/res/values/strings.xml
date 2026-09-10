@@ -169,6 +169,7 @@
     <string name="order_by_name">按名称排序</string>
     <string name="from_small_to_large">从小到大</string>
     <string name="from_large_to_small">从大到小</string>
+    <string name="auto_update_check">自动更新检测</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

@@ -64,6 +64,11 @@
                 android:id="@+id/first_screen_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 自动检测更新开关 -->
+            <include
+                android:id="@+id/auto_update_check_switch"
+                layout="@layout/view_setting_option" />
+
             <com.google.android.material.textview.MaterialTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
