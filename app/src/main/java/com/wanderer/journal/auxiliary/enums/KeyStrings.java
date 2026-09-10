@@ -1,6 +1,8 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum KeyStrings {
+    BACKUP_CHOICES("backup_choices"),                   //备份时的选择情况
+    BACKUP_TARGET("backup_target"),                     //备份时的目标文件(夹)
     LIFE_NOTE_ID("life_note_id"),                       //人生笔记 ID
     PARAGRAPH_ID("paragraph_id"),                       //日记段落 ID
     KEY_ROLE_GROUP("key_role_group"),                   //角色分组的关键字

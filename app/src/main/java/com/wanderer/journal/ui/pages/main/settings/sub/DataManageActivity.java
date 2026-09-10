@@ -16,12 +16,15 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.work.Data;
+import androidx.work.WorkManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.automation.worker.BackupWorker;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -55,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -70,7 +74,6 @@ public class DataManageActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> appendFromFileLauncher;                  //从外部文件追加段落的启动器
     private ActivityResultLauncher<Intent> importDiaryLauncher;                     //导入日记启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
-    private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
     private ActivityResultLauncher<Intent> backupDirSelectLauncher;                 //自动备份目录选择启动器
 
     @Override
@@ -110,7 +113,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    exportData(data.getData(), exportChoiceStatList, exportIncludeMedia);
+                    exportData(data.getData(), exportChoiceStatList);
                 }
         );
 
@@ -256,9 +259,9 @@ public class DataManageActivity extends AppCompatActivity {
             } else if (isChecked) {
                 int frequencyIndex = AutoBackupPreference.getBackupFrequency(this);
                 long intervalMillis = BackupFrequency.values()[frequencyIndex].getIntervalMillis();
-                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
             } else {
-                WorkerScheduler.cancelPeriodicBackup(this, TagStrings.BACKUP_WORKER.t());
+                WorkerScheduler.cancelUniqueWork(this, TagStrings.BACKUP_WORKER.t());
             }
 
             AutoBackupPreference.setSwitchStat(this, isChecked);
@@ -315,7 +318,7 @@ public class DataManageActivity extends AppCompatActivity {
                         if (AutoBackupPreference.getSwitchStat(this)) {
                             //更新工作内容
                             long intervalMillis = frequency.getIntervalMillis();
-                            WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                            WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
 
                             //立即备份一次
                             WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class);
@@ -404,7 +407,6 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //保存选择结果引用
                     exportChoiceStatList = checkedStatList;
-                    exportIncludeMedia = checkedStatList.get(0);
 
                     //打开 SAF 用于创建压缩包文件
                     SAFHelper.createDocumentViaSAF(
@@ -422,9 +424,18 @@ public class DataManageActivity extends AppCompatActivity {
      *
      * @param uri          用户通过 SAF 创建的 zip 文件的 Uri
      * @param checkedStats 备份数据选项选择情况
-     * @param includeMedia 是否导出媒体文件
      */
-    private void exportData(Uri uri, List<Boolean> checkedStats, boolean includeMedia) {
+    private void exportData(Uri uri, @NonNull List<Boolean> checkedStats) {
+        //生成传递给 Worker 的 Data
+        boolean[] choices = new boolean[checkedStats.size()];
+        for (int i = 0; i < checkedStats.size(); i++) {
+            choices[i] = checkedStats.get(i);
+        }
+        Data data = new Data.Builder()
+                .putString(KeyStrings.BACKUP_TARGET.v(), uri.toString())
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choices)
+                .build();
+
         //显示进度条对话框
         AlertDialog progressDialog = new ProgressDialogBuilder(this, "导出数据", "正在导出数据……")
                 .setNegativeButton("取消", (dialogInterface, i) -> {
@@ -433,30 +444,30 @@ public class DataManageActivity extends AppCompatActivity {
                 })
                 .show();
 
-        //收集用户没有忽略的数据类型，并将这些数据导出为临时文件
-        List<Completable> taskList = new ArrayList<>();
-        for (BackupDataType type : BackupDataType.values()) {
-            if (checkedStats.get(type.ordinal())) {
-                BackupHelperBase<?, ?> backupHelper = type.createBackupHelper(this);
-                taskList.add(backupHelper.exportDataToTempFile(this));
-            }
-        }
+        //执行一次任务并监听运行状态
+        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class, data);
+        WorkManager.getInstance(this)
+                .getWorkInfoByIdLiveData(uuid)
+                .observe(this, workInfo -> {
+                    if (workInfo == null) return;
 
-        //并行执行数据导出逻辑
-        disposables.add(Completable.merge(taskList)
-                .andThen(ZipHelper.createBackupFile(uri, this, includeMedia))
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(() -> {
-                    Toast.makeText(this, "数据导出完毕", Toast.LENGTH_SHORT).show();
-                    progressDialog.dismiss();
-                    FileHelper.clearTempDataDir(this);
-                }, e -> {
-                    ExceptionHelper.showExceptionDialog(this, e);
-                    progressDialog.dismiss();
-                    FileHelper.clearTempDataDir(this);
-                })
-        );
+                    //判断 Worker 是否运行结束
+                    if (workInfo.getState().isFinished()) {
+                        progressDialog.dismiss();
+
+                        switch (workInfo.getState()) {
+                            case SUCCEEDED:
+                                Toast.makeText(this, "数据导出成功", Toast.LENGTH_SHORT).show();
+                                break;
+                            case CANCELLED:
+                                Toast.makeText(this, "数据导出已取消", Toast.LENGTH_SHORT).show();
+                                break;
+                            case FAILED:
+                            default:
+                                Toast.makeText(this, "数据导出失败", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     /**

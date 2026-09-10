@@ -16,8 +16,8 @@ import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
-import com.wanderer.journal.automation.worker.BackupWorker;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
@@ -61,7 +61,7 @@ public class WandererJournal extends Application {
             if (AutoBackupPreference.getSwitchStat(this)) {
                 int frequency = AutoBackupPreference.getBackupFrequency(this);
                 long intervalMillis = BackupFrequency.values()[frequency].getIntervalMillis();
-                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
 
                 //打印任务状态日志
                 try {
