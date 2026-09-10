@@ -61,13 +61,23 @@ public class WorkerScheduler {
     }
 
     /**
-     * 取消 Worker 的自动任务
+     * 取消 Worker 的任务
      *
      * @param context   上下文
      * @param workerTag Worker 对应的标签
      */
     public static void cancelUniqueWork(Context context, String workerTag) {
         WorkManager.getInstance(context).cancelUniqueWork(workerTag);
+    }
+
+    /**
+     * 通过 UUID 取消 Worker 的任务
+     *
+     * @param context 上下文
+     * @param uuid    Worker 的 UUID
+     */
+    public static void cancelWorkById(Context context, UUID uuid) {
+        WorkManager.getInstance(context).cancelWorkById(uuid);
     }
 
     /**

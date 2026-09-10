@@ -461,9 +461,9 @@ public class DataManageActivity extends AppCompatActivity {
                 .setPositiveButton("后台执行", (dialogInterface, i) ->
                         sendBackgroundProgress("导出数据", "正在导出数据……")
                 )
-                .setNegativeButton("取消", (dialogInterface, i) -> {
-                    //TODO:取消逻辑
-                })
+                .setNegativeButton("取消执行", (dialogInterface, i) ->
+                        WorkerScheduler.cancelWorkById(this, uuid)
+                )
                 .show();
 
         //监听运行状态
@@ -596,9 +596,9 @@ public class DataManageActivity extends AppCompatActivity {
                 .setPositiveButton("后台执行", (dialogInterface, i) ->
                         sendBackgroundProgress("导入数据", "正在导入数据……")
                 )
-                .setNegativeButton("取消", (dialogInterface, i) -> {
-                    //TODO:取消逻辑
-                })
+                .setNegativeButton("取消执行", (dialogInterface, i) ->
+                        WorkerScheduler.cancelWorkById(this, uuid)
+                )
                 .show();
 
         //监听运行状态

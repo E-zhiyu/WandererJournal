@@ -184,8 +184,12 @@ public class FileHelper {
             }
         } else if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
             // 如果是通过 FileProvider 生成的 content:// 协议临时文件
-            context.getContentResolver().delete(uri, null, null);
-            Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+            try {
+                context.getContentResolver().delete(uri, null, null);
+                Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+            } catch (UnsupportedOperationException e) {
+                Log.e(LogTags.FILE_HELPER.n(), "ContentUri delete failed: " + uri);
+            }
         }
     }
 
