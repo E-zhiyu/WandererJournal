@@ -80,4 +80,5 @@ dependencies {
     implementation libs.recyclerview.selection      // Recycler 多选支持
     implementation libs.lifecycle.process           // 生命周期监听
     implementation libs.pinyin4j                    //拼音首字母获取
+    implementation libs.zibin.luban                 //图片压缩
 }
