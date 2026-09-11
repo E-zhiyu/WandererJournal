@@ -53,6 +53,7 @@ public class MediaListViewModel extends ViewModel {
                 orderingProcessor.debounce(50, TimeUnit.MILLISECONDS),
                 isInOrderProcessor.debounce(50, TimeUnit.MILLISECONDS),
                 (ordering, isInOrder) -> {
+                    orderingLiveData.postValue(ordering);
                     List<MediaFileInfo> infoList = MediaHelper.readMediaDir(context);
 
                     //进行排序

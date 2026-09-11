@@ -17,6 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.databinding.ViewHolderMediaListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -40,6 +41,7 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
         }
     };
     private final OnClickListener clickListener;
+    private final AdapterOnLongClickListener<MediaFileInfo> longClickListener;
     private final RequestOptions glideOptions;          //图片显示设置
 
     public interface OnClickListener {
@@ -62,12 +64,19 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
 
             //绑定点击监听
             binding.getRoot().setOnClickListener(view -> listener.onClick(getBindingAdapterPosition(), binding.getRoot()));
+
+            //绑定长按监听
+            binding.getRoot().setOnLongClickListener(view -> {
+                listener.onLongClick(getBindingAdapterPosition(), binding.getRoot());
+                return true;
+            });
         }
     }
 
-    public MediaListAdapter(Context context, OnClickListener clickListener) {
+    public MediaListAdapter(Context context, OnClickListener clickListener, AdapterOnLongClickListener<MediaFileInfo> longClickListener) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
 
         //初始化Glide设置
         glideOptions = new RequestOptions()
@@ -101,6 +110,8 @@ public class MediaListAdapter extends ListAdapter<MediaFileInfo, MediaListAdapte
 
                     @Override
                     public void onLongClick(int pos, View anchor) {
+                        MediaFileInfo info = getItem(pos);
+                        longClickListener.onLongClick(info, anchor);
                     }
                 }
         );
