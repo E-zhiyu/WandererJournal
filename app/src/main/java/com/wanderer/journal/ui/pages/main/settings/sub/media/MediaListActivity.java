@@ -36,6 +36,7 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
@@ -273,7 +274,12 @@ public class MediaListActivity extends AppCompatActivity {
                             }
 
                             //替换文件
-                            Files.copy(file.toPath(), originFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            long originModifiedTime = originFile.lastModified();
+                            Path copiedPath = Files.copy(file.toPath(), originFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            boolean isLastModifyTimeRestored = copiedPath.toFile().setLastModified(originModifiedTime);
+                            if (!isLastModifyTimeRestored) {
+                                Log.w(LogTags.MEDIA_LIST_ACTIVITY.n(), "无法恢复原来的最后编辑时间");
+                            }
 
                             //更新列表
                             MediaListViewModel viewModel = new ViewModelProvider(MediaListActivity.this)

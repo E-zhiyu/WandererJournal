@@ -294,13 +294,14 @@ public class MediaHelper {
         // 解析文件信息
         for (File file : childFiles) {
             Path path = file.toPath();
-            // 一次性获取文件大小与时间信息
-            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
 
+            //获取大小信息
+            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
             long size = attrs.size();
-            // 优先获取创建时间，若不支持则降级为最后修改时间
-            FileTime creationTime = attrs.creationTime();
-            long creationTimestamp = (creationTime != null) ? creationTime.toMillis() : attrs.lastModifiedTime().toMillis();
+
+            //获取最后修改时间
+            FileTime lastModifiedTime = attrs.lastModifiedTime();
+            long creationTimestamp = lastModifiedTime.toMillis();
 
             String fileName = file.getName();
             Uri uri = Uri.fromFile(file);
