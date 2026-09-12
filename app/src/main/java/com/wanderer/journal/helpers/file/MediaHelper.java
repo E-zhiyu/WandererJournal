@@ -3,7 +3,6 @@ package com.wanderer.journal.helpers.file;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -11,7 +10,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebView;
@@ -20,10 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.exifinterface.media.ExifInterface;
 
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.file.MediaDetail;
 import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
 import org.jetbrains.annotations.Contract;
@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -333,17 +334,10 @@ public class MediaHelper {
         String device = "";
         double aperture = 0, exp = 0, focalLength = 0;
         boolean flashFired = false;
+        LocalDateTime time = null;
 
         //获取文件大小
-        long fileSize = -1;
-        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
-                if (sizeIndex != -1) {
-                    fileSize = cursor.getLong(sizeIndex);
-                }
-            }
-        }
+        long fileSize = FileHelper.getFileSizeByUri(context, uri);
 
         //读取 Exif 信息
         try (InputStream inputStream = resolver.openInputStream(uri)) {
@@ -352,8 +346,11 @@ public class MediaHelper {
 
                 // --- 拍摄时间 / 修改时间 ---
                 String timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL); // 优先获取原始拍摄时间
-                if (timeStr == null) {
-                    timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME); // 次选修改时间
+                if (timeStr != null) {
+                    time = LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DATE_TIME_EXIF);
+                } else {
+                    long lastModified = FileHelper.getLastModifyTimeByUri(context, uri);
+                    time = DateTimeConverter.toLocalDateTime(lastModified);
                 }
 
                 // --- 像素尺寸 ---
@@ -371,8 +368,8 @@ public class MediaHelper {
                 // --- 拍摄设备 (品牌 & 型号) ---
                 String make = exif.getAttribute(ExifInterface.TAG_MAKE);
                 String model = exif.getAttribute(ExifInterface.TAG_MODEL);
-                if (make != null) device += make + " ";
                 if (model != null) device += model;
+                if (make != null) device += (", " + make);
 
                 // --- 光圈大小 ---
                 aperture = exif.getAttributeDouble(ExifInterface.TAG_F_NUMBER, 0.0);
@@ -390,7 +387,7 @@ public class MediaHelper {
                 }
 
                 // --- ISO 值 ---
-                iso = exif.getAttributeInt(ExifInterface.TAG_ISO_SPEED, 0);
+                iso = exif.getAttributeInt(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY, 0);
 
                 // --- 焦距 ---
                 focalLength = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0.0);
@@ -405,7 +402,7 @@ public class MediaHelper {
         }
 
         return new MediaDetail(
-                null,//TODO:时间处理
+                time,
                 fileSize,
                 wi,
                 hei,

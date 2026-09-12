@@ -726,7 +726,7 @@ public class DataManageActivity extends AppCompatActivity {
      * @param uri 待导入的文本文件 Uri
      */
     private void showImportDiaryDialog(Uri uri) {
-        disposables.add(Observable.fromCallable(() -> FileHelper.getLines(uri, this))
+        disposables.add(Observable.fromCallable(() -> FileHelper.getLinesCount(uri, this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
