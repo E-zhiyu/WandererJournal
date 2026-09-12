@@ -17,7 +17,6 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
@@ -25,7 +24,6 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderInnerMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.helpers.file.FileHelper;
 
 public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, ParagraphInnerMediaAdapter.MediaViewHolder> {
     private final int spanCount;                        //媒体列数
@@ -110,8 +108,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
         setRadius(holder.binding.imageView, position);
 
         //停止旧图片加载（适配RecyclerView的复用逻辑）
-        Context context = holder.itemView.getContext();
-        Glide.with(context).clear(holder.binding.imageView);
+        Glide.with(holder.itemView.getContext()).clear(holder.binding.imageView);
 
         //等待布局完成后指定高度
         holder.binding.imageView.post(() -> {
@@ -127,7 +124,7 @@ public class ParagraphInnerMediaAdapter extends ListAdapter<MediaEntity, Paragra
             //通过 Glide 显示图片
             try {
                 Glide.with(holder.itemView.getContext())
-                        .load(FileHelper.redirectFileFromUri(media.getFileUri(), DirectoryPaths.MEDIA, context))
+                        .load(media.getFileUri())
                         .apply(glideOptions)
                         .into(holder.binding.imageView);
             } catch (IllegalArgumentException e) {

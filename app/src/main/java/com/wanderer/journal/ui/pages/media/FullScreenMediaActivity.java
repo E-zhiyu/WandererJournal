@@ -26,7 +26,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.data.save.preference.MediaPreference;
@@ -128,19 +127,16 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                 if (position >= 0 && position < mediaUriList.size() &&
                         MediaPreference.getHdrDisplay(FullScreenMediaActivity.this)) {
                     Uri mediaUri = mediaUriList.get(position);
-                    disposable.add(MediaHelper.isHdrImage(
-                                            FullScreenMediaActivity.this,
-                                            FileHelper.redirectFileFromUri(mediaUri, DirectoryPaths.MEDIA, FullScreenMediaActivity.this)
-                                    )
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe(
-                                            isHdr -> setHDR(isHdr),
-                                            e -> {
-                                                ExceptionHelper.showExceptionDialog(FullScreenMediaActivity.this, e);
-                                                setHDR(false);
-                                            }
-                                    )
+                    disposable.add(MediaHelper.isHdrImage(FullScreenMediaActivity.this, mediaUri)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    isHdr -> setHDR(isHdr),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(FullScreenMediaActivity.this, e);
+                                        setHDR(false);
+                                    }
+                            )
                     );
                 } else {
                     setHDR(false);

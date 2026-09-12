@@ -12,9 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.databinding.ViewHolderFullScreenMediaBinding;
-import com.wanderer.journal.helpers.file.FileHelper;
 
 public class FullScreenMediaAdapter
         extends ListAdapter<Uri, FullScreenMediaAdapter.FullScreenPictureViewHolder> {
@@ -66,7 +64,7 @@ public class FullScreenMediaAdapter
         Uri mediaUri = getItem(position);
         Context context = holder.itemView.getContext();
         Glide.with(context)
-                .load(FileHelper.redirectFileFromUri(mediaUri, DirectoryPaths.MEDIA, holder.itemView.getContext()))
+                .load(mediaUri)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .into(holder.binding.photoView);
     }
