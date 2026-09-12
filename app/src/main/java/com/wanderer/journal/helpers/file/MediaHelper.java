@@ -339,6 +339,9 @@ public class MediaHelper {
         //获取文件大小
         long fileSize = FileHelper.getFileSizeByUri(context, uri);
 
+        //获取文件名
+        String fileName = FileHelper.getFileNameByUri(context, uri);
+
         //读取 Exif 信息
         try (InputStream inputStream = resolver.openInputStream(uri)) {
             if (inputStream != null) {
@@ -406,6 +409,7 @@ public class MediaHelper {
                 fileSize,
                 wi,
                 hei,
+                fileName,
                 device,
                 aperture,
                 exp,

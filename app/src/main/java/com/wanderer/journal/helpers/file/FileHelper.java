@@ -343,6 +343,47 @@ public class FileHelper {
     }
 
     /**
+     * 通过 Uri 获取文件名
+     *
+     * @param context 上下文
+     * @param uri     目标文件的 Uri
+     * @return 文件显示名称
+     */
+    public static String getFileNameByUri(Context context, Uri uri) {
+        if (context == null || uri == null) {
+            return null;
+        }
+
+        String scheme = uri.getScheme();
+        if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri,
+                    new String[]{OpenableColumns.DISPLAY_NAME},
+                    null,
+                    null,
+                    null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                        return cursor.getString(sizeIndex);
+                    }
+                }
+            }
+        } else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
+            String path = uri.getPath();
+            if (path != null) {
+                int lastSlashIndex = path.lastIndexOf('/');
+                if (lastSlashIndex != -1) {
+                    return path.substring(lastSlashIndex + 1);
+                }
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * 根据 Uri 获取文件最后修改时间
      *
      * @param context 上下文

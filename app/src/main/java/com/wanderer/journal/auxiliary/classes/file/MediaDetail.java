@@ -7,6 +7,7 @@ public class MediaDetail {
     private final long size;            //文件大小
     private final int width;            //像素宽度
     private final int height;           //像素高度
+    private final String fileName;      //文件名称
     private final String device;        //拍摄设备
     private final double aperture;      //光圈大小
     private final double shutter;       //快门速度
@@ -14,11 +15,12 @@ public class MediaDetail {
     private final double focalLength;   //焦距
     private final boolean isFlashUsed;  //是否使用闪光灯
 
-    public MediaDetail(LocalDateTime time, long size, int width, int height, String device, double aperture, double shutter, int iso, double focalLength, boolean isFlashUsed) {
+    public MediaDetail(LocalDateTime time, long size, int width, int height, String fileName, String device, double aperture, double shutter, int iso, double focalLength, boolean isFlashUsed) {
         this.time = time;
         this.size = size;
         this.width = width;
         this.height = height;
+        this.fileName = fileName;
         this.device = device;
         this.aperture = aperture;
         this.shutter = shutter;
@@ -65,5 +67,9 @@ public class MediaDetail {
 
     public boolean isFlashUsed() {
         return isFlashUsed;
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 }
