@@ -506,7 +506,7 @@ public class TextHelper {
      * @param value   复制的内容
      */
     public static void copyToClipBoard(@NonNull Context context, String label, String value) {
-        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboard = context.getSystemService(ClipboardManager.class);
         ClipData clipData = ClipData.newPlainText(label, value);
         if (clipboard != null) {
             clipboard.setPrimaryClip(clipData);

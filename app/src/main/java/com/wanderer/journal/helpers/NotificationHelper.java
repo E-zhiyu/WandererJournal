@@ -20,9 +20,7 @@ public class NotificationHelper {
      * @param context 上下文
      */
     public static void createNotificationChannels(@NonNull Context context) {
-        NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
         for (ChannelInfo info : ChannelInfo.values()) {
             NotificationChannel channel = info.getNotificationChannel();
             notificationManager.createNotificationChannel(channel);
