@@ -3,6 +3,7 @@ package com.wanderer.journal.helpers.file;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -10,17 +11,22 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.exifinterface.media.ExifInterface;
 
-import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
+import com.wanderer.journal.auxiliary.classes.file.MediaDetail;
+import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+
+import org.jetbrains.annotations.Contract;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -310,5 +316,105 @@ public class MediaHelper {
         }
 
         return result;
+    }
+
+    /**
+     * 获取媒体文件的详细数据
+     *
+     * @param context 上下文
+     * @param uri     媒体文件的 Uri
+     * @return 媒体文件详细数据
+     */
+    @NonNull
+    @Contract("_, _ -> new")
+    public static MediaDetail getMediaDetail(@NonNull Context context, Uri uri) throws IOException {
+        ContentResolver resolver = context.getContentResolver();
+        int wi = 0, hei = 0, iso = 0;
+        String device = "";
+        double aperture = 0, exp = 0, focalLength = 0;
+        boolean flashFired = false;
+
+        //获取文件大小
+        long fileSize = -1;
+        try (Cursor cursor = resolver.query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                if (sizeIndex != -1) {
+                    fileSize = cursor.getLong(sizeIndex);
+                }
+            }
+        }
+
+        //读取 Exif 信息
+        try (InputStream inputStream = resolver.openInputStream(uri)) {
+            if (inputStream != null) {
+                ExifInterface exif = new ExifInterface(inputStream);
+
+                // --- 拍摄时间 / 修改时间 ---
+                String timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL); // 优先获取原始拍摄时间
+                if (timeStr == null) {
+                    timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME); // 次选修改时间
+                }
+
+                // --- 像素尺寸 ---
+                wi = exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0);
+                hei = exif.getAttributeInt(ExifInterface.TAG_IMAGE_LENGTH, 0);
+
+                // 处理部分机型拍摄旋转后的宽高属性
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                if (orientation == ExifInterface.ORIENTATION_ROTATE_90 || orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+                    int temp = wi;
+                    wi = hei;
+                    hei = temp;
+                }
+
+                // --- 拍摄设备 (品牌 & 型号) ---
+                String make = exif.getAttribute(ExifInterface.TAG_MAKE);
+                String model = exif.getAttribute(ExifInterface.TAG_MODEL);
+                if (make != null) device += make + " ";
+                if (model != null) device += model;
+
+                // --- 光圈大小 ---
+                aperture = exif.getAttributeDouble(ExifInterface.TAG_F_NUMBER, 0.0);
+
+                // --- 快门速度 ---
+                String exposureTime = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
+                if (exposureTime != null) {
+                    try {
+                        exp = Double.parseDouble(exposureTime);
+                    } catch (NumberFormatException e) {
+                        exp = -1;
+                    }
+                } else {
+                    exp = -1;
+                }
+
+                // --- ISO 值 ---
+                iso = exif.getAttributeInt(ExifInterface.TAG_ISO_SPEED, 0);
+
+                // --- 焦距 ---
+                focalLength = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0.0);
+
+                // --- 是否使用闪光灯 ---
+                int flash = exif.getAttributeInt(ExifInterface.TAG_FLASH, -1);
+                if (flash != -1) {
+                    // 比特位 0 表示闪光灯是否触发 (Flash fired)
+                    flashFired = (flash & 0x1) != 0;
+                }
+            }
+        }
+
+        return new MediaDetail(
+                null,//TODO:时间处理
+                fileSize,
+                wi,
+                hei,
+                device,
+                aperture,
+                exp,
+                iso,
+                focalLength,
+                flashFired
+        );
     }
 }

@@ -5,7 +5,7 @@ import android.content.Context;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
+import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.helpers.file.MediaHelper;
 
 import java.util.Collections;

@@ -14,7 +14,7 @@ import androidx.documentfile.provider.DocumentFile;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.classes.TextFileData;
+import com.wanderer.journal.auxiliary.classes.file.TextFileData;
 
 import org.jetbrains.annotations.Contract;
 

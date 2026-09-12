@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.media;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
@@ -162,7 +163,16 @@ public class FullScreenMediaActivity extends AppCompatActivity {
 
         //图片详情
         binding.infoBtn.setOnClickListener(view -> {
-            //TODO:跳转至图片详情界面
+            Bundle bundle = new Bundle();
+            String currentUriStr = "";
+            if (mediaUriStrings != null) {
+                currentUriStr = mediaUriStrings[binding.viewPager2.getCurrentItem()];
+            }
+            bundle.putString(KeyStrings.FILE_URIS.v(), currentUriStr);
+
+            Intent intent = new Intent(this, MediaInfoActivity.class);
+            intent.putExtras(bundle);
+            startActivity(intent);
         });
         AppearanceHelper.attachMorphAnimation(binding.infoBtn);
     }

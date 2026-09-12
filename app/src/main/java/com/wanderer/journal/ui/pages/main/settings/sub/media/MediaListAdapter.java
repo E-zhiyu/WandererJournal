@@ -15,7 +15,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.MediaFileInfo;
+import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
