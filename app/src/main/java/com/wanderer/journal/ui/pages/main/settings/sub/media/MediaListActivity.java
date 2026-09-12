@@ -20,7 +20,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
@@ -32,6 +31,7 @@ import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
+import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.io.File;
@@ -117,9 +117,17 @@ public class MediaListActivity extends AppCompatActivity {
                     menu.setOnMenuItemClickListener(item -> {
                         int id = item.getItemId();
                         if (id == R.id.action_compress) {
-                            new MaterialAlertDialogBuilder(this)
-                                    .setTitle(R.string.compress)
-                                    .setMessage("即将压缩文件的体积，这可能导致显示内容变模糊，且该操作不可逆，确认继续吗？")
+                            new MarkdownDialogBuilder(
+                                    this,
+                                    getString(R.string.compress),
+                                    "即将压缩图片的体积，这可能导致以下不可逆的结果：\n" +
+                                            "\n" +
+                                            "1. 图片变得模糊；\n" +
+                                            "2. 原本的HDR显示效果丢失；\n" +
+                                            "3. 原本的动态照片效果丢失。\n" +
+                                            "\n" +
+                                            "确认继续吗？"
+                            )
                                     .setPositiveButton("确定", (dialogInterface, i) ->
                                             compressImage(entity.getUri())
                                     )
