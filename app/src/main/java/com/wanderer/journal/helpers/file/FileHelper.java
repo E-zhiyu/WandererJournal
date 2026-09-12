@@ -259,27 +259,9 @@ public class FileHelper {
     public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
         return Single.fromCallable(() -> {
             String content = readContent(uri, context);
-            LocalDateTime lastModifyTime = getFileLastModifyTime(uri, context);
+            LocalDateTime lastModifyTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(getLastModifyTimeByUri(context, uri)), ZoneId.systemDefault());
             return new TextFileData(content, lastModifyTime);
         });
-    }
-
-    /**
-     * 获取文件最后的编辑时间
-     *
-     * @param uri     需要获取创建时间的文件的 Uri
-     * @param context 上下文
-     * @return 文件最后编辑时间的时间戳
-     */
-    public static LocalDateTime getFileLastModifyTime(Uri uri, Context context) {
-        long lastModified = 0;
-
-        DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
-        if (documentFile.exists()) {
-            lastModified = documentFile.lastModified();
-        }
-
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneId.systemDefault());
     }
 
     /**
