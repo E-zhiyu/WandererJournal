@@ -171,6 +171,10 @@
     <string name="from_large_to_small">从大到小</string>
     <string name="auto_update_check">自动更新检测</string>
     <string name="compress">压缩</string>
+    <string name="media_info">媒体详情</string>
+    <string name="time_with_colon">时间：</string>
+    <string name="file_info">文件信息：</string>
+    <string name="media_param_info">媒体参数：</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

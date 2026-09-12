@@ -122,6 +122,10 @@
             android:parentActivityName=".ui.pages.main.MainActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.pages.media.MediaInfoActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".ui.pages.main.MainActivity"
             android:exported="true">
             <intent-filter>

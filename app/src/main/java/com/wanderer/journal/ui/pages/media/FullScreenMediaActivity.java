@@ -152,13 +152,19 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.v(), 0);
         binding.viewPager2.setCurrentItem(startIndex, false);
 
+        //分享媒体
+        binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
+        AppearanceHelper.attachMorphAnimation(binding.shareMediaBtn);
+
         //保存媒体
         binding.saveMediaBtn.setOnClickListener(v -> savePicture());
         AppearanceHelper.attachMorphAnimation(binding.saveMediaBtn);
 
-        //分享媒体
-        binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
-        AppearanceHelper.attachMorphAnimation(binding.shareMediaBtn);
+        //图片详情
+        binding.infoBtn.setOnClickListener(view -> {
+            //TODO:跳转至图片详情界面
+        });
+        AppearanceHelper.attachMorphAnimation(binding.infoBtn);
     }
 
     /**
