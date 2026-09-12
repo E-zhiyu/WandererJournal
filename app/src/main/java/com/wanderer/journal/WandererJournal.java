@@ -26,6 +26,7 @@ import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
+import com.wanderer.journal.helpers.ShortcutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.pages.AuthActivity;
@@ -40,8 +41,9 @@ public class WandererJournal extends Application {
     public void onCreate() {
         super.onCreate();
 
-        //注册通知渠道
+        //动态注册（通知渠道、快捷方式）
         NotificationHelper.createNotificationChannels(this);
+        ShortcutHelper.buildShortcuts(this);
 
         if (getProcessName().equals(getPackageName())) {
             //初始化动态配色
