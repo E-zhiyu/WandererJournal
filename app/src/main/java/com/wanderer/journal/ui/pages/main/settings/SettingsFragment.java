@@ -19,7 +19,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.data.save.preference.MediaPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
+import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.databinding.FragmentSettingsBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
@@ -36,6 +38,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity;
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity;
+import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -70,6 +73,7 @@ public class SettingsFragment extends Fragment {
     private void initViews() {
         initAppSettings();
         initCommonSettings();
+        initMediaSettings();
         initPrivacySettings();
         initAboutSettings();
     }
@@ -117,7 +121,7 @@ public class SettingsFragment extends Fragment {
                 R.string.select_first_screen,
                 "选择启动的第一屏",
                 R.drawable.outline_mobile_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         int screenCode = AppSettingsPreference.getFirstScreen(requireContext());
         firstScreenOption.setSpinnerText(FirstScreen.values()[screenCode].getTitle());
@@ -153,6 +157,20 @@ public class SettingsFragment extends Fragment {
 
             firstScreenMenu.show();
         });
+
+        //自动检测更新
+        SettingSwitchView autoUpdateCheck = new SettingSwitchView(
+                requireContext(),
+                binding.autoUpdateCheckSwitch,
+                R.string.auto_update_check,
+                "应用启动后自动检查更新",
+                R.drawable.outline_deployed_code_update_24,
+                RadiusStyle.BOTTOM
+        );
+        autoUpdateCheck.setChecked(VersionPreference.getAutoUpdateCheck(requireContext()));
+        autoUpdateCheck.setFunctionListener((compoundButton, b) ->
+                VersionPreference.setAutoUpdateCheck(requireContext(), b)
+        );
     }
 
     /**
@@ -164,7 +182,7 @@ public class SettingsFragment extends Fragment {
                 requireContext(),
                 binding.permissionsOption,
                 R.string.permissions_setting,
-                "点击进入权限管理界面",
+                "跳转至权限管理界面",
                 R.drawable.outline_admin_panel_settings_24,
                 RadiusStyle.TOP
         );
@@ -181,7 +199,7 @@ public class SettingsFragment extends Fragment {
                 requireContext(),
                 binding.dataManageOption,
                 R.string.data_manage,
-                "点击跳转数据管理界面",
+                "跳转至数据管理界面",
                 R.drawable.outline_database_24,
                 RadiusStyle.MIDDLE
         );
@@ -195,7 +213,7 @@ public class SettingsFragment extends Fragment {
                 requireContext(),
                 binding.diaryAlarmOption,
                 R.string.diary_alarm,
-                "点击跳转至日记提醒设置界面",
+                "跳转至日记提醒设置界面",
                 R.drawable.outline_alarm_24,
                 RadiusStyle.MIDDLE
         );
@@ -209,13 +227,46 @@ public class SettingsFragment extends Fragment {
                 requireContext(),
                 binding.shareOption,
                 R.string.share_settings,
-                "点击跳转分享设置界面",
+                "跳转至分享设置界面",
                 R.drawable.outline_share_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         shareOption.setFunctionListener(view -> {
             Intent skip2ShareSettings = new Intent(requireContext(), ShareSettingsActivity.class);
             startActivity(skip2ShareSettings);
+        });
+    }
+
+    /**
+     * 初始化媒体设置
+     */
+    private void initMediaSettings() {
+        // HDR 显示开关
+        SettingSwitchView hdrSwitch = new SettingSwitchView(
+                requireContext(),
+                binding.hdrSwitch,
+                R.string.hdr_display_effect,
+                "全屏查看图片时支持HDR显示",
+                R.drawable.outline_hdr_on_24,
+                RadiusStyle.TOP
+        );
+        hdrSwitch.setChecked(MediaPreference.getHdrDisplay(requireContext()));
+        hdrSwitch.setFunctionListener((compoundButton, b) ->
+                MediaPreference.setHdrDisplay(requireContext(), b)
+        );
+
+        //媒体列表
+        SettingClickableTextView mediaList = new SettingClickableTextView(
+                requireContext(),
+                binding.mediaList,
+                R.string.media_list,
+                "点击进入媒体文件列表",
+                R.drawable.outline_perm_media_24,
+                RadiusStyle.BOTTOM
+        );
+        mediaList.setFunctionListener(view -> {
+            Intent intent = new Intent(requireContext(), MediaListActivity.class);
+            startActivity(intent);
         });
     }
 

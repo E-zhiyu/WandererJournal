@@ -1,8 +1,10 @@
 package com.wanderer.journal.ui.pages.main;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -11,7 +13,9 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
+import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.databinding.ActivityMainBinding;
 import com.wanderer.journal.helpers.UpdateHelper;
 import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
@@ -27,6 +31,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;    //绑定的XML布局
     private final CompositeDisposable disposable = new CompositeDisposable();      //多线程任务列表
+    @Nullable
+    private ViewPager2.OnPageChangeCallback pageChangeCallback = null;  // ViewPager2 的翻页监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +49,9 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        //启动主界面时自动检测更新（不一定触发）
-        final int MODULAR = 2;
-        if (System.currentTimeMillis() % MODULAR == 0) {
+        //启动主界面时自动检测更新
+        if (VersionPreference.getAutoUpdateCheck(this)) {
+            Log.d(LogTags.MAIN_ACTIVITY.n(), "自动检测更新中……");
             UpdateHelper.checkUpdate(this, disposable, false);
         }
     }
@@ -53,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if (pageChangeCallback != null) {
+            binding.viewPager2.unregisterOnPageChangeCallback(pageChangeCallback);
+            pageChangeCallback = null;
+        }
 
         disposable.dispose();
         binding = null;
@@ -102,14 +113,15 @@ public class MainActivity extends AppCompatActivity {
         viewPager2.setAdapter(viewPagerAdapter);
 
         //ViewPager 页面切换监听
-        viewPager2.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 super.onPageSelected(position);
                 // 更新底部导航栏选中状态
                 binding.bottomNavi.getMenu().getItem(position).setChecked(true);
             }
-        });
+        };
+        viewPager2.registerOnPageChangeCallback(pageChangeCallback);
         viewPager2.setOffscreenPageLimit(2);    //设置保留邻近Fragment
     }
 }

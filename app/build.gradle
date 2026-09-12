@@ -12,8 +12,8 @@ android {
         applicationId "com.wanderer.journal"
         minSdk 28
         targetSdk 37
-        versionCode 38
-        versionName "1.5.7"
+        versionCode 39
+        versionName "1.6.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -32,6 +32,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
+            applicationIdSuffix ".test"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -79,4 +80,5 @@ dependencies {
     implementation libs.recyclerview.selection      // Recycler 多选支持
     implementation libs.lifecycle.process           // 生命周期监听
     implementation libs.pinyin4j                    //拼音首字母获取
+    implementation libs.zibin.luban                 //图片压缩
 }

@@ -9,4 +9,6 @@ public class CustomDateTimeFormatter {
     public static final DateTimeFormatter LOCAL_DATE = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
     public static final DateTimeFormatter DATE_WITH_WEEK = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE");
     public static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public static final DateTimeFormatter DATE_TIME_EXIF = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss");
+    public static final DateTimeFormatter DATE_TIME_MEDIA_DETAIL = DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE\nHH:mm");
 }

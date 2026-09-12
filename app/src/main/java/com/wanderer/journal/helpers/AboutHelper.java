@@ -10,7 +10,24 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.5.7\n" +
+    private final static String CHANGELOG = "# v1.6.0\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 支持显示图片的HDR效果\n" +
+            "- 添加媒体列表界面，可从设置界面进入\n" +
+            "- 添加自动更新检测开关\n" +
+            "- 添加图片压缩功能，在媒体列表界面长按图片可进行压缩\n" +
+            "- 添加媒体详情查看功能，可从全屏媒体界面中进入\n" +
+            "- 桌面图标长按菜单添加快捷方式\n" +
+            "\n" +
+            "### 修改和优化的内容\n" +
+            "\n" +
+            "- 开启自动更新检测时，启动应用时必定检测一次更新（此前为50%几率）\n" +
+            "- 修改全屏媒体界面的按钮布局\n" +
+            "- 重构数据备份功能，增强退出应用后执行操作的稳定性\n" +
+            "\n" +
+            "# v1.5.7\n" +
             "\n" +
             "### 修改的内容\n" +
             "\n" +

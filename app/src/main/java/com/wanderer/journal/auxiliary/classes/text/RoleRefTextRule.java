@@ -22,7 +22,7 @@ public abstract class RoleRefTextRule implements RichTextRule {
 
     @Override
     public String getKey() {
-        return KeyStrings.ROLE_ID.getS();
+        return KeyStrings.ROLE_ID.v();
     }
 
     @Override

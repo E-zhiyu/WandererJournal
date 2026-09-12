@@ -37,7 +37,7 @@ public class AlarmHelper {
         Log.d(LogTags.ALARM_HELPER.n(), "系统时间戳：" + systemMillis);
 
         //获取闹钟管理器
-        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        AlarmManager am = context.getSystemService(AlarmManager.class);
 
         //设置单一的闹钟
         PendingIntent pi = PendingIntent.getBroadcast(
@@ -85,7 +85,7 @@ public class AlarmHelper {
 
         // 如果 PendingIntent 存在，调用 cancel
         if (pendingIntent != null) {
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            AlarmManager alarmManager = context.getSystemService(AlarmManager.class);
             alarmManager.cancel(pendingIntent);
 
             // 彻底释放这个 PendingIntent

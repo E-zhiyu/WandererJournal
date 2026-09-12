@@ -28,10 +28,45 @@ import net.sourceforge.pinyin4j.PinyinHelper;
 
 import org.jetbrains.annotations.Contract;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.regex.Matcher;
 
 public class TextHelper {
+    //文件大小符号
+    private static final String[] FILE_SIZE_CHAR = {
+            "", "K", "M", "G", "T"
+    };
+
+    /**
+     * 将单位为 B 的文件大小简写为字符串
+     *
+     * @param fileSize 要转换的Double值
+     * @return 简写后的字符串
+     */
+    @NonNull
+    public static String shortenFileSize(long fileSize) {
+        double absValue = Math.abs(fileSize);
+        int divisor = 1000;
+
+        // 计算应该使用哪个单位
+        int index = 0;
+        double scaledValue = absValue;
+
+        while (scaledValue >= divisor && index < FILE_SIZE_CHAR.length - 1) {
+            scaledValue /= divisor;
+            index++;
+        }
+
+        // 有后缀：使用普通格式（# 表示可选，不强制显示小数）
+        String pattern = "#0." + "#".repeat(1);
+        DecimalFormat df = new DecimalFormat(pattern);
+        String formatted = df.format(scaledValue);
+
+        // 组装结果
+        return formatted + FILE_SIZE_CHAR[index];
+    }
+
     /**
      * 将整型转换为罗马数字
      *
@@ -52,30 +87,6 @@ public class TextHelper {
             }
         }
         return roman.toString();
-    }
-
-    /**
-     * 获取字符串中出现的关键词个数
-     *
-     * @param str     原始字符串
-     * @param end     结束计数的下标
-     * @param keyword 需要查找次数的关键词
-     * @return 关键词出现次数
-     */
-    public static int getKeywordCount(String str, int end, String keyword) {
-        if (str == null || keyword == null || keyword.isEmpty()) {
-            return 0;
-        }
-
-        int count = 0;
-        int index = 0;
-
-        while ((index = str.indexOf(keyword, index)) != -1 && index <= end) {
-            count++;
-            index += keyword.length(); // 跳过已匹配的子串
-        }
-
-        return count;
     }
 
     /**
@@ -495,7 +506,7 @@ public class TextHelper {
      * @param value   复制的内容
      */
     public static void copyToClipBoard(@NonNull Context context, String label, String value) {
-        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboard = context.getSystemService(ClipboardManager.class);
         ClipData clipData = ClipData.newPlainText(label, value);
         if (clipboard != null) {
             clipboard.setPrimaryClip(clipData);

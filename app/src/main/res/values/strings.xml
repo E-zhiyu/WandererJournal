@@ -159,6 +159,23 @@
     <string name="btn_of_explanation">功能说明按钮</string>
     <string name="update_check">检测更新</string>
     <string name="select_first_screen">启动页选择</string>
+    <string name="HDR">HDR</string>
+    <string name="media_settings">媒体设置</string>
+    <string name="hdr_display_effect">HDR显示效果</string>
+    <string name="media_list">媒体列表</string>
+    <string name="no_media">无媒体</string>
+    <string name="order_by_time">按时间排序</string>
+    <string name="order_by_size">按大小排序</string>
+    <string name="order_by_name">按名称排序</string>
+    <string name="from_small_to_large">从小到大</string>
+    <string name="from_large_to_small">从大到小</string>
+    <string name="auto_update_check">自动更新检测</string>
+    <string name="compress">压缩</string>
+    <string name="media_info">媒体详情</string>
+    <string name="time_with_colon">时间：</string>
+    <string name="file_info">文件信息：</string>
+    <string name="media_param_info">媒体参数：</string>
+    <string name="read_diary">看日记</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.media;
 
-import android.graphics.Color;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,18 +17,22 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.data.save.preference.MediaPreference;
 import com.wanderer.journal.databinding.ActivityFullScreenMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 
@@ -44,8 +49,11 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class FullScreenMediaActivity extends AppCompatActivity {
     private ActivityFullScreenMediaBinding binding;   //绑定的 XML 布局
+    @Nullable
     private Bundle initBundle = null;       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
+    @Nullable
+    private ViewPager2.OnPageChangeCallback pageChangeCallback = null;  // ViewPager2 的翻页监听器
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +88,25 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(backPressedCallback);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (pageChangeCallback != null) {
+            binding.viewPager2.unregisterOnPageChangeCallback(pageChangeCallback);
+            pageChangeCallback = null;
+        }
+
+        disposable.dispose();
+        binding = null;
+    }
+
     /**
      * 初始化视图
      */
     private void initViews() {
         //翻页视图
-        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         FullScreenMediaAdapter adapter = new FullScreenMediaAdapter(mediaUriStrings);
         binding.viewPager2.setAdapter(adapter);
         List<Uri> mediaUriList;
@@ -97,21 +118,59 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             mediaUriList = new ArrayList<>();
         }
         adapter.submitList(mediaUriList);
+        pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+
+                //设置 HDR 显示效果
+                if (position >= 0 && position < mediaUriList.size() &&
+                        MediaPreference.getHdrDisplay(FullScreenMediaActivity.this)) {
+                    Uri mediaUri = mediaUriList.get(position);
+                    disposable.add(MediaHelper.isHdrImage(FullScreenMediaActivity.this, mediaUri)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(
+                                    isHdr -> setHDR(isHdr),
+                                    e -> {
+                                        ExceptionHelper.showExceptionDialog(FullScreenMediaActivity.this, e);
+                                        setHDR(false);
+                                    }
+                            )
+                    );
+                } else {
+                    setHDR(false);
+                }
+            }
+        };
+        binding.viewPager2.registerOnPageChangeCallback(pageChangeCallback);
 
         //设置初始位置
-        int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), 0);
+        int startIndex = initBundle.getInt(KeyStrings.VIEW_HOLDER_POSITION.v(), 0);
         binding.viewPager2.setCurrentItem(startIndex, false);
-
-        //保存媒体
-        binding.saveMediaBtn.setOnClickListener(v -> savePicture());
-        AppearanceHelper.attachMorphAnimation(binding.saveMediaBtn);
 
         //分享媒体
         binding.shareMediaBtn.setOnClickListener(v -> sharePicture());
         AppearanceHelper.attachMorphAnimation(binding.shareMediaBtn);
 
-        //按钮分组设置到底部的边距
-        AppearanceHelper.setMarginToNavigation(binding.btnGroup, 30, this);
+        //保存媒体
+        binding.saveMediaBtn.setOnClickListener(v -> savePicture());
+        AppearanceHelper.attachMorphAnimation(binding.saveMediaBtn);
+
+        //图片详情
+        binding.infoBtn.setOnClickListener(view -> {
+            Bundle bundle = new Bundle();
+            String currentUriStr = "";
+            if (mediaUriStrings != null) {
+                currentUriStr = mediaUriStrings[binding.viewPager2.getCurrentItem()];
+            }
+            bundle.putString(KeyStrings.FILE_URIS.v(), currentUriStr);
+
+            Intent intent = new Intent(this, MediaInfoActivity.class);
+            intent.putExtras(bundle);
+            startActivity(intent);
+        });
+        AppearanceHelper.attachMorphAnimation(binding.infoBtn);
     }
 
     /**
@@ -125,10 +184,6 @@ public class FullScreenMediaActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(false);
         insetsController.setAppearanceLightNavigationBars(false);
 
-        //设置导航栏和状态栏为透明
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
-
         // 确保当前 Window 铺满全屏
         WindowCompat.setDecorFitsSystemWindows(window, false);
 
@@ -139,6 +194,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
             if (controller != null) {
                 //隐藏状态栏
                 controller.hide(WindowInsets.Type.statusBars());
+                controller.hide(WindowInsets.Type.navigationBars());
 
                 //设置状态栏行为：用户从边缘滑动手势时，临时半透明拉出系统栏，不影响应用本身的布局
                 controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
@@ -159,7 +215,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void savePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         if (mediaUriStrings != null) {
             Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
             disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
@@ -178,7 +234,7 @@ public class FullScreenMediaActivity extends AppCompatActivity {
      */
     private void sharePicture() {
         int currentIndex = binding.viewPager2.getCurrentItem();
-        String[] mediaUriStrings = initBundle.getStringArray(KeyStrings.FILE_URIS.getS());
+        String[] mediaUriStrings = initBundle != null ? initBundle.getStringArray(KeyStrings.FILE_URIS.v()) : null;
         if (mediaUriStrings != null) {
             Uri currentUri = Uri.parse(mediaUriStrings[currentIndex]);
             File pictureFile = new File(Objects.requireNonNull(currentUri.getPath()));
@@ -196,5 +252,19 @@ public class FullScreenMediaActivity extends AppCompatActivity {
                     )
             );
         }
+    }
+
+    /**
+     * 设置 HDR 显示效果
+     *
+     * @param isHDR 是否为 HDR 显示状态
+     */
+    private void setHDR(boolean isHDR) {
+        //色彩范围
+        int colorMode = isHDR ? ActivityInfo.COLOR_MODE_HDR : ActivityInfo.COLOR_MODE_DEFAULT;
+        getWindow().setColorMode(colorMode);
+
+        // HDR 提示
+        VisibilityHelper.toggleVisibilityWithFade(binding.hdrTextCard, isHDR);
     }
 }

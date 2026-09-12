@@ -79,7 +79,7 @@ import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.ui.others.adapters.MediaAdapter;
+import com.wanderer.journal.ui.others.adapters.WriteMediaAdapter;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
@@ -125,7 +125,7 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private MediaAdapter mediaAdapter;                      //媒体文件列表适配器
+    private WriteMediaAdapter mediaAdapter;                      //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
@@ -258,7 +258,7 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         //待编辑的段落的 ID
-        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.getS());
+        long modifyParagraphId = initBundle.getLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v());
         ParagraphDao paragraphDao = DiaryDb.getInstance(this).paragraphDao();
         disposable.add(paragraphDao.getParagraphOptionalSingleById(modifyParagraphId)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -287,7 +287,7 @@ public class WriteActivity extends AppCompatActivity {
     private LocalDate getParentDiaryDate() {
         if (initBundle == null) return LocalDate.now();
 
-        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1);
+        long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v(), -1);
         return initDateTimestamp == -1 ? LocalDate.now() : DateTimeConverter.toLocalDate(initDateTimestamp);
     }
 
@@ -496,7 +496,7 @@ public class WriteActivity extends AppCompatActivity {
                     WriteActivity.this,
                     null,
                     display,
-                    KeyStrings.ROLE_ID.getS(),
+                    KeyStrings.ROLE_ID.v(),
                     value
             );
 
@@ -623,14 +623,14 @@ public class WriteActivity extends AppCompatActivity {
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), position);
                     skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
                             mediaView,
-                            TransitionName.PARAGRAPH_MEDIA.getS()
+                            TransitionName.FULLSCREEN_MEDIA.getS()
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
@@ -717,7 +717,7 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initMediaRecycler() {
         //实例化媒体适配器并分配给 RecyclerView
-        mediaAdapter = new MediaAdapter(this);
+        mediaAdapter = new WriteMediaAdapter(this);
         binding.mediaRecycler.setAdapter(mediaAdapter);
 
         //构建选择追踪器
@@ -1037,10 +1037,10 @@ public class WriteActivity extends AppCompatActivity {
 
                         //获取传递的起始日期
                         LocalDate startDate;
-                        if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                        if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) == -1) {
                             startDate = LocalDate.now();
                         } else {
-                            long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                            long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
                             startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
                         }
 
@@ -1119,10 +1119,10 @@ public class WriteActivity extends AppCompatActivity {
 
                     //获取传递的起始日期
                     LocalDate startDate;
-                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.getS(), -1) == -1) {
+                    if (initBundle == null || initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) == -1) {
                         startDate = LocalDate.now();
                     } else {
-                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.getS());
+                        long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
                         startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
                     }
 

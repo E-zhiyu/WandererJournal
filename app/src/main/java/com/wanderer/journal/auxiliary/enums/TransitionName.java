@@ -1,7 +1,7 @@
 package com.wanderer.journal.auxiliary.enums;
 
 public enum TransitionName {
-    PARAGRAPH_MEDIA("paragraph_media");
+    FULLSCREEN_MEDIA("fullscreen_media");
     private final String s;
 
     TransitionName(String s) {

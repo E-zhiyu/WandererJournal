@@ -3,7 +3,10 @@ package com.wanderer.journal.helpers.file;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -14,7 +17,7 @@ import androidx.documentfile.provider.DocumentFile;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.classes.TextFileData;
+import com.wanderer.journal.auxiliary.classes.file.TextFileData;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -38,6 +41,18 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    /**
+     * 获取文件扩展名
+     */
+    @Nullable
+    public static String getFileExtension(@NonNull String fileName) {
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+            return fileName.substring(lastDotIndex + 1);
+        }
+        return null;
+    }
+
     /**
      * 生成备份文件名称
      *
@@ -135,8 +150,12 @@ public class FileHelper {
             }
         } else if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
             // 如果是通过 FileProvider 生成的 content:// 协议临时文件
-            context.getContentResolver().delete(uri, null, null);
-            Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+            try {
+                context.getContentResolver().delete(uri, null, null);
+                Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: " + uri);
+            } catch (UnsupportedOperationException e) {
+                Log.e(LogTags.FILE_HELPER.n(), "ContentUri delete failed: " + uri);
+            }
         }
     }
 
@@ -240,27 +259,9 @@ public class FileHelper {
     public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
         return Single.fromCallable(() -> {
             String content = readContent(uri, context);
-            LocalDateTime lastModifyTime = getFileLastModifyTime(uri, context);
+            LocalDateTime lastModifyTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(getLastModifyTimeByUri(context, uri)), ZoneId.systemDefault());
             return new TextFileData(content, lastModifyTime);
         });
-    }
-
-    /**
-     * 获取文件最后的编辑时间
-     *
-     * @param uri     需要获取创建时间的文件的 Uri
-     * @param context 上下文
-     * @return 文件最后编辑时间的时间戳
-     */
-    public static LocalDateTime getFileLastModifyTime(Uri uri, Context context) {
-        long lastModified = 0;
-
-        DocumentFile documentFile = DocumentFile.fromSingleUri(context, uri);
-        if (documentFile.exists()) {
-            lastModified = documentFile.lastModified();
-        }
-
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(lastModified), ZoneId.systemDefault());
     }
 
     /**
@@ -271,7 +272,7 @@ public class FileHelper {
      * @return 总行数
      * @throws IOException 文件读取失败引发的异常
      */
-    public static int getLines(Uri uri, Context context) throws IOException {
+    public static int getLinesCount(Uri uri, Context context) throws IOException {
         int lineCount = 0;
         try (InputStream is = context.getContentResolver().openInputStream(uri);
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
@@ -281,6 +282,127 @@ public class FileHelper {
         }
 
         return lineCount;
+    }
+
+    /**
+     * 通过 Uri 获取文件大小
+     *
+     * @param context 上下文
+     * @param uri     需要获取大小的文件的 Uri
+     * @return 文件大小，单位为 B
+     */
+    public static long getFileSizeByUri(Context context, Uri uri) {
+        if (context == null || uri == null) {
+            return -1;
+        }
+
+        String scheme = uri.getScheme();
+        if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri,
+                    new String[]{OpenableColumns.SIZE},
+                    null,
+                    null,
+                    null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                        return cursor.getLong(sizeIndex);
+                    }
+                }
+            }
+        } else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
+            String path = uri.getPath();
+            if (path != null) {
+                java.io.File file = new java.io.File(path);
+                if (file.exists()) {
+                    return file.length();
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * 通过 Uri 获取文件名
+     *
+     * @param context 上下文
+     * @param uri     目标文件的 Uri
+     * @return 文件显示名称
+     */
+    public static String getFileNameByUri(Context context, Uri uri) {
+        if (context == null || uri == null) {
+            return null;
+        }
+
+        String scheme = uri.getScheme();
+        if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri,
+                    new String[]{OpenableColumns.DISPLAY_NAME},
+                    null,
+                    null,
+                    null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                        return cursor.getString(sizeIndex);
+                    }
+                }
+            }
+        } else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
+            String path = uri.getPath();
+            if (path != null) {
+                int lastSlashIndex = path.lastIndexOf('/');
+                if (lastSlashIndex != -1) {
+                    return path.substring(lastSlashIndex + 1);
+                }
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 根据 Uri 获取文件最后修改时间
+     *
+     * @param context 上下文
+     * @param uri     需要获取最后修改时间的文件的 Uri
+     * @return 最后修改时间的时间戳
+     */
+    public static long getLastModifyTimeByUri(Context context, Uri uri) {
+        if (context == null || uri == null) {
+            return -1;
+        }
+
+        String scheme = uri.getScheme();
+        if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri,
+                    new String[]{DocumentsContract.Document.COLUMN_LAST_MODIFIED},
+                    null,
+                    null,
+                    null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int dateIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_LAST_MODIFIED);
+                    if (dateIndex != -1 && !cursor.isNull(dateIndex)) {
+                        return cursor.getLong(dateIndex);
+                    }
+                }
+            }
+        } else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
+            String path = uri.getPath();
+            if (path != null) {
+                java.io.File file = new java.io.File(path);
+                if (file.exists()) {
+                    return file.lastModified();
+                }
+            }
+        }
+
+        return -1;
     }
 
     /**

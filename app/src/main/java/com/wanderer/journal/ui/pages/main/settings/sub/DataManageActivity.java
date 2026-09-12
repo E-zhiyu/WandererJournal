@@ -1,8 +1,10 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -13,16 +15,23 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.work.Data;
+import androidx.work.WorkManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.automation.worker.BackupWorker;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.automation.worker.backup.BackupWorker;
+import com.wanderer.journal.automation.worker.backup.RestoreWorker;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.enums.ChannelInfo;
+import com.wanderer.journal.auxiliary.enums.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
+import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -33,11 +42,12 @@ import com.wanderer.journal.databinding.ActivityDataManageBinding;
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.NotificationHelper;
+import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
-import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.time.DateParseHelper;
 import com.wanderer.journal.ui.others.dialogs.MultiChoiceDialogBuilder;
@@ -55,10 +65,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -70,7 +80,6 @@ public class DataManageActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> appendFromFileLauncher;                  //从外部文件追加段落的启动器
     private ActivityResultLauncher<Intent> importDiaryLauncher;                     //导入日记启动器
     private List<Boolean> exportChoiceStatList = null;                              //导出数据时的选项选择情况
-    private boolean exportIncludeMedia = false;                                     //导出时是否包含媒体文件
     private ActivityResultLauncher<Intent> backupDirSelectLauncher;                 //自动备份目录选择启动器
 
     @Override
@@ -94,6 +103,7 @@ public class DataManageActivity extends AppCompatActivity {
 
         initActivityLaunchers();
         initViews();
+        initPermissionRequests();
     }
 
     /**
@@ -110,7 +120,7 @@ public class DataManageActivity extends AppCompatActivity {
                         return;
                     }
 
-                    exportData(data.getData(), exportChoiceStatList, exportIncludeMedia);
+                    exportData(data.getData(), exportChoiceStatList);
                 }
         );
 
@@ -197,6 +207,16 @@ public class DataManageActivity extends AppCompatActivity {
     }
 
     /**
+     * 初始化权限请求
+     */
+    private void initPermissionRequests() {
+        PermissionHelper helper = new PermissionHelper(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            helper.addPermission(Manifest.permission.POST_NOTIFICATIONS, "请授予通知权限以发送操作进度通知");
+        }
+    }
+
+    /**
      * 初始化数据管理条目
      */
     private void initDataManageSettings() {
@@ -256,9 +276,9 @@ public class DataManageActivity extends AppCompatActivity {
             } else if (isChecked) {
                 int frequencyIndex = AutoBackupPreference.getBackupFrequency(this);
                 long intervalMillis = BackupFrequency.values()[frequencyIndex].getIntervalMillis();
-                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
             } else {
-                WorkerScheduler.cancelPeriodicBackup(this, TagStrings.BACKUP_WORKER.t());
+                WorkerScheduler.cancelUniqueWork(this, TagStrings.BACKUP_WORKER.t());
             }
 
             AutoBackupPreference.setSwitchStat(this, isChecked);
@@ -315,7 +335,7 @@ public class DataManageActivity extends AppCompatActivity {
                         if (AutoBackupPreference.getSwitchStat(this)) {
                             //更新工作内容
                             long intervalMillis = frequency.getIntervalMillis();
-                            WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                            WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
 
                             //立即备份一次
                             WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class);
@@ -404,7 +424,6 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //保存选择结果引用
                     exportChoiceStatList = checkedStatList;
-                    exportIncludeMedia = checkedStatList.get(0);
 
                     //打开 SAF 用于创建压缩包文件
                     SAFHelper.createDocumentViaSAF(
@@ -422,41 +441,74 @@ public class DataManageActivity extends AppCompatActivity {
      *
      * @param uri          用户通过 SAF 创建的 zip 文件的 Uri
      * @param checkedStats 备份数据选项选择情况
-     * @param includeMedia 是否导出媒体文件
      */
-    private void exportData(Uri uri, List<Boolean> checkedStats, boolean includeMedia) {
+    private void exportData(Uri uri, @NonNull List<Boolean> checkedStats) {
+        //构建传递给 Worker 的 Data
+        boolean[] choices = new boolean[checkedStats.size()];
+        for (int i = 0; i < checkedStats.size(); i++) {
+            choices[i] = checkedStats.get(i);
+        }
+        Data data = new Data.Builder()
+                .putString(KeyStrings.BACKUP_TARGET.v(), uri.toString())
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choices)
+                .build();
+
+        //执行一次任务
+        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, BackupWorker.class, data);
+
         //显示进度条对话框
         AlertDialog progressDialog = new ProgressDialogBuilder(this, "导出数据", "正在导出数据……")
-                .setNegativeButton("取消", (dialogInterface, i) -> {
-                    disposables.clear();
-                    Toast.makeText(this, "已取消数据导出", Toast.LENGTH_SHORT).show();
-                })
+                .setPositiveButton("后台执行", (dialogInterface, i) ->
+                        sendBackgroundProgress("导出数据", "正在导出数据……")
+                )
+                .setNegativeButton("取消执行", (dialogInterface, i) ->
+                        WorkerScheduler.cancelWorkById(this, uuid)
+                )
                 .show();
 
-        //收集用户没有忽略的数据类型，并将这些数据导出为临时文件
-        List<Completable> taskList = new ArrayList<>();
-        for (BackupDataType type : BackupDataType.values()) {
-            if (checkedStats.get(type.ordinal())) {
-                BackupHelperBase<?, ?> backupHelper = type.createBackupHelper(this);
-                taskList.add(backupHelper.exportDataToTempFile(this));
-            }
-        }
+        //监听运行状态
+        WorkManager.getInstance(this)
+                .getWorkInfoByIdLiveData(uuid)
+                .observe(this, workInfo -> {
+                    if (workInfo == null) return;
 
-        //并行执行数据导出逻辑
-        disposables.add(Completable.merge(taskList)
-                .andThen(ZipHelper.createBackupFile(uri, this, includeMedia))
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(() -> {
-                    Toast.makeText(this, "数据导出完毕", Toast.LENGTH_SHORT).show();
-                    progressDialog.dismiss();
-                    FileHelper.clearTempDataDir(this);
-                }, e -> {
-                    ExceptionHelper.showExceptionDialog(this, e);
-                    progressDialog.dismiss();
-                    FileHelper.clearTempDataDir(this);
-                })
-        );
+                    //判断 Worker 是否运行结束
+                    if (workInfo.getState().isFinished()) {
+                        String text;
+                        switch (workInfo.getState()) {
+                            case SUCCEEDED:
+                                text = "数据导出成功";
+                                break;
+                            case CANCELLED:
+                                text = "数据导出已取消";
+                                break;
+                            case FAILED:
+                            default:
+                                text = "数据导出失败";
+                        }
+
+                        if (progressDialog.isShowing()) {
+                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            //构建通知
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle("导出数据")
+                                    .setContentText(text)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+                            //发送通知
+                            NotificationHelper.sendNotification(
+                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                                    builder,
+                                    this
+                            );
+                        }
+
+                        progressDialog.dismiss();
+                    }
+                });
     }
 
     /**
@@ -501,7 +553,15 @@ public class DataManageActivity extends AppCompatActivity {
 
                     //显示多选对话框
                     new MultiChoiceDialogBuilder(this, "导入数据", itemList)
-                            .setPositiveButton("确认", checkedStatList -> importData(uri, checkedStatList))
+                            .setPositiveButton("确认", checkedStatList -> {
+                                //判断是否选择了数据
+                                if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
+                                    Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+
+                                importData(uri, checkedStatList);
+                            })
                             .setNegativeButton("取消", null)
                             .show();
                 }, e -> {
@@ -514,59 +574,76 @@ public class DataManageActivity extends AppCompatActivity {
     /**
      * 将用户选择的数据导入到数据库中
      *
-     * @param uri             备份文件的 Uri
-     * @param checkedStatList 用户选择的选项状态，选项的下标与{@link BackupDataType}的枚举序数一一对应
+     * @param uri          备份文件的 Uri
+     * @param checkedStats 用户选择的选项状态，选项的下标与{@link BackupDataType}的枚举序数一一对应
      */
-    private void importData(Uri uri, @NonNull List<Boolean> checkedStatList) {
-        //判断是否选择了数据
-        if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
-            Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
-            return;
+    private void importData(Uri uri, @NonNull List<Boolean> checkedStats) {
+        //构建传递给 Worker 的 Data
+        boolean[] choices = new boolean[checkedStats.size()];
+        for (int i = 0; i < checkedStats.size(); i++) {
+            choices[i] = checkedStats.get(i);
         }
+        Data data = new Data.Builder()
+                .putString(KeyStrings.BACKUP_TARGET.v(), uri.toString())
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choices)
+                .build();
+
+        //执行一次任务
+        UUID uuid = WorkerScheduler.executeWorkOnceNow(this, RestoreWorker.class, data);
 
         //显示扫描文件的进度条对话框
         AlertDialog progressDialog = new ProgressDialogBuilder(this, "导入数据", "正在导入数据……")
-                .setNegativeButton("取消", (dialogInterface, i) -> {
-                    disposables.clear();
-                    Toast.makeText(this, "已取消数据导入", Toast.LENGTH_SHORT).show();
-                })
+                .setPositiveButton("后台执行", (dialogInterface, i) ->
+                        sendBackgroundProgress("导入数据", "正在导入数据……")
+                )
+                .setNegativeButton("取消执行", (dialogInterface, i) ->
+                        WorkerScheduler.cancelWorkById(this, uuid)
+                )
                 .show();
 
-        //获取需要解压的文件名列表
-        List<String> allowedFileNameList = Arrays.stream(BackupDataType.values())
-                .filter(backupDataType -> checkedStatList.get(backupDataType.ordinal()))
-                .map(BackupDataType::getFileName)
-                .collect(Collectors.toList());
-        boolean includeMedia = checkedStatList.get(0);
+        //监听运行状态
+        WorkManager.getInstance(this)
+                .getWorkInfoByIdLiveData(uuid)
+                .observe(this, workInfo -> {
+                    if (workInfo == null) return;
 
-        //解压文件并导入数据
-        disposables.add(ZipHelper.unpackBackupFileWithFilter(this, uri, allowedFileNameList, includeMedia)
-                .flatMapObservable(Observable::fromIterable)
-                .flatMapCompletable(file -> {
-                    //根据文件名判断数据类型
-                    BackupDataType type = BackupDataType.fromFileName(file.getName());
-
-                    //使用对应的备份Helper导入数据
-                    if (type != null) {
-                        BackupHelperBase<?, ?> helper = type.createBackupHelper(this);
-                        return helper.importDataFromTempFile(file);
-                    } else {
-                        return Completable.complete();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> {
-                            Toast.makeText(this, "数据导入成功", Toast.LENGTH_SHORT).show();
-                            FileHelper.clearTempDataDir(this);
-                            progressDialog.dismiss();
-                        },
-                        e -> {
-                            ExceptionHelper.showExceptionDialog(this, e);
-                            progressDialog.dismiss();
+                    //判断 Worker 是否运行结束
+                    if (workInfo.getState().isFinished()) {
+                        String text;
+                        switch (workInfo.getState()) {
+                            case SUCCEEDED:
+                                text = "数据导入成功";
+                                break;
+                            case CANCELLED:
+                                text = "数据导入已取消";
+                                break;
+                            case FAILED:
+                            default:
+                                text = "数据导入失败";
                         }
-                )
-        );
+
+                        if (progressDialog.isShowing()) {
+                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+                        } else {
+                            //构建通知
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle("导入数据")
+                                    .setContentText(text)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+                            //发送通知
+                            NotificationHelper.sendNotification(
+                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                                    builder,
+                                    this
+                            );
+                        }
+
+                        progressDialog.dismiss();
+                    }
+                });
     }
 
     /**
@@ -649,7 +726,7 @@ public class DataManageActivity extends AppCompatActivity {
      * @param uri 待导入的文本文件 Uri
      */
     private void showImportDiaryDialog(Uri uri) {
-        disposables.add(Observable.fromCallable(() -> FileHelper.getLines(uri, this))
+        disposables.add(Observable.fromCallable(() -> FileHelper.getLinesCount(uri, this))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -764,6 +841,31 @@ public class DataManageActivity extends AppCompatActivity {
                             Toast.makeText(this, "日记导入完毕", Toast.LENGTH_SHORT).show();
                         }
                 )
+        );
+    }
+
+    /**
+     * 发送处于后台运行状态的进度条通知
+     *
+     * @param title   标题
+     * @param content 文本内容
+     */
+    private void sendBackgroundProgress(String title, String content) {
+        //构建通知
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setProgress(0, 0, true)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+
+        //发送通知
+        NotificationHelper.sendNotification(
+                NotificationID.BACKUP_AND_RESTORE.ordinal(),
+                builder,
+                this
         );
     }
 }

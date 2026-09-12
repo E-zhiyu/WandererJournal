@@ -6,7 +6,7 @@ import android.view.View;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.ui.others.adapters.MediaAdapter;
+import com.wanderer.journal.ui.others.adapters.WriteMediaAdapter;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -23,8 +23,8 @@ public class MediaLookup extends ItemDetailsLookup<Long> {
         View view = recyclerView.findChildViewUnder(e.getX(), e.getY());
         if (view != null) {
             RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(view);
-            if (holder instanceof MediaAdapter.MediaViewHolder) {
-                return ((MediaAdapter.MediaViewHolder) holder).getItemDetails();
+            if (holder instanceof WriteMediaAdapter.MediaViewHolder) {
+                return ((WriteMediaAdapter.MediaViewHolder) holder).getItemDetails();
             }
         }
         return null;

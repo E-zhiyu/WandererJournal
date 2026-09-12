@@ -18,8 +18,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.automation.worker.BackupWorker;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 

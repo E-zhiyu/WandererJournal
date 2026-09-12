@@ -206,14 +206,14 @@ public class SharePreviewActivity extends AppCompatActivity {
                     //实例化 Intent 并放入数据
                     Intent skip2FullScreen = new Intent(this, FullScreenMediaActivity.class);
                     Bundle bundle = new Bundle();
-                    bundle.putStringArray(KeyStrings.FILE_URIS.getS(), uriStrArray);
-                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.getS(), position);
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), position);
                     skip2FullScreen.putExtras(bundle);
 
                     ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                             this,
                             mediaView,
-                            TransitionName.PARAGRAPH_MEDIA.getS()
+                            TransitionName.FULLSCREEN_MEDIA.getS()
                     );
 
                     startActivity(skip2FullScreen, options.toBundle());
@@ -232,7 +232,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
         //获取数据源
         DiaryDb db = DiaryDb.getInstance(this);
-        long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.getS());
+        long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v());
         disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
                 .flatMap(paragraphEntityModels ->
                         Single.just(insertDateSeparator(paragraphEntityModels))

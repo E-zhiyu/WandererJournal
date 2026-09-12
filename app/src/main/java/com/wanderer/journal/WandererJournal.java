@@ -2,7 +2,6 @@ package com.wanderer.journal;
 
 import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
@@ -16,8 +15,8 @@ import androidx.work.WorkManager;
 
 import com.google.android.material.color.DynamicColors;
 import com.google.android.material.color.DynamicColorsOptions;
-import com.wanderer.journal.automation.worker.BackupWorker;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
+import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.auxiliary.enums.LogTags;
 import com.wanderer.journal.auxiliary.enums.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
@@ -27,6 +26,7 @@ import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.data.save.preference.VersionPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
+import com.wanderer.journal.helpers.ShortcutHelper;
 import com.wanderer.journal.helpers.appearance.ThemeHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.ui.pages.AuthActivity;
@@ -41,8 +41,9 @@ public class WandererJournal extends Application {
     public void onCreate() {
         super.onCreate();
 
-        //注册通知渠道
+        //动态注册（通知渠道、快捷方式）
         NotificationHelper.createNotificationChannels(this);
+        ShortcutHelper.buildShortcuts(this);
 
         if (getProcessName().equals(getPackageName())) {
             //初始化动态配色
@@ -61,7 +62,7 @@ public class WandererJournal extends Application {
             if (AutoBackupPreference.getSwitchStat(this)) {
                 int frequency = AutoBackupPreference.getBackupFrequency(this);
                 long intervalMillis = BackupFrequency.values()[frequency].getIntervalMillis();
-                WorkerScheduler.schedulePeriodicBackup(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
+                WorkerScheduler.schedulePeriodicTask(this, intervalMillis, TagStrings.BACKUP_WORKER.t(), BackupWorker.class);
 
                 //打印任务状态日志
                 try {
@@ -126,7 +127,7 @@ public class WandererJournal extends Application {
      */
     private void removeTaskFromRecents() {
         Log.d(LogTags.APPLICATION.n(), "触发最近任务隐藏");
-        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = getSystemService(ActivityManager.class);
         if (am != null) {
             List<ActivityManager.AppTask> taskList = am.getAppTasks();
             if (taskList != null) {

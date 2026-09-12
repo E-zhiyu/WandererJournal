@@ -7,6 +7,7 @@ espressoCore = "3.7.0"
 gradle = "9.4.0"
 appcompat = "1.7.1"
 lifecycleProcess = "2.10.0"
+lubanVersion = "2.0.2"
 mapstruct = "1.6.3"
 material = "1.14.0"
 materialdatetimepicker = "4.2.3"
@@ -65,6 +66,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 core = { module = "io.noties.markwon:core", version.ref = "core" }
 work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
 work-rxjava3 = { module = "androidx.work:work-rxjava3", version.ref = "workRuntime" }
+zibin-luban = { module = "top.zibin:luban", version.ref = "lubanVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -379,7 +379,7 @@ public class PermissionHelper {
      * @return 是否在电池优化白名单
      */
     private static boolean isIgnoringBatteryOptimizations(@NonNull Context context) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        PowerManager pm = context.getSystemService(PowerManager.class);
         return pm.isIgnoringBatteryOptimizations(context.getPackageName());
     }
 

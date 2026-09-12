@@ -3,7 +3,10 @@ package com.wanderer.journal.automation.worker;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ListenableWorker;
 import androidx.work.OneTimeWorkRequest;
@@ -14,6 +17,7 @@ import androidx.work.WorkManager;
 
 import com.wanderer.journal.auxiliary.enums.LogTags;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +30,7 @@ public class WorkerScheduler {
      * @param tag            Worker 的标签
      * @param workerClass    Worker 的类型
      */
-    public static void schedulePeriodicBackup(Context context, long intervalMillis, String tag, Class<? extends ListenableWorker> workerClass) {
+    public static void schedulePeriodicTask(Context context, long intervalMillis, String tag, Class<? extends ListenableWorker> workerClass) {
         //创建约束条件
         Constraints constraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true) //电量不低于临界值
@@ -57,13 +61,23 @@ public class WorkerScheduler {
     }
 
     /**
-     * 取消 Worker 的自动任务
+     * 取消 Worker 的任务
      *
      * @param context   上下文
      * @param workerTag Worker 对应的标签
      */
-    public static void cancelPeriodicBackup(Context context, String workerTag) {
+    public static void cancelUniqueWork(Context context, String workerTag) {
         WorkManager.getInstance(context).cancelUniqueWork(workerTag);
+    }
+
+    /**
+     * 通过 UUID 取消 Worker 的任务
+     *
+     * @param context 上下文
+     * @param uuid    Worker 的 UUID
+     */
+    public static void cancelWorkById(Context context, UUID uuid) {
+        WorkManager.getInstance(context).cancelWorkById(uuid);
     }
 
     /**
@@ -73,8 +87,30 @@ public class WorkerScheduler {
      * @param workerClass Worker 的类型
      */
     public static void executeWorkOnceNow(Context context, Class<? extends ListenableWorker> workerClass) {
-        OneTimeWorkRequest oneTimeRequest = new OneTimeWorkRequest.Builder(workerClass)
-                .build();
+        executeWorkOnceNow(context, workerClass, null);
+    }
+
+    /**
+     * 立即执行一次 Worker 中的任务
+     *
+     * @param context     上下文
+     * @param workerClass Worker 的类型
+     * @param data        需要传递给 Worker 的参数
+     * @return Worker 请求的唯一标识符，可用于监听其运行状态
+     */
+    @NonNull
+    public static UUID executeWorkOnceNow(Context context, Class<? extends ListenableWorker> workerClass, @Nullable Data data) {
+        OneTimeWorkRequest oneTimeRequest;
+        if (data == null) {
+            oneTimeRequest = new OneTimeWorkRequest.Builder(workerClass)
+                    .build();
+        } else {
+            oneTimeRequest = new OneTimeWorkRequest.Builder(workerClass)
+                    .setInputData(data)
+                    .build();
+        }
         WorkManager.getInstance(context).enqueue(oneTimeRequest);
+
+        return oneTimeRequest.getId();
     }
 }

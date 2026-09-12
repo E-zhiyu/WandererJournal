@@ -276,7 +276,7 @@ public class StatisticsActivity extends AppCompatActivity {
                         Intent skip2DiaryRead = new Intent(this, DiaryReadActivity.class);
                         Bundle bundle = new Bundle();
 
-                        bundle.putLong(KeyStrings.INIT_DATE.getS(), DateTimeConverter.fromLocalDate(model.getDiaryDate()));
+                        bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDate(model.getDiaryDate()));
 
                         skip2DiaryRead.putExtras(bundle);
                         startActivity(skip2DiaryRead);

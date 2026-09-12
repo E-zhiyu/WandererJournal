@@ -133,7 +133,7 @@ public class LifeNoteListActivity extends AppCompatActivity {
                     Intent skip2Input = new Intent(this, LifeNoteInputActivity.class);
 
                     Bundle bundle = new Bundle();
-                    bundle.putLong(KeyStrings.LIFE_NOTE_ID.getS(), entity.getNoteId());
+                    bundle.putLong(KeyStrings.LIFE_NOTE_ID.v(), entity.getNoteId());
                     skip2Input.putExtras(bundle);
 
                     startActivity(skip2Input);

@@ -82,7 +82,7 @@ public class EmotionTagInputActivity extends AppCompatActivity {
 
             //初始化输入框内容
             DiaryDb db = DiaryDb.getInstance(this);
-            long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
+            long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.v());
             disposable.add(db.emotionTagDao().getEmotionTagOptionalSingleById(emotionId)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -170,7 +170,7 @@ public class EmotionTagInputActivity extends AppCompatActivity {
 
         //保存到数据库
         if (initBundle != null) {
-            long emotionTagId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.getS());
+            long emotionTagId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.v());
             emotionTag.setEmotionId(emotionTagId);
             disposable.add(dao.updateEmotionTagCompletable(emotionTag)
                     .observeOn(AndroidSchedulers.mainThread())

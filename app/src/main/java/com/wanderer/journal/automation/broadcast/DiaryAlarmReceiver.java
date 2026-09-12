@@ -100,7 +100,7 @@ public class DiaryAlarmReceiver extends BroadcastReceiver {
                 .setContentIntent(contentIntent)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_CALL);
+                .setCategory(NotificationCompat.CATEGORY_ALARM);
 
         //发送通知
         NotificationHelper.sendNotification(
