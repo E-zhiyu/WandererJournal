@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.0\n" +
+    private final static String CHANGELOG = "# v1.6.1\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 优化桌面图标长按菜单中快捷方式的图标颜色\n" +
+            "\n" +
+            "# v1.6.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

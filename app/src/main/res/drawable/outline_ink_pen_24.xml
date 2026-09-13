@@ -13,8 +13,20 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="960" android:viewportWidth="960" android:width="24dp">
-      
-    <path android:fillColor="@android:color/white" android:pathData="M490,433L527,470L744,253L707,216L490,433ZM200,760L237,760L470,527L433,490L200,723L200,760ZM555,555L405,405L572,238L543,209Q543,209 543,209Q543,209 543,209L324,428L268,372L486,153Q510,129 542.5,129Q575,129 599,153L628,182L678,132Q690,120 706.5,120Q723,120 735,132L828,225Q840,237 840,253.5Q840,270 828,282L555,555ZM270,840L120,840L120,690L405,405L555,555L270,840Z"/>
-    
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+
+    <!-- 圆形背景路径 -->
+    <path
+        android:fillColor="@color/color_surface_container"
+        android:pathData="M480,480m-480,0a480,480 0 1,0 960,0a480,480 0 1,0 -960,0" />
+
+    <!-- 前景图案 -->
+    <path
+        android:fillColor="@color/color_primary_container_night"
+        android:pathData="M488,443L517.6,472.6L691.2,299.04L661.6,269.44L488,443ZM256,704L285.6,704L472,517.6L442.4,488L256,674.4L256,704ZM540,540L420,420L553.6,286.4L530.4,263.2L355.2,438.4L310.4,393.6L484.8,218.4Q504,199.2 530,199.2Q556,199.2 575.2,218.4L598.4,241.6L638.4,201.6Q648,192 661.2,192Q674.4,192 684,201.6L758.4,276Q768,285.6 768,298.8Q768,312 758.4,321.6L540,540ZM312,768L192,768L192,648L420,420L540,540L312,768Z" />
+
 </vector>
