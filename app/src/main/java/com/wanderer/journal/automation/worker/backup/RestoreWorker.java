@@ -64,7 +64,7 @@ public class RestoreWorker extends RxWorker {
                     //使用对应的备份Helper导入数据
                     if (type != null) {
                         BackupHelperBase<?, ?> helper = type.createBackupHelper(context);
-                        return helper.importDataFromTempFile(file);
+                        return helper.importDataFromTempFile(context, file);
                     } else {
                         return Completable.complete();
                     }

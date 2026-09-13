@@ -27,7 +27,7 @@ public class LifeNoteBackupHelper extends BackupHelperBase<DiaryDb, LifeNoteData
     }
 
     @Override
-    protected void saveDataInMapToDb(LifeNoteDataMap map) {
+    protected void saveDataInMapToDb(Context context, LifeNoteDataMap map) {
         db.dataBackupDao().importLifeNoteData(map);
     }
 

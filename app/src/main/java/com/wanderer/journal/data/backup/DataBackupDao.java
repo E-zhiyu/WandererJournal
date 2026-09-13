@@ -1,5 +1,7 @@
 package com.wanderer.journal.data.backup;
 
+import android.content.Context;
+
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -29,6 +31,8 @@ import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Dao
 public interface DataBackupDao {
@@ -78,7 +82,7 @@ public interface DataBackupDao {
      * @param map 日记数据集合
      */
     @Transaction
-    default void importDiaryData(DiaryDataMap map) {
+    default void importDiaryData(Context context, DiaryDataMap map) {
         if (map == null) return;
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
@@ -107,8 +111,24 @@ public interface DataBackupDao {
         //导入媒体数据
         List<MediaPojo> mediaPojoList = map.getMediaList();
         if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
-            List<MediaEntity> mediaEntityList = mapper.toMediaEntityList(mediaPojoList);
-            writeMediaData(mediaEntityList);
+            //替换包名为当前包名
+            String replacement = String.format(
+                    Locale.getDefault(),
+                    "Android/data/%s/files/",
+                    context.getPackageName()
+            );
+            List<MediaPojo> uriConvertedPojoList = mediaPojoList.stream()
+                    .peek(media -> {
+                        String uriStr = media.getFileUri();
+                        String currentPackageNameUri = uriStr.replaceAll(
+                                "Android/data/([^/]+)/files/",
+                                replacement
+                        );
+                        media.setFileUri(currentPackageNameUri);
+                    })
+                    .collect(Collectors.toList());
+
+            writeMediaData(mapper.toMediaEntityList(uriConvertedPojoList));
         }
 
         //导入情绪标签数据

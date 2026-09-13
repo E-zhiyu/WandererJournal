@@ -2,8 +2,6 @@ package com.wanderer.journal.data.backup.helpers;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-
 import com.wanderer.journal.auxiliary.enums.BackupDataType;
 import com.wanderer.journal.data.backup.maps.RoleDataMap;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -29,7 +27,7 @@ public class RoleBackupHelper extends BackupHelperBase<DiaryDb, RoleDataMap> {
     }
 
     @Override
-    protected void saveDataInMapToDb(@NonNull RoleDataMap map) {
+    protected void saveDataInMapToDb(Context context, RoleDataMap map) {
         db.dataBackupDao().importRoleData(map);
     }
 
