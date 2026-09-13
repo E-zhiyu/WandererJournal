@@ -176,6 +176,21 @@
     <string name="file_info">文件信息：</string>
     <string name="media_param_info">媒体参数：</string>
     <string name="read_diary">看日记</string>
+    <string name="troubleshooting">问题解答</string>
+    <string name="help_solve_some_common_problems">帮助解决一些常见的问题</string>
+    <string name="floating_notification_question">Q : 为什么授予通知权限后不会弹出悬浮通知？</string>
+    <string name="floating_notification_answer">A : 部分定制安卓系统修改了通知发送逻辑，只允许部分经过厂商验证的应用发送悬浮通知。您可以尝试长按应用图标进入应用设置界面，在通知设置中手动为特定通知渠道允许发送悬浮通知。</string>
+    <string name="power_consumption_question">Q : 这个APP在后台运行时会特别耗电吗？</string>
+    <string name="power_consumption_answer">A : 本APP十分注重性能优化，没有太多需要后台运行的功能，对性能的开销并不算太大，而且在后续的更新中作者也会持续优化旧功能的性能。</string>
+    <string name="ad_integration_question">Q : 作者会为这个APP接入广告吗？</string>
+    <string name="ad_integration_answer">A : 就目前的看法来说，不会。这个APP只是我做出来练手的，一开始也只想给自己用，而且我非常讨厌APP里面塞各种牛皮癣广告，也并不希望像某些APP一样随意收集个人信息，因此我并不打算接入广告，也算坚守某种初心吧？</string>
+    <string name="data_save_question">Q : 我在使用过程中产生的数据存放在哪里，我要如何迁移这些数据？</string>
+    <string name="data_save_answer">A : 您在使用过程中产生的所有数据都保存在本地，不会上传至互联网。如果您需要迁移应用数据，请前往数据管理界面导出您需要的数据。</string>
+    <string name="update_question">Q : 我要如何更新软件版本？</string>
+    <string name="update_answer">A : 您可以直接访问项目仓库，从发行版(Release)中下载安装包。更推荐的方式是通过APP内的更新检测功能，APP会自动从仓库中下载最新版安装包，下载完成后点击立刻更新即可安装新版本。部分用户可能在安装时出现问题，此时您可以尝试进入手机上的文件管理应用，进入Downloads文件夹并手动安装新版本。</string>
+    <string name="privacy_data_question">Q : 这个APP会收集隐私数据吗？</string>
+    <string name="privacy_data_answer">A : 本APP不收集任何数据，且使用过程中产生的所有数据都仅保存到本地，您无需担心任何隐私泄露问题。</string>
+
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>
