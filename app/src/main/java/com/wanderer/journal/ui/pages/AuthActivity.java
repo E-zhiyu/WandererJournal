@@ -13,7 +13,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.preference.SecurityPreference;
 import com.wanderer.journal.databinding.ActivityAuthBinding;
 import com.wanderer.journal.helpers.BiometricHelper;

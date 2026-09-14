@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums;
+package com.wanderer.journal.auxiliary.enums.unique;
 
 public enum KeyStrings {
     BACKUP_CHOICES("backup_choices"),                   //备份时的选择情况

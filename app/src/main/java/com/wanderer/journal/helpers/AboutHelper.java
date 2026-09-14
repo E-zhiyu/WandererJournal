@@ -10,7 +10,18 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.1\n" +
+    private final static String CHANGELOG = "# v1.6.2\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增问题解答界面，可从关于软件界面进入\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 略微优化媒体详情界面的布局\n" +
+            "- 现在压缩图片后会保留原本的拍照参数\n" +
+            "\n" +
+            "# v1.6.1\n" +
             "\n" +
             "### 优化的内容\n" +
             "\n" +

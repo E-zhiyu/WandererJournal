@@ -12,10 +12,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.databinding.ActivityMediaInfoBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 
@@ -43,12 +42,7 @@ public class MediaInfoActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
-            binding.linearLayout.setPadding(
-                    AppearanceHelper.dpToPx(this,30),
-                    AppearanceHelper.dpToPx(this,10),
-                    AppearanceHelper.dpToPx(this,30),
-                    systemBars.bottom
-            );
+            binding.scrollView.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 

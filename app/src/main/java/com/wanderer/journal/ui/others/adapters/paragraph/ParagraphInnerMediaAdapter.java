@@ -17,7 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.google.android.material.shape.Shapeable;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;

@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDb;

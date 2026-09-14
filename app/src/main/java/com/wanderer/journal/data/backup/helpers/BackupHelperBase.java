@@ -36,11 +36,11 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
 
     protected abstract M getAllDataInMap();             //获取数据字典的方法
 
-    protected abstract void saveDataInMapToDb(M map);   //将map中的数据保存至数据库的方法
+    protected abstract void saveDataInMapToDb(Context context, M map);  //将map中的数据保存至数据库的方法
 
     protected abstract String getTempDataFileName();    //设置临时数据文件名称
 
-    public Completable importDataFromTempFile(File file) {
+    public Completable importDataFromTempFile(Context context, File file) {
         return Completable.defer(() -> {
             try {
                 //读取文件内容
@@ -51,7 +51,7 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
                 M dataMap = mapper.readValue(json, mapClass);
 
                 //将对应的数据写入数据库
-                saveDataInMapToDb(dataMap);
+                saveDataInMapToDb(context, dataMap);
 
                 return Completable.complete();
             } catch (IOException e) {

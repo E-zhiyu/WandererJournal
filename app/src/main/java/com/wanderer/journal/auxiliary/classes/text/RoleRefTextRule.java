@@ -2,7 +2,7 @@ package com.wanderer.journal.auxiliary.classes.text;
 
 import androidx.annotation.NonNull;
 
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 

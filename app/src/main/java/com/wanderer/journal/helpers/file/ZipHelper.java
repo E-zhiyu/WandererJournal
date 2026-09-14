@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 
 import java.io.File;
 import java.io.FileInputStream;
