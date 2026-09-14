@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 
 import org.jetbrains.annotations.Contract;
 

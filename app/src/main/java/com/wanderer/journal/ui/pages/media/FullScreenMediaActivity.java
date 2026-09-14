@@ -26,8 +26,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.preference.MediaPreference;
 import com.wanderer.journal.databinding.ActivityFullScreenMediaBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;

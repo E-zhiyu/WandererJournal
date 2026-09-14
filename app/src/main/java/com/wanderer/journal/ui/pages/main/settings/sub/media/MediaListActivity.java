@@ -22,9 +22,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.TransitionName;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.PermissionHelper;

@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.auxiliary.enums.BackupDataType;
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 
 public class DiaryBackupHelper extends BackupHelperBase<DiaryDb, DiaryDataMap> {
     public DiaryBackupHelper(Context context) {

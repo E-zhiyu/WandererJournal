@@ -15,7 +15,7 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;

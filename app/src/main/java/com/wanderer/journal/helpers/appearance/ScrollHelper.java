@@ -8,8 +8,8 @@ import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.auxiliary.enums.LogTags;
-import com.wanderer.journal.auxiliary.enums.ViewTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.ViewTags;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;

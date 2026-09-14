@@ -27,8 +27,8 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryU
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;

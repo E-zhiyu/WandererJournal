@@ -8,9 +8,9 @@ import androidx.work.Data;
 import androidx.work.WorkerParameters;
 import androidx.work.rxjava3.RxWorker;
 
-import com.wanderer.journal.auxiliary.enums.BackupDataType;
-import com.wanderer.journal.auxiliary.enums.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.helpers.NotificationHelper;

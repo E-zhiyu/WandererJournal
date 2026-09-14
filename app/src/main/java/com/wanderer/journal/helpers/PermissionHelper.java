@@ -26,7 +26,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
 import com.wanderer.journal.WandererJournal;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 

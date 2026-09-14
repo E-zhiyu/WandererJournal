@@ -22,7 +22,7 @@ import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.file.MediaDetail;
 import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
-import com.wanderer.journal.auxiliary.enums.LogTags;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 

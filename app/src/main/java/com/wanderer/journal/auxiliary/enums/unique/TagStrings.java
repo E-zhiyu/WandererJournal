@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums;
+package com.wanderer.journal.auxiliary.enums.unique;
 
 public enum TagStrings {
     BACKUP_WORKER("backup_worker"),                             //自动备份的 Worker

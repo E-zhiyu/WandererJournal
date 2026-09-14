@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums;
+package com.wanderer.journal.auxiliary.enums.unique;
 
 public enum TransitionName {
     FULLSCREEN_MEDIA("fullscreen_media");
