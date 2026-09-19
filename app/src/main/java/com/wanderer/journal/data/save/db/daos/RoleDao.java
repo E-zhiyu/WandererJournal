@@ -1,8 +1,5 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import android.database.sqlite.SQLiteException;
-
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -177,9 +174,9 @@ public interface RoleDao {
      * @param aliaList 角色别名列表
      */
     @Transaction
-    default void updateRoleAndAlia(@NonNull RoleEntity role, List<String> aliaList) {
+    default void updateRoleAndAlia(RoleEntity role, List<String> aliaList) {
+        if (role == null || role.getRoleId() == 0) return;
         long roleId = role.getRoleId();
-        if (roleId == 0) throw new SQLiteException("角色主键无效，无法更新");
 
         //获取角色的旧数据
         RoleEntity oldRole = getRoleById(roleId);
@@ -215,7 +212,9 @@ public interface RoleDao {
      * @param aliaList 该角色的别名列表
      */
     @Transaction
-    default void addRole(RoleEntity role, @NonNull List<String> aliaList) {
+    default void addRole(RoleEntity role, List<String> aliaList) {
+        if (aliaList == null) return;
+
         Long roleId = insertRole(role);
         List<RoleAliaEntity> aliaEntityList = aliaList.stream()
                 .map(alia -> new RoleAliaEntity(alia, roleId))
@@ -247,7 +246,8 @@ public interface RoleDao {
      * @param role 需要删除的角色
      */
     @Transaction
-    default void deleteRoleAndWash(@NonNull RoleEntity role) {
+    default void deleteRoleAndWash(RoleEntity role) {
+        if (role == null) return;
         washRoleRefInParagraph(role.getRoleId(), role.getName());
         deleteRole(role);
     }

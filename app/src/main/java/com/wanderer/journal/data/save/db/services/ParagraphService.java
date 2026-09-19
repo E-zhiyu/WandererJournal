@@ -44,7 +44,7 @@ public class ParagraphService {
         return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.addParagraph(startDate, paragraph, mediaList, db);
+                return paragraphDao.addParagraph(startDate, paragraph, mediaList, db.mediaDao());
             } else {
                 return -1;
             }
@@ -67,11 +67,13 @@ public class ParagraphService {
         return Completable.fromAction(() -> {
             DiaryDb db = DiaryDb.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
-            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, db);
+            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, db.mediaDao());
 
             //删除旧媒体文件
-            for (Uri uri : oldMediaUriSet) {
-                FileHelper.deleteFile(uri, context);
+            if (oldMediaUriSet != null) {
+                for (Uri uri : oldMediaUriSet) {
+                    FileHelper.deleteFile(uri, context);
+                }
             }
         });
     }

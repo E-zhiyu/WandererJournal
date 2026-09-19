@@ -1,6 +1,5 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -16,6 +15,7 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryU
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -165,7 +165,9 @@ public interface DiaryDao {
      * @param paragraphDao 段落查询接口
      */
     @Transaction
-    default void modifyDiaryDate(long diaryId, LocalDate targetDate, @NonNull ParagraphDao paragraphDao) {
+    default void modifyDiaryDate(long diaryId, LocalDate targetDate, ParagraphDao paragraphDao) {
+        if (paragraphDao == null) return;
+
         //先删除目标日期的日记
         deleteDiaryByDate(targetDate);
 
@@ -179,10 +181,8 @@ public interface DiaryDao {
         List<ParagraphEntity> newParagraphList = originParagraphList.stream()
                 .map(paragraph -> {
                     //计算得到新的时间
-                    LocalDateTime newDateTime = paragraph.getCreateTime()
-                            .withYear(targetDate.getYear())
-                            .withMonth(targetDate.getMonthValue())
-                            .withDayOfMonth(targetDate.getDayOfMonth());
+                    LocalTime time = paragraph.getCreateTime().toLocalTime();
+                    LocalDateTime newDateTime = targetDate.atTime(time);
 
                     //构建并返回新段落实体
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, paragraph.getContent(), newDateTime);

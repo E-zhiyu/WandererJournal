@@ -1,6 +1,5 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -101,7 +100,9 @@ public interface LifeNoteDao {
      * @param newLifeNote 新人生笔记数据
      */
     @Transaction
-    default void modifyLifeNote(@NonNull LifeNoteEntity newLifeNote) {
+    default void modifyLifeNote(LifeNoteEntity newLifeNote) {
+        if (newLifeNote == null) return;
+
         //获取旧数据
         long noteId = newLifeNote.getNoteId();
         LifeNoteEntity oldLifeNote = getLifeNoteById(noteId);
