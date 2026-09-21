@@ -23,7 +23,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
@@ -103,7 +103,7 @@ public class DiaryFragment extends Fragment {
                         .findFirstVisibleItemPosition();
                 if (binding.diaryRecycler.getAdapter() instanceof DiaryAdapter &&
                         firstViewPosition != RecyclerView.NO_POSITION) {
-                    DiaryWithSummaryUiModel model = ((DiaryAdapter) binding.diaryRecycler.getAdapter())
+                    DiaryListUiModel model = ((DiaryAdapter) binding.diaryRecycler.getAdapter())
                             .getCurrentList().get(firstViewPosition);
                     initDate = model.getDiary().getDiaryDate();
                 }
@@ -195,7 +195,7 @@ public class DiaryFragment extends Fragment {
         } else {
             //判断跳转到的位置是否是目标日期
             if (adapter instanceof DiaryAdapter) {
-                DiaryWithSummaryUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
+                DiaryListUiModel diaryModel = ((DiaryAdapter) adapter).getCurrentList().get(targetPosition);
                 LocalDate exactDate = diaryModel.getDiary().getDiaryDate();
                 if (!exactDate.isEqual(targetDate)) {
                     Toast.makeText(requireContext(), "当天无日记，已跳转至相邻日期", Toast.LENGTH_SHORT).show();

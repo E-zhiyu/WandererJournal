@@ -15,6 +15,7 @@
         android:paddingEnd="15dp"
         android:paddingBottom="10dp">
 
+        <!-- 日期 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/date_text"
             android:layout_width="wrap_content"
@@ -26,6 +27,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed" />
 
+        <!-- 日记片段 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/content_preview_text"
             android:layout_width="0dp"
@@ -37,17 +39,19 @@
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOutline"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/paragraph_count_text"
+            app:layout_constraintEnd_toStartOf="@id/char_count_text"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/date_text" />
 
+        <!-- 段落字数 -->
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/paragraph_count_text"
+            android:id="@+id/char_count_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/paragraph"
+            android:text="@string/diary_count"
             android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOutline"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

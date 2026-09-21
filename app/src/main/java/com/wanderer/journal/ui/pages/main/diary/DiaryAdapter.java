@@ -16,30 +16,31 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
 import com.wanderer.journal.databinding.ViewHolderDiaryListBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
-public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdapter.ViewHolderDiary> {
+public class DiaryAdapter extends ListAdapter<DiaryListUiModel, DiaryAdapter.ViewHolderDiary> {
     private final AdapterOnClickListener<DiaryEntity> clickListener;
     private final AdapterOnLongClickListener<DiaryEntity> longClickListener;
-    private static final DiffUtil.ItemCallback<DiaryWithSummaryUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+    private static final DiffUtil.ItemCallback<DiaryListUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
 
         @Override
-        public boolean areItemsTheSame(@NonNull DiaryWithSummaryUiModel oldItem, @NonNull DiaryWithSummaryUiModel newItem) {
+        public boolean areItemsTheSame(@NonNull DiaryListUiModel oldItem, @NonNull DiaryListUiModel newItem) {
             return oldItem.getDiary().getDiaryId() == newItem.getDiary().getDiaryId();
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull DiaryWithSummaryUiModel oldItem, @NonNull DiaryWithSummaryUiModel newItem) {
+        public boolean areContentsTheSame(@NonNull DiaryListUiModel oldItem, @NonNull DiaryListUiModel newItem) {
             DiaryEntity oldDiary = oldItem.getDiary();
             DiaryEntity newDiary = newItem.getDiary();
 
             return oldDiary.getDiaryDate().isEqual(newDiary.getDiaryDate()) &&
-                    oldItem.getParagraphCount() == newItem.getParagraphCount() &&
+                    oldItem.getCharCount() == newItem.getCharCount() &&
                     oldItem.getParagraphFragment().equals(newItem.getParagraphFragment());
         }
     };
@@ -129,15 +130,15 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolderDiary holder, int position) {
-        DiaryWithSummaryUiModel diaryWithSummaryUiModel = getItem(position);
+        DiaryListUiModel diaryListUiModel = getItem(position);
         Context context = holder.itemView.getContext();
 
         //日期
-        LocalDate date = diaryWithSummaryUiModel.getDiary().getDiaryDate();
+        LocalDate date = diaryListUiModel.getDiary().getDiaryDate();
         holder.binding.dateText.setText(date.format(CustomDateTimeFormatter.DATE_WITH_WEEK));
 
         //片段摘要
-        String paragraphFragment = diaryWithSummaryUiModel.getParagraphFragment();
+        String paragraphFragment = diaryListUiModel.getParagraphFragment();
         CharSequence richText = ParagraphTextConverter.hierarchic(
                 context,
                 null,
@@ -150,10 +151,13 @@ public class DiaryAdapter extends ListAdapter<DiaryWithSummaryUiModel, DiaryAdap
         );
         holder.binding.contentPreviewText.setText(richText);
 
-        //片段数量
-        int paragraphCount = diaryWithSummaryUiModel.getParagraphCount();
-        String tip = "×" + paragraphCount;
-        holder.binding.paragraphCountText.setText(tip);
+        //字数
+        String charCountStr = String.format(
+                Locale.getDefault(),
+                "%d字",
+                diaryListUiModel.getCharCount()
+        );
+        holder.binding.charCountText.setText(charCountStr);
 
         //设置圆角
         AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), holder.getBindingAdapterPosition());

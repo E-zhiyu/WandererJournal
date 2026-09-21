@@ -10,8 +10,8 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
 import com.wanderer.journal.data.save.db.entities.composite.union.DiaryLengthUnionModel;
-import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,14 +64,14 @@ public interface DiaryDao {
     /**
      * 获取所有日记
      *
-     * @return 由{@link DiaryWithSummaryUiModel}组成的列表，支持响应式更新
+     * @return 由{@link DiaryListUiModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
             "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
-            "(SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = d.diaryId) as paragraphCount " +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = d.diaryId) as charCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
-    Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
+    Flowable<List<DiaryListUiModel>> getAllDiariesFlowable();
 
     /**
      * 获取日记段落的字符数量数据，支持响应式更新
@@ -80,12 +80,10 @@ public interface DiaryDao {
      * @param end   截止日期（包含）
      * @return 在指定日期段的日记的段落数量数据
      */
-    @Query(
-            "SELECT diaryDate AS diaryDate," +
-                    "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS diaryLength " +
-                    "FROM diaries " +
-                    "WHERE diaryDate >= :start AND diaryDate <= :end"
-    )
+    @Query("SELECT diaryDate AS diaryDate," +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS diaryLength " +
+            "FROM diaries " +
+            "WHERE diaryDate >= :start AND diaryDate <= :end")
     Flowable<List<DiaryLengthUnionModel>> getDiaryParagraphWordCountFlowable(LocalDate start, LocalDate end);
 
     /**
