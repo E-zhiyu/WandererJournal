@@ -1,6 +1,5 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -11,11 +10,12 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
-import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryWithSummaryUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.DiaryLengthUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -64,14 +64,14 @@ public interface DiaryDao {
     /**
      * 获取所有日记
      *
-     * @return 由{@link DiaryWithSummaryUiModel}组成的列表，支持响应式更新
+     * @return 由{@link DiaryListUiModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
             "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
-            "(SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = d.diaryId) as paragraphCount " +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = d.diaryId) as charCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
-    Flowable<List<DiaryWithSummaryUiModel>> getAllDiariesFlowable();
+    Flowable<List<DiaryListUiModel>> getAllDiariesFlowable();
 
     /**
      * 获取日记段落的字符数量数据，支持响应式更新
@@ -80,13 +80,11 @@ public interface DiaryDao {
      * @param end   截止日期（包含）
      * @return 在指定日期段的日记的段落数量数据
      */
-    @Query(
-            "SELECT diaryDate AS diaryDate," +
-                    "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS diaryLength " +
-                    "FROM diaries " +
-                    "WHERE diaryDate >= :start AND diaryDate <= :end"
-    )
-    Flowable<List<DiaryLengthModel>> getDiaryParagraphWordCountFlowable(LocalDate start, LocalDate end);
+    @Query("SELECT diaryDate AS diaryDate," +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = diaryId) AS diaryLength " +
+            "FROM diaries " +
+            "WHERE diaryDate >= :start AND diaryDate <= :end")
+    Flowable<List<DiaryLengthUnionModel>> getDiaryParagraphWordCountFlowable(LocalDate start, LocalDate end);
 
     /**
      * 查询指定日期之前（包括该日期）的所有日记的日期
@@ -165,7 +163,9 @@ public interface DiaryDao {
      * @param paragraphDao 段落查询接口
      */
     @Transaction
-    default void modifyDiaryDate(long diaryId, LocalDate targetDate, @NonNull ParagraphDao paragraphDao) {
+    default void modifyDiaryDate(long diaryId, LocalDate targetDate, ParagraphDao paragraphDao) {
+        if (paragraphDao == null) return;
+
         //先删除目标日期的日记
         deleteDiaryByDate(targetDate);
 
@@ -179,10 +179,8 @@ public interface DiaryDao {
         List<ParagraphEntity> newParagraphList = originParagraphList.stream()
                 .map(paragraph -> {
                     //计算得到新的时间
-                    LocalDateTime newDateTime = paragraph.getCreateTime()
-                            .withYear(targetDate.getYear())
-                            .withMonth(targetDate.getMonthValue())
-                            .withDayOfMonth(targetDate.getDayOfMonth());
+                    LocalTime time = paragraph.getCreateTime().toLocalTime();
+                    LocalDateTime newDateTime = targetDate.atTime(time);
 
                     //构建并返回新段落实体
                     ParagraphEntity newParagraph = new ParagraphEntity(diaryId, paragraph.getContent(), newDateTime);

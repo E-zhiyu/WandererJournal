@@ -1,8 +1,5 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import android.database.sqlite.SQLiteException;
-
-import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -13,7 +10,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +46,7 @@ public interface RoleDao {
             // 将 IN 子查询改为高效的 EXISTS 关联查询，并在 SQL 层面指定转义符
             "OR EXISTS (SELECT 1 FROM roleAlias WHERE roleAlias.roleId = roles.roleId AND alia LIKE '%' || :safeKeyword || '%' ESCAPE '/') " +
             "ORDER BY relationship DESC")
-    Flowable<List<RoleEntityModel>> getAllRoleWithSearchFlowable(String safeKeyword, int filterSearchKeyword);
+    Flowable<List<RoleEntityUnionModel>> getAllRoleWithSearchFlowable(String safeKeyword, int filterSearchKeyword);
 
     /**
      * 查询所有角色数据，并按照关系由近到远排序
@@ -96,7 +93,7 @@ public interface RoleDao {
      */
     @Transaction
     @Query("SELECT * FROM roles WHERE roleId = :id")
-    Single<Optional<RoleEntityModel>> getRoleAndAliasSingleById(long id);
+    Single<Optional<RoleEntityUnionModel>> getRoleAndAliasSingleById(long id);
 
     /**
      * 判断某个角色 ID 是否在表中
@@ -177,9 +174,9 @@ public interface RoleDao {
      * @param aliaList 角色别名列表
      */
     @Transaction
-    default void updateRoleAndAlia(@NonNull RoleEntity role, List<String> aliaList) {
+    default void updateRoleAndAlia(RoleEntity role, List<String> aliaList) {
+        if (role == null || role.getRoleId() == 0) return;
         long roleId = role.getRoleId();
-        if (roleId == 0) throw new SQLiteException("角色主键无效，无法更新");
 
         //获取角色的旧数据
         RoleEntity oldRole = getRoleById(roleId);
@@ -215,7 +212,9 @@ public interface RoleDao {
      * @param aliaList 该角色的别名列表
      */
     @Transaction
-    default void addRole(RoleEntity role, @NonNull List<String> aliaList) {
+    default void addRole(RoleEntity role, List<String> aliaList) {
+        if (aliaList == null) return;
+
         Long roleId = insertRole(role);
         List<RoleAliaEntity> aliaEntityList = aliaList.stream()
                 .map(alia -> new RoleAliaEntity(alia, roleId))
@@ -247,7 +246,8 @@ public interface RoleDao {
      * @param role 需要删除的角色
      */
     @Transaction
-    default void deleteRoleAndWash(@NonNull RoleEntity role) {
+    default void deleteRoleAndWash(RoleEntity role) {
+        if (role == null) return;
         washRoleRefInParagraph(role.getRoleId(), role.getName());
         deleteRole(role);
     }

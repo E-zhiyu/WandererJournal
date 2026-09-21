@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.union;
 
 import androidx.room.Embedded;
 import androidx.room.Relation;
@@ -9,7 +9,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.util.List;
 
-public class ParagraphEntityModel {
+public class ParagraphEntityUnionModel {
     @Embedded
     private ParagraphEntity paragraph;                  // 段落实体
     @Relation(
@@ -17,7 +17,7 @@ public class ParagraphEntityModel {
             entityColumn = "paragraphId",
             entity = EmotionParagraphRefEntity.class
     )
-    private List<CrossRefWithEmotion> emotionList;      // 情绪标签（带情绪程度）列表
+    private List<EmotionTagRefUnionModel> emotionList;      // 情绪标签（带情绪程度）列表
     @Relation(
             parentColumn = "paragraphId",
             entityColumn = "parentParagraphId",
@@ -33,11 +33,11 @@ public class ParagraphEntityModel {
         this.paragraph = paragraph;
     }
 
-    public List<CrossRefWithEmotion> getEmotionList() {
+    public List<EmotionTagRefUnionModel> getEmotionList() {
         return emotionList;
     }
 
-    public void setEmotionList(List<CrossRefWithEmotion> emotionList) {
+    public void setEmotionList(List<EmotionTagRefUnionModel> emotionList) {
         this.emotionList = emotionList;
     }
 

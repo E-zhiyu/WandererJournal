@@ -4,13 +4,13 @@ import androidx.room.Embedded;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 
-public class DiaryWithSummaryUiModel {
+public class DiaryListUiModel {
     @Embedded
     private DiaryEntity diary;          //日记实体
     private String paragraphFragment;   //首段摘要
-    private int paragraphCount;         //段落数量
+    private int charCount;              //日记字数
 
-    public DiaryWithSummaryUiModel() {
+    public DiaryListUiModel() {
     }
 
     public DiaryEntity getDiary() {
@@ -29,11 +29,11 @@ public class DiaryWithSummaryUiModel {
         this.paragraphFragment = paragraphFragment;
     }
 
-    public int getParagraphCount() {
-        return paragraphCount;
+    public int getCharCount() {
+        return charCount;
     }
 
-    public void setParagraphCount(int paragraphCount) {
-        this.paragraphCount = paragraphCount;
+    public void setCharCount(int charCount) {
+        this.charCount = charCount;
     }
 }

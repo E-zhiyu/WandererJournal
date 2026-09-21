@@ -1,15 +1,15 @@
 package com.wanderer.journal.data.save.db.entities.composite.ui;
 
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 
 import java.time.LocalDate;
 
 public abstract class ParagraphUiModel {
     // 段落项
     public static final class Item extends ParagraphUiModel {
-        public final ParagraphEntityModel model;
+        public final ParagraphEntityUnionModel model;
 
-        public Item(ParagraphEntityModel p) {
+        public Item(ParagraphEntityUnionModel p) {
             this.model = p;
         }
     }

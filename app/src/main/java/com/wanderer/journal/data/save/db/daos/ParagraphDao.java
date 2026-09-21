@@ -1,9 +1,7 @@
 package com.wanderer.journal.data.save.db.daos;
 
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -15,11 +13,10 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
-import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,7 +47,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntityModel> getAllParagraphPagingSource();
+    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource();
 
     /**
      * 查询指定 ID 的段落
@@ -60,7 +57,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
-    Single<List<ParagraphEntityModel>> getParagraphSingleById(long[] paragraphIds);
+    Single<List<ParagraphEntityUnionModel>> getParagraphSingleById(long[] paragraphIds);
 
     /**
      * 查询某个日期范围内的段落
@@ -71,7 +68,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
 
     /**
      * 查询某个日期段内的段落数量
@@ -121,7 +118,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
-    Single<Optional<ParagraphEntityModel>> getParagraphOptionalSingleById(long paragraphId);
+    Single<Optional<ParagraphEntityUnionModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 查询最大的日记长度
@@ -195,15 +192,18 @@ public interface ParagraphDao {
      * @param startDate 写日记界面的起始日期
      * @param paragraph 新段落实例
      * @param mediaList 该段落新添加的媒体列表
-     * @param db        数据库实例
+     * @param mediaDao  媒体 Dao 类
+     * @return 新添加的段落在当前界面中的下标
      */
     @Transaction
     default int addParagraph(
-            @NonNull LocalDate startDate,
-            @NonNull ParagraphEntity paragraph,
-            @NonNull List<MediaEntity> mediaList,
-            @NonNull DiaryDb db
+            LocalDate startDate,
+            ParagraphEntity paragraph,
+            List<MediaEntity> mediaList,
+            MediaDao mediaDao
     ) {
+        if (paragraph == null || mediaDao == null) return -1;
+
         //获取从起始日期开始，有多少个段落日期小于等于该段落
         int earlierThanNewParagraph = getNewParagraphPosition(
                 startDate,
@@ -221,7 +221,6 @@ public interface ParagraphDao {
         List<MediaEntity> availableMediaList = mediaList.stream()
                 .peek(media -> media.setParentParagraphId(paragraphId))
                 .collect(Collectors.toList());
-        MediaDao mediaDao = db.mediaDao();
         mediaDao.insertMedia(availableMediaList);
 
         return earlierThanNewParagraph + dateSeparatorCount;
@@ -272,7 +271,7 @@ public interface ParagraphDao {
      * @return 修改后的段落在列表中的下标
      */
     default int modifyCreateTime(
-            @NonNull LocalDate startDate,
+            LocalDate startDate,
             LocalDateTime newCreateTime,
             long paragraphId
     ) {
@@ -322,14 +321,16 @@ public interface ParagraphDao {
      *
      * @param paragraph 更新后的段落实体
      * @param mediaList 最终的媒体列表
-     * @param db        数据库实例
+     * @param mediaDao  媒体 Dao 类
+     * @return 需要删除的媒体文件的 Uri 集合
      */
     @Transaction
     default Set<Uri> modifyParagraph(
-            @NonNull ParagraphEntity paragraph,
-            @NonNull List<MediaEntity> mediaList,
-            @NonNull DiaryDb db
+            ParagraphEntity paragraph,
+            List<MediaEntity> mediaList,
+            MediaDao mediaDao
     ) {
+        if (paragraph == null) return null;
         long paragraphId = paragraph.getParagraphId();
 
         //获取在数据库中的媒体文件 Uri，并计算需要删除的媒体文件的 Uri
@@ -343,7 +344,6 @@ public interface ParagraphDao {
         updateParagraph(paragraph);
 
         //更新媒体
-        MediaDao mediaDao = db.mediaDao();
         mediaDao.deleteMediaByParagraphId(paragraphId);
         mediaDao.insertMedia(mediaList);
 
@@ -368,11 +368,12 @@ public interface ParagraphDao {
     void deleteParagraphByDateRange(LocalDate start, LocalDate end);
 
     @Transaction
-    default void addDiaryWithParagraphs(LocalDate date, @NonNull List<ParagraphEntity> paragraphList, Context context) {
-        DiaryDb db = DiaryDb.getInstance(context);
-        DiaryDao diaryDao = db.diaryDao();
-
-        if (paragraphList.isEmpty()) return;
+    default void addDiaryWithParagraphs(
+            LocalDate date,
+            List<ParagraphEntity> paragraphList,
+            DiaryDao diaryDao
+    ) {
+        if (paragraphList == null || paragraphList.isEmpty()) return;
 
         // 获取或创建日记 ID
         Long diaryId = diaryDao.getOrCreateDiaryIdByDate(date);

@@ -32,8 +32,8 @@ import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
@@ -255,13 +255,13 @@ public class SharePreviewActivity extends AppCompatActivity {
     }
 
     /**
-     * 将{@link ParagraphEntityModel}列表转换为{@link ParagraphUiModel}列表并插入日期分隔符
+     * 将{@link ParagraphEntityUnionModel}列表转换为{@link ParagraphUiModel}列表并插入日期分隔符
      *
      * @param paragraphList 纯段落列表
      * @return 包含日期分隔符的段落列表
      */
     @NonNull
-    private List<ParagraphUiModel> insertDateSeparator(List<ParagraphEntityModel> paragraphList) {
+    private List<ParagraphUiModel> insertDateSeparator(List<ParagraphEntityUnionModel> paragraphList) {
         List<ParagraphUiModel> uiModelList = new ArrayList<>();
 
         //判空
@@ -277,8 +277,8 @@ public class SharePreviewActivity extends AppCompatActivity {
         //遍历插入段落和剩下的分隔符
         for (int i = 0; i < paragraphList.size(); i++) {
             //获取 ParagraphEntityModel 实例
-            ParagraphEntityModel current = paragraphList.get(i);
-            ParagraphEntityModel next = i >= paragraphList.size() - 1 ? null : paragraphList.get(i + 1);
+            ParagraphEntityUnionModel current = paragraphList.get(i);
+            ParagraphEntityUnionModel next = i >= paragraphList.size() - 1 ? null : paragraphList.get(i + 1);
 
             //插入段落数据
             uiModelList.add(new ParagraphUiModel.Item(current));
@@ -328,7 +328,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     builder.append(date);
                     builder.append("\"");
                 } else if (model instanceof ParagraphUiModel.Item) {
-                    ParagraphEntityModel entityModel = ((ParagraphUiModel.Item) model).model;
+                    ParagraphEntityUnionModel entityModel = ((ParagraphUiModel.Item) model).model;
                     ParagraphEntity paragraph = entityModel.getParagraph();
 
                     //添加段落内容字段
@@ -363,14 +363,14 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
 
                     //添加情绪字段
-                    List<CrossRefWithEmotion> emotionList = entityModel.getEmotionList();
+                    List<EmotionTagRefUnionModel> emotionList = entityModel.getEmotionList();
                     if (!emotionList.isEmpty() && enableEmotion) {
                         builder.append(",");
                         builder.append("\"emotionTags\":");
                         builder.append("[");
 
                         int emotionIndex = 0;
-                        for (CrossRefWithEmotion emotionTagRef : emotionList) {
+                        for (EmotionTagRefUnionModel emotionTagRef : emotionList) {
                             builder.append("\"");
                             builder.append(emotionTagRef.generateDisplayText());
                             builder.append("\"");

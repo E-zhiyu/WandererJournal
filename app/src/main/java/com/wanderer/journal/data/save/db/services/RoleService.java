@@ -6,7 +6,7 @@ import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class RoleService {
                     }
 
                     //通过关系远近进行分组
-                    Map<Integer, List<RoleEntityModel>> groupedMap = rawList.stream()
+                    Map<Integer, List<RoleEntityUnionModel>> groupedMap = rawList.stream()
                             .collect(Collectors.groupingBy(
                                     model -> model.getRole().getRelationship(),
                                     LinkedHashMap::new,
@@ -59,7 +59,7 @@ public class RoleService {
                             ));
 
                     //循环插入分隔符和 Item
-                    for (Map.Entry<Integer, List<RoleEntityModel>> entry : groupedMap.entrySet()) {
+                    for (Map.Entry<Integer, List<RoleEntityUnionModel>> entry : groupedMap.entrySet()) {
                         String separatorText = relations[entry.getKey()].getTitle();
                         resultList.add(new RoleUiModel.Separator(separatorText));
 

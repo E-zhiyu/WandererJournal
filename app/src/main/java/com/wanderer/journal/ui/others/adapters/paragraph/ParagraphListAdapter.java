@@ -20,8 +20,8 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
@@ -57,8 +57,8 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
                 ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
-                List<CrossRefWithEmotion> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
-                List<CrossRefWithEmotion> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
                 List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
@@ -155,6 +155,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 notifyItemChanged(fromPosition);                //更新后面的
 
                 notifyItemChanged(toPosition - 1);      //更新前面的
+                notifyItemChanged(toPosition);                  //更新自己
                 notifyItemChanged(toPosition + 1);      //更新后面的
             }
         });
@@ -192,7 +193,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         ParagraphUiModel uiModel = getItem(position);
 
         if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntityModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
+            ParagraphEntityUnionModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
             ParagraphEntity paragraph = dataModel.getParagraph();
             ParagraphListAdapter.ParagraphViewHolder itemHolder = (ParagraphListAdapter.ParagraphViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();
@@ -243,12 +244,12 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             itemHolder.binding.contentText.setText(richText);
 
             //情绪标签
-            List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
+            List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-                for (CrossRefWithEmotion emotion : emotionList) {
+                for (EmotionTagRefUnionModel emotion : emotionList) {
                     String title = emotion.generateDisplayText();
 
                     //添加 Chip 到视图中
