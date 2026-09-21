@@ -18,7 +18,7 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListe
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
 import com.wanderer.journal.databinding.ViewHolderRoleListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
@@ -35,8 +35,8 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         @Override
         public boolean areItemsTheSame(@NonNull RoleUiModel oldItem, @NonNull RoleUiModel newItem) {
             if (oldItem instanceof RoleUiModel.Item && newItem instanceof RoleUiModel.Item) {
-                RoleEntityModel oldModel = ((RoleUiModel.Item) oldItem).model;
-                RoleEntityModel newModel = ((RoleUiModel.Item) newItem).model;
+                RoleEntityUnionModel oldModel = ((RoleUiModel.Item) oldItem).model;
+                RoleEntityUnionModel newModel = ((RoleUiModel.Item) newItem).model;
                 return oldModel.getRole().getRoleId() == newModel.getRole().getRoleId();
             } else if (oldItem instanceof RoleUiModel.Separator && newItem instanceof RoleUiModel.Separator) {
                 String oldSeparator = ((RoleUiModel.Separator) oldItem).relationship;
@@ -50,8 +50,8 @@ public class RoleAdapter extends ListAdapter<RoleUiModel, RecyclerView.ViewHolde
         @Override
         public boolean areContentsTheSame(@NonNull RoleUiModel oldItem, @NonNull RoleUiModel newItem) {
             if (oldItem instanceof RoleUiModel.Item && newItem instanceof RoleUiModel.Item) {
-                RoleEntityModel oldModel = ((RoleUiModel.Item) oldItem).model;
-                RoleEntityModel newModel = ((RoleUiModel.Item) newItem).model;
+                RoleEntityUnionModel oldModel = ((RoleUiModel.Item) oldItem).model;
+                RoleEntityUnionModel newModel = ((RoleUiModel.Item) newItem).model;
                 return oldModel.getRole().getName().equals(newModel.getRole().getName()) &&
                         oldModel.getRole().getDisplayName().equals(newModel.getRole().getDisplayName()) &&
                         oldModel.getRoleAliaList().equals(newModel.getRoleAliaList()) &&

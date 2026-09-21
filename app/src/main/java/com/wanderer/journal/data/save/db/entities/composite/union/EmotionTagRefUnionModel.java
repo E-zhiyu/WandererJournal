@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.union;
 
 import androidx.room.Embedded;
 import androidx.room.Relation;
@@ -9,7 +9,7 @@ import com.wanderer.journal.helpers.text.TextHelper;
 
 import java.util.Locale;
 
-public class CrossRefWithEmotion {
+public class EmotionTagRefUnionModel {
     @Embedded
     private final EmotionParagraphRefEntity crossRef;   // 包含 degree, paragraphId, emotionId等信息
 
@@ -19,7 +19,7 @@ public class CrossRefWithEmotion {
     )
     private final EmotionTagEntity emotionTag;          // 情绪标签的具体信息（名称等）
 
-    public CrossRefWithEmotion(EmotionParagraphRefEntity crossRef, EmotionTagEntity emotionTag) {
+    public EmotionTagRefUnionModel(EmotionParagraphRefEntity crossRef, EmotionTagEntity emotionTag) {
         this.crossRef = crossRef;
         this.emotionTag = emotionTag;
     }

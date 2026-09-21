@@ -57,7 +57,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -270,7 +270,7 @@ public class WriteActivity extends AppCompatActivity {
                             }
 
                             //启用编辑模式
-                            ParagraphEntityModel model = paragraphOptional.get();
+                            ParagraphEntityUnionModel model = paragraphOptional.get();
                             ParagraphEntity paragraph = model.getParagraph();
                             List<MediaEntity> mediaList = model.getMediaList();
                             setEditMode(true, paragraph, mediaList);

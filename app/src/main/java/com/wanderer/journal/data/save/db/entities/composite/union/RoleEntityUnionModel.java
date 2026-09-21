@@ -1,4 +1,4 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.union;
 
 import androidx.room.Embedded;
 import androidx.room.Relation;
@@ -8,7 +8,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
 
 import java.util.List;
 
-public class RoleEntityModel {
+public class RoleEntityUnionModel {
     @Embedded
     private RoleEntity role;
     @Relation(
@@ -18,7 +18,7 @@ public class RoleEntityModel {
     )
     private List<RoleAliaEntity> roleAliaList;
 
-    public RoleEntityModel(RoleEntity role, List<RoleAliaEntity> roleAliaList) {
+    public RoleEntityUnionModel(RoleEntity role, List<RoleAliaEntity> roleAliaList) {
         this.role = role;
         this.roleAliaList = roleAliaList;
     }

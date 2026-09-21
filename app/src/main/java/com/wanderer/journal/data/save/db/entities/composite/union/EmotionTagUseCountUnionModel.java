@@ -1,15 +1,15 @@
-package com.wanderer.journal.data.save.db.entities.composite;
+package com.wanderer.journal.data.save.db.entities.composite.union;
 
 import androidx.room.Embedded;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 
-public class EmotionTagUseCountModel {
+public class EmotionTagUseCountUnionModel {
     @Embedded
     private EmotionTagEntity emotionTag;
     private final int useCount;
 
-    public EmotionTagUseCountModel(EmotionTagEntity emotionTag, int useCount) {
+    public EmotionTagUseCountUnionModel(EmotionTagEntity emotionTag, int useCount) {
         this.emotionTag = emotionTag;
         this.useCount = useCount;
     }

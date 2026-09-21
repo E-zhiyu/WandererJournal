@@ -27,7 +27,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.TipPreference;
@@ -417,12 +417,12 @@ public class StatisticsActivity extends AppCompatActivity {
                             }
 
                             //添加使用的标签到 ChipGroup
-                            List<EmotionTagUseCountModel> commonEmotionTagList = usedModelList.stream()
+                            List<EmotionTagUseCountUnionModel> commonEmotionTagList = usedModelList.stream()
                                     .limit(5)
-                                    .sorted(Comparator.comparing(EmotionTagUseCountModel::getUseCount).reversed())
+                                    .sorted(Comparator.comparing(EmotionTagUseCountUnionModel::getUseCount).reversed())
                                     .collect(Collectors.toList());
                             binding.commonEmotionChipGroup.removeAllViews();
-                            for (EmotionTagUseCountModel model : commonEmotionTagList) {
+                            for (EmotionTagUseCountUnionModel model : commonEmotionTagList) {
                                 Chip chip = new Chip(this);
                                 chip.setClickable(false);
                                 chip.setText(String.format(
@@ -436,7 +436,7 @@ public class StatisticsActivity extends AppCompatActivity {
                             }
 
                             //获取不同种类标签的数量
-                            Map<Integer, List<EmotionTagUseCountModel>> typeMap = usedModelList.stream()
+                            Map<Integer, List<EmotionTagUseCountUnionModel>> typeMap = usedModelList.stream()
                                     .collect(Collectors.groupingBy(
                                             model -> model.getEmotionTag().getType(),
                                             LinkedHashMap::new,
@@ -446,10 +446,10 @@ public class StatisticsActivity extends AppCompatActivity {
                             //将种类计数数据添加到 ChipGroup 中
                             EmotionType[] types = EmotionType.values();
                             binding.emotionTypeChipGroup.removeAllViews();
-                            for (Map.Entry<Integer, List<EmotionTagUseCountModel>> entry : typeMap.entrySet()) {
+                            for (Map.Entry<Integer, List<EmotionTagUseCountUnionModel>> entry : typeMap.entrySet()) {
                                 String typeTitle = types[entry.getKey()].getTitle();
                                 int typeCount = entry.getValue().stream()
-                                        .map(EmotionTagUseCountModel::getUseCount)
+                                        .map(EmotionTagUseCountUnionModel::getUseCount)
                                         .reduce(0, Integer::sum);
 
                                 Chip chip = new Chip(this);

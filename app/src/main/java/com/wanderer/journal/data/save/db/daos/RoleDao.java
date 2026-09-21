@@ -10,7 +10,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.RoleEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +46,7 @@ public interface RoleDao {
             // 将 IN 子查询改为高效的 EXISTS 关联查询，并在 SQL 层面指定转义符
             "OR EXISTS (SELECT 1 FROM roleAlias WHERE roleAlias.roleId = roles.roleId AND alia LIKE '%' || :safeKeyword || '%' ESCAPE '/') " +
             "ORDER BY relationship DESC")
-    Flowable<List<RoleEntityModel>> getAllRoleWithSearchFlowable(String safeKeyword, int filterSearchKeyword);
+    Flowable<List<RoleEntityUnionModel>> getAllRoleWithSearchFlowable(String safeKeyword, int filterSearchKeyword);
 
     /**
      * 查询所有角色数据，并按照关系由近到远排序
@@ -93,7 +93,7 @@ public interface RoleDao {
      */
     @Transaction
     @Query("SELECT * FROM roles WHERE roleId = :id")
-    Single<Optional<RoleEntityModel>> getRoleAndAliasSingleById(long id);
+    Single<Optional<RoleEntityUnionModel>> getRoleAndAliasSingleById(long id);
 
     /**
      * 判断某个角色 ID 是否在表中

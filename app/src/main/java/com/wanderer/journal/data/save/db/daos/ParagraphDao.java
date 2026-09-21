@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteQuery;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +47,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntityModel> getAllParagraphPagingSource();
+    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource();
 
     /**
      * 查询指定 ID 的段落
@@ -57,7 +57,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
-    Single<List<ParagraphEntityModel>> getParagraphSingleById(long[] paragraphIds);
+    Single<List<ParagraphEntityUnionModel>> getParagraphSingleById(long[] paragraphIds);
 
     /**
      * 查询某个日期范围内的段落
@@ -68,7 +68,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntityModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
+    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
 
     /**
      * 查询某个日期段内的段落数量
@@ -118,7 +118,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
-    Single<Optional<ParagraphEntityModel>> getParagraphOptionalSingleById(long paragraphId);
+    Single<Optional<ParagraphEntityUnionModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 查询最大的日记长度

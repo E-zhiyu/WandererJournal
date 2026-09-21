@@ -11,7 +11,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
@@ -86,7 +86,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @return 插入分隔视图后的段落数据
      */
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityModel> pagingData) {
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityUnionModel> pagingData) {
         Executor executor = Runnable::run;
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
@@ -127,7 +127,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
                             () -> db.paragraphDao().getParagraphPagingSourceByDate(start, end)
@@ -159,7 +159,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
                             () -> db.paragraphDao().getAllParagraphPagingSource()

@@ -9,7 +9,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.composite.EmotionTagUseCountModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
@@ -104,7 +104,7 @@ public interface EmotionTagDao {
                     "WHERE useCount > 0 " +
                     "ORDER BY useCount DESC"
     )
-    Flowable<List<EmotionTagUseCountModel>> getUsedEmotionTagFlowable();
+    Flowable<List<EmotionTagUseCountUnionModel>> getUsedEmotionTagFlowable();
 
     /**
      * 获取可以选择的情绪标签数据

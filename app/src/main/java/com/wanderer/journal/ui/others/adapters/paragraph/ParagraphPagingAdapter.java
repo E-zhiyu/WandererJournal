@@ -24,8 +24,8 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.CrossRefWithEmotion;
-import com.wanderer.journal.data.save.db.entities.composite.ParagraphEntityModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
@@ -69,8 +69,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
                 ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
-                List<CrossRefWithEmotion> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
-                List<CrossRefWithEmotion> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
                 List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
@@ -84,7 +84,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     };
     private final static int TYPE_ITEM = 1;         //段落内容ViewHolder种类
     private final static int TYPE_SEPARATOR = 0;    //分隔ViewHolder种类
-    private final AdapterOnClickListener<ParagraphEntityModel> paragraphClickListener;  //段落点击监听
+    private final AdapterOnClickListener<ParagraphEntityUnionModel> paragraphClickListener;  //段落点击监听
     private final OnMediaClickedListener mediaClickedListener;                          //媒体点击监听
     private final AdapterOnClickListener<Long> roleClickListener;                       //角色富文本点击监听
 
@@ -172,9 +172,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
     public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
-        private ParagraphEntityModel data = null;   //数据实例
+        private ParagraphEntityUnionModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityModel> listener) {
+        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityUnionModel> listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -199,7 +199,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
          *
          * @param data 数据实例
          */
-        public void bindItem(ParagraphEntityModel data) {
+        public void bindItem(ParagraphEntityUnionModel data) {
             this.data = data;
         }
 
@@ -243,7 +243,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * @param mediaClickedListener   媒体预览图点击监听
      */
     public ParagraphPagingAdapter(
-            AdapterOnClickListener<ParagraphEntityModel> paragraphClickListener,
+            AdapterOnClickListener<ParagraphEntityUnionModel> paragraphClickListener,
             OnMediaClickedListener mediaClickedListener,
             AdapterOnClickListener<Long> roleClickListener
     ) {
@@ -325,7 +325,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         }
 
         if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntityModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
+            ParagraphEntityUnionModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
             ParagraphEntity paragraph = dataModel.getParagraph();
             ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();
@@ -396,12 +396,12 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             );
 
             //情绪标签
-            List<CrossRefWithEmotion> emotionList = dataModel.getEmotionList();
+            List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {
                 itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-                for (CrossRefWithEmotion emotion : emotionList) {
+                for (EmotionTagRefUnionModel emotion : emotionList) {
                     long emotionId = emotion.getEmotionTag().getEmotionId();
                     String title = emotion.generateDisplayText();
 

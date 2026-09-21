@@ -12,20 +12,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
-import com.wanderer.journal.data.save.db.entities.composite.DiaryLengthModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.DiaryLengthUnionModel;
 import com.wanderer.journal.databinding.ViewHolderMemeryPixelBinding;
 
-public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
+public class MemeryPixelAdapter extends ListAdapter<DiaryLengthUnionModel, MemeryPixelAdapter.MemeryPixelViewHolder> {
     private final int avgDiaryLength;   //平均日记长度
-    private final AdapterOnClickListener<DiaryLengthModel> clickListener;
-    private final static DiffUtil.ItemCallback<DiaryLengthModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+    private final AdapterOnClickListener<DiaryLengthUnionModel> clickListener;
+    private final static DiffUtil.ItemCallback<DiaryLengthUnionModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
-        public boolean areItemsTheSame(@NonNull DiaryLengthModel oldItem, @NonNull DiaryLengthModel newItem) {
+        public boolean areItemsTheSame(@NonNull DiaryLengthUnionModel oldItem, @NonNull DiaryLengthUnionModel newItem) {
             return oldItem.getDiaryDate().isEqual(newItem.getDiaryDate());
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull DiaryLengthModel oldItem, @NonNull DiaryLengthModel newItem) {
+        public boolean areContentsTheSame(@NonNull DiaryLengthUnionModel oldItem, @NonNull DiaryLengthUnionModel newItem) {
             return oldItem.getDiaryLength() == newItem.getDiaryLength();
         }
     };
@@ -34,7 +34,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
      * 记忆像素适配器构造方法
      *
      */
-    public MemeryPixelAdapter(int avgDiaryLength, AdapterOnClickListener<DiaryLengthModel> clickListener) {
+    public MemeryPixelAdapter(int avgDiaryLength, AdapterOnClickListener<DiaryLengthUnionModel> clickListener) {
         super(ITEM_CALLBACK);
         this.avgDiaryLength = avgDiaryLength;
         this.clickListener = clickListener;
@@ -66,7 +66,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
                 new ViewHolderListener() {
                     @Override
                     public void onClick(int pos, View anchor) {
-                        DiaryLengthModel model = getItem(pos);
+                        DiaryLengthUnionModel model = getItem(pos);
                         clickListener.onClick(model, anchor);
                     }
 
@@ -79,7 +79,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthModel, MemeryPixe
 
     @Override
     public void onBindViewHolder(@NonNull MemeryPixelViewHolder holder, int position) {
-        DiaryLengthModel model = getItem(position);
+        DiaryLengthUnionModel model = getItem(position);
 
         //判断是否为 null 占位符
         if (model == null) {
