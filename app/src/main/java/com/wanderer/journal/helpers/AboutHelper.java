@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.2\n" +
+    private final static String CHANGELOG = "# v1.6.3\n" +
+            "\n" +
+            "### 修改的内容\n" +
+            "\n" +
+            "- 日记列表显示字数而非段落数量\n" +
+            "\n" +
+            "# v1.6.2\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +
