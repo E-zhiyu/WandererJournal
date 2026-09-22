@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:clipToPadding="false"
     android:minHeight="200dp"
-    android:paddingTop="10dp">
+    android:padding="10dp">
 
     <com.google.android.material.bottomsheet.BottomSheetDragHandleView
         android:id="@+id/drag_handle"
@@ -21,24 +21,10 @@
         android:layout_gravity="center_horizontal"
         android:text="@string/filter_diary_paragraph"
         android:textAppearance="?attr/textAppearanceTitleLarge"
-        app:layout_constraintBottom_toTopOf="@id/clear_btn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/drag_handle"
         app:layout_constraintVertical_chainStyle="packed" />
-
-    <!-- 清除筛选按钮 -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/clear_btn"
-        style="@style/TextBtnStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/clear_filter"
-        app:icon="@drawable/baseline_clear_24"
-        app:layout_constraintBottom_toTopOf="@id/emotion_tag_recycler"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_text" />
 
     <!-- 情绪标签列表标题 -->
     <com.google.android.material.textview.MaterialTextView
@@ -46,11 +32,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
         android:text="@string/emotion_tag"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         app:layout_constraintBottom_toTopOf="@id/emotion_tag_recycler"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/clear_btn" />
+        app:layout_constraintTop_toBottomOf="@id/title_text" />
 
     <!-- 情绪标签列表 -->
     <androidx.recyclerview.widget.RecyclerView

@@ -10,7 +10,14 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.3\n" +
+    private final static String CHANGELOG = "# v1.6.4\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 优化部分界面输入框的边距，提升全面屏用户的体验\n" +
+            "- 去除读日记界面筛选段落对话框的清空筛选按钮\n" +
+            "\n" +
+            "# v1.6.3\n" +
             "\n" +
             "### 修改的内容\n" +
             "\n" +
