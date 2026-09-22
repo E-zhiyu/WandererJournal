@@ -17,6 +17,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
 import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
@@ -38,7 +39,12 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(0, 0, 0, systemBars.bottom);
+            v.setPadding(
+                    AppearanceHelper.dpToPx(requireContext(),10),
+                    AppearanceHelper.dpToPx(requireContext(),10),
+                    AppearanceHelper.dpToPx(requireContext(),10),
+                    systemBars.bottom
+            );
             return insets;
         });
 
@@ -99,12 +105,6 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
-
-        //清除按钮
-        binding.clearBtn.setOnClickListener(view -> {
-            viewModel.clearFilter();
-            dismiss();
-        });
 
         //图片过滤 Chip
         binding.mediaFilterChip.setChecked(viewModel.getFilterMedia());
