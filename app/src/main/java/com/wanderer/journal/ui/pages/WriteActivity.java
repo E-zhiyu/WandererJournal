@@ -717,7 +717,33 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initMediaRecycler() {
         //实例化媒体适配器并分配给 RecyclerView
-        mediaAdapter = new WriteMediaAdapter(this);
+        mediaAdapter = new WriteMediaAdapter(
+                this,
+                (position, mediaView, mediaList) -> {
+                    //生成 Uri 数组
+                    String[] uriStrArray = mediaList.stream()
+                            .map(MediaEntity::getFileUri)
+                            .map(Uri::toString)
+                            .toArray(String[]::new);
+
+                    //生成数据包
+                    Bundle bundle = new Bundle();
+                    bundle.putStringArray(KeyStrings.FILE_URIS.v(), uriStrArray);
+                    bundle.putInt(KeyStrings.VIEW_HOLDER_POSITION.v(), position);
+
+                    //生成动画效果
+                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            this,
+                            mediaView,
+                            TransitionName.FULLSCREEN_MEDIA.getS()
+                    );
+
+                    //跳转界面
+                    Intent intent = new Intent(this, FullScreenMediaActivity.class);
+                    intent.putExtras(bundle);
+                    startActivity(intent, options.toBundle());
+                }
+        );
         binding.mediaRecycler.setAdapter(mediaAdapter);
 
         //构建选择追踪器

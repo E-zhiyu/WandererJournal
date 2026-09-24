@@ -19,14 +19,18 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.databinding.ViewHolderMediaBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+
+import java.util.List;
 
 public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapter.MediaViewHolder> {
     private SelectionTracker<Long> selectionTracker;    // ViewHolder 选择追踪器
     private final RequestOptions glideOptions;          //图片显示设置
     private boolean isSelectMode = false;               //是否是选择模式
+    private final OnMediaClickedListener clickListener; //点击监听器
     private final static DiffUtil.ItemCallback<MediaEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull MediaEntity oldItem, @NonNull MediaEntity newItem) {
@@ -39,15 +43,31 @@ public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapte
         }
     };
 
+    public interface OnMediaClickedListener {
+        /**
+         * 媒体视图点击监听
+         *
+         * @param position  被点击的媒体所在的位置
+         * @param mediaView 被点击的媒体视图
+         * @param mediaList 同一个段落的媒体列表
+         */
+        void onClick(int position, View mediaView, List<MediaEntity> mediaList);
+    }
+
     public static class MediaViewHolder extends RecyclerView.ViewHolder {
         ViewHolderMediaBinding binding;
         private final SpringAnimation scaleXAnim;           //X轴缩放动画
         private final SpringAnimation scaleYAnim;           //Y轴缩放动画
         private static final float PRESSED_SCALE = 0.9f;    //按下时缩放程度
 
-        public MediaViewHolder(@NonNull ViewHolderMediaBinding binding) {
+        public MediaViewHolder(@NonNull ViewHolderMediaBinding binding, ViewHolderListener listener) {
             super(binding.getRoot());
             this.binding = binding;
+
+            //设置点击监听器
+            binding.getRoot().setOnClickListener(view ->
+                    listener.onClick(getBindingAdapterPosition(), binding.getRoot())
+            );
 
             //设置缩放动画
             scaleXAnim = new SpringAnimation(binding.imageCard, SpringAnimation.SCALE_X);
@@ -124,8 +144,9 @@ public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapte
      *
      * @param context 上下文
      */
-    public WriteMediaAdapter(Context context) {
+    public WriteMediaAdapter(Context context, OnMediaClickedListener clickListener) {
         super(ITEM_CALLBACK);
+        this.clickListener = clickListener;
 
         //初始化Glide设置
         glideOptions = new RequestOptions()
@@ -170,7 +191,19 @@ public class WriteMediaAdapter extends ListAdapter<MediaEntity, WriteMediaAdapte
                 parent,
                 false
         );
-        return new MediaViewHolder(binding);
+        return new MediaViewHolder(
+                binding,
+                new ViewHolderListener() {
+                    @Override
+                    public void onClick(int pos, View anchor) {
+                        clickListener.onClick(pos, anchor, getCurrentList());
+                    }
+
+                    @Override
+                    public void onLongClick(int pos, View anchor) {
+                    }
+                }
+        );
     }
 
     @Override
