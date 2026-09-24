@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.4\n" +
+    private final static String CHANGELOG = "# v1.6.5\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 写日记界面添加媒体时可以点击查看大图\n" +
+            "\n" +
+            "# v1.6.4\n" +
             "\n" +
             "### 优化和修改的内容\n" +
             "\n" +
