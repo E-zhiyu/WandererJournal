@@ -101,7 +101,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
          * @param mediaView 被点击的媒体视图
          * @param mediaList 同一个段落的媒体列表
          */
-        void onClicked(int position, View mediaView, List<MediaEntity> mediaList);
+        void onClick(int position, View mediaView, List<MediaEntity> mediaList);
     }
 
     public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
@@ -211,7 +211,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
                         size,
                         spanCount,
-                        (mediaPosition, view) -> mediaClickedListener.onClicked(mediaPosition, view, mediaList)
+                        (mediaPosition, view) -> mediaClickedListener.onClick(mediaPosition, view, mediaList)
                 );
                 itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
                 mediaAdapter.submitList(mediaList);
