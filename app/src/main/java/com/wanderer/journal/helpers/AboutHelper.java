@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.6.5\n" +
+    private final static String CHANGELOG = "# v1.7.0\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 新增段落隐私选项，访问隐藏的段落需要进行身份验证\n" +
+            "\n" +
+            "# v1.6.5\n" +
             "\n" +
             "### 优化的内容\n" +
             "\n" +
