@@ -6,7 +6,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 public class DatabaseMigrations {
     //情绪标签添加分类字段
-    public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("ALTER TABLE emotionTags ADD COLUMN type INTEGER NOT NULL DEFAULT 1");
@@ -14,7 +14,7 @@ public class DatabaseMigrations {
     };
 
     //段落表添加段落 ID 的索引
-    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_paragraphs_paragraphId` ON `paragraphs` (`paragraphId`)");
@@ -22,7 +22,7 @@ public class DatabaseMigrations {
     };
 
     //媒体表添加媒体 ID 的索引
-    public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_medias_mediaId` ON `medias` (`mediaId`)");
@@ -30,7 +30,7 @@ public class DatabaseMigrations {
     };
 
     //添加角色表和角色别名表
-    public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS `roles` (`roleId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `identity` TEXT, `impression` TEXT, `relationship` INTEGER NOT NULL DEFAULT 2)");
@@ -47,7 +47,7 @@ public class DatabaseMigrations {
 
     //添加角色显示名称字段
     //添加角色使用次数字段
-    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("ALTER TABLE roles ADD COLUMN useCount INTEGER NOT NULL DEFAULT 0");
@@ -58,7 +58,7 @@ public class DatabaseMigrations {
     };
 
     //添加人生笔记实体及其修改历史表
-    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+    static final Migration MIGRATION_6_7 = new Migration(6, 7) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("CREATE TABLE IF NOT EXISTS `lifeNotes` (`noteId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `insight` TEXT, `elaboration` TEXT, `dateTime` INTEGER)");
@@ -74,11 +74,20 @@ public class DatabaseMigrations {
     };
 
     //角色添加最后使用时间字段
-    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+    static final Migration MIGRATION_7_8 = new Migration(7, 8) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             db.execSQL("ALTER TABLE roles ADD COLUMN latestUseTime INTEGER DEFAULT 0");
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_roles_latestUseTime` ON `roles` (`latestUseTime`)");
+        }
+    };
+
+    //添加段落隐私种类字段
+    static final Migration MIGRATION_8_9 = new Migration(8, 9) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE paragraphs ADD COLUMN privacyType INTEGER NOT NULL DEFAULT 0");
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_paragraphs_privacyType` ON `paragraphs` (`privacyType`)");
         }
     };
 }
