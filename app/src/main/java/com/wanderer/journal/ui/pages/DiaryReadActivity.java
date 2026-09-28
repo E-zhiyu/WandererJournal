@@ -578,7 +578,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
             LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
-            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate)
+            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, viewModel.isHiddenParagraphShown())
                     .flatMapPublisher(
                             initPosition -> {
                                 initScrollPosition.set(initPosition);
@@ -803,18 +803,25 @@ public class DiaryReadActivity extends AppCompatActivity {
                     disposable.add(db.diaryDao().getEarliestDiaryDateSingle()
                             .flatMap(optional -> {
                                 LocalDate startDate = optional.orElseGet(LocalDate::now);
-                                return ParagraphService.modifyCreateTime(paragraph.getParagraphId(), startDate, newDateTime, db);
+                                ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                                return ParagraphService.modifyCreateTime(
+                                        paragraph.getParagraphId(),
+                                        startDate,
+                                        newDateTime,
+                                        viewModel.isHiddenParagraphShown(),
+                                        db
+                                );
                             })
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
                                     pos -> {
-                                        Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落创建时间修改成功");
-                                        Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
+                                        Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "段落时间修改成功");
+                                        Toast.makeText(this, "段落时间修改成功", Toast.LENGTH_SHORT).show();
                                     },
                                     throwable -> {
                                         ExceptionHelper.showExceptionDialog(this, throwable);
-                                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落创建时间修改失败");
+                                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "段落时间修改失败");
                                     }
                             )
                     );

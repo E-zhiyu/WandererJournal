@@ -62,13 +62,20 @@ public interface DiaryDao {
     Single<Optional<LocalDate>> getEarliestDiaryDateSingle();
 
     /**
-     * 获取所有日记
+     * 获取所有日记，并附带日记段落片段和日记长度数据
      *
      * @return 由{@link DiaryListUiModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
-            "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
-            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = d.diaryId) as charCount " +
+            "CASE " +
+            "  WHEN (SELECT privacyType FROM paragraphs " +
+            "        WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1) = 2 " +
+            "  THEN '<该段落的内容受保护>' " +
+            "  ELSE IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs " +
+            "               WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '<无日记内容>') " +
+            "END as paragraphFragment," +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs " +
+            " WHERE parentDiaryId = d.diaryId) as charCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
     Flowable<List<DiaryListUiModel>> getAllDiariesFlowable();

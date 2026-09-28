@@ -1071,7 +1071,14 @@ public class WriteActivity extends AppCompatActivity {
                         }
 
                         //返回查询到的下标
-                        return ParagraphService.addParagraph(startDate, paragraph, mediaEntityList, db);
+                        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                        return ParagraphService.addParagraph(
+                                startDate,
+                                paragraph,
+                                mediaEntityList,
+                                viewModel.isHiddenParagraphShown(),
+                                db
+                        );
                     })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -1153,22 +1160,33 @@ public class WriteActivity extends AppCompatActivity {
                     }
 
                     //更新数据
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
                     DiaryDb db = DiaryDb.getInstance(this);
-                    disposable.add(ParagraphService.modifyCreateTime(paragraph.getParagraphId(), startDate, newDateTime, db)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    pos -> {
-                                        Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
-                                        Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
+                    disposable.add(ParagraphService.modifyCreateTime(
+                                            paragraph.getParagraphId(),
+                                            startDate,
+                                            newDateTime,
+                                            viewModel.isHiddenParagraphShown(),
+                                            db
+                                    )
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            pos -> {
+                                                Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
+                                                Toast.makeText(
+                                                        this,
+                                                        "段落创建时间修改成功",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
 
-                                        scrollPosition.set(pos);
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(this, throwable);
-                                        Log.e(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改失败");
-                                    }
-                            )
+                                                scrollPosition.set(pos);
+                                            },
+                                            throwable -> {
+                                                ExceptionHelper.showExceptionDialog(this, throwable);
+                                                Log.e(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改失败");
+                                            }
+                                    )
                     );
                 }
         );
