@@ -47,6 +47,7 @@ public class ParagraphEntity {
         this.parentDiaryId = parentDiaryId;
         this.content = content;
         this.createTime = createTime;
+        this.privacyType = 0;
     }
 
     public long getParagraphId() {
