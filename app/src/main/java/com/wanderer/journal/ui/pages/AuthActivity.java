@@ -69,7 +69,7 @@ public class AuthActivity extends AppCompatActivity {
      * 显示 Biometric 对话框并进行身份验证
      */
     private void showBiometric() {
-        BiometricHelper.showBiometricPrompt(this, new BiometricHelper.AuthCallback() {
+        BiometricHelper.showBiometricPrompt( this, new BiometricHelper.AuthCallback() {
             @Override
             public void onSuccess() {
                 lastSuccessTimeMillis = System.currentTimeMillis();

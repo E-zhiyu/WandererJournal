@@ -7,13 +7,17 @@
         android:title="@string/filter_diary_paragraph"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_skip_date"
+        android:icon="@drawable/outline_date_range_24"
+        android:title="@string/skip_date"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_share"
         android:icon="@drawable/outline_share_24"
         android:title="@string/share_diary"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_skip_date"
-        android:icon="@drawable/outline_date_range_24"
-        android:title="@string/skip_date"
+        android:id="@+id/action_change_hidden_paragraph_visibility"
+        android:title="@string/change_hidden_paragraph_visibility"
         app:showAsAction="ifRoom" />
 </menu>

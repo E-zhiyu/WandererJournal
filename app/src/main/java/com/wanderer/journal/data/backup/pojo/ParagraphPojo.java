@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class ParagraphPojo {
-    long paragraphId;   //段落ID
-    long parentDiaryId; //父日记ID
-    long createTime;    //创建时间戳
-    String content;     //内容
-    int privacyType;    //隐私种类
+    long paragraphId;       //段落ID
+    long parentDiaryId;     //父日记ID
+    long createTime;        //创建时间戳
+    String content;         //内容
+    int privacyType = 0;    //隐私种类
 
     public ParagraphPojo() {
     }

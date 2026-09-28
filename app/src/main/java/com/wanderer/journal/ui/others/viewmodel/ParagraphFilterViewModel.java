@@ -38,6 +38,8 @@ public class ParagraphFilterViewModel extends ViewModel {
             BehaviorProcessor.createDefault(true);
     private final BehaviorProcessor<Boolean> keywordModeProcessor =
             BehaviorProcessor.createDefault(true);  //多词搜索是否为“与”模式处理器
+    private final BehaviorProcessor<Boolean> authProcessor =
+            BehaviorProcessor.createDefault(false); //是否通过身份验证
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
@@ -51,12 +53,21 @@ public class ParagraphFilterViewModel extends ViewModel {
         }
     }
 
-    public Boolean getFilterMedia() {
+    public boolean getFilterMedia() {
         return filterMedia;
     }
 
     public Set<Long> getCheckedEmotionIdSet() {
         return checkedEmotionIdSet;
+    }
+
+    /**
+     * 获取隐藏的段落是否显示
+     *
+     * @return 是否显示了隐藏的段落
+     */
+    public boolean isHiddenParagraphShown() {
+        return authProcessor.getValue() != null && authProcessor.getValue();
     }
 
     public void setFilterMedia(boolean filterMedia) {
@@ -108,19 +119,18 @@ public class ParagraphFilterViewModel extends ViewModel {
     /**
      * 获取由 PagingData转换得到的 Flowable 数据
      *
-     * @param start      段落起始日期
-     * @param end        段落结束日期（不包含）
-     * @param isVerified 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
-     * @param db         数据库实例
+     * @param start 段落起始日期
+     * @param end   段落结束日期（不包含）
+     * @param db    数据库实例
      * @return 段落数据，支持响应式更新
      */
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
             @NonNull LocalDate start,
             @NonNull LocalDate end,
-            boolean isVerified,
             DiaryDb db
     ) {
-        return Flowable.fromCallable(() -> {
+        return authProcessor
+                .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
                             10,
@@ -133,13 +143,12 @@ public class ParagraphFilterViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isVerified ? 1 : 0)
+                            () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isAuthed ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
                 })
                 .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .flatMap(pagingDataFlow -> pagingDataFlow)
                 .compose(flowable -> PagingRx.cachedIn(
                         flowable,
                         ViewModelKt.getViewModelScope(this)
@@ -150,12 +159,12 @@ public class ParagraphFilterViewModel extends ViewModel {
      * 不指定起止日期的获取段落数据方法
      *
      * @param initPosition 初始跳转到的位置
-     * @param isVerified   是否通过身份验证，通过验证后能够显示被隐藏的日记段落
      * @param db           数据库实例
      * @return 段落分页数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, boolean isVerified, DiaryDb db) {
-        return Flowable.fromCallable(() -> {
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
+        return authProcessor
+                .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
                             10,
@@ -168,13 +177,12 @@ public class ParagraphFilterViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
-                            () -> db.paragraphDao().getAllParagraphPagingSource(isVerified ? 1 : 0)
+                            () -> db.paragraphDao().getAllParagraphPagingSource(isAuthed ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
                 })
                 .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .flatMap(pagingDataFlow -> pagingDataFlow)
                 .compose(flowable -> PagingRx.cachedIn(
                         flowable,
                         ViewModelKt.getViewModelScope(this)
@@ -248,6 +256,15 @@ public class ParagraphFilterViewModel extends ViewModel {
     public void toggleKeywordMode() {
         keywordModeProcessor.onNext(!isAndMode());
         filterUpdatedLiveData.setValue(null);
+    }
+
+    /**
+     * 设置隐藏的段落的可见性
+     *
+     * @param isVisible 是否可见
+     */
+    public void setHiddenParagraphVisibility(boolean isVisible) {
+        authProcessor.onNext(isVisible);
     }
 
     /**

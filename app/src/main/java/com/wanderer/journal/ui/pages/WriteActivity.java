@@ -702,7 +702,7 @@ public class WriteActivity extends AppCompatActivity {
         DiaryDb db = DiaryDb.getInstance(this);
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
-        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), false, db)
+        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
