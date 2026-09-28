@@ -645,7 +645,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     .flatMapPublisher(
                             initPosition -> {
                                 initScrollPosition.set(initPosition);
-                                return viewModel.getPagingDataFlow(initPosition, db);
+                                return viewModel.getPagingDataFlow(initPosition, false, db);
                             }
                     )
                     .subscribeOn(Schedulers.io())
@@ -657,7 +657,7 @@ public class DiaryReadActivity extends AppCompatActivity {
             );
         } else {    //没有传递参数直接从最顶部开始
             initScrollPosition.set(0);
-            disposable.add(viewModel.getPagingDataFlow(0, db)
+            disposable.add(viewModel.getPagingDataFlow(0, false, db)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(

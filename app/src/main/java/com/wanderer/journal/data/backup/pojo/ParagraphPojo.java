@@ -8,6 +8,7 @@ public class ParagraphPojo {
     long parentDiaryId; //父日记ID
     long createTime;    //创建时间戳
     String content;     //内容
+    int privacyType;    //隐私种类
 
     public ParagraphPojo() {
     }
@@ -42,5 +43,13 @@ public class ParagraphPojo {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public int getPrivacyType() {
+        return privacyType;
+    }
+
+    public void setPrivacyType(int privacyType) {
+        this.privacyType = privacyType;
     }
 }

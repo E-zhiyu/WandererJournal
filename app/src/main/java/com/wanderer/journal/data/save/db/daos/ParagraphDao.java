@@ -43,11 +43,28 @@ public interface ParagraphDao {
     /**
      * 读取所有段落并支持局部加载
      *
+     * @param isVerified 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
      * @return 可局部加载的日记段落列表
      */
     @Transaction
-    @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource();
+    @Query("SELECT * FROM paragraphs " +
+            "WHERE (:isVerified OR privacyType != 2) " +
+            "ORDER BY createTime")
+    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource(int isVerified);
+
+    /**
+     * 查询某个日期范围内的段落
+     *
+     * @param start 起始日期
+     * @param end   结束日期（不包含）
+     * @param isVerified 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
+     * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
+     */
+    @Transaction
+    @Query("SELECT * FROM paragraphs " +
+            "WHERE createTime >= :start AND createTime < :end AND (:isVerified OR privacyType != 2) " +
+            "ORDER BY createTime, paragraphId")
+    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceInDateRange(LocalDate start, LocalDate end, int isVerified);
 
     /**
      * 查询指定 ID 的段落
@@ -58,17 +75,6 @@ public interface ParagraphDao {
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
     Single<List<ParagraphEntityUnionModel>> getParagraphSingleById(long[] paragraphIds);
-
-    /**
-     * 查询某个日期范围内的段落
-     *
-     * @param start 起始日期
-     * @param end   结束日期（不包含）
-     * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
-     */
-    @Transaction
-    @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
 
     /**
      * 查询某个日期段内的段落数量

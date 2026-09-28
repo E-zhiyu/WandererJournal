@@ -108,13 +108,16 @@ public class ParagraphFilterViewModel extends ViewModel {
     /**
      * 获取由 PagingData转换得到的 Flowable 数据
      *
-     * @param start 段落起始日期
-     * @param end   段落结束日期（不包含）
+     * @param start      段落起始日期
+     * @param end        段落结束日期（不包含）
+     * @param isVerified 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
+     * @param db         数据库实例
      * @return 段落数据，支持响应式更新
      */
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
             @NonNull LocalDate start,
             @NonNull LocalDate end,
+            boolean isVerified,
             DiaryDb db
     ) {
         return Flowable.fromCallable(() -> {
@@ -130,7 +133,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceByDate(start, end)
+                            () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isVerified ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
@@ -146,9 +149,12 @@ public class ParagraphFilterViewModel extends ViewModel {
     /**
      * 不指定起止日期的获取段落数据方法
      *
+     * @param initPosition 初始跳转到的位置
+     * @param isVerified   是否通过身份验证，通过验证后能够显示被隐藏的日记段落
+     * @param db           数据库实例
      * @return 段落分页数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
+    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, boolean isVerified, DiaryDb db) {
         return Flowable.fromCallable(() -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
@@ -162,7 +168,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
-                            () -> db.paragraphDao().getAllParagraphPagingSource()
+                            () -> db.paragraphDao().getAllParagraphPagingSource(isVerified ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
