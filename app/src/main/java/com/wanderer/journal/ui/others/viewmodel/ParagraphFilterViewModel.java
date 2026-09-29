@@ -11,7 +11,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
@@ -41,7 +41,7 @@ public class ParagraphFilterViewModel extends ViewModel {
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
             BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
     public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
-    public long lastAuthTimeMillis = 0;
+    private long lastAuthTimeMillis = 0;
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
@@ -118,7 +118,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @return 插入分隔视图后的段落数据
      */
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityUnionModel> pagingData) {
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphUnionModel> pagingData) {
         Executor executor = Runnable::run;
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
@@ -161,7 +161,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
                             () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isAuthed ? 1 : 0)
@@ -195,7 +195,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
                             () -> db.paragraphDao().getAllParagraphPagingSource(isAuthed ? 1 : 0)

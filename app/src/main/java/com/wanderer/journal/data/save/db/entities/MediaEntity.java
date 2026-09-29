@@ -7,6 +7,8 @@ import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(
         tableName = "medias",
         foreignKeys = @ForeignKey(
@@ -69,5 +71,17 @@ public class MediaEntity {
      */
     public long getItemId() {
         return fileUri.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        MediaEntity that = (MediaEntity) o;
+        return Objects.equals(fileUri, that.fileUri);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(fileUri);
     }
 }

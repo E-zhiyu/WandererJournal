@@ -8,6 +8,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.helpers.text.TextHelper;
 
 import java.util.Locale;
+import java.util.Objects;
 
 public class EmotionTagRefUnionModel {
     @Embedded
@@ -41,5 +42,17 @@ public class EmotionTagRefUnionModel {
                 "%s %s",
                 name, TextHelper.toRoman(degree)
         );
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        EmotionTagRefUnionModel that = (EmotionTagRefUnionModel) o;
+        return Objects.equals(generateDisplayText(), that.generateDisplayText());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(generateDisplayText());
     }
 }

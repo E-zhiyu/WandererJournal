@@ -46,6 +46,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 import com.wanderer.journal.data.save.preference.SearchHistoryPreference;
@@ -440,47 +441,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         adapter = new ParagraphPagingAdapter(
                 viewModel.contentDisplayIdSet,
-                (model, view) -> {
-                    ParagraphEntity paragraph = model.getParagraph();
-
-                    PopupMenu menu = new PopupMenu(this, view, Gravity.END);
-                    menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
-
-                    menu.setOnMenuItemClickListener(item -> {
-                        int id = item.getItemId();
-                        if (id == R.id.action_modify_content) {
-                            Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
-                            Bundle bundle = new Bundle();
-
-                            bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
-                            bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v(), paragraph.getParagraphId());    //段落 ID
-
-                            skip2Write.putExtras(bundle);
-                            startActivity(skip2Write);
-                            return true;
-                        } else if (id == R.id.action_modify_time) {
-                            modifyCreateTime(paragraph);
-                            return true;
-                        } else if (id == R.id.action_modify_emotion) {
-                            modifyEmotion(paragraph);
-                            return true;
-                        } else if (id == R.id.action_change_privacy_type) {
-                            switchParagraphPrivacyType(paragraph);
-                            return true;
-                        } else if (id == R.id.action_copy_paragraph) {
-                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
-                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
-                            return true;
-                        } else if (id == R.id.action_delete_paragraph) {
-                            deleteParagraph(paragraph);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    menu.show();
-                },
+                this::showParagraphModifyMenu,
                 (position, mediaView, mediaList) -> {
                     String[] uriStrArray = mediaList.stream()
                             .map(MediaEntity::getFileUri)
@@ -791,6 +752,53 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
+     * 显示段落修改菜单
+     *
+     * @param model 需要修改的段落的数据模型
+     * @param view  下拉菜单锚点
+     */
+    private void showParagraphModifyMenu(@NonNull ParagraphUnionModel model, View view) {
+        ParagraphEntity paragraph = model.getParagraph();
+        PopupMenu menu = new PopupMenu(this, view, Gravity.END);
+        menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
+
+        menu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_modify_content) {
+                Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
+                Bundle bundle = new Bundle();
+
+                bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
+                bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v(), paragraph.getParagraphId());    //段落 ID
+
+                skip2Write.putExtras(bundle);
+                startActivity(skip2Write);
+                return true;
+            } else if (id == R.id.action_modify_time) {
+                modifyCreateTime(paragraph);
+                return true;
+            } else if (id == R.id.action_modify_emotion) {
+                modifyEmotion(paragraph);
+                return true;
+            } else if (id == R.id.action_change_privacy_type) {
+                switchParagraphPrivacyType(paragraph);
+                return true;
+            } else if (id == R.id.action_copy_paragraph) {
+                TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (id == R.id.action_delete_paragraph) {
+                deleteParagraph(paragraph);
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        menu.show();
+    }
+
+    /**
      * 更新段落创建日期
      *
      * @param paragraph 原来的段落实例
@@ -893,6 +901,12 @@ public class DiaryReadActivity extends AppCompatActivity {
                             }
                         });
                     } else {
+                        //从隐藏内容切换为别的类型时取消显示其内容
+                        if (paragraph.getPrivacyType() == ParagraphPrivacyType.HIDE_CONTENT.ordinal() &&
+                                i != ParagraphPrivacyType.HIDE_CONTENT.ordinal()) {
+                            viewModel.contentDisplayIdSet.remove(paragraph.getParagraphId());
+                        }
+
                         DiaryDb db = DiaryDb.getInstance(this);
                         disposable.add(db.paragraphDao().updatePrivacyTypeCompletable(paragraph.getParagraphId(), i)
                                 .observeOn(AndroidSchedulers.mainThread())

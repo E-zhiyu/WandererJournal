@@ -33,7 +33,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
@@ -255,13 +255,13 @@ public class SharePreviewActivity extends AppCompatActivity {
     }
 
     /**
-     * 将{@link ParagraphEntityUnionModel}列表转换为{@link ParagraphUiModel}列表并插入日期分隔符
+     * 将{@link ParagraphUnionModel}列表转换为{@link ParagraphUiModel}列表并插入日期分隔符
      *
      * @param paragraphList 纯段落列表
      * @return 包含日期分隔符的段落列表
      */
     @NonNull
-    private List<ParagraphUiModel> insertDateSeparator(List<ParagraphEntityUnionModel> paragraphList) {
+    private List<ParagraphUiModel> insertDateSeparator(List<ParagraphUnionModel> paragraphList) {
         List<ParagraphUiModel> uiModelList = new ArrayList<>();
 
         //判空
@@ -277,8 +277,8 @@ public class SharePreviewActivity extends AppCompatActivity {
         //遍历插入段落和剩下的分隔符
         for (int i = 0; i < paragraphList.size(); i++) {
             //获取 ParagraphEntityModel 实例
-            ParagraphEntityUnionModel current = paragraphList.get(i);
-            ParagraphEntityUnionModel next = i >= paragraphList.size() - 1 ? null : paragraphList.get(i + 1);
+            ParagraphUnionModel current = paragraphList.get(i);
+            ParagraphUnionModel next = i >= paragraphList.size() - 1 ? null : paragraphList.get(i + 1);
 
             //插入段落数据
             uiModelList.add(new ParagraphUiModel.Item(current));
@@ -328,7 +328,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     builder.append(date);
                     builder.append("\"");
                 } else if (model instanceof ParagraphUiModel.Item) {
-                    ParagraphEntityUnionModel entityModel = ((ParagraphUiModel.Item) model).model;
+                    ParagraphUnionModel entityModel = ((ParagraphUiModel.Item) model).model;
                     ParagraphEntity paragraph = entityModel.getParagraph();
 
                     //添加段落内容字段

@@ -9,7 +9,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 
 import java.util.List;
 
-public class ParagraphEntityUnionModel {
+public class ParagraphUnionModel {
     @Embedded
     private ParagraphEntity paragraph;                  // 段落实体
     @Relation(

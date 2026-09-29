@@ -77,8 +77,9 @@
             android:id="@+id/color_block_card"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
             app:layout_constraintBottom_toBottomOf="@id/date_time_text"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/date_time_text"
             app:layout_constraintTop_toTopOf="@id/date_time_text"
             app:strokeWidth="0dp">
 

@@ -57,7 +57,7 @@ import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -270,7 +270,7 @@ public class WriteActivity extends AppCompatActivity {
                             }
 
                             //启用编辑模式
-                            ParagraphEntityUnionModel model = paragraphOptional.get();
+                            ParagraphUnionModel model = paragraphOptional.get();
                             ParagraphEntity paragraph = model.getParagraph();
                             List<MediaEntity> mediaList = model.getMediaList();
                             setEditMode(true, paragraph, mediaList);
@@ -582,35 +582,7 @@ public class WriteActivity extends AppCompatActivity {
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
                 viewModel.contentDisplayIdSet,
-                (model, view) -> {
-                    ParagraphEntity paragraph = model.getParagraph();
-                    PopupMenu menu = new PopupMenu(this, view, Gravity.END);
-                    menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
-
-                    menu.setOnMenuItemClickListener(item -> {
-                        if (item.getItemId() == R.id.action_modify_content) {
-                            setEditMode(true, paragraph, model.getMediaList());
-                            return true;
-                        } else if (item.getItemId() == R.id.action_modify_time) {
-                            modifyCreateTime(paragraph);
-                            return true;
-                        } else if (item.getItemId() == R.id.action_modify_emotion) {
-                            modifyEmotion(paragraph);
-                            return true;
-                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
-                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
-                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
-                            return true;
-                        } else if (item.getItemId() == R.id.action_delete_paragraph) {
-                            deleteParagraph(paragraph);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    menu.show();
-                },
+                this::showParagraphModifyMenu,
                 (position, mediaView, mediaList) -> {
                     String[] uriStrArray = mediaList.stream()
                             .map(MediaEntity::getFileUri)
@@ -1127,6 +1099,42 @@ public class WriteActivity extends AppCompatActivity {
                     )
             );
         }
+    }
+
+    /**
+     * 显示段落修改菜单
+     *
+     * @param model 需要修改的段落的模型
+     * @param view  下拉菜单锚点
+     */
+    private void showParagraphModifyMenu(@NonNull ParagraphUnionModel model, View view) {
+        ParagraphEntity paragraph = model.getParagraph();
+        PopupMenu menu = new PopupMenu(this, view, Gravity.END);
+        menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
+
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_modify_content) {
+                setEditMode(true, paragraph, model.getMediaList());
+                return true;
+            } else if (item.getItemId() == R.id.action_modify_time) {
+                modifyCreateTime(paragraph);
+                return true;
+            } else if (item.getItemId() == R.id.action_modify_emotion) {
+                modifyEmotion(paragraph);
+                return true;
+            } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (item.getItemId() == R.id.action_delete_paragraph) {
+                deleteParagraph(paragraph);
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        menu.show();
     }
 
     /**

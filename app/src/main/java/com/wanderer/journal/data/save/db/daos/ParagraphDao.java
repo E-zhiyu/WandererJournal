@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteQuery;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,7 +50,7 @@ public interface ParagraphDao {
     @Query("SELECT * FROM paragraphs " +
             "WHERE (:isAuthed OR privacyType != 2) " +
             "ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource(int isAuthed);
+    PagingSource<Integer, ParagraphUnionModel> getAllParagraphPagingSource(int isAuthed);
 
     /**
      * 查询某个日期范围内的段落
@@ -64,7 +64,7 @@ public interface ParagraphDao {
     @Query("SELECT * FROM paragraphs " +
             "WHERE createTime >= :start AND createTime < :end AND (:isAuthed OR privacyType != 2) " +
             "ORDER BY createTime, paragraphId")
-    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceInDateRange(LocalDate start, LocalDate end, int isAuthed);
+    PagingSource<Integer, ParagraphUnionModel> getParagraphPagingSourceInDateRange(LocalDate start, LocalDate end, int isAuthed);
 
     /**
      * 查询指定 ID 的段落
@@ -74,7 +74,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
-    Single<List<ParagraphEntityUnionModel>> getParagraphSingleById(long[] paragraphIds);
+    Single<List<ParagraphUnionModel>> getParagraphSingleById(long[] paragraphIds);
 
     /**
      * 查询某个日期段内的段落数量
@@ -126,7 +126,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
-    Single<Optional<ParagraphEntityUnionModel>> getParagraphOptionalSingleById(long paragraphId);
+    Single<Optional<ParagraphUnionModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 查询最大的日记长度
