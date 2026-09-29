@@ -91,16 +91,20 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 public class DiaryReadActivity extends AppCompatActivity {
     private ActivityDiaryReadBinding binding;                               //绑定的XML布局
+    @Nullable
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();           //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                 //段落列表适配器
-    private List<Integer> paragraphPositionList;                    //符合过滤条件的段落的位置列表
+    private List<Integer> paragraphPositionList;                            //符合过滤条件的段落的位置列表
     private int currentPosListIndex = -1;                                   //位置列表当前元素的下标
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;           //滚动到初始位置的 Runnable 实例
+    @Nullable
+    private Function0<Unit> pageUpdatedListener = null;
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
     private BackPressedCallbackHelper.BackHandler searchBackHandler;        //搜索返回处理器
     private BackPressedCallbackHelper.BackHandler shareChoiceBackHandler;   //分享日记时多选模式的返回处理器
@@ -140,6 +144,12 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //移除待滚动的任务
         binding.contentRecycler.removeCallbacks(scrollToInit);
+
+        //移除页面加载监听器
+        if (pageUpdatedListener != null) {
+            adapter.removeOnPagesUpdatedListener(pageUpdatedListener);
+            pageUpdatedListener = null;
+        }
 
         disposable.dispose();
         binding = null;
@@ -574,14 +584,15 @@ public class DiaryReadActivity extends AppCompatActivity {
         }
 
         //添加页面加载监听，用以滚动到初始位置
-        adapter.addOnPagesUpdatedListener(() -> {
+        pageUpdatedListener = () -> {
             if (initScrollPosition.get() != -1) {
                 //500毫秒的间隔防抖
                 binding.contentRecycler.removeCallbacks(scrollToInit);
                 binding.contentRecycler.postDelayed(scrollToInit, 100);
             }
             return Unit.INSTANCE;
-        });
+        };
+        adapter.addOnPagesUpdatedListener(pageUpdatedListener);
     }
 
     /**
@@ -628,6 +639,12 @@ public class DiaryReadActivity extends AppCompatActivity {
                     }
                 }
         );
+
+        //移除页面加载监听器
+        if (pageUpdatedListener != null) {
+            adapter.removeOnPagesUpdatedListener(pageUpdatedListener);
+            pageUpdatedListener = null;
+        }
     }
 
     /**
