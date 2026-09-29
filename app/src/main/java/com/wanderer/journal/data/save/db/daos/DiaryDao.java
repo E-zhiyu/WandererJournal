@@ -36,14 +36,15 @@ public interface DiaryDao {
     /**
      * 在读日记界面通过日期获取日期分隔符的位置
      *
-     * @param date 目标日期
+     * @param date                   目标日期
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @return 小于等于该日期的日期分隔符在读日记界面的下标
      */
     @Query("SELECT " +
             "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date) + " +
-            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date)"
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date AND (:isHiddenParagraphShown OR privacyType != 2))"
     )
-    Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date);
+    Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date, boolean isHiddenParagraphShown);
 
     /**
      * 获取最早的日记日期

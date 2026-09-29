@@ -50,7 +50,6 @@ import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
-import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
@@ -627,30 +626,32 @@ public class WriteActivity extends AppCompatActivity {
 
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    ScrollHelper.scrollPagingRecycler(
-                            binding.contentRecycler,
-                            (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
-                            adapter,
-                            scrollPosition.get(),
-                            63,
-                            10,
-                            750,
-                            new PagingRecyclerScrollListener() {
-                                @Override
-                                public void onSucceed() {
-                                    scrollPosition.set(-1);
-                                }
+                    if (binding.contentRecycler.getLayoutManager() != null) {
+                        ScrollHelper.scrollPagingRecycler(
+                                binding.contentRecycler,
+                                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                                adapter,
+                                scrollPosition.get(),
+                                63,
+                                10,
+                                750,
+                                new ScrollHelper.PagingRecyclerScrollListener() {
+                                    @Override
+                                    public void onSucceed(int successPosition) {
+                                        scrollPosition.set(-1);
+                                    }
 
-                                @Override
-                                public void onRetry(int failCount) {
-                                }
+                                    @Override
+                                    public void onRetry(int failCount) {
+                                    }
 
-                                @Override
-                                public void onFailed() {
-                                    scrollPosition.set(-1);
+                                    @Override
+                                    public void onFailed() {
+                                        scrollPosition.set(-1);
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
             }
 

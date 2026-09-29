@@ -39,7 +39,6 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
-import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -617,9 +616,9 @@ public class DiaryReadActivity extends AppCompatActivity {
         scrollContentRecycler(
                 position,
                 false,
-                new PagingRecyclerScrollListener() {
+                new ScrollHelper.PagingRecyclerScrollListener() {
                     @Override
-                    public void onSucceed() {
+                    public void onSucceed(int successPosition) {
                         //折叠标题栏
                         binding.appBarLayout.setExpanded(false);
 
@@ -705,7 +704,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void scrollContentRecycler(
             int targetPosition,
             boolean withDialog,
-            @Nullable PagingRecyclerScrollListener listener
+            @Nullable ScrollHelper.PagingRecyclerScrollListener listener
     ) {
         //构建滚动进度条
         int maxRetryCount = 10;
@@ -718,55 +717,57 @@ public class DiaryReadActivity extends AppCompatActivity {
         dialog.setCancelable(false);    //不可取消
 
         //执行滚动逻辑
-        ScrollHelper.scrollPagingRecycler(
-                binding.contentRecycler,
-                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
-                adapter,
-                targetPosition,
-                AppearanceHelper.dpToPx(this, 63),
-                maxRetryCount,
-                750,
-                new PagingRecyclerScrollListener() {
-                    @Override
-                    public void onSucceed() {
-                        if (listener != null) {
-                            listener.onSucceed();
+        if (binding.contentRecycler.getLayoutManager() != null) {
+            ScrollHelper.scrollPagingRecycler(
+                    binding.contentRecycler,
+                    (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                    adapter,
+                    targetPosition,
+                    AppearanceHelper.dpToPx(this, 63),
+                    maxRetryCount,
+                    750,
+                    new ScrollHelper.PagingRecyclerScrollListener() {
+                        @Override
+                        public void onSucceed(int successPosition) {
+                            if (listener != null) {
+                                listener.onSucceed(successPosition);
+                            }
+
+                            if (dialog.isShowing()) {
+                                Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
+                            }
+                            dialog.dismiss();
+                            Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
                         }
 
-                        if (dialog.isShowing()) {
-                            Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onRetry(int failCount) {
+                            if (listener != null) {
+                                listener.onRetry(failCount);
+                            }
+
+                            if (withDialog) {
+                                dialog.show();
+                                builder.setIndeterminate(false);
+                                builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
+                            }
+                            Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
                         }
-                        dialog.dismiss();
-                        Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
+
+                        @Override
+                        public void onFailed() {
+                            if (listener != null) {
+                                listener.onFailed();
+                            }
+
+                            Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
+
+                            dialog.dismiss();
+                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
+                        }
                     }
-
-                    @Override
-                    public void onRetry(int failCount) {
-                        if (listener != null) {
-                            listener.onRetry(failCount);
-                        }
-
-                        if (withDialog) {
-                            dialog.show();
-                            builder.setIndeterminate(false);
-                            builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
-                        }
-                        Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
-                    }
-
-                    @Override
-                    public void onFailed() {
-                        if (listener != null) {
-                            listener.onFailed();
-                        }
-
-                        Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
-
-                        dialog.dismiss();
-                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
-                    }
-                }
-        );
+            );
+        }
     }
 
     /**
@@ -1040,30 +1041,40 @@ public class DiaryReadActivity extends AppCompatActivity {
                     //跳转到对应位置
                     DiaryDb db = DiaryDb.getInstance(this);
                     DiaryDao diaryDao = db.diaryDao();
-                    disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate)
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    disposable.add(diaryDao.getDiaryDateSeparatorPositionSingleByDate(selectedDate, viewModel.isHiddenParagraphShown())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
                                     position -> scrollContentRecycler(
                                             position,
                                             true,
-                                            new PagingRecyclerScrollListener() {
+                                            new ScrollHelper.PagingRecyclerScrollListener() {
                                                 @Override
-                                                public void onSucceed() {
+                                                public void onSucceed(int successPosition) {
                                                     //判断跳转到的日期是否为选择的日期
-                                                    ParagraphUiModel model = adapter.peek(position);
-                                                    LocalDate resultDate;
-                                                    if (model instanceof ParagraphUiModel.Separator) {
-                                                        resultDate = ((ParagraphUiModel.Separator) model).date;
-                                                    } else if (model instanceof ParagraphUiModel.Item) {
-                                                        resultDate = ((ParagraphUiModel.Item) model).model
-                                                                .getParagraph()
-                                                                .getCreateTime()
-                                                                .toLocalDate();
-                                                    } else {
-                                                        resultDate = null;
-                                                    }
-                                                    if (!selectedDate.equals(resultDate)) {
+                                                    try {
+                                                        LocalDate resultDate;
+                                                        ParagraphUiModel model = adapter.peek(successPosition);
+                                                        if (model instanceof ParagraphUiModel.Separator) {
+                                                            resultDate = ((ParagraphUiModel.Separator) model).date;
+                                                        } else if (model instanceof ParagraphUiModel.Item) {
+                                                            resultDate = ((ParagraphUiModel.Item) model).model
+                                                                    .getParagraph()
+                                                                    .getCreateTime()
+                                                                    .toLocalDate();
+                                                        } else {
+                                                            resultDate = null;
+                                                        }
+
+                                                        if (!selectedDate.equals(resultDate)) {
+                                                            Toast.makeText(
+                                                                    DiaryReadActivity.this,
+                                                                    "未找到内容，已跳转至相邻日记",
+                                                                    Toast.LENGTH_SHORT
+                                                            ).show();
+                                                        }
+                                                    } catch (IndexOutOfBoundsException e) {
                                                         Toast.makeText(
                                                                 DiaryReadActivity.this,
                                                                 "未找到内容，已跳转至相邻日记",

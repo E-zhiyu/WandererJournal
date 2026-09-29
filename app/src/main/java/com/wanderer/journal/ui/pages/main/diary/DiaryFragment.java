@@ -18,7 +18,6 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -213,9 +212,10 @@ public class DiaryFragment extends Fragment {
                 targetPosition,
                 30,
                 0,
-                new RecyclerViewScrollListener() {
+                new ScrollHelper.RecyclerViewScrollListener() {
                     @Override
                     public void onSucceed() {
+
                     }
 
                     @Override
