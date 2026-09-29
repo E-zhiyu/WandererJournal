@@ -33,13 +33,14 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ParagraphFilterViewModel extends ViewModel {
     private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
     private final BehaviorProcessor<String> searchKeywordProcessor =
-            BehaviorProcessor.createDefault("");    //搜索关键词处理器（包含空格）
+            BehaviorProcessor.createDefault("");        //搜索关键词处理器（包含空格）
     private final BehaviorProcessor<Boolean> filterUpdateProcessor =
             BehaviorProcessor.createDefault(true);
     private final BehaviorProcessor<Boolean> keywordModeProcessor =
-            BehaviorProcessor.createDefault(true);  //多词搜索是否为“与”模式处理器
+            BehaviorProcessor.createDefault(true);      //多词搜索是否为“与”模式处理器
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
-            BehaviorProcessor.createDefault(false); //是否显示隐藏的段落
+            BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
+    public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
     public long lastAuthTimeMillis = 0;
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();

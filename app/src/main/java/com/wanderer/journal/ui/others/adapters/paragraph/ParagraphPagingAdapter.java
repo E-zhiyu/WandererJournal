@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
+import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
@@ -43,6 +45,7 @@ import java.util.Set;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
+    public final Set<Long> contentDisplayIdSet;                         //标记为显示内容的段落编号
     private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
     private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
     private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
@@ -127,10 +130,10 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         void onClick(int position, View mediaView, List<MediaEntity> mediaList);
     }
 
-    public static class DateSeparatorViewHolder extends RecyclerView.ViewHolder {
+    public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
         ViewHolderSeparatorTextChipBinding binding;
 
-        public DateSeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
+        public SeparatorViewHolder(@NonNull ViewHolderSeparatorTextChipBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
         }
@@ -171,11 +174,11 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         }
     }
 
-    public static class ParagraphViewHolder extends RecyclerView.ViewHolder {
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
         ViewHolderParagraphBinding binding;
         private ParagraphEntityUnionModel data = null;   //数据实例
 
-        public ParagraphViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityUnionModel> listener) {
+        public ItemViewHolder(@NonNull ViewHolderParagraphBinding binding, @Nullable AdapterOnClickListener<ParagraphEntityUnionModel> listener) {
             super(binding.getRoot());
             this.binding = binding;
 
@@ -240,15 +243,19 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 段落适配器构造方法
      *
+     * @param contentDisplayIdSet    标记为显示内容的段落编号集合
      * @param paragraphClickListener 段落点击监听器（传递 null 则不设置点击监听）
      * @param mediaClickedListener   媒体预览图点击监听
+     * @param roleClickListener      角色富文本点击监听
      */
     public ParagraphPagingAdapter(
+            Set<Long> contentDisplayIdSet,
             AdapterOnClickListener<ParagraphEntityUnionModel> paragraphClickListener,
             OnMediaClickedListener mediaClickedListener,
             AdapterOnClickListener<Long> roleClickListener
     ) {
         super(ITEM_CALLBACK);
+        this.contentDisplayIdSet = contentDisplayIdSet;
         this.paragraphClickListener = paragraphClickListener;
         this.mediaClickedListener = mediaClickedListener;
         this.roleClickListener = roleClickListener;
@@ -295,7 +302,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                     parent,
                     false
             );
-            return new ParagraphViewHolder(
+            return new ItemViewHolder(
                     binding,
                     (paragraphEntityModel, view) -> {
                         if (!isSelectMode) {
@@ -311,7 +318,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                     parent,
                     false
             );
-            return new DateSeparatorViewHolder(binding);
+            return new SeparatorViewHolder(binding);
         }
     }
 
@@ -325,38 +332,14 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             holder.itemView.setVisibility(View.VISIBLE);    //不是占位符时才显示
         }
 
-        if (holder instanceof ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
+        if (holder instanceof ItemViewHolder && uiModel instanceof ParagraphUiModel.Item) {
             ParagraphEntityUnionModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
             ParagraphEntity paragraph = dataModel.getParagraph();
-            ParagraphViewHolder itemHolder = (ParagraphViewHolder) holder;
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();
 
             //绑定数据原型
             itemHolder.bindItem(dataModel);
-
-            //媒体列表
-            List<MediaEntity> mediaList = dataModel.getMediaList();
-            if (mediaList != null && !mediaList.isEmpty()) {
-                //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
-                int spanCount = Math.min(mediaList.size(), 3);
-                int size = itemHolder.binding.getRoot().getWidth() / spanCount;
-                GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount);
-                itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
-
-                //绑定数据
-                ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
-                        size,
-                        spanCount,
-                        (mediaPosition, view) -> mediaClickedListener.onClick(mediaPosition, view, mediaList)
-                );
-                itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
-                mediaAdapter.submitList(mediaList);
-
-                //显示列表
-                itemHolder.binding.mediaRecycler.setVisibility(View.VISIBLE);
-            } else {
-                itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
-            }
 
             //内容文本视图的属性设置
             itemHolder.binding.contentText.setMovementMethod(FallbackLinkMovementMethod.getInstance());
@@ -365,24 +348,74 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             itemHolder.binding.contentText.setLongClickable(false); //防止消费长按监听
             itemHolder.binding.contentText.setHighlightColor(Color.TRANSPARENT);
 
-            //内容文本填充富文本
-            String rawContent = paragraph.getContent(); //数据库中的原始数据
-            CharSequence richText = ParagraphTextConverter.hierarchic(
-                    context,
-                    positionSet.contains(holder.getBindingAdapterPosition()) ? highlightedKeywordList : null,
-                    rawContent,
-                    new RoleRefTextRule() {
-                        @Override
-                        public void onClick(String clickData) {
-                            try {
-                                long roleId = Long.parseLong(clickData);
-                                roleClickListener.onClick(roleId, holder.itemView);
-                            } catch (NumberFormatException ignored) {
+            //根据隐私类别决定是否显示内容
+            if (paragraph.getPrivacyType() != ParagraphPrivacyType.HIDE_CONTENT.ordinal() ||
+                    contentDisplayIdSet.contains(paragraph.getParagraphId())) {
+                //媒体列表
+                List<MediaEntity> mediaList = dataModel.getMediaList();
+                if (mediaList != null && !mediaList.isEmpty()) {
+                    //动态动态调整网格列数：1张图显示1列，2张图2列，3张及以上显示3列
+                    int spanCount = Math.min(mediaList.size(), 3);
+                    int size = itemHolder.binding.getRoot().getWidth() / spanCount;
+                    GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount);
+                    itemHolder.binding.mediaRecycler.setLayoutManager(layoutManager);
+
+                    //绑定数据
+                    ParagraphInnerMediaAdapter mediaAdapter = new ParagraphInnerMediaAdapter(
+                            size,
+                            spanCount,
+                            (mediaPosition, view) -> mediaClickedListener.onClick(mediaPosition, view, mediaList)
+                    );
+                    itemHolder.binding.mediaRecycler.setAdapter(mediaAdapter);
+                    mediaAdapter.submitList(mediaList);
+
+                    //显示列表
+                    itemHolder.binding.mediaRecycler.setVisibility(View.VISIBLE);
+                } else {
+                    itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
+                }
+
+                //内容文本填充富文本
+                String rawContent = paragraph.getContent(); //数据库中的原始数据
+                CharSequence richText = ParagraphTextConverter.hierarchic(
+                        context,
+                        positionSet.contains(holder.getBindingAdapterPosition()) ? highlightedKeywordList : null,
+                        rawContent,
+                        new RoleRefTextRule() {
+                            @Override
+                            public void onClick(String clickData) {
+                                try {
+                                    long roleId = Long.parseLong(clickData);
+                                    roleClickListener.onClick(roleId, holder.itemView);
+                                } catch (NumberFormatException ignored) {
+                                }
                             }
                         }
+                );
+                itemHolder.binding.contentText.setText(richText);
+
+                //情绪标签
+                List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
+                if (emotionList.isEmpty()) {
+                    itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
+                } else {
+                    itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
+                    for (EmotionTagRefUnionModel emotion : emotionList) {
+                        long emotionId = emotion.getEmotionTag().getEmotionId();
+                        String title = emotion.generateDisplayText();
+
+                        //添加 Chip 到视图中
+                        Chip emotionChip = getEmotionChip(context, emotionId, title);
+                        itemHolder.binding.emotionChipGroup.addView(emotionChip);
                     }
-            );
-            itemHolder.binding.contentText.setText(richText);
+
+                    itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
+                }
+            } else {
+                itemHolder.binding.mediaRecycler.setVisibility(View.GONE);
+                itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
+                itemHolder.binding.contentText.setText("<该段落的内容已隐藏，点击以显示其内容>");
+            }
 
             //显示和隐藏复选框
             if (isSelectMode) {
@@ -396,22 +429,27 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                             selectionTracker.isSelected(paragraph.getParagraphId())
             );
 
-            //情绪标签
-            List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
-            if (emotionList.isEmpty()) {
-                itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
+            //隐私种类色块
+            int privacy = paragraph.getPrivacyType();
+            if (privacy == ParagraphPrivacyType.PUBLIC.ordinal()) {
+                itemHolder.binding.privacyTypeColorBlock.setVisibility(View.GONE);
             } else {
-                itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-                for (EmotionTagRefUnionModel emotion : emotionList) {
-                    long emotionId = emotion.getEmotionTag().getEmotionId();
-                    String title = emotion.generateDisplayText();
+                itemHolder.binding.privacyTypeColorBlock.setVisibility(View.VISIBLE);
 
-                    //添加 Chip 到视图中
-                    Chip emotionChip = getEmotionChip(context, emotionId, title);
-                    itemHolder.binding.emotionChipGroup.addView(emotionChip);
+                int colorAttributeResId, errColor;
+                if (privacy == ParagraphPrivacyType.HIDE_CONTENT.ordinal()) {
+                    colorAttributeResId = com.google.android.material.R.attr.colorPrimaryVariant;
+                    errColor = Color.BLUE;
+                } else {
+                    colorAttributeResId = com.google.android.material.R.attr.colorSecondaryVariant;
+                    errColor = Color.GRAY;
                 }
-
-                itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
+                int color = MaterialColors.getColor(
+                        context,
+                        colorAttributeResId,
+                        errColor
+                );
+                itemHolder.binding.privacyTypeColorBlock.setBackgroundColor(color);
             }
 
             //时间
@@ -420,8 +458,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
-        } else if (holder instanceof DateSeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
-            DateSeparatorViewHolder separatorViewHolder = (DateSeparatorViewHolder) holder;
+        } else if (holder instanceof SeparatorViewHolder && uiModel instanceof ParagraphUiModel.Separator) {
+            SeparatorViewHolder separatorViewHolder = (SeparatorViewHolder) holder;
 
             //分隔符文本
             String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);

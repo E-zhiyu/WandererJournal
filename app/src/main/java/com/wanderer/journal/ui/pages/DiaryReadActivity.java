@@ -437,7 +437,9 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         //设置适配器
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         adapter = new ParagraphPagingAdapter(
+                viewModel.contentDisplayIdSet,
                 (model, view) -> {
                     ParagraphEntity paragraph = model.getParagraph();
 
@@ -579,7 +581,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDb db = DiaryDb.getInstance(this);
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) != -1) {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);

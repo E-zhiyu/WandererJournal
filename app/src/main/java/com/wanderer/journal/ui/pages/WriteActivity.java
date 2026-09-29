@@ -579,20 +579,17 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initParagraphRecycler() {
         //设置适配器
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
-                (dataModel, view) -> {
-                    ParagraphEntity paragraph = dataModel.getParagraph();
-
-                    //先收起输入法
-                    ImmHelper.hideImm(binding.contentTextInput);
-
+                viewModel.contentDisplayIdSet,
+                (model, view) -> {
+                    ParagraphEntity paragraph = model.getParagraph();
                     PopupMenu menu = new PopupMenu(this, view, Gravity.END);
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
                     menu.setOnMenuItemClickListener(item -> {
                         if (item.getItemId() == R.id.action_modify_content) {
-                            setEditMode(true, paragraph, dataModel.getMediaList());
-
+                            setEditMode(true, paragraph, model.getMediaList());
                             return true;
                         } else if (item.getItemId() == R.id.action_modify_time) {
                             modifyCreateTime(paragraph);
@@ -700,7 +697,6 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDb db = DiaryDb.getInstance(this);
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
