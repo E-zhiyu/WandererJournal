@@ -185,15 +185,11 @@ public interface DiaryDao {
         //构建新段落列表并写入
         List<ParagraphEntity> originParagraphList = paragraphDao.getParagraphByDiaryId(diaryId);
         List<ParagraphEntity> newParagraphList = originParagraphList.stream()
-                .map(paragraph -> {
-                    //计算得到新的时间
+                .peek(paragraph -> {
+                    //计算得到新的时间并更新
                     LocalTime time = paragraph.getCreateTime().toLocalTime();
                     LocalDateTime newDateTime = targetDate.atTime(time);
-
-                    //构建并返回新段落实体
-                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, paragraph.getContent(), newDateTime);
-                    newParagraph.setParagraphId(paragraph.getParagraphId());
-                    return newParagraph;
+                    paragraph.setCreateTime(newDateTime);
                 })
                 .collect(Collectors.toList());
         paragraphDao.updateParagraph(newParagraphList);
