@@ -247,6 +247,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                             getValidKeywordList(),
                             checkedEmotionIdSet,
                             filterMedia,
+                            isHiddenParagraphShown(),
                             db,
                             filterQuery.isAndMode
                     );
