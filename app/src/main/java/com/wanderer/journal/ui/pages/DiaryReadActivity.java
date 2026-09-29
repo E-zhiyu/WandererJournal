@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -1076,7 +1077,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void changeHiddenParagraphVisibility() {
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         if (viewModel.isNotAuthed() && !viewModel.isHiddenParagraphShown()) {
-            BiometricHelper.showBiometricPrompt("隐私段落保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
+            BiometricHelper.showBiometricPrompt("隐私保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
                 @Override
                 public void onSuccess() {
                     viewModel.showHiddenParagraph(true);
@@ -1086,7 +1087,12 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(int errCode, CharSequence errStr) {
-                    Toast.makeText(DiaryReadActivity.this, errStr, Toast.LENGTH_SHORT).show();
+                    if (errCode == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+                        viewModel.showHiddenParagraph(true);
+                        Toast.makeText(DiaryReadActivity.this, "请设置锁屏验证方式以保护隐私段落", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(DiaryReadActivity.this, errStr, Toast.LENGTH_SHORT).show();
+                    }
                 }
 
                 @Override
