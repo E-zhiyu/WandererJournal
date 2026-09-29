@@ -18,6 +18,6 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_change_hidden_paragraph_visibility"
-        android:title="@string/change_hidden_paragraph_visibility"
+        android:title="@string/show_or_hide_private_paragraph"
         app:showAsAction="ifRoom" />
 </menu>

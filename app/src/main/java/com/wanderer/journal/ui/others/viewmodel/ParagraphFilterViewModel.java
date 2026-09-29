@@ -38,8 +38,9 @@ public class ParagraphFilterViewModel extends ViewModel {
             BehaviorProcessor.createDefault(true);
     private final BehaviorProcessor<Boolean> keywordModeProcessor =
             BehaviorProcessor.createDefault(true);  //多词搜索是否为“与”模式处理器
-    private final BehaviorProcessor<Boolean> authProcessor =
-            BehaviorProcessor.createDefault(false); //是否通过身份验证
+    private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
+            BehaviorProcessor.createDefault(false); //是否显示隐藏的段落
+    public long lastAuthTimeMillis = 0;
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
@@ -67,7 +68,26 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @return 是否显示了隐藏的段落
      */
     public boolean isHiddenParagraphShown() {
-        return authProcessor.getValue() != null && authProcessor.getValue();
+        return showHiddenParagraphProcessor.getValue() != null && showHiddenParagraphProcessor.getValue();
+    }
+
+    /**
+     * 判断是否未通过身份验证
+     *
+     * @return 是否未通过身份验证
+     */
+    public boolean isNotAuthed() {
+        long currentTimeMillis = System.currentTimeMillis();
+        return currentTimeMillis - lastAuthTimeMillis > 1000 * 60 * 5;     //一次授权的有效时间为5分钟
+    }
+
+    /**
+     * 设置是否通过身份验证
+     *
+     * @param isAuthed 是否通过身份验证
+     */
+    public void setIsAuthed(boolean isAuthed) {
+        lastAuthTimeMillis = isAuthed ? System.currentTimeMillis() : 0;
     }
 
     public void setFilterMedia(boolean filterMedia) {
@@ -129,7 +149,7 @@ public class ParagraphFilterViewModel extends ViewModel {
             @NonNull LocalDate end,
             DiaryDb db
     ) {
-        return authProcessor
+        return showHiddenParagraphProcessor
                 .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
@@ -163,7 +183,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @return 段落分页数据，支持响应式更新
      */
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
-        return authProcessor
+        return showHiddenParagraphProcessor
                 .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
@@ -263,8 +283,8 @@ public class ParagraphFilterViewModel extends ViewModel {
      *
      * @param isVisible 是否可见
      */
-    public void setHiddenParagraphVisibility(boolean isVisible) {
-        authProcessor.onNext(isVisible);
+    public void showHiddenParagraph(boolean isVisible) {
+        showHiddenParagraphProcessor.onNext(isVisible);
     }
 
     /**

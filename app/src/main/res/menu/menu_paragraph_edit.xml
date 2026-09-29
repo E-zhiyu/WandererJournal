@@ -3,19 +3,18 @@
     <item
         android:id="@+id/action_modify_content"
         android:title="@string/modify_content" />
-
     <item
         android:id="@+id/action_modify_time"
         android:title="@string/modify_time" />
-
     <item
         android:id="@+id/action_modify_emotion"
         android:title="@string/modify_emotion_tag" />
-
+    <item
+        android:id="@+id/action_change_privacy_type"
+        android:title="@string/switch_privacy_type" />
     <item
         android:id="@+id/action_copy_paragraph"
-        android:title="@string/copy_paragraph"/>
-
+        android:title="@string/copy_paragraph" />
     <item
         android:id="@+id/action_delete_paragraph"
         android:title="@string/delete" />

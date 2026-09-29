@@ -405,4 +405,14 @@ public interface ParagraphDao {
         // 批量插入段落
         insertParagraphWhenImportingDiary(paragraphList);
     }
+
+    /**
+     * 更新段落的隐私类别
+     *
+     * @param paragraphId 需要更新的段落的编号
+     * @param type        更新后的隐私类别
+     * @return 是否完成
+     */
+    @Query("UPDATE paragraphs SET privacyType = :type WHERE paragraphId = :paragraphId")
+    Completable updatePrivacyTypeCompletable(long paragraphId, int type);
 }

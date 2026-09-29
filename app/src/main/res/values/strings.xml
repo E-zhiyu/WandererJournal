@@ -176,7 +176,8 @@
     <string name="file_info">文件信息：</string>
     <string name="media_param_info">媒体参数：</string>
     <string name="read_diary">看日记</string>
-    <string name="change_hidden_paragraph_visibility">显示/隐藏隐私段落</string>
+    <string name="show_or_hide_private_paragraph">显示/隐藏隐私段落</string>
+    <string name="switch_privacy_type">切换隐私类别</string>
     <string name="troubleshooting">问题解答</string>
     <string name="help_solve_some_common_problems">帮助解决一些常见的问题</string>
     <string name="floating_notification_question">Q : 为什么授予通知权限后不会弹出悬浮通知？</string>

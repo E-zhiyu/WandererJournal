@@ -75,6 +75,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
                         oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime()) &&
+                        oldParagraph.getPrivacyType() == newParagraph.getPrivacyType() &&
                         oldEmotionList.equals(newEmotionList) &&
                         oldMediaList.equals(newMediaList);
             } else {

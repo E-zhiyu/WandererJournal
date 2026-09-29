@@ -36,6 +36,7 @@ import androidx.transition.TransitionSet;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
+import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -78,6 +79,7 @@ import com.wanderer.journal.ui.pages.share.SharePreviewActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -443,7 +445,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                     menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
                     menu.setOnMenuItemClickListener(item -> {
-                        if (item.getItemId() == R.id.action_modify_content) {
+                        int id = item.getItemId();
+                        if (id == R.id.action_modify_content) {
                             Intent skip2Write = new Intent(DiaryReadActivity.this, WriteActivity.class);
                             Bundle bundle = new Bundle();
 
@@ -453,17 +456,20 @@ public class DiaryReadActivity extends AppCompatActivity {
                             skip2Write.putExtras(bundle);
                             startActivity(skip2Write);
                             return true;
-                        } else if (item.getItemId() == R.id.action_modify_time) {
+                        } else if (id == R.id.action_modify_time) {
                             modifyCreateTime(paragraph);
                             return true;
-                        } else if (item.getItemId() == R.id.action_modify_emotion) {
+                        } else if (id == R.id.action_modify_emotion) {
                             modifyEmotion(paragraph);
                             return true;
-                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                        } else if (id == R.id.action_change_privacy_type) {
+                            switchParagraphPrivacyType(paragraph);
+                            return true;
+                        } else if (id == R.id.action_copy_paragraph) {
                             TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
                             Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                             return true;
-                        } else if (item.getItemId() == R.id.action_delete_paragraph) {
+                        } else if (id == R.id.action_delete_paragraph) {
                             deleteParagraph(paragraph);
                             return true;
                         } else {
@@ -841,6 +847,67 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
+     * 切换段落的隐私类别
+     *
+     * @param paragraph 需要修改隐私类别的段落
+     */
+    private void switchParagraphPrivacyType(@NonNull ParagraphEntity paragraph) {
+        //获取种类和标题数组
+        ParagraphPrivacyType[] types = ParagraphPrivacyType.values();
+        String[] titles = Arrays.stream(types)
+                .map(ParagraphPrivacyType::getTitle)
+                .toArray(String[]::new);
+
+        //显示对话框
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.switch_privacy_type)
+                .setSingleChoiceItems(titles, paragraph.getPrivacyType(), (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    if ((i == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal() ||
+                            paragraph.getPrivacyType() == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal()) &&
+                            viewModel.isNotAuthed()) {
+                        BiometricHelper.showBiometricPrompt("隐私段落保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
+                            @Override
+                            public void onSuccess() {
+                                DiaryDb db = DiaryDb.getInstance(DiaryReadActivity.this);
+                                disposable.add(db.paragraphDao().updatePrivacyTypeCompletable(paragraph.getParagraphId(), i)
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(
+                                                () -> Toast.makeText(DiaryReadActivity.this, "隐私类别修改成功", Toast.LENGTH_SHORT).show(),
+                                                e -> ExceptionHelper.showExceptionDialog(DiaryReadActivity.this, e)
+                                        )
+                                );
+                            }
+
+                            @Override
+                            public void onError(int errCode, CharSequence errStr) {
+                                Toast.makeText(DiaryReadActivity.this, errStr, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailed() {
+                            }
+                        });
+                    } else {
+                        DiaryDb db = DiaryDb.getInstance(this);
+                        disposable.add(db.paragraphDao().updatePrivacyTypeCompletable(paragraph.getParagraphId(), i)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Toast.makeText(this, "隐私类别修改成功", Toast.LENGTH_SHORT).show(),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /**
      * 删除段落
      *
      * @param paragraph 待删除的段落实例
@@ -993,12 +1060,13 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void changeHiddenParagraphVisibility() {
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
-        if (!viewModel.isHiddenParagraphShown()) {
+        if (viewModel.isNotAuthed() && !viewModel.isHiddenParagraphShown()) {
             BiometricHelper.showBiometricPrompt("隐私段落保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
                 @Override
                 public void onSuccess() {
-                    viewModel.setHiddenParagraphVisibility(true);
-                    Toast.makeText(DiaryReadActivity.this, "已显示隐私段落", Toast.LENGTH_SHORT).show();
+                    viewModel.showHiddenParagraph(true);
+                    Toast.makeText(DiaryReadActivity.this, "已显示受保护的段落", Toast.LENGTH_SHORT).show();
+                    viewModel.setIsAuthed(true);
                 }
 
                 @Override
@@ -1011,8 +1079,11 @@ public class DiaryReadActivity extends AppCompatActivity {
                 }
             });
         } else {
-            viewModel.setHiddenParagraphVisibility(false);
-            Toast.makeText(this, "已隐藏隐私段落", Toast.LENGTH_SHORT).show();
+            boolean currentStat = viewModel.isHiddenParagraphShown();
+            viewModel.showHiddenParagraph(!currentStat);
+
+            String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
+            Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
         }
     }
 }
