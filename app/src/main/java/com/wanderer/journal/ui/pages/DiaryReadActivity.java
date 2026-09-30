@@ -16,7 +16,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.biometric.BiometricManager;
@@ -74,7 +73,6 @@ import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.ParagraphFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
-import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import com.wanderer.journal.ui.pages.share.SharePreviewActivity;
 
@@ -187,7 +185,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                             currentPosListIndex = pos - 1;
                             scrollContentRecycler(
                                     paragraphPositionList.get(currentPosListIndex),
-                                    true,
                                     null
                             );
 
@@ -216,7 +213,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
             scrollContentRecycler(
                     paragraphPositionList.get(currentPosListIndex),
-                    true,
                     null
             );
 
@@ -244,7 +240,6 @@ public class DiaryReadActivity extends AppCompatActivity {
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
             scrollContentRecycler(
                     paragraphPositionList.get(currentPosListIndex),
-                    true,
                     null
             );
 
@@ -309,7 +304,6 @@ public class DiaryReadActivity extends AppCompatActivity {
 
                                 scrollContentRecycler(
                                         positionList.get(positionList.size() - 1),
-                                        true,
                                         null
                                 );
                             }
@@ -615,7 +609,6 @@ public class DiaryReadActivity extends AppCompatActivity {
         Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
         scrollContentRecycler(
                 position,
-                false,
                 new ScrollHelper.PagingRecyclerScrollListener() {
                     @Override
                     public void onSucceed(int successPosition) {
@@ -703,20 +696,12 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void scrollContentRecycler(
             int targetPosition,
-            boolean withDialog,
             @Nullable ScrollHelper.PagingRecyclerScrollListener listener
     ) {
-        //构建滚动进度条
-        int maxRetryCount = 10;
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(
-                this,
-                "加载日记内容",
-                "正在跳转至目标位置……"
-        );
-        AlertDialog dialog = builder.create();
-        dialog.setCancelable(false);    //不可取消
+        VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,true);
 
         //执行滚动逻辑
+        final int MAX_RETRY = 10;
         if (binding.contentRecycler.getLayoutManager() != null) {
             ScrollHelper.scrollPagingRecycler(
                     binding.contentRecycler,
@@ -724,7 +709,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     adapter,
                     targetPosition,
                     AppearanceHelper.dpToPx(this, 63),
-                    maxRetryCount,
+                    MAX_RETRY,
                     750,
                     new ScrollHelper.PagingRecyclerScrollListener() {
                         @Override
@@ -733,10 +718,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onSucceed(successPosition);
                             }
 
-                            if (dialog.isShowing()) {
-                                Toast.makeText(DiaryReadActivity.this, "跳转成功", Toast.LENGTH_SHORT).show();
-                            }
-                            dialog.dismiss();
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
                             Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
                         }
 
@@ -746,11 +728,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onRetry(failCount);
                             }
 
-                            if (withDialog) {
-                                dialog.show();
-                                builder.setIndeterminate(false);
-                                builder.updateProgress(failCount, maxRetryCount, "正在加载日记内容……");
-                            }
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
                             Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
                         }
 
@@ -760,9 +738,8 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onFailed();
                             }
 
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
                             Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
-
-                            dialog.dismiss();
                             Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
                         }
                     }
@@ -1048,7 +1025,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                             .subscribe(
                                     position -> scrollContentRecycler(
                                             position,
-                                            true,
                                             new ScrollHelper.PagingRecyclerScrollListener() {
                                                 @Override
                                                 public void onSucceed(int successPosition) {

@@ -50,6 +50,18 @@ public class ScrollHelper {
         private int retryCount = 0;
         private boolean isFinished = false;
 
+        /**
+         * 滚动到未加载的分页列表的任务
+         *
+         * @param recyclerView     列表视图
+         * @param layoutManager    线性布局管理器
+         * @param adapter          分页加载适配器
+         * @param targetPosition   目标下标
+         * @param offset           偏移量 (px)
+         * @param maxRetryCount    重定向的最大重试次数
+         * @param retryDelayMillis 两次重试的间隔时间
+         * @param listener         滚动结果监听器
+         */
         PagingScrollTask(
                 RecyclerView recyclerView,
                 LinearLayoutManager layoutManager,
@@ -70,6 +82,9 @@ public class ScrollHelper {
             this.listener = listener;
         }
 
+        /**
+         * 开始滚动
+         */
         public void start() {
             PagingDataAdapter<?, ?> adapter = adapterRef.get();
             RecyclerView recyclerView = recyclerViewRef.get();
@@ -113,7 +128,7 @@ public class ScrollHelper {
                 retryCount++;
                 listener.onRetry(retryCount);
 
-                // 重新尝试向目标方向引导，而不是颠倒跳到两端
+                //重新尝试向目标方向引导
                 triggerFetchTowardsTarget();
 
                 recyclerView.postDelayed(this, retryDelayMillis);
@@ -123,6 +138,11 @@ public class ScrollHelper {
             }
         }
 
+        /**
+         * 滚动检查是否滚动到目标位置
+         *
+         * @return 滚动后是否到达目标位置
+         */
         private boolean checkAndScroll() {
             if (isFinished) return true;
 
@@ -176,6 +196,9 @@ public class ScrollHelper {
             }
         }
 
+        /**
+         * 清理（页面加载监听器等）
+         */
         private void cleanup() {
             isFinished = true;
             PagingDataAdapter<?, ?> adapter = adapterRef.get();
