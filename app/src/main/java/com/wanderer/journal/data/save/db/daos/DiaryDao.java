@@ -41,7 +41,10 @@ public interface DiaryDao {
      * @return 小于等于该日期的日期分隔符在读日记界面的下标
      */
     @Query("SELECT " +
-            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date) + " +
+            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date AND " +
+            "       EXISTS (SELECT 1 FROM paragraphs p_sub" +
+            "           WHERE p_sub.parentDiaryId = diaryId" +
+            "               AND (:isHiddenParagraphShown OR p_sub.privacyType != 2))) + " +
             "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date AND (:isHiddenParagraphShown OR privacyType != 2))"
     )
     Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date, boolean isHiddenParagraphShown);
