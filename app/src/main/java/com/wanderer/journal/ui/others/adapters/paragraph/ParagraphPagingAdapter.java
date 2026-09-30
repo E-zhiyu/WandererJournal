@@ -39,19 +39,18 @@ import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
-    public final Set<Long> contentDisplayIdSet;                         //标记为显示内容的段落编号
-    private SelectionTracker<Long> selectionTracker;                    // ViewHolder 选择追踪器
-    private List<String> highlightedKeywordList = null;                 //当前高亮的搜索关键词
-    private final Set<Long> filterEmotionIdSet = new HashSet<>();       //搜索的情绪标签 ID 集合
-    private final Set<Integer> positionSet = new HashSet<>();           //当前高亮的段落下标集合
-    private boolean isSelectMode = false;                               //是否是选择模式
+    public final Set<Long> contentDisplayIdSet;                          //标记为显示内容的段落编号
+    private SelectionTracker<Long> selectionTracker;                     // ViewHolder 选择追踪器
+    private List<String> highlightedKeywordList = null;                  //当前高亮的搜索关键词
+    private final Set<Long> filterEmotionIdSet = new HashSet<>();        //搜索的情绪标签 ID 集合
+    private final Set<Long> hilightedParagraphIdSet = new HashSet<>();  //当前高亮的段落编号集合
+    private boolean isSelectMode = false;                                //是否是选择模式
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull ParagraphUiModel oldItem, @NonNull ParagraphUiModel newItem) {
@@ -396,7 +395,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 String rawContent = paragraph.getContent(); //数据库中的原始数据
                 CharSequence richText = ParagraphTextConverter.hierarchic(
                         context,
-                        positionSet.contains(holder.getBindingAdapterPosition()) ? highlightedKeywordList : null,
+                        hilightedParagraphIdSet.contains(paragraph.getParagraphId()) ? highlightedKeywordList : null,
                         rawContent,
                         new RoleRefTextRule() {
                             @Override
@@ -567,28 +566,37 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 设置高亮
      *
-     * @param keywordList  高亮关键词列表
-     * @param positionList 有符合关键词的视图的下标
+     * @param keywordList 高亮关键词列表
+     * @param idList      有符合关键词的视图的下标
      */
-    public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Integer> positionList) {
+    public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Long> idList) {
         //修改搜索元素数据
         this.highlightedKeywordList = keywordList;
         this.filterEmotionIdSet.clear();
         this.filterEmotionIdSet.addAll(filterEmotionIdList);
 
         //更改位置列表中的内容
-        List<Integer> oldPositionList = new ArrayList<>(positionList);
-        this.positionSet.clear();
-        this.positionSet.addAll(positionList);
+        Set<Long> oldPositionList = new HashSet<>(this.hilightedParagraphIdSet);
+        this.hilightedParagraphIdSet.clear();
+        this.hilightedParagraphIdSet.addAll(idList);
 
-        //提醒旧的取消高亮
-        for (int i : oldPositionList) {
-            notifyItemChanged(i);
+        //获取需要刷新的位置
+        Set<Integer> refreshPositionSet = new HashSet<>();
+        int i = 0;
+        for (ParagraphUiModel uiModel : snapshot().getItems()) {
+            if (uiModel instanceof ParagraphUiModel.Item) {
+                ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+                long paragraphId = paragraph.getParagraphId();
+                if (oldPositionList.contains(paragraphId) || idList.contains(paragraphId)) {
+                    refreshPositionSet.add(i);
+                }
+            }
+            i++;
         }
 
-        //提醒新的进行高亮
-        for (int i : positionList) {
-            notifyItemChanged(i);
+        //刷新
+        for (int pos : refreshPositionSet) {
+            notifyItemChanged(pos);
         }
     }
 
@@ -596,11 +604,28 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
      * 清除高亮
      */
     public void clearHighlight() {
+        //获取需要刷新的位置
+        Set<Integer> refreshPositionSet = new HashSet<>();
+        int i = 0;
+        for (ParagraphUiModel uiModel : snapshot().getItems()) {
+            if (uiModel instanceof ParagraphUiModel.Item) {
+                ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+                long paragraphId = paragraph.getParagraphId();
+                if (hilightedParagraphIdSet.contains(paragraphId)) {
+                    refreshPositionSet.add(i);
+                }
+            }
+            i++;
+        }
+
+        //清理
+        hilightedParagraphIdSet.clear();
         this.highlightedKeywordList = null;
         this.filterEmotionIdSet.clear();
-        for (int position : positionSet) {
-            notifyItemChanged(position);
+
+        //刷新 UI
+        for (int pos : refreshPositionSet) {
+            notifyItemChanged(pos);
         }
-        positionSet.clear();
     }
 }

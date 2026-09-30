@@ -224,12 +224,12 @@ public class ParagraphFilterViewModel extends ViewModel {
     }
 
     /**
-     * 获取符合过滤条件的段落的位置
+     * 获取符合过滤条件的段落的编号
      *
      * @param db 数据库实例
-     * @return 从数据库中获取符合过滤条件的段落下标
+     * @return 从数据库中获取符合过滤条件的段落编号
      */
-    public Flowable<List<Integer>> getFilteredParagraphPosition(DiaryDb db) {
+    public Flowable<List<Long>> getFilteredParagraphIds(DiaryDb db) {
         return Flowable.combineLatest(
                         searchKeywordProcessor,
                         filterUpdateProcessor,

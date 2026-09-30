@@ -107,7 +107,20 @@ public interface ParagraphDao {
      * @return 包含所有匹配位置的列表，支持 Flowable 响应式
      */
     @RawQuery(observedEntities = {ParagraphEntity.class, DiaryEntity.class})
-    Flowable<List<Integer>> getSearchMatchedParagraphPositionsRaw(SupportSQLiteQuery query);
+    Flowable<List<Long>> getSearchMatchedParagraphIdsRaw(SupportSQLiteQuery query);
+
+    /**
+     * 查找某个段落的粗略位置，用于触发分页加载
+     *
+     * @param paragraphId   需要定位的段落的编号
+     * @param isHiddenShown 隐藏的段落是否显示
+     * @return 该段落的粗略位置
+     */
+    @Query("SELECT COUNT(*) " +
+            "FROM paragraphs p " +
+            "WHERE p.createTime < (SELECT createTime FROM paragraphs WHERE paragraphId = :paragraphId)" +
+            "  AND (:isHiddenShown OR p.privacyType != 2)")
+    Single<Integer> getRoughPositionByParagraphId(long paragraphId, boolean isHiddenShown);
 
     /**
      * 通过日记 ID 获取段落

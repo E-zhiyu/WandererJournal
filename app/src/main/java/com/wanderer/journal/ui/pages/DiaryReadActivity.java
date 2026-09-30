@@ -28,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.transition.Fade;
 import androidx.transition.Slide;
 import androidx.transition.TransitionManager;
@@ -96,8 +97,8 @@ public class DiaryReadActivity extends AppCompatActivity {
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();           //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                 //段落列表适配器
-    private List<Integer> paragraphPositionList;                            //符合过滤条件的段落的位置列表
-    private int currentPosListIndex = -1;                                   //位置列表当前元素的下标
+    private List<Long> searchMatchedparagraphIdList;                        //符合过滤条件的段落的位置列表
+    private int currentIndex = -1;                                          //搜索匹配项列表当前元素的下标
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
     private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;           //滚动到初始位置的 Runnable 实例
     @Nullable
@@ -169,33 +170,30 @@ public class DiaryReadActivity extends AppCompatActivity {
                         .setNegativeButton("取消", null)
                         .setPositiveButton("确定", input -> {
                             //判断是否有内容
-                            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
+                            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
                                 Toast.makeText(this, "无匹配的搜索项，无法跳转", Toast.LENGTH_SHORT).show();
                                 return;
                             }
 
                             //判断范围
                             int pos = Integer.parseInt(input);
-                            if (pos <= 0 || pos > paragraphPositionList.size()) {
+                            if (pos <= 0 || pos > searchMatchedparagraphIdList.size()) {
                                 Toast.makeText(this, "请输入有效范围内的位置", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-
-                            //执行跳转逻辑
-                            currentPosListIndex = pos - 1;
-                            scrollContentRecycler(
-                                    paragraphPositionList.get(currentPosListIndex),
-                                    null
-                            );
 
                             //更新计数器
                             String counterText = String.format(
                                     Locale.getDefault(),
                                     "%d/%d",
-                                    currentPosListIndex + 1,
-                                    paragraphPositionList.size()
+                                    currentIndex + 1,
+                                    searchMatchedparagraphIdList.size()
                             );
                             binding.filteredParagraphCounterText.setText(counterText);
+
+                            //执行跳转逻辑
+                            currentIndex = pos - 1;
+                            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
                         })
                         .show());
         AppearanceHelper.attachMorphAnimation(binding.matchedItemsCounter);
@@ -203,24 +201,21 @@ public class DiaryReadActivity extends AppCompatActivity {
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
             //判空
-            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
+            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
                 return;
             }
 
             //滚动列表
-            int model = paragraphPositionList.size();
-            currentPosListIndex = (currentPosListIndex + model - 1) % model;
-            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
-            scrollContentRecycler(
-                    paragraphPositionList.get(currentPosListIndex),
-                    null
-            );
+            int model = searchMatchedparagraphIdList.size();
+            currentIndex = (currentIndex + model - 1) % model;
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentIndex);
+            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
 
             //更新计数器
             String counterText = String.format(
                     Locale.getDefault(),
                     "%d/%d",
-                    currentPosListIndex + 1,
+                    currentIndex + 1,
                     model
             );
             binding.filteredParagraphCounterText.setText(counterText);
@@ -230,24 +225,21 @@ public class DiaryReadActivity extends AppCompatActivity {
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
             //判空
-            if (paragraphPositionList == null || paragraphPositionList.isEmpty()) {
+            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
                 return;
             }
 
             //滚动视图
-            int model = paragraphPositionList.size();
-            currentPosListIndex = (currentPosListIndex + model + 1) % model;
-            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentPosListIndex);
-            scrollContentRecycler(
-                    paragraphPositionList.get(currentPosListIndex),
-                    null
-            );
+            int model = searchMatchedparagraphIdList.size();
+            currentIndex = (currentIndex + model + 1) % model;
+            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentIndex);
+            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
 
             //更新计数器
             String counterText = String.format(
                     Locale.getDefault(),
                     "%d/%d",
-                    currentPosListIndex + 1,
+                    currentIndex + 1,
                     model
             );
             binding.filteredParagraphCounterText.setText(counterText);
@@ -271,41 +263,38 @@ public class DiaryReadActivity extends AppCompatActivity {
         //符合过滤条件的段落的下标
         ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         DiaryDb db = DiaryDb.getInstance(this);
-        disposable.add(viewModel.getFilteredParagraphPosition(db)
+        disposable.add(viewModel.getFilteredParagraphIds(db)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        positionList -> {
-                            paragraphPositionList = positionList;
+                        idList -> {
+                            searchMatchedparagraphIdList = idList;
 
                             //高亮段落
-                            if (!positionList.isEmpty()) {
+                            if (!idList.isEmpty()) {
                                 adapter.setHighlightTarget(
                                         viewModel.getValidKeywordList(),
                                         viewModel.getCheckedEmotionIdSet(),
-                                        positionList
+                                        idList
                                 );
                             } else {
                                 adapter.clearHighlight();
                             }
 
                             //设置跳转位置卡片文本
-                            currentPosListIndex = positionList.size() - 1;
-                            if (positionList.isEmpty()) {
+                            currentIndex = idList.size() - 1;
+                            if (idList.isEmpty()) {
                                 binding.filteredParagraphCounterText.setText(R.string.not_applicable);
                             } else {
                                 String counterText = String.format(
                                         Locale.getDefault(),
                                         "%d/%d",
-                                        currentPosListIndex + 1,
-                                        positionList.size()
+                                        currentIndex + 1,
+                                        idList.size()
                                 );
                                 binding.filteredParagraphCounterText.setText(counterText);
 
-                                scrollContentRecycler(
-                                        positionList.get(positionList.size() - 1),
-                                        null
-                                );
+                                scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
@@ -493,7 +482,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                         if (key < 0) return false;
 
                         boolean isItem = false;
-                        List<ParagraphUiModel> snapshot = adapter.snapshot().getItems();
+                        List<ParagraphUiModel> snapshot = adapter.snapshot();
                         for (int i = 0; i < snapshot.size(); i++) {
                             ParagraphUiModel item = snapshot.get(i);
                             if ((item instanceof ParagraphUiModel.Item) && ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId() == key) {
@@ -640,6 +629,63 @@ public class DiaryReadActivity extends AppCompatActivity {
     }
 
     /**
+     * 滚动到指定的段落
+     *
+     * @param paragraphId 段落编号
+     */
+    private void scrollToParagraph(long paragraphId) {
+        int snapPos = findPositionByParagraphIdInSnapshot(paragraphId);
+        if (snapPos != -1) {
+            scrollContentRecycler(snapPos, null);
+        } else {
+            DiaryDb db = DiaryDb.getInstance(this);
+            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+            disposable.add(db.paragraphDao().getRoughPositionByParagraphId(paragraphId, viewModel.isHiddenParagraphShown())
+                    .subscribeOn(Schedulers.io())
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            roughPos -> scrollContentRecycler(roughPos, new ScrollHelper.PagingRecyclerScrollListener() {
+                                @Override
+                                public void onSucceed(int successPosition) {
+                                    scrollToParagraph(paragraphId);
+                                }
+
+                                @Override
+                                public void onRetry(int count) {
+
+                                }
+
+                                @Override
+                                public void onFailed() {
+                                    Toast.makeText(DiaryReadActivity.this, "滚动失败", Toast.LENGTH_SHORT).show();
+                                }
+                            }),
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
+    }
+
+    /**
+     * 在缓存中通过段落编号获取其位置
+     *
+     * @param paragraphId 段落编号
+     * @return 段落在适配器中的位置（没有找到则为 -1）
+     */
+    private int findPositionByParagraphIdInSnapshot(long paragraphId) {
+        List<ParagraphUiModel> currentSnapshot = adapter.snapshot();
+        for (int i = 0; i < adapter.getItemCount(); i++) {
+            ParagraphUiModel uiModel = currentSnapshot.get(i);
+            if (uiModel instanceof ParagraphUiModel.Item) {
+                ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+                if (paragraph.getParagraphId() == paragraphId) return i;
+            }
+        }
+
+        return RecyclerView.NO_POSITION;
+    }
+
+    /**
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
@@ -698,7 +744,9 @@ public class DiaryReadActivity extends AppCompatActivity {
             int targetPosition,
             @Nullable ScrollHelper.PagingRecyclerScrollListener listener
     ) {
-        VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,true);
+        new Handler(Looper.getMainLooper()).post(() ->
+                VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, true)
+        );
 
         //执行滚动逻辑
         final int MAX_RETRY = 10;
@@ -718,7 +766,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onSucceed(successPosition);
                             }
 
-                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
                             Log.i(LogTags.DIARY_READ_ACTIVITY.n(), "跳转成功");
                         }
 
@@ -728,7 +776,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onRetry(failCount);
                             }
 
-                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
                             Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败重试，次数：" + failCount);
                         }
 
@@ -738,7 +786,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                 listener.onFailed();
                             }
 
-                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator,false);
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
                             Toast.makeText(DiaryReadActivity.this, "跳转失败", Toast.LENGTH_SHORT).show();
                             Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "跳转失败，请尝试点击右侧按钮跳转至附近");
                         }
