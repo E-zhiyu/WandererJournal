@@ -931,6 +931,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                                                 e -> ExceptionHelper.showExceptionDialog(DiaryReadActivity.this, e)
                                         )
                                 );
+                                viewModel.setIsAuthed(true);
                             }
 
                             @Override

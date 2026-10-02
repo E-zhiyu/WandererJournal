@@ -46,10 +46,12 @@ public class ParagraphFilterViewModel extends ViewModel {
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
     private static class FilterQuery {
-        final boolean isAndMode;    //多词搜索是否为“与”模式
-        final String keyword;       //搜索关键词（包含空格）
+        final boolean isHiddenShown;    //是否显示隐藏段落
+        final boolean isAndMode;        //多词搜索是否为“与”模式
+        final String keyword;           //搜索关键词（包含空格）
 
-        public FilterQuery(boolean isAndMode, String keyword) {
+        public FilterQuery(boolean isHiddenShown, boolean isAndMode, String keyword) {
+            this.isHiddenShown = isHiddenShown;
             this.isAndMode = isAndMode;
             this.keyword = keyword;
         }
@@ -231,10 +233,12 @@ public class ParagraphFilterViewModel extends ViewModel {
      */
     public Flowable<List<Long>> getFilteredParagraphIds(DiaryDb db) {
         return Flowable.combineLatest(
+                        showHiddenParagraphProcessor,
                         searchKeywordProcessor,
                         filterUpdateProcessor,
                         keywordModeProcessor.debounce(50, TimeUnit.MILLISECONDS),
-                        (keyword, b, isAndMode) -> new FilterQuery(isAndMode, keyword)
+                        (isHiddenShown, keyword, b, isAndMode) ->
+                                new FilterQuery(isHiddenShown, isAndMode, keyword)
                 )
                 .switchMap(filterQuery -> {
                     //判断是否没有过滤选项
@@ -247,7 +251,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                             getValidKeywordList(),
                             checkedEmotionIdSet,
                             filterMedia,
-                            isHiddenParagraphShown(),
+                            filterQuery.isHiddenShown,
                             db,
                             filterQuery.isAndMode
                     );
