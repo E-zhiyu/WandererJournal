@@ -4,17 +4,215 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.paging.CombinedLoadStates;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.unique.ViewTags;
-import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
-import com.wanderer.journal.auxiliary.interfaces.RecyclerViewScrollListener;
 import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;
 
+import java.lang.ref.WeakReference;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
+
 public class ScrollHelper {
+    public interface PagingRecyclerScrollListener {
+        void onSucceed(int successPosition);
+
+        void onRetry(int count);
+
+        void onFailed();
+    }
+
+    public interface RecyclerViewScrollListener {
+        void onSucceed();
+
+        void onFailed(String errMessage);
+    }
+
+    /**
+     * 内部滚动任务，管理 LoadState 监听器和轮询降级
+     */
+    private static class PagingScrollTask implements Runnable {
+        private final WeakReference<RecyclerView> recyclerViewRef;
+        private final WeakReference<LinearLayoutManager> layoutManagerRef;
+        private final WeakReference<PagingDataAdapter<?, ?>> adapterRef;
+        private final int targetPosition;
+        private final int offset;
+        private final int maxRetryCount;
+        private final int retryDelayMillis;
+        private final PagingRecyclerScrollListener listener;
+
+        private Function1<CombinedLoadStates, Unit> loadStateListener;
+        private int retryCount = 0;
+        private boolean isFinished = false;
+
+        /**
+         * 滚动到未加载的分页列表的任务
+         *
+         * @param recyclerView     列表视图
+         * @param layoutManager    线性布局管理器
+         * @param adapter          分页加载适配器
+         * @param targetPosition   目标下标
+         * @param offset           偏移量 (px)
+         * @param maxRetryCount    重定向的最大重试次数
+         * @param retryDelayMillis 两次重试的间隔时间
+         * @param listener         滚动结果监听器
+         */
+        PagingScrollTask(
+                RecyclerView recyclerView,
+                LinearLayoutManager layoutManager,
+                PagingDataAdapter<?, ?> adapter,
+                int targetPosition,
+                int offset,
+                int maxRetryCount,
+                int retryDelayMillis,
+                PagingRecyclerScrollListener listener
+        ) {
+            this.recyclerViewRef = new WeakReference<>(recyclerView);
+            this.layoutManagerRef = new WeakReference<>(layoutManager);
+            this.adapterRef = new WeakReference<>(adapter);
+            this.targetPosition = targetPosition;
+            this.offset = offset;
+            this.maxRetryCount = maxRetryCount;
+            this.retryDelayMillis = retryDelayMillis;
+            this.listener = listener;
+        }
+
+        /**
+         * 开始滚动
+         */
+        public void start() {
+            PagingDataAdapter<?, ?> adapter = adapterRef.get();
+            RecyclerView recyclerView = recyclerViewRef.get();
+            if (adapter == null || recyclerView == null) {
+                listener.onFailed();
+                return;
+            }
+
+            // 监听 Paging3 的加载状态变化
+            loadStateListener = combinedLoadStates -> {
+                checkAndScroll();
+                return Unit.INSTANCE;
+            };
+            adapter.addLoadStateListener(loadStateListener);
+
+            // 首次向目标方向推动一次滚动（触发该方向的 Page 加载）
+            triggerFetchTowardsTarget();
+
+            // 启动定时检查作为兜底保护
+            recyclerView.postDelayed(this, retryDelayMillis);
+        }
+
+        @Override
+        public void run() {
+            if (isFinished) return;
+
+            RecyclerView recyclerView = recyclerViewRef.get();
+            PagingDataAdapter<?, ?> adapter = adapterRef.get();
+
+            if (recyclerView == null || adapter == null) {
+                cleanup();
+                listener.onFailed();
+                return;
+            }
+
+            if (checkAndScroll()) {
+                return;
+            }
+
+            if (retryCount < maxRetryCount) {
+                retryCount++;
+                listener.onRetry(retryCount);
+
+                //重新尝试向目标方向引导
+                triggerFetchTowardsTarget();
+
+                recyclerView.postDelayed(this, retryDelayMillis);
+            } else {
+                cleanup();
+                listener.onFailed();
+            }
+        }
+
+        /**
+         * 滚动检查是否滚动到目标位置
+         *
+         * @return 滚动后是否到达目标位置
+         */
+        private boolean checkAndScroll() {
+            if (isFinished) return true;
+
+            PagingDataAdapter<?, ?> adapter = adapterRef.get();
+            RecyclerView recyclerView = recyclerViewRef.get();
+            LinearLayoutManager layoutManager = layoutManagerRef.get();
+
+            if (adapter != null && recyclerView != null && layoutManager != null) {
+                if (isPositionLoaded(adapter, targetPosition)) {
+                    cleanup();
+                    scrollRecycler(recyclerView, layoutManager, targetPosition, 10, offset, new RecyclerViewScrollListener() {
+                        @Override
+                        public void onSucceed() {
+                            listener.onSucceed(targetPosition);
+                        }
+
+                        @Override
+                        public void onFailed(String errMessage) {
+                            listener.onFailed();
+                        }
+                    });
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * 向目标方向逼近，触发 Paging3 加载目标区域的 Page
+         */
+        private void triggerFetchTowardsTarget() {
+            LinearLayoutManager layoutManager = layoutManagerRef.get();
+            PagingDataAdapter<?, ?> adapter = adapterRef.get();
+            if (layoutManager == null || adapter == null) return;
+
+            int firstVisible = layoutManager.findFirstVisibleItemPosition();
+            int lastVisible = layoutManager.findLastVisibleItemPosition();
+            int itemCount = adapter.getItemCount();
+
+            if (itemCount == 0) return;
+
+            // 如果 targetPosition 在可视区域下方，跳到当前已知最靠下的位置以触发向下加载
+            if (targetPosition > lastVisible) {
+                int nearestPos = Math.min(targetPosition, itemCount - 1);
+                layoutManager.scrollToPosition(nearestPos);
+            }
+            // 如果 targetPosition 在可视区域上方，跳到当前已知最靠上的位置
+            else if (targetPosition < firstVisible) {
+                int nearestPos = Math.max(targetPosition, 0);
+                layoutManager.scrollToPosition(nearestPos);
+            }
+        }
+
+        /**
+         * 清理（页面加载监听器等）
+         */
+        private void cleanup() {
+            isFinished = true;
+            PagingDataAdapter<?, ?> adapter = adapterRef.get();
+            RecyclerView recyclerView = recyclerViewRef.get();
+
+            if (adapter != null && loadStateListener != null) {
+                adapter.removeLoadStateListener(loadStateListener);
+            }
+            if (recyclerView != null) {
+                recyclerView.removeCallbacks(this);
+            }
+        }
+    }
+
     /**
      * 将 RecyclerView平滑滚动到指定位置
      *
@@ -183,105 +381,66 @@ public class ScrollHelper {
      * @param listener         滚动状态监听器
      */
     public static void scrollPagingRecycler(
-            RecyclerView recyclerView,
-            LinearLayoutManager layoutManager,
-            PagingDataAdapter<?, ?> adapter,
+            @NonNull RecyclerView recyclerView,
+            @NonNull LinearLayoutManager layoutManager,
+            @NonNull PagingDataAdapter<?, ?> adapter,
             int targetPosition,
             int offset,
             int maxRetryCount,
             int retryDelayMillis,
-            PagingRecyclerScrollListener listener
+            @NonNull PagingRecyclerScrollListener listener
     ) {
-        if (layoutManager == null) {
-            return;
+        //处理越界情况
+        if (targetPosition < 0) {
+            targetPosition = 0;
+        } else if (targetPosition >= adapter.getItemCount()) {
+            targetPosition = adapter.getItemCount() - 1;
         }
 
+        int secureTarget = targetPosition;
         recyclerView.post(() -> {
-                    Object o;
-                    try {
-                        o = adapter.peek(targetPosition);
-                    } catch (IndexOutOfBoundsException e) {
-                        o = null;
+            // 1. 如果目标位置的数据已经加载，直接精确滚动
+            if (isPositionLoaded(adapter, secureTarget)) {
+                scrollRecycler(recyclerView, layoutManager, secureTarget, 10, offset, new RecyclerViewScrollListener() {
+                    @Override
+                    public void onSucceed() {
+                        listener.onSucceed(secureTarget);
                     }
-                    if (o != null) {
-                        // 已真实加载
-                        scrollRecycler(
-                                recyclerView,
-                                layoutManager,
-                                targetPosition,
-                                10,
-                                offset,
-                                new RecyclerViewScrollListener() {
-                                    @Override
-                                    public void onSucceed() {
-                                        listener.onSucceed();
-                                    }
 
-                                    @Override
-                                    public void onFailed(String errMessage) {
-                                        listener.onFailed();
-                                    }
-                                }
-                        );
-                    } else {
-                        // 未加载成功，继续等待
-                        recyclerView.postDelayed(new Runnable() {
-                            private int failCount = 0;
-                            private boolean scrollBottomOrTop = true;   //true:下次滚动到底部，false:下次滚动到顶部
-
-                            @Override
-                            public void run() {
-                                //获取目标位置的数据实例，判断是否滚动成功
-                                Object object;
-                                try {
-                                    object = adapter.peek(targetPosition);
-                                } catch (IndexOutOfBoundsException e) {
-                                    object = null;
-                                }
-
-                                //计算下次重试的滚动位置
-                                int nextRetryPosition;
-                                if (scrollBottomOrTop) {
-                                    nextRetryPosition = adapter.getItemCount() - 1;
-                                } else {
-                                    nextRetryPosition = 0;
-                                }
-
-                                if (object != null) {
-                                    scrollRecycler(
-                                            recyclerView,
-                                            layoutManager,
-                                            targetPosition,
-                                            10,
-                                            offset,
-                                            new RecyclerViewScrollListener() {
-                                                @Override
-                                                public void onSucceed() {
-                                                    listener.onSucceed();
-                                                }
-
-                                                @Override
-                                                public void onFailed(String errMessage) {
-                                                    listener.onFailed();
-                                                }
-                                            }
-                                    );
-                                } else if (failCount < maxRetryCount) {
-                                    failCount++;
-                                    listener.onRetry(failCount);
-
-                                    //跳转到边界以触发加载
-                                    layoutManager.scrollToPositionWithOffset(nextRetryPosition, 0);
-                                    scrollBottomOrTop = !scrollBottomOrTop;
-
-                                    recyclerView.postDelayed(this, retryDelayMillis);
-                                } else {
-                                    listener.onFailed();
-                                }
-                            }
-                        }, 50);
+                    @Override
+                    public void onFailed(String errMessage) {
+                        listener.onFailed();
                     }
-                }
-        );
+                });
+                return;
+            }
+
+            // 2. 数据尚未加载，启动 LoadState 监听 + 引导式滚动机制
+            PagingScrollTask task = new PagingScrollTask(
+                    recyclerView,
+                    layoutManager,
+                    adapter,
+                    secureTarget,
+                    offset,
+                    maxRetryCount,
+                    retryDelayMillis,
+                    listener
+            );
+            task.start();
+        });
+    }
+
+    /**
+     * 判断指定位置的数据是否真正加载（排除超出范围和未加载的占位符）
+     */
+    private static boolean isPositionLoaded(PagingDataAdapter<?, ?> adapter, int position) {
+        if (position < 0 || position >= adapter.getItemCount()) {
+            return false;
+        }
+        try {
+            return adapter.peek(position) != null;
+        } catch (IndexOutOfBoundsException e) {
+            return false;
+        }
     }
 }

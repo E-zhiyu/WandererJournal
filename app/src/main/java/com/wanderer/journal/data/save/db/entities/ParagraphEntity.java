@@ -1,5 +1,6 @@
 package com.wanderer.journal.data.save.db.entities;
 
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
@@ -21,16 +22,19 @@ import java.time.LocalDateTime;
         indices = {
                 @Index("parentDiaryId"),
                 @Index("createTime"),
-                @Index("paragraphId")
+                @Index("paragraphId"),
+                @Index("privacyType")
         }
 )
 @TypeConverters({DateTimeConverter.class})
 public class ParagraphEntity {
     @PrimaryKey(autoGenerate = true)
-    private long paragraphId;            //自增主键
-    private long parentDiaryId;          //所属的日记的编号
-    private String content;              //段落内容
-    private LocalDateTime createTime;    //写下该段落的具体时间
+    private long paragraphId;           //自增主键
+    private long parentDiaryId;         //所属的日记的编号
+    private String content;             //段落内容
+    private LocalDateTime createTime;   //写下该段落的具体时间
+    @ColumnInfo(defaultValue = "0")
+    private int privacyType;            //隐私种类
 
     /**
      * 段落实体类的构造方法
@@ -43,6 +47,7 @@ public class ParagraphEntity {
         this.parentDiaryId = parentDiaryId;
         this.content = content;
         this.createTime = createTime;
+        this.privacyType = 0;
     }
 
     public long getParagraphId() {
@@ -75,5 +80,13 @@ public class ParagraphEntity {
 
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
+    }
+
+    public int getPrivacyType() {
+        return privacyType;
+    }
+
+    public void setPrivacyType(int privacyType) {
+        this.privacyType = privacyType;
     }
 }

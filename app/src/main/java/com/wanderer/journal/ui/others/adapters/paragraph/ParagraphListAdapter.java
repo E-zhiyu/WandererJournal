@@ -21,7 +21,7 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
@@ -193,7 +193,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
         ParagraphUiModel uiModel = getItem(position);
 
         if (holder instanceof ParagraphListAdapter.ParagraphViewHolder && uiModel instanceof ParagraphUiModel.Item) {
-            ParagraphEntityUnionModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
+            ParagraphUnionModel dataModel = ((ParagraphUiModel.Item) uiModel).model;
             ParagraphEntity paragraph = dataModel.getParagraph();
             ParagraphListAdapter.ParagraphViewHolder itemHolder = (ParagraphListAdapter.ParagraphViewHolder) holder;
             Context context = itemHolder.binding.getRoot().getContext();

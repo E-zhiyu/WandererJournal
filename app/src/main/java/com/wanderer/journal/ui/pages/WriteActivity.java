@@ -50,14 +50,13 @@ import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
-import com.wanderer.journal.auxiliary.interfaces.PagingRecyclerScrollListener;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
@@ -270,7 +269,7 @@ public class WriteActivity extends AppCompatActivity {
                             }
 
                             //启用编辑模式
-                            ParagraphEntityUnionModel model = paragraphOptional.get();
+                            ParagraphUnionModel model = paragraphOptional.get();
                             ParagraphEntity paragraph = model.getParagraph();
                             List<MediaEntity> mediaList = model.getMediaList();
                             setEditMode(true, paragraph, mediaList);
@@ -579,41 +578,10 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void initParagraphRecycler() {
         //设置适配器
+        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
-                (dataModel, view) -> {
-                    ParagraphEntity paragraph = dataModel.getParagraph();
-
-                    //先收起输入法
-                    ImmHelper.hideImm(binding.contentTextInput);
-
-                    PopupMenu menu = new PopupMenu(this, view, Gravity.END);
-                    menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
-
-                    menu.setOnMenuItemClickListener(item -> {
-                        if (item.getItemId() == R.id.action_modify_content) {
-                            setEditMode(true, paragraph, dataModel.getMediaList());
-
-                            return true;
-                        } else if (item.getItemId() == R.id.action_modify_time) {
-                            modifyCreateTime(paragraph);
-                            return true;
-                        } else if (item.getItemId() == R.id.action_modify_emotion) {
-                            modifyEmotion(paragraph);
-                            return true;
-                        } else if (item.getItemId() == R.id.action_copy_paragraph) {
-                            TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
-                            Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
-                            return true;
-                        } else if (item.getItemId() == R.id.action_delete_paragraph) {
-                            deleteParagraph(paragraph);
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    menu.show();
-                },
+                viewModel.contentDisplayIdSet,
+                this::showParagraphModifyMenu,
                 (position, mediaView, mediaList) -> {
                     String[] uriStrArray = mediaList.stream()
                             .map(MediaEntity::getFileUri)
@@ -658,30 +626,32 @@ public class WriteActivity extends AppCompatActivity {
 
                 int itemCount = adapter.getItemCount();
                 if (itemCount > 0) {
-                    ScrollHelper.scrollPagingRecycler(
-                            binding.contentRecycler,
-                            (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
-                            adapter,
-                            scrollPosition.get(),
-                            63,
-                            10,
-                            750,
-                            new PagingRecyclerScrollListener() {
-                                @Override
-                                public void onSucceed() {
-                                    scrollPosition.set(-1);
-                                }
+                    if (binding.contentRecycler.getLayoutManager() != null) {
+                        ScrollHelper.scrollPagingRecycler(
+                                binding.contentRecycler,
+                                (LinearLayoutManager) binding.contentRecycler.getLayoutManager(),
+                                adapter,
+                                scrollPosition.get(),
+                                63,
+                                10,
+                                750,
+                                new ScrollHelper.PagingRecyclerScrollListener() {
+                                    @Override
+                                    public void onSucceed(int successPosition) {
+                                        scrollPosition.set(-1);
+                                    }
 
-                                @Override
-                                public void onRetry(int failCount) {
-                                }
+                                    @Override
+                                    public void onRetry(int failCount) {
+                                    }
 
-                                @Override
-                                public void onFailed() {
-                                    scrollPosition.set(-1);
+                                    @Override
+                                    public void onFailed() {
+                                        scrollPosition.set(-1);
+                                    }
                                 }
-                            }
-                    );
+                        );
+                    }
                 }
             }
 
@@ -700,7 +670,6 @@ public class WriteActivity extends AppCompatActivity {
 
         //监听数据库的响应
         DiaryDb db = DiaryDb.getInstance(this);
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
         LocalDate diaryDate = getParentDiaryDate();
         disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
                 .subscribeOn(Schedulers.io())
@@ -1071,7 +1040,14 @@ public class WriteActivity extends AppCompatActivity {
                         }
 
                         //返回查询到的下标
-                        return ParagraphService.addParagraph(startDate, paragraph, mediaEntityList, db);
+                        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                        return ParagraphService.addParagraph(
+                                startDate,
+                                paragraph,
+                                mediaEntityList,
+                                viewModel.isHiddenParagraphShown(),
+                                db
+                        );
                     })
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -1127,6 +1103,42 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
+     * 显示段落修改菜单
+     *
+     * @param model 需要修改的段落的模型
+     * @param view  下拉菜单锚点
+     */
+    private void showParagraphModifyMenu(@NonNull ParagraphUnionModel model, View view) {
+        ParagraphEntity paragraph = model.getParagraph();
+        PopupMenu menu = new PopupMenu(this, view, Gravity.END);
+        menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
+
+        menu.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_modify_content) {
+                setEditMode(true, paragraph, model.getMediaList());
+                return true;
+            } else if (item.getItemId() == R.id.action_modify_time) {
+                modifyCreateTime(paragraph);
+                return true;
+            } else if (item.getItemId() == R.id.action_modify_emotion) {
+                modifyEmotion(paragraph);
+                return true;
+            } else if (item.getItemId() == R.id.action_copy_paragraph) {
+                TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
+                Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
+                return true;
+            } else if (item.getItemId() == R.id.action_delete_paragraph) {
+                deleteParagraph(paragraph);
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        menu.show();
+    }
+
+    /**
      * 更新段落创建日期
      *
      * @param paragraph 原来的段落实例
@@ -1153,22 +1165,33 @@ public class WriteActivity extends AppCompatActivity {
                     }
 
                     //更新数据
+                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
                     DiaryDb db = DiaryDb.getInstance(this);
-                    disposable.add(ParagraphService.modifyCreateTime(paragraph.getParagraphId(), startDate, newDateTime, db)
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe(
-                                    pos -> {
-                                        Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
-                                        Toast.makeText(this, "段落创建时间修改成功", Toast.LENGTH_SHORT).show();
+                    disposable.add(ParagraphService.modifyCreateTime(
+                                            paragraph.getParagraphId(),
+                                            startDate,
+                                            newDateTime,
+                                            viewModel.isHiddenParagraphShown(),
+                                            db
+                                    )
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeOn(Schedulers.io())
+                                    .subscribe(
+                                            pos -> {
+                                                Log.i(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改成功");
+                                                Toast.makeText(
+                                                        this,
+                                                        "段落创建时间修改成功",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
 
-                                        scrollPosition.set(pos);
-                                    },
-                                    throwable -> {
-                                        ExceptionHelper.showExceptionDialog(this, throwable);
-                                        Log.e(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改失败");
-                                    }
-                            )
+                                                scrollPosition.set(pos);
+                                            },
+                                            throwable -> {
+                                                ExceptionHelper.showExceptionDialog(this, throwable);
+                                                Log.e(LogTags.WRITE_ACTIVITY.n(), "段落创建时间修改失败");
+                                            }
+                                    )
                     );
                 }
         );

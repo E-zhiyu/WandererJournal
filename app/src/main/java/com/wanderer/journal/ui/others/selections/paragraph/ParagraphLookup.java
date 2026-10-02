@@ -22,10 +22,10 @@ public class ParagraphLookup extends ItemDetailsLookup<Long> {
         View view = recyclerView.findChildViewUnder(e.getX(), e.getY());
         if (view != null) {
             RecyclerView.ViewHolder holder = recyclerView.getChildViewHolder(view);
-            if (holder instanceof ParagraphPagingAdapter.ParagraphViewHolder) {
-                return ((ParagraphPagingAdapter.ParagraphViewHolder) holder).getItemDetails();
-            } else if (holder instanceof ParagraphPagingAdapter.DateSeparatorViewHolder) {
-                return ((ParagraphPagingAdapter.DateSeparatorViewHolder) holder).getItemDetails();
+            if (holder instanceof ParagraphPagingAdapter.ItemViewHolder) {
+                return ((ParagraphPagingAdapter.ItemViewHolder) holder).getItemDetails();
+            } else if (holder instanceof ParagraphPagingAdapter.SeparatorViewHolder) {
+                return ((ParagraphPagingAdapter.SeparatorViewHolder) holder).getItemDetails();
             }
         }
         return null;

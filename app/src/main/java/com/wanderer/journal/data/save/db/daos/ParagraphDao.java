@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteQuery;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,11 +43,28 @@ public interface ParagraphDao {
     /**
      * 读取所有段落并支持局部加载
      *
+     * @param isAuthed 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
      * @return 可局部加载的日记段落列表
      */
     @Transaction
-    @Query("SELECT * FROM paragraphs ORDER BY createTime")
-    PagingSource<Integer, ParagraphEntityUnionModel> getAllParagraphPagingSource();
+    @Query("SELECT * FROM paragraphs " +
+            "WHERE (:isAuthed OR privacyType != 2) " +
+            "ORDER BY createTime")
+    PagingSource<Integer, ParagraphUnionModel> getAllParagraphPagingSource(int isAuthed);
+
+    /**
+     * 查询某个日期范围内的段落
+     *
+     * @param start    起始日期
+     * @param end      结束日期（不包含）
+     * @param isAuthed 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
+     * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
+     */
+    @Transaction
+    @Query("SELECT * FROM paragraphs " +
+            "WHERE createTime >= :start AND createTime < :end AND (:isAuthed OR privacyType != 2) " +
+            "ORDER BY createTime, paragraphId")
+    PagingSource<Integer, ParagraphUnionModel> getParagraphPagingSourceInDateRange(LocalDate start, LocalDate end, int isAuthed);
 
     /**
      * 查询指定 ID 的段落
@@ -57,18 +74,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId IN (:paragraphIds)")
-    Single<List<ParagraphEntityUnionModel>> getParagraphSingleById(long[] paragraphIds);
-
-    /**
-     * 查询某个日期范围内的段落
-     *
-     * @param start 起始日期
-     * @param end   结束日期（不包含）
-     * @return 在日期范围内的按照日期顺序排序的日记段落分页列表
-     */
-    @Transaction
-    @Query("SELECT * FROM paragraphs WHERE createTime >= :start AND createTime < :end ORDER BY createTime,paragraphId")
-    PagingSource<Integer, ParagraphEntityUnionModel> getParagraphPagingSourceByDate(LocalDate start, LocalDate end);
+    Single<List<ParagraphUnionModel>> getParagraphSingleById(long[] paragraphIds);
 
     /**
      * 查询某个日期段内的段落数量
@@ -87,10 +93,12 @@ public interface ParagraphDao {
      * @return 小于该日期的段落数量+小于该日期的日记数量，即需要跳转到的日记的段落下标
      */
     @Query("SELECT " +
-            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date) + " +
-            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date)"
+            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date AND (" +
+            "   SELECT COUNT(*) FROM paragraphs WHERE parentDiaryId = diaryId AND (:isAuthed OR privacyType != 2)" +
+            ") > 0) + " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date AND (:isAuthed OR privacyType != 2))"
     )
-    Single<Integer> getAdjustedPositionSingle(LocalDate date);
+    Single<Integer> getAdjustedPositionSingle(LocalDate date, boolean isAuthed);
 
     /**
      * 使用 RawQuery 动态计算匹配搜索的段落位置
@@ -99,7 +107,20 @@ public interface ParagraphDao {
      * @return 包含所有匹配位置的列表，支持 Flowable 响应式
      */
     @RawQuery(observedEntities = {ParagraphEntity.class, DiaryEntity.class})
-    Flowable<List<Integer>> getSearchMatchedParagraphPositionsRaw(SupportSQLiteQuery query);
+    Flowable<List<Long>> getSearchMatchedParagraphIdsRaw(SupportSQLiteQuery query);
+
+    /**
+     * 查找某个段落的粗略位置，用于触发分页加载
+     *
+     * @param paragraphId   需要定位的段落的编号
+     * @param isHiddenShown 隐藏的段落是否显示
+     * @return 该段落的粗略位置
+     */
+    @Query("SELECT COUNT(*) " +
+            "FROM paragraphs p " +
+            "WHERE p.createTime < (SELECT createTime FROM paragraphs WHERE paragraphId = :paragraphId)" +
+            "  AND (:isHiddenShown OR p.privacyType != 2)")
+    Single<Integer> getRoughPositionByParagraphId(long paragraphId, boolean isHiddenShown);
 
     /**
      * 通过日记 ID 获取段落
@@ -118,7 +139,7 @@ public interface ParagraphDao {
      */
     @Transaction
     @Query("SELECT * FROM paragraphs WHERE paragraphId = :paragraphId")
-    Single<Optional<ParagraphEntityUnionModel>> getParagraphOptionalSingleById(long paragraphId);
+    Single<Optional<ParagraphUnionModel>> getParagraphOptionalSingleById(long paragraphId);
 
     /**
      * 查询最大的日记长度
@@ -156,14 +177,12 @@ public interface ParagraphDao {
      * @param end   结束时间（不包含）
      * @return 该时间段内的平均日记长度
      */
-    @Query(
-            "SELECT COALESCE(AVG(length), 0) FROM (" +
-                    "SELECT TOTAL(LENGTH(content)) AS length " +
-                    "FROM paragraphs " +
-                    "WHERE createTime >= :start AND createTime < :end " +
-                    "GROUP BY parentDiaryId" +
-                    ")"
-    )
+    @Query("SELECT COALESCE(AVG(length), 0) FROM (" +
+            "SELECT TOTAL(LENGTH(content)) AS length " +
+            "FROM paragraphs " +
+            "WHERE createTime >= :start AND createTime < :end " +
+            "GROUP BY parentDiaryId" +
+            ")")
     Single<Integer> getAverageDiaryLengthSingleInTimeRange(LocalDateTime start, LocalDateTime end);
 
     /**
@@ -183,16 +202,21 @@ public interface ParagraphDao {
      * @param paragraphId   需要排除的段落的 ID
      * @return 插入的段落在当天的位置
      */
-    @Query("SELECT COUNT(*) FROM paragraphs WHERE createTime >= :startDate AND createTime <= :paragraphTime AND paragraphId != :paragraphId")
-    int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime, long paragraphId);
+    @Query("SELECT COUNT(*) FROM paragraphs " +
+            "WHERE createTime >= :startDate " +
+            "   AND createTime <= :paragraphTime " +
+            "   AND paragraphId != :paragraphId " +
+            "   AND (:isAuthed OR privacyType != 2)")
+    int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime, long paragraphId, int isAuthed);
 
     /**
      * 插入段落的事务
      *
-     * @param startDate 写日记界面的起始日期
-     * @param paragraph 新段落实例
-     * @param mediaList 该段落新添加的媒体列表
-     * @param mediaDao  媒体 Dao 类
+     * @param startDate              写日记界面的起始日期
+     * @param paragraph              新段落实例
+     * @param mediaList              该段落新添加的媒体列表
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
+     * @param mediaDao               媒体 Dao 类
      * @return 新添加的段落在当前界面中的下标
      */
     @Transaction
@@ -200,6 +224,7 @@ public interface ParagraphDao {
             LocalDate startDate,
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            boolean isHiddenParagraphShown,
             MediaDao mediaDao
     ) {
         if (paragraph == null || mediaDao == null) return -1;
@@ -208,7 +233,8 @@ public interface ParagraphDao {
         int earlierThanNewParagraph = getNewParagraphPosition(
                 startDate,
                 paragraph.getCreateTime(),
-                paragraph.getParagraphId()
+                paragraph.getParagraphId(),
+                isHiddenParagraphShown ? 1 : 0
         );
 
         //计算有几个日期分隔符
@@ -265,21 +291,24 @@ public interface ParagraphDao {
     /**
      * 修改段落创建时间
      *
-     * @param startDate     列表中最开始的日期
-     * @param newCreateTime 修改后的创建时间
-     * @param paragraphId   需要修改的段落的 ID
+     * @param startDate              列表中最开始的日期
+     * @param newCreateTime          修改后的创建时间
+     * @param paragraphId            需要修改的段落的 ID
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @return 修改后的段落在列表中的下标
      */
     default int modifyCreateTime(
             LocalDate startDate,
             LocalDateTime newCreateTime,
-            long paragraphId
+            long paragraphId,
+            boolean isHiddenParagraphShown
     ) {
         //获取从起始日期开始，有多少个段落日期小于等于该段落
         int earlierThanNewParagraph = getNewParagraphPosition(
                 startDate,
                 newCreateTime,
-                paragraphId
+                paragraphId,
+                isHiddenParagraphShown ? 1 : 0
         );
 
         //计算有几个日期分隔符
@@ -389,4 +418,14 @@ public interface ParagraphDao {
         // 批量插入段落
         insertParagraphWhenImportingDiary(paragraphList);
     }
+
+    /**
+     * 更新段落的隐私类别
+     *
+     * @param paragraphId 需要更新的段落的编号
+     * @param type        更新后的隐私类别
+     * @return 是否完成
+     */
+    @Query("UPDATE paragraphs SET privacyType = :type WHERE paragraphId = :paragraphId")
+    Completable updatePrivacyTypeCompletable(long paragraphId, int type);
 }

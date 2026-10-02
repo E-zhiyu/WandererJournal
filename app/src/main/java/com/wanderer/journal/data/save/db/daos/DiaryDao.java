@@ -36,14 +36,18 @@ public interface DiaryDao {
     /**
      * 在读日记界面通过日期获取日期分隔符的位置
      *
-     * @param date 目标日期
+     * @param date                   目标日期
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @return 小于等于该日期的日期分隔符在读日记界面的下标
      */
     @Query("SELECT " +
-            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date) + " +
-            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date)"
+            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date AND " +
+            "       EXISTS (SELECT 1 FROM paragraphs p_sub" +
+            "           WHERE p_sub.parentDiaryId = diaryId" +
+            "               AND (:isHiddenParagraphShown OR p_sub.privacyType != 2))) + " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date AND (:isHiddenParagraphShown OR privacyType != 2))"
     )
-    Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date);
+    Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date, boolean isHiddenParagraphShown);
 
     /**
      * 获取最早的日记日期
@@ -62,13 +66,20 @@ public interface DiaryDao {
     Single<Optional<LocalDate>> getEarliestDiaryDateSingle();
 
     /**
-     * 获取所有日记
+     * 获取所有日记，并附带日记段落片段和日记长度数据
      *
      * @return 由{@link DiaryListUiModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
-            "IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '') as paragraphFragment," +
-            "(SELECT SUM(LENGTH(content)) FROM paragraphs WHERE parentDiaryId = d.diaryId) as charCount " +
+            "CASE " +
+            "  WHEN (SELECT privacyType FROM paragraphs " +
+            "        WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1) = 2 " +
+            "  THEN '<该段落的内容受保护>' " +
+            "  ELSE IFNULL((SELECT SUBSTR(content, 1, 30) FROM paragraphs " +
+            "               WHERE parentDiaryId = d.diaryId ORDER BY createTime LIMIT 1), '<无日记内容>') " +
+            "END as paragraphFragment," +
+            "(SELECT SUM(LENGTH(content)) FROM paragraphs " +
+            " WHERE parentDiaryId = d.diaryId) as charCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
     Flowable<List<DiaryListUiModel>> getAllDiariesFlowable();
@@ -177,15 +188,11 @@ public interface DiaryDao {
         //构建新段落列表并写入
         List<ParagraphEntity> originParagraphList = paragraphDao.getParagraphByDiaryId(diaryId);
         List<ParagraphEntity> newParagraphList = originParagraphList.stream()
-                .map(paragraph -> {
-                    //计算得到新的时间
+                .peek(paragraph -> {
+                    //计算得到新的时间并更新
                     LocalTime time = paragraph.getCreateTime().toLocalTime();
                     LocalDateTime newDateTime = targetDate.atTime(time);
-
-                    //构建并返回新段落实体
-                    ParagraphEntity newParagraph = new ParagraphEntity(diaryId, paragraph.getContent(), newDateTime);
-                    newParagraph.setParagraphId(paragraph.getParagraphId());
-                    return newParagraph;
+                    paragraph.setCreateTime(newDateTime);
                 })
                 .collect(Collectors.toList());
         paragraphDao.updateParagraph(newParagraphList);

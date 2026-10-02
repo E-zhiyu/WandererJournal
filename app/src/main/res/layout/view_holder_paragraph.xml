@@ -73,6 +73,25 @@
             app:layout_constraintTop_toBottomOf="@id/text_layout"
             app:layout_constraintVertical_chainStyle="packed" />
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/color_block_card"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            app:layout_constraintBottom_toBottomOf="@id/date_time_text"
+            app:layout_constraintEnd_toStartOf="@id/date_time_text"
+            app:layout_constraintTop_toTopOf="@id/date_time_text"
+            app:strokeWidth="0dp">
+
+            <!-- 隐私类别色块 -->
+            <ImageView
+                android:id="@+id/privacy_type_color_block"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/privacy_type_color_block"
+                app:circularflow_defaultRadius="10dp" />
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- 时间文本 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/date_time_text"

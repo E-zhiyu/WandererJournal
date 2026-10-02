@@ -11,7 +11,7 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphEntityUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
@@ -33,30 +33,64 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ParagraphFilterViewModel extends ViewModel {
     private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
     private final BehaviorProcessor<String> searchKeywordProcessor =
-            BehaviorProcessor.createDefault("");    //搜索关键词处理器（包含空格）
+            BehaviorProcessor.createDefault("");        //搜索关键词处理器（包含空格）
     private final BehaviorProcessor<Boolean> filterUpdateProcessor =
             BehaviorProcessor.createDefault(true);
     private final BehaviorProcessor<Boolean> keywordModeProcessor =
-            BehaviorProcessor.createDefault(true);  //多词搜索是否为“与”模式处理器
+            BehaviorProcessor.createDefault(true);      //多词搜索是否为“与”模式处理器
+    private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
+            BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
+    public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
+    private long lastAuthTimeMillis = 0;
     private boolean filterMedia = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
     private static class FilterQuery {
-        final boolean isAndMode;    //多词搜索是否为“与”模式
-        final String keyword;       //搜索关键词（包含空格）
+        final boolean isHiddenShown;    //是否显示隐藏段落
+        final boolean isAndMode;        //多词搜索是否为“与”模式
+        final String keyword;           //搜索关键词（包含空格）
 
-        public FilterQuery(boolean isAndMode, String keyword) {
+        public FilterQuery(boolean isHiddenShown, boolean isAndMode, String keyword) {
+            this.isHiddenShown = isHiddenShown;
             this.isAndMode = isAndMode;
             this.keyword = keyword;
         }
     }
 
-    public Boolean getFilterMedia() {
+    public boolean getFilterMedia() {
         return filterMedia;
     }
 
     public Set<Long> getCheckedEmotionIdSet() {
         return checkedEmotionIdSet;
+    }
+
+    /**
+     * 获取隐藏的段落是否显示
+     *
+     * @return 是否显示了隐藏的段落
+     */
+    public boolean isHiddenParagraphShown() {
+        return showHiddenParagraphProcessor.getValue() != null && showHiddenParagraphProcessor.getValue();
+    }
+
+    /**
+     * 判断是否未通过身份验证
+     *
+     * @return 是否未通过身份验证
+     */
+    public boolean isNotAuthed() {
+        long currentTimeMillis = System.currentTimeMillis();
+        return currentTimeMillis - lastAuthTimeMillis > 1000 * 60 * 5;     //一次授权的有效时间为5分钟
+    }
+
+    /**
+     * 设置是否通过身份验证
+     *
+     * @param isAuthed 是否通过身份验证
+     */
+    public void setIsAuthed(boolean isAuthed) {
+        lastAuthTimeMillis = isAuthed ? System.currentTimeMillis() : 0;
     }
 
     public void setFilterMedia(boolean filterMedia) {
@@ -86,7 +120,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      * @return 插入分隔视图后的段落数据
      */
     @NonNull
-    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphEntityUnionModel> pagingData) {
+    private PagingData<ParagraphUiModel> transformAndSeparator(PagingData<ParagraphUnionModel> pagingData) {
         Executor executor = Runnable::run;
 
         PagingData<ParagraphUiModel.Item> itemPagingData = PagingDataTransforms.map(
@@ -110,6 +144,7 @@ public class ParagraphFilterViewModel extends ViewModel {
      *
      * @param start 段落起始日期
      * @param end   段落结束日期（不包含）
+     * @param db    数据库实例
      * @return 段落数据，支持响应式更新
      */
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
@@ -117,7 +152,8 @@ public class ParagraphFilterViewModel extends ViewModel {
             @NonNull LocalDate end,
             DiaryDb db
     ) {
-        return Flowable.fromCallable(() -> {
+        return showHiddenParagraphProcessor
+                .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
                             10,
@@ -127,16 +163,15 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceByDate(start, end)
+                            () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isAuthed ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
                 })
                 .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .flatMap(pagingDataFlow -> pagingDataFlow)
                 .compose(flowable -> PagingRx.cachedIn(
                         flowable,
                         ViewModelKt.getViewModelScope(this)
@@ -146,10 +181,13 @@ public class ParagraphFilterViewModel extends ViewModel {
     /**
      * 不指定起止日期的获取段落数据方法
      *
+     * @param initPosition 初始跳转到的位置
+     * @param db           数据库实例
      * @return 段落分页数据，支持响应式更新
      */
     public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
-        return Flowable.fromCallable(() -> {
+        return showHiddenParagraphProcessor
+                .switchMap(isAuthed -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
                             10,
@@ -159,16 +197,15 @@ public class ParagraphFilterViewModel extends ViewModel {
                     );
 
                     // 创建 Pager
-                    Pager<Integer, ParagraphEntityUnionModel> pager = new Pager<>(
+                    Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
-                            () -> db.paragraphDao().getAllParagraphPagingSource()
+                            () -> db.paragraphDao().getAllParagraphPagingSource(isAuthed ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
                 })
                 .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .flatMap(pagingDataFlow -> pagingDataFlow)
                 .compose(flowable -> PagingRx.cachedIn(
                         flowable,
                         ViewModelKt.getViewModelScope(this)
@@ -189,17 +226,19 @@ public class ParagraphFilterViewModel extends ViewModel {
     }
 
     /**
-     * 获取符合过滤条件的段落的位置
+     * 获取符合过滤条件的段落的编号
      *
      * @param db 数据库实例
-     * @return 从数据库中获取符合过滤条件的段落下标
+     * @return 从数据库中获取符合过滤条件的段落编号
      */
-    public Flowable<List<Integer>> getFilteredParagraphPosition(DiaryDb db) {
+    public Flowable<List<Long>> getFilteredParagraphIds(DiaryDb db) {
         return Flowable.combineLatest(
+                        showHiddenParagraphProcessor,
                         searchKeywordProcessor,
                         filterUpdateProcessor,
                         keywordModeProcessor.debounce(50, TimeUnit.MILLISECONDS),
-                        (keyword, b, isAndMode) -> new FilterQuery(isAndMode, keyword)
+                        (isHiddenShown, keyword, b, isAndMode) ->
+                                new FilterQuery(isHiddenShown, isAndMode, keyword)
                 )
                 .switchMap(filterQuery -> {
                     //判断是否没有过滤选项
@@ -212,6 +251,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                             getValidKeywordList(),
                             checkedEmotionIdSet,
                             filterMedia,
+                            filterQuery.isHiddenShown,
                             db,
                             filterQuery.isAndMode
                     );
@@ -242,6 +282,15 @@ public class ParagraphFilterViewModel extends ViewModel {
     public void toggleKeywordMode() {
         keywordModeProcessor.onNext(!isAndMode());
         filterUpdatedLiveData.setValue(null);
+    }
+
+    /**
+     * 设置隐藏的段落的可见性
+     *
+     * @param isVisible 是否可见
+     */
+    public void showHiddenParagraph(boolean isVisible) {
+        showHiddenParagraphProcessor.onNext(isVisible);
     }
 
     /**

@@ -28,23 +28,25 @@ public class ParagraphService {
     /**
      * 插入新日记段落并插入新添加的媒体
      *
-     * @param startDate 写日记界面的起始日期
-     * @param paragraph 新段落实体
-     * @param mediaList 媒体列表
-     * @param db        数据库实例
+     * @param startDate              写日记界面的起始日期
+     * @param paragraph              新段落实体
+     * @param mediaList              媒体列表
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
+     * @param db                     数据库实例
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
     public static Single<Integer> addParagraph(
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            boolean isHiddenParagraphShown,
             @NonNull DiaryDb db
     ) {
         paragraph.setContent(paragraph.getContent().trim());
         return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.addParagraph(startDate, paragraph, mediaList, db.mediaDao());
+                return paragraphDao.addParagraph(startDate, paragraph, mediaList, isHiddenParagraphShown, db.mediaDao());
             } else {
                 return -1;
             }
@@ -81,21 +83,23 @@ public class ParagraphService {
     /**
      * 根据段落编号更新创建时间
      *
-     * @param paragraphId   需要更新的段落的编号
-     * @param startDate     列表中最开始的日期
-     * @param newCreateTime 更新后的创建时间
-     * @param db            数据库实例
+     * @param paragraphId            需要更新的段落的编号
+     * @param startDate              列表中最开始的日期
+     * @param newCreateTime          更新后的创建时间
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
+     * @param db                     数据库实例
      * @return 更新后段落在列表中的下标
      */
     public static Single<Integer> modifyCreateTime(
             long paragraphId,
             LocalDate startDate,
             LocalDateTime newCreateTime,
+            boolean isHiddenParagraphShown,
             DiaryDb db
     ) {
         return Single.defer(() -> {
             ParagraphDao dao = db.paragraphDao();
-            int pos = dao.modifyCreateTime(startDate, newCreateTime, paragraphId);
+            int pos = dao.modifyCreateTime(startDate, newCreateTime, paragraphId, isHiddenParagraphShown);
             return Single.just(pos);
         });
     }
@@ -144,49 +148,40 @@ public class ParagraphService {
     }
 
     /**
-     * 获取匹配搜索的段落的位置
+     * 获取匹配搜索的段落的编号
      *
-     * @param keywordList    搜索关键词列表
-     * @param emotionIds     情绪标签 ID 集合（如果传入空集合，代表不限制情绪，只按关键词搜索）
-     * @param useMediaFilter 是否需要由媒体文件
-     * @param db             数据库实例
-     * @param isAndMode      多词搜索模式是否为“与”模式
-     * @return 包含所有匹配搜索位置的整数列表（已考虑日期分隔符），支持响应式更新
+     * @param keywordList            搜索关键词列表
+     * @param emotionIds             情绪标签 ID 集合（如果传入空集合，代表不限制情绪，只按关键词搜索）
+     * @param useMediaFilter         是否需要由媒体文件
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
+     * @param db                     数据库实例
+     * @param isAndMode              多词搜索模式是否为“与”模式
+     * @return 包含所有匹配搜索的段落编号列表
      */
     @NonNull
-    public static Flowable<List<Integer>> getSearchMatchedParagraphPositionsFlowableInternal(
+    public static Flowable<List<Long>> getSearchMatchedParagraphPositionsFlowableInternal(
             List<String> keywordList,
             Set<Long> emotionIds,
             boolean useMediaFilter,
+            boolean isHiddenParagraphShown,
             @NonNull DiaryDb db,
             boolean isAndMode
     ) {
         ParagraphDao paragraphDao = db.paragraphDao();
-        // 1. 基础 SQL 骨架（保留你原本完美的位置计算逻辑）
-        StringBuilder sql = new StringBuilder(
-                "SELECT (pure_paragraph_position + date_separator_count) FROM (" +
-                        "    SELECT " +
-                        "        paragraphId, " +
-                        "        content, " +
-                        "        (ROW_NUMBER() OVER(ORDER BY createTime ASC) - 1) AS pure_paragraph_position," +
-                        "        (SELECT COUNT(*) FROM diaries d_sub WHERE d_sub.diaryDate <= d.diaryDate) AS date_separator_count" +
-                        "    FROM paragraphs " +
-                        "    INNER JOIN diaries d ON parentDiaryId = d.diaryId" +
-                        ") WHERE 1=1 " // 1=1 是为了方便后面直接拼接 AND
-        );
+        StringBuilder sql = new StringBuilder("SELECT p.paragraphId FROM paragraphs p WHERE 1=1 ");
+
+        if (!isHiddenParagraphShown) {
+            sql.append(" AND p.privacyType != 2 ");
+        }
 
         List<Object> args = getSearchArgs(keywordList, emotionIds, sql, isAndMode);
 
-        // 4. 动态拼接媒体过滤
         if (useMediaFilter) {
-            sql.append(" AND paragraphId IN (SELECT parentParagraphId FROM medias)");
+            sql.append(" AND p.paragraphId IN (SELECT parentParagraphId FROM medias)");
         }
 
-        // 5. 封装成 Room 需要的 SimpleSQLiteQuery 对象
         SimpleSQLiteQuery rawQuery = new SimpleSQLiteQuery(sql.toString(), args.toArray());
-
-        // 6. 调用 DAO 返回响应式 Flowable
-        return paragraphDao.getSearchMatchedParagraphPositionsRaw(rawQuery);
+        return paragraphDao.getSearchMatchedParagraphIdsRaw(rawQuery);
     }
 
     /**
