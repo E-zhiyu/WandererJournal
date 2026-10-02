@@ -34,22 +34,6 @@ public interface DiaryDao {
     Flowable<Integer> getDiaryCountFlowable();
 
     /**
-     * 在读日记界面通过日期获取日期分隔符的位置
-     *
-     * @param date                   目标日期
-     * @param isHiddenParagraphShown 隐藏的段落是否显示
-     * @return 小于等于该日期的日期分隔符在读日记界面的下标
-     */
-    @Query("SELECT " +
-            "(SELECT COUNT(*) FROM diaries WHERE diaryDate < :date AND " +
-            "       EXISTS (SELECT 1 FROM paragraphs p_sub" +
-            "           WHERE p_sub.parentDiaryId = diaryId" +
-            "               AND (:isHiddenParagraphShown OR p_sub.privacyType != 2))) + " +
-            "(SELECT COUNT(*) FROM paragraphs WHERE createTime < :date AND (:isHiddenParagraphShown OR privacyType != 2))"
-    )
-    Single<Integer> getDiaryDateSeparatorPositionSingleByDate(LocalDate date, boolean isHiddenParagraphShown);
-
-    /**
      * 获取最早的日记日期
      *
      * @return 最早的日记日期，支持响应式更新

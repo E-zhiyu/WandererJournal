@@ -634,7 +634,6 @@ public class WriteActivity extends AppCompatActivity {
                                 scrollPosition.get(),
                                 63,
                                 10,
-                                750,
                                 new ScrollHelper.PagingRecyclerScrollListener() {
                                     @Override
                                     public void onSucceed(int successPosition) {
