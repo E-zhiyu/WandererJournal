@@ -39,6 +39,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
+import com.wanderer.journal.auxiliary.enums.unique.ViewTags;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -100,7 +101,6 @@ public class DiaryReadActivity extends AppCompatActivity {
     private List<Long> searchMatchedparagraphIdList;                        //符合过滤条件的段落的位置列表
     private int currentIndex = -1;                                          //搜索匹配项列表当前元素的下标
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
-    private final Runnable scrollToInit = this::scrollRecyclerToInitPosition;           //滚动到初始位置的 Runnable 实例
     @Nullable
     private Function0<Unit> pageUpdatedListener = null;
     private BackPressedCallbackHelper backHelper;                           //返回监听帮助器
@@ -141,7 +141,10 @@ public class DiaryReadActivity extends AppCompatActivity {
         super.onDestroy();
 
         //移除待滚动的任务
-        binding.contentRecycler.removeCallbacks(scrollToInit);
+        Object scrollTask = binding.contentRecycler.getTag(ViewTags.RECYCLER_SCROLL_RUNNABLE.getT());
+        if (scrollTask instanceof Runnable) {
+            binding.contentRecycler.removeCallbacks((Runnable) scrollTask);
+        }
 
         //移除页面加载监听器
         if (pageUpdatedListener != null) {
@@ -183,6 +186,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                             }
 
                             //更新计数器
+                            currentIndex = pos - 1;
                             String counterText = String.format(
                                     Locale.getDefault(),
                                     "%d/%d",
@@ -192,7 +196,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                             binding.filteredParagraphCounterText.setText(counterText);
 
                             //执行跳转逻辑
-                            currentIndex = pos - 1;
                             scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
                         })
                         .show());
@@ -566,66 +569,70 @@ public class DiaryReadActivity extends AppCompatActivity {
         }
 
         //添加页面加载监听，用以滚动到初始位置
-        pageUpdatedListener = () -> {
-            if (initScrollPosition.get() != -1) {
-                //500毫秒的间隔防抖
-                binding.contentRecycler.removeCallbacks(scrollToInit);
-                binding.contentRecycler.postDelayed(scrollToInit, 100);
-            }
-            return Unit.INSTANCE;
-        };
-        adapter.addOnPagesUpdatedListener(pageUpdatedListener);
-    }
+        Function0<Unit> pageUpdatedListener = new Function0<>() {
+            @Override
+            public Unit invoke() {
+                if (initScrollPosition.get() != -1) {
+                    Object savedScrollTask = binding.contentRecycler.getTag(ViewTags.RECYCLER_SCROLL_RUNNABLE.getT());
+                    if (savedScrollTask instanceof Runnable) {
+                        binding.contentRecycler.removeCallbacks((Runnable) savedScrollTask);
+                        binding.contentRecycler.postDelayed((Runnable) savedScrollTask, 100);
+                    } else {
+                        Runnable task = () -> {
+                            //控制视图显示
+                            VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
+                            if (adapter.getItemCount() == 0) {
+                                VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, true);
+                            } else if (adapter.getItemCount() != 0) {
+                                VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, false);
+                            }
 
-    /**
-     * 将段落内容列表滚动到初始位置
-     */
-    private void scrollRecyclerToInitPosition() {
-        //控制视图显示
-        VisibilityHelper.toggleVisibilityWithFade(binding.recyclerLoadingIndicator, false);
-        if (adapter.getItemCount() == 0) {
-            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, true);
-        } else if (adapter.getItemCount() != 0) {
-            VisibilityHelper.toggleVisibilityWithFade(binding.emptyText, false);
-        }
+                            //执行滚动操作
+                            int position = initScrollPosition.get();
+                            if (position < 0) return;
+                            else if (position >= adapter.getItemCount()) {
+                                position = adapter.getItemCount() - 1;
+                            }
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
+                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
+                            scrollContentRecycler(
+                                    position,
+                                    new ScrollHelper.PagingRecyclerScrollListener() {
+                                        @Override
+                                        public void onSucceed(int successPosition) {
+                                            //折叠标题栏
+                                            binding.appBarLayout.setExpanded(false);
 
-        //执行滚动操作
-        int position = initScrollPosition.get();
-        if (position >= adapter.getItemCount()) {
-            position = adapter.getItemCount() - 1;
-        }
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "pagesUpdated count=" + adapter.getItemCount());
-        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "LoadState 触发精确滚动位置：" + initScrollPosition.get());
-        scrollContentRecycler(
-                position,
-                new ScrollHelper.PagingRecyclerScrollListener() {
-                    @Override
-                    public void onSucceed(int successPosition) {
-                        //折叠标题栏
-                        binding.appBarLayout.setExpanded(false);
+                                            Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
+                                            initScrollPosition.set(-1);
+                                            binding.contentRecycler.setTag(ViewTags.RECYCLER_SCROLL_RUNNABLE.getT(), null);
+                                        }
 
-                        Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动成功");
-                        initScrollPosition.set(-1);
-                    }
+                                        @Override
+                                        public void onRetry(int failCount) {
+                                            Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
+                                        }
 
-                    @Override
-                    public void onRetry(int failCount) {
-                        Log.w(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动重试次数：" + failCount);
-                    }
+                                        @Override
+                                        public void onFailed() {
+                                            Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
+                                            initScrollPosition.set(-1);
+                                            binding.contentRecycler.setTag(ViewTags.RECYCLER_SCROLL_RUNNABLE.getT(), null);
+                                        }
+                                    }
+                            );
 
-                    @Override
-                    public void onFailed() {
-                        Log.e(LogTags.DIARY_READ_ACTIVITY.n(), "初始化滚动失败");
-                        initScrollPosition.set(-1);
+                            //移除页面加载监听器
+                            adapter.removeOnPagesUpdatedListener(this);
+                        };
+                        binding.contentRecycler.setTag(ViewTags.RECYCLER_SCROLL_RUNNABLE.getT(), task);
+                        binding.contentRecycler.postDelayed(task, 100);
                     }
                 }
-        );
-
-        //移除页面加载监听器
-        if (pageUpdatedListener != null) {
-            adapter.removeOnPagesUpdatedListener(pageUpdatedListener);
-            pageUpdatedListener = null;
-        }
+                return Unit.INSTANCE;
+            }
+        };
+        adapter.addOnPagesUpdatedListener(pageUpdatedListener);
     }
 
     /**
@@ -634,8 +641,18 @@ public class DiaryReadActivity extends AppCompatActivity {
      * @param paragraphId 段落编号
      */
     private void scrollToParagraph(long paragraphId) {
-        int snapPos = findPositionByParagraphIdInSnapshot(paragraphId);
-        if (snapPos != -1) {
+        int snapPos = RecyclerView.NO_POSITION;
+        List<ParagraphUiModel> currentSnapshot = adapter.snapshot();
+        for (int i = 0; i < adapter.getItemCount(); i++) {
+            ParagraphUiModel uiModel = currentSnapshot.get(i);
+            if (uiModel instanceof ParagraphUiModel.Item) {
+                ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
+                if (paragraph.getParagraphId() == paragraphId) snapPos = i;
+            }
+        }
+
+        //判断目标是否在缓存中
+        if (snapPos != RecyclerView.NO_POSITION) {
             scrollContentRecycler(snapPos, null);
         } else {
             DiaryDb db = DiaryDb.getInstance(this);
@@ -664,25 +681,6 @@ public class DiaryReadActivity extends AppCompatActivity {
                     )
             );
         }
-    }
-
-    /**
-     * 在缓存中通过段落编号获取其位置
-     *
-     * @param paragraphId 段落编号
-     * @return 段落在适配器中的位置（没有找到则为 -1）
-     */
-    private int findPositionByParagraphIdInSnapshot(long paragraphId) {
-        List<ParagraphUiModel> currentSnapshot = adapter.snapshot();
-        for (int i = 0; i < adapter.getItemCount(); i++) {
-            ParagraphUiModel uiModel = currentSnapshot.get(i);
-            if (uiModel instanceof ParagraphUiModel.Item) {
-                ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
-                if (paragraph.getParagraphId() == paragraphId) return i;
-            }
-        }
-
-        return RecyclerView.NO_POSITION;
     }
 
     /**
