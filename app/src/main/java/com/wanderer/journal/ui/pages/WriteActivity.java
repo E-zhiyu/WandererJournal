@@ -118,6 +118,7 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
+    @Nullable
     private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private final AtomicInteger scrollPosition = new AtomicInteger(-1); //段落列表加载完毕后需要滚动到的位置
@@ -1259,6 +1260,9 @@ public class WriteActivity extends AppCompatActivity {
 
         //执行状态改变
         if (isEditMode) {
+            //自动显示输入法
+            ImmHelper.showImm(binding.contentTextInput);
+
             VisibilityHelper.toggleViewExpansion(
                     binding.bottomLayout,
                     true,
@@ -1276,12 +1280,11 @@ public class WriteActivity extends AppCompatActivity {
                         }
                     }
             );
-            binding.originText.setText(richText);                               //显示原始文本的富文本
+            binding.originText.setText(richText);                                   //显示原始文本的富文本
             needCursorSkipToTail = true;
-            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-
-            //自动显示输入法
-            ImmHelper.showImm(binding.contentTextInput);
+            binding.contentEditCard.post(() -> {
+                binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
+            });
         } else {
             VisibilityHelper.toggleViewExpansion(
                     binding.bottomLayout,
@@ -1290,7 +1293,7 @@ public class WriteActivity extends AppCompatActivity {
                     binding.contentEditCard
             );
             this.modifyingParagraph = null;
-            binding.contentTextInput.setText(null);         //清空输入框
+            binding.contentTextInput.setText(null);
         }
 
         //如果带有媒体，则显示媒体列表，否则关闭
