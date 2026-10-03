@@ -4,7 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.paging.CombinedLoadStates;
 import androidx.paging.PagingDataAdapter;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,7 +15,7 @@ import com.wanderer.journal.ui.others.scroller.CustomOffsetSmoothScroller;
 import java.lang.ref.WeakReference;
 
 import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function0;
 
 public class ScrollHelper {
     public interface PagingRecyclerScrollListener {
@@ -45,8 +44,8 @@ public class ScrollHelper {
         private final int maxRetryCount;
         private final int retryDelayMillis;
         private final PagingRecyclerScrollListener listener;
-
-        private Function1<CombinedLoadStates, Unit> loadStateListener;
+        private final Runnable pageUpdatedTask = this::checkAndScroll;  //触发 pageUpdatedListener 后执行的代码
+        private Function0<Unit> pageUpdatedListener;
         private int retryCount = 0;
         private boolean isFinished = false;
 
@@ -94,11 +93,12 @@ public class ScrollHelper {
             }
 
             // 监听 Paging3 的加载状态变化
-            loadStateListener = combinedLoadStates -> {
-                checkAndScroll();
+            pageUpdatedListener = () -> {
+                recyclerView.removeCallbacks(pageUpdatedTask);
+                recyclerView.postDelayed(pageUpdatedTask, 200);
                 return Unit.INSTANCE;
             };
-            adapter.addLoadStateListener(loadStateListener);
+            adapter.addOnPagesUpdatedListener(pageUpdatedListener);
 
             // 首次向目标方向推动一次滚动（触发该方向的 Page 加载）
             triggerFetchTowardsTarget();
@@ -178,21 +178,18 @@ public class ScrollHelper {
             PagingDataAdapter<?, ?> adapter = adapterRef.get();
             if (layoutManager == null || adapter == null) return;
 
-            int firstVisible = layoutManager.findFirstVisibleItemPosition();
-            int lastVisible = layoutManager.findLastVisibleItemPosition();
             int itemCount = adapter.getItemCount();
-
             if (itemCount == 0) return;
 
             // 如果 targetPosition 在可视区域下方，跳到当前已知最靠下的位置以触发向下加载
+            int firstVisible = layoutManager.findFirstVisibleItemPosition();
+            int lastVisible = layoutManager.findLastVisibleItemPosition();
             if (targetPosition > lastVisible) {
-                int nearestPos = Math.min(targetPosition, itemCount - 1);
-                layoutManager.scrollToPosition(nearestPos);
+                layoutManager.scrollToPosition(itemCount - 1);
             }
             // 如果 targetPosition 在可视区域上方，跳到当前已知最靠上的位置
             else if (targetPosition < firstVisible) {
-                int nearestPos = Math.max(targetPosition, 0);
-                layoutManager.scrollToPosition(nearestPos);
+                layoutManager.scrollToPosition(0);
             }
         }
 
@@ -204,8 +201,8 @@ public class ScrollHelper {
             PagingDataAdapter<?, ?> adapter = adapterRef.get();
             RecyclerView recyclerView = recyclerViewRef.get();
 
-            if (adapter != null && loadStateListener != null) {
-                adapter.removeLoadStateListener(loadStateListener);
+            if (adapter != null && pageUpdatedListener != null) {
+                adapter.removeOnPagesUpdatedListener(pageUpdatedListener);
             }
             if (recyclerView != null) {
                 recyclerView.removeCallbacks(this);
@@ -313,7 +310,6 @@ public class ScrollHelper {
                 );
                 scroller.setTargetPosition(targetPosition);
                 layoutManager.startSmoothScroll(scroller);
-                Log.d(LogTags.SCROLL_HELPER.n(), "平滑滚动目标：" + targetPosition);
 
                 //一定时间后瞬间滚动到附近以缩短行程
                 recyclerView.post(() -> {
@@ -321,7 +317,6 @@ public class ScrollHelper {
                             targetPosition - distanceThresholder :
                             targetPosition + distanceThresholder;
                     layoutManager.scrollToPositionWithOffset(momentPosition, 0);
-                    Log.d(LogTags.SCROLL_HELPER.n(), "滚动到附近：" + momentPosition);
                 });
             });
         } else {
@@ -371,14 +366,13 @@ public class ScrollHelper {
     /**
      * 滚动带有{@link PagingDataAdapter}类型适配器的{@link RecyclerView}
      *
-     * @param recyclerView     需要滚动的 RecyclerView
-     * @param layoutManager    RecyclerView 的布局管理器
-     * @param adapter          RecyclerView 的适配器
-     * @param targetPosition   需要滚动到的位置
-     * @param offset           滚动结束后目标视图到 RecyclerView 顶部的距离
-     * @param maxRetryCount    最大重试次数
-     * @param retryDelayMillis 重试时间间隔（毫秒）
-     * @param listener         滚动状态监听器
+     * @param recyclerView   需要滚动的 RecyclerView
+     * @param layoutManager  RecyclerView 的布局管理器
+     * @param adapter        RecyclerView 的适配器
+     * @param targetPosition 需要滚动到的位置
+     * @param offset         滚动结束后目标视图到 RecyclerView 顶部的距离
+     * @param maxRetryCount  最大重试次数
+     * @param listener       滚动状态监听器
      */
     public static void scrollPagingRecycler(
             @NonNull RecyclerView recyclerView,
@@ -387,9 +381,14 @@ public class ScrollHelper {
             int targetPosition,
             int offset,
             int maxRetryCount,
-            int retryDelayMillis,
             @NonNull PagingRecyclerScrollListener listener
     ) {
+        //处理无内容的情况
+        if (adapter.getItemCount() == 0) {
+            listener.onFailed();
+            return;
+        }
+
         //处理越界情况
         if (targetPosition < 0) {
             targetPosition = 0;
@@ -423,7 +422,7 @@ public class ScrollHelper {
                     secureTarget,
                     offset,
                     maxRetryCount,
-                    retryDelayMillis,
+                    3000,
                     listener
             );
             task.start();

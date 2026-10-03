@@ -110,17 +110,41 @@ public interface ParagraphDao {
     Flowable<List<Long>> getSearchMatchedParagraphIdsRaw(SupportSQLiteQuery query);
 
     /**
-     * 查找某个段落的粗略位置，用于触发分页加载
+     * 查找某个段落的具体位置，用于在需要跳转到未加载的段落时获取绝对位置
      *
      * @param paragraphId   需要定位的段落的编号
      * @param isHiddenShown 隐藏的段落是否显示
      * @return 该段落的粗略位置
      */
-    @Query("SELECT COUNT(*) " +
-            "FROM paragraphs p " +
-            "WHERE p.createTime < (SELECT createTime FROM paragraphs WHERE paragraphId = :paragraphId)" +
-            "  AND (:isHiddenShown OR p.privacyType != 2)")
-    Single<Integer> getRoughPositionByParagraphId(long paragraphId, boolean isHiddenShown);
+    @Query("WITH params AS (" +
+            "    SELECT createTime FROM paragraphs WHERE paragraphId = :paragraphId" +
+            ")" +
+            "SELECT paragraphCount + diaryCount FROM (SELECT " +
+            "   (SELECT COUNT(*) " +
+            "       FROM paragraphs, params " +
+            "       WHERE paragraphs.createTime <= params.createTime" +
+            "           AND (:isHiddenShown OR privacyType != 2)" +
+            "   ) AS paragraphCount, " +
+            "   (SELECT COUNT(*) " +
+            "       FROM diaries, params " +
+            "       WHERE diaries.diaryDate <= params.createTime " +
+            "           AND EXISTS (SELECT 1 FROM paragraphs WHERE parentDiaryId = diaryId AND (:isHiddenShown OR privacyType != 2))" +
+            "   ) AS diaryCount" +
+            ")")
+    Single<Integer> getParagraphPositionById(long paragraphId, boolean isHiddenShown);
+
+    /**
+     * 获取指定日期的日记首段的编号
+     *
+     * @param date                   目标日期
+     * @param isHiddenParagraphShown 隐藏的段落是否显示
+     * @return 首段的编号
+     */
+    @Query("SELECT paragraphId FROM paragraphs " +
+            "WHERE createTime >= :date AND (:isHiddenParagraphShown OR privacyType != 2) " +
+            "ORDER BY createTime ASC " +
+            "LIMIT 1")
+    Single<Optional<Long>> getDiaryStartPositionByDate(LocalDate date, boolean isHiddenParagraphShown);
 
     /**
      * 通过日记 ID 获取段落

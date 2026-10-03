@@ -45,6 +45,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
@@ -118,6 +119,7 @@ public class WriteActivity extends AppCompatActivity {
     private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
     private BackPressedCallbackHelper.BackHandler editBackHandler;      //内容编辑返回处理器
+    @Nullable
     private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private final AtomicInteger scrollPosition = new AtomicInteger(-1); //段落列表加载完毕后需要滚动到的位置
@@ -164,22 +166,20 @@ public class WriteActivity extends AppCompatActivity {
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-                // 获取当前帧键盘（IME）和系统栏的高度
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
-                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.bottomLayout.setTranslationY(-keyboardHeight);
-                binding.contentRecycler.setPadding(
-                        0,
-                        0,
-                        0,
-                        keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
-                );
-                binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
-
+                changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
                 return insets;
+            }
+
+            @Override
+            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+                WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(binding.getRoot());
+                if (insets != null) {
+                    Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+                    Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
+                }
             }
         });
 
@@ -188,8 +188,6 @@ public class WriteActivity extends AppCompatActivity {
         observeLiveData();
         initLaunchers();
         initOnBackPressedHandlers();
-
-        //实例化键盘监听器
 
         //第一次加载界面时显示草稿恢复对话框
         if (savedInstanceState == null) {
@@ -211,7 +209,6 @@ public class WriteActivity extends AppCompatActivity {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
-        binding.bottomLayout.clearAnimation();
         if (!hasFocus) {
             binding.bottomLayout
                     .animate()
@@ -225,9 +222,12 @@ public class WriteActivity extends AppCompatActivity {
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
-            ImmHelper.hideImm(binding.contentTextInput);
-        } else {
-            ImmHelper.showImm(binding.contentTextInput);
+            binding.contentRecycler.setPadding(
+                    0,
+                    0,
+                    0,
+                    AppearanceHelper.dpToPx(WriteActivity.this, 5)
+            );
         }
     }
 
@@ -244,6 +244,23 @@ public class WriteActivity extends AppCompatActivity {
 
         //清空临时媒体目录
         FileHelper.clearMediaTempDir(this);
+    }
+
+    /**
+     * 更改输入框的高度
+     *
+     * @param keyboardHeight 键盘高度
+     */
+    private void changeEdittextHeight(int keyboardHeight) {
+        int height = Math.max(keyboardHeight, 0);
+        binding.bottomLayout.setTranslationY(-height);
+        binding.contentRecycler.setPadding(
+                0,
+                0,
+                0,
+                height + AppearanceHelper.dpToPx(WriteActivity.this, 5)
+        );
+        binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
     }
 
     /**
@@ -296,6 +313,8 @@ public class WriteActivity extends AppCompatActivity {
     private void initViews() {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
+        String date = CustomDateTimeFormatter.LOCAL_DATE.format(getParentDiaryDate());
+        binding.toolbar.setSubtitle(date);
 
         //初始化RecyclerView
         initParagraphRecycler();
@@ -634,7 +653,6 @@ public class WriteActivity extends AppCompatActivity {
                                 scrollPosition.get(),
                                 63,
                                 10,
-                                750,
                                 new ScrollHelper.PagingRecyclerScrollListener() {
                                     @Override
                                     public void onSucceed(int successPosition) {
@@ -1136,6 +1154,7 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         menu.show();
+        ImmHelper.hideImm(binding.contentTextInput, false); //收起键盘
     }
 
     /**
@@ -1203,9 +1222,6 @@ public class WriteActivity extends AppCompatActivity {
      * @param paragraph 需要修改情绪标签的段落
      */
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
-        //先收起输入法
-        ImmHelper.hideImm(binding.contentTextInput);
-
         //实例化底部对话框并显示
         EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());
@@ -1260,6 +1276,9 @@ public class WriteActivity extends AppCompatActivity {
 
         //执行状态改变
         if (isEditMode) {
+            //自动显示输入法
+            ImmHelper.showImm(binding.contentTextInput);
+
             VisibilityHelper.toggleViewExpansion(
                     binding.bottomLayout,
                     true,
@@ -1277,12 +1296,11 @@ public class WriteActivity extends AppCompatActivity {
                         }
                     }
             );
-            binding.originText.setText(richText);                               //显示原始文本的富文本
+            binding.originText.setText(richText);                                   //显示原始文本的富文本
             needCursorSkipToTail = true;
-            binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
-
-            //自动显示输入法
-            ImmHelper.showImm(binding.contentTextInput);
+            binding.contentEditCard.post(() -> {
+                binding.contentTextInput.setText(modifyingParagraph.getContent());  //填充原始文本到输入框
+            });
         } else {
             VisibilityHelper.toggleViewExpansion(
                     binding.bottomLayout,
@@ -1291,7 +1309,7 @@ public class WriteActivity extends AppCompatActivity {
                     binding.contentEditCard
             );
             this.modifyingParagraph = null;
-            binding.contentTextInput.setText(null);         //清空输入框
+            binding.contentTextInput.setText(null);
         }
 
         //如果带有媒体，则显示媒体列表，否则关闭
