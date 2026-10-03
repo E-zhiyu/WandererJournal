@@ -45,6 +45,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
@@ -297,6 +298,8 @@ public class WriteActivity extends AppCompatActivity {
     private void initViews() {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
+        String date = CustomDateTimeFormatter.LOCAL_DATE.format(getParentDiaryDate());
+        binding.toolbar.setSubtitle(date);
 
         //初始化RecyclerView
         initParagraphRecycler();
