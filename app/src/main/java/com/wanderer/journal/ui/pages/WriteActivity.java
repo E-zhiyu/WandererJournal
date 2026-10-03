@@ -166,22 +166,20 @@ public class WriteActivity extends AppCompatActivity {
             @NonNull
             @Override
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-                // 获取当前帧键盘（IME）和系统栏的高度
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-                // 计算键盘弹起的高度（减去底部导航栏的高度，防止重复偏移）
-                int keyboardHeight = Math.max(0, imeInsets.bottom - systemBars.bottom);
-                binding.bottomLayout.setTranslationY(-keyboardHeight);
-                binding.contentRecycler.setPadding(
-                        0,
-                        0,
-                        0,
-                        keyboardHeight + AppearanceHelper.dpToPx(WriteActivity.this, 5)
-                );
-                binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
-
+                changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
                 return insets;
+            }
+
+            @Override
+            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+                WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(binding.getRoot());
+                if (insets != null) {
+                    Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+                    Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
+                }
             }
         });
 
@@ -190,8 +188,6 @@ public class WriteActivity extends AppCompatActivity {
         observeLiveData();
         initLaunchers();
         initOnBackPressedHandlers();
-
-        //实例化键盘监听器
 
         //第一次加载界面时显示草稿恢复对话框
         if (savedInstanceState == null) {
@@ -213,7 +209,6 @@ public class WriteActivity extends AppCompatActivity {
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
-        binding.bottomLayout.clearAnimation();
         if (!hasFocus) {
             binding.bottomLayout
                     .animate()
@@ -227,9 +222,12 @@ public class WriteActivity extends AppCompatActivity {
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
-            ImmHelper.hideImm(binding.contentTextInput);
-        } else {
-            ImmHelper.showImm(binding.contentTextInput);
+            binding.contentRecycler.setPadding(
+                    0,
+                    0,
+                    0,
+                    AppearanceHelper.dpToPx(WriteActivity.this, 5)
+            );
         }
     }
 
@@ -246,6 +244,23 @@ public class WriteActivity extends AppCompatActivity {
 
         //清空临时媒体目录
         FileHelper.clearMediaTempDir(this);
+    }
+
+    /**
+     * 更改输入框的高度
+     *
+     * @param keyboardHeight 键盘高度
+     */
+    private void changeEdittextHeight(int keyboardHeight) {
+        int height = Math.max(keyboardHeight, 0);
+        binding.bottomLayout.setTranslationY(-height);
+        binding.contentRecycler.setPadding(
+                0,
+                0,
+                0,
+                height + AppearanceHelper.dpToPx(WriteActivity.this, 5)
+        );
+        binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
     }
 
     /**
@@ -1139,6 +1154,7 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         menu.show();
+        ImmHelper.hideImm(binding.contentTextInput, false); //收起键盘
     }
 
     /**
@@ -1206,9 +1222,6 @@ public class WriteActivity extends AppCompatActivity {
      * @param paragraph 需要修改情绪标签的段落
      */
     private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
-        //先收起输入法
-        ImmHelper.hideImm(binding.contentTextInput);
-
         //实例化底部对话框并显示
         EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());

@@ -14,12 +14,12 @@ public class ImmHelper {
      */
     public static void showImm(@NonNull View view) {
         Context context = view.getContext();
-        view.requestFocus();
         InputMethodManager imm = context.getSystemService(InputMethodManager.class);
         if (imm == null) {
             return;
         }
 
+        view.requestFocus();
         boolean success = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
         if (!success) { //失败后再尝试
             view.postDelayed(() -> {
@@ -32,16 +32,19 @@ public class ImmHelper {
     /**
      * 隐藏输入法
      *
-     * @param view 需要隐藏输入法的视图
+     * @param view       需要隐藏输入法的视图
+     * @param clearFocus 是否清除焦点
      */
-    public static void hideImm(@NonNull View view) {
+    public static void hideImm(@NonNull View view, boolean clearFocus) {
         Context context = view.getContext();
         InputMethodManager imm = context.getSystemService(InputMethodManager.class);
         if (imm == null) {
             return;
         }
 
-        view.clearFocus();
+        if (clearFocus) {
+            view.clearFocus();
+        }
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }
