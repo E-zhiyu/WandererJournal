@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.0\n" +
+    private final static String CHANGELOG = "# v1.7.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复读日记界面取消搜索可能无法取消关键词高亮的BUG\n" +
+            "\n" +
+            "# v1.7.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

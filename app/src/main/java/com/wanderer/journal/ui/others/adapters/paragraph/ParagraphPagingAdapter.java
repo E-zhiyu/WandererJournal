@@ -607,7 +607,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         //获取需要刷新的位置
         Set<Integer> refreshPositionSet = new HashSet<>();
         int i = 0;
-        for (ParagraphUiModel uiModel : snapshot().getItems()) {
+        for (ParagraphUiModel uiModel : snapshot()) {
             if (uiModel instanceof ParagraphUiModel.Item) {
                 ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
                 long paragraphId = paragraph.getParagraphId();
