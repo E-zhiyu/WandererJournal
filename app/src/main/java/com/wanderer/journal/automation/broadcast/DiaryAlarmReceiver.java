@@ -23,7 +23,7 @@ import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
-import com.wanderer.journal.ui.pages.WriteActivity;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 
 import java.time.LocalDate;
 

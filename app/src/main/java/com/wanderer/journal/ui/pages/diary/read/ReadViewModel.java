@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.viewmodel;
+package com.wanderer.journal.ui.pages.diary.read;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
@@ -30,7 +30,7 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class ParagraphFilterViewModel extends ViewModel {
+public class ReadViewModel extends ViewModel {
     private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
     private final BehaviorProcessor<String> searchKeywordProcessor =
             BehaviorProcessor.createDefault("");        //搜索关键词处理器（包含空格）
@@ -140,45 +140,6 @@ public class ParagraphFilterViewModel extends ViewModel {
     }
 
     /**
-     * 获取由 PagingData转换得到的 Flowable 数据
-     *
-     * @param start 段落起始日期
-     * @param end   段落结束日期（不包含）
-     * @param db    数据库实例
-     * @return 段落数据，支持响应式更新
-     */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(
-            @NonNull LocalDate start,
-            @NonNull LocalDate end,
-            DiaryDb db
-    ) {
-        return showHiddenParagraphProcessor
-                .switchMap(isAuthed -> {
-                    // 配置 PagingConfig
-                    PagingConfig pagingConfig = new PagingConfig(
-                            10,
-                            20,
-                            true, // 必须为 true 以支持精准定位
-                            8
-                    );
-
-                    // 创建 Pager
-                    Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
-                            pagingConfig,
-                            null, // 从最开始加载
-                            () -> db.paragraphDao().getParagraphPagingSourceInDateRange(start, end, isAuthed ? 1 : 0)
-                    );
-
-                    return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
-                })
-                .subscribeOn(Schedulers.io())   //在 IO 线程执行
-                .compose(flowable -> PagingRx.cachedIn(
-                        flowable,
-                        ViewModelKt.getViewModelScope(this)
-                ));
-    }
-
-    /**
      * 不指定起止日期的获取段落数据方法
      *
      * @param initPosition 初始跳转到的位置
@@ -200,7 +161,7 @@ public class ParagraphFilterViewModel extends ViewModel {
                     Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
-                            () -> db.paragraphDao().getAllParagraphPagingSource(isAuthed ? 1 : 0)
+                            () -> db.paragraphDao().getAllParagraphPagingSource(isHiddenParagraphShown() ? 1 : 0)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);

@@ -7,8 +7,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 
 import com.wanderer.journal.R;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.WriteActivity;
+import com.wanderer.journal.ui.pages.diary.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 
 import java.util.function.Function;
 

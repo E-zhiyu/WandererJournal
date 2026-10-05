@@ -27,7 +27,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.diary.read.DiaryReadActivity;
 import com.wanderer.journal.ui.pages.role.RoleListActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 

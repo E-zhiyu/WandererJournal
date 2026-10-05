@@ -32,8 +32,8 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.WriteActivity;
+import com.wanderer.journal.ui.pages.diary.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 
 import java.time.LocalDate;
 

@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages;
+package com.wanderer.journal.ui.pages.diary.read;
 
 
 import android.content.Intent;
@@ -70,10 +70,10 @@ import com.wanderer.journal.ui.others.dialogs.EditTextDialogBuilder;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 import com.wanderer.journal.ui.others.bottom.ParagraphFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 import com.wanderer.journal.ui.pages.share.SharePreviewActivity;
 
@@ -253,7 +253,7 @@ public class DiaryReadActivity extends AppCompatActivity {
 
         //多词搜索模式切换按钮
         binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+            ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
             viewModel.toggleKeywordMode();
             if (viewModel.isAndMode()) {
                 binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
@@ -263,7 +263,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         });
 
         //符合过滤条件的段落的下标
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
         DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(viewModel.getFilteredParagraphIds(db)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -334,7 +334,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         searchBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                ParagraphFilterViewModel viewModel = new ViewModelProvider(DiaryReadActivity.this).get(ParagraphFilterViewModel.class);
+                ReadViewModel viewModel = new ViewModelProvider(DiaryReadActivity.this).get(ReadViewModel.class);
                 viewModel.clearFilter();
                 return true;
             }
@@ -371,7 +371,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 binding.clearHistoryBtn,
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
-                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
                     viewModel.executeSearch(keyword);
                 },
                 item -> {
@@ -458,7 +458,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      */
     private void initRecyclerView() {
         //设置适配器
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
         adapter = new ParagraphPagingAdapter(
                 viewModel.contentDisplayIdSet,
                 this::showParagraphModifyMenu,
@@ -663,7 +663,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
-        ParagraphFilterViewModel filterViewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ReadViewModel filterViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
         filterViewModel.getFilterUpdatedLiveData().observe(this, v ->
                 setSearchMode(!filterViewModel.isNoFilter())
         );
@@ -798,7 +798,7 @@ public class DiaryReadActivity extends AppCompatActivity {
         if (queriedPos == RecyclerView.NO_POSITION) {
             //缓存中找不到则从数据库中读取具体位置
             DiaryDb db = DiaryDb.getInstance(this);
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+            ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
             disposable.add(db.paragraphDao().getParagraphPositionById(paragraphId, viewModel.isHiddenParagraphShown())
                     .subscribeOn(Schedulers.io())
                     .subscribeOn(AndroidSchedulers.mainThread())
@@ -924,7 +924,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                     disposable.add(db.diaryDao().getEarliestDiaryDateSingle()
                             .flatMap(optional -> {
                                 LocalDate startDate = optional.orElseGet(LocalDate::now);
-                                ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                                ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
                                 return ParagraphService.modifyCreateTime(
                                         paragraph.getParagraphId(),
                                         startDate,
@@ -979,7 +979,7 @@ public class DiaryReadActivity extends AppCompatActivity {
                 .setSingleChoiceItems(titles, paragraph.getPrivacyType(), (dialogInterface, i) -> {
                     dialogInterface.dismiss();
 
-                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
                     if ((i == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal() ||
                             paragraph.getPrivacyType() == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal()) &&
                             viewModel.isNotAuthed()) {
@@ -1109,7 +1109,7 @@ public class DiaryReadActivity extends AppCompatActivity {
     private void skipToTargetDate(@NonNull LocalDate targetDate) {
         //跳转到对应位置
         DiaryDb db = DiaryDb.getInstance(this);
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
         disposable.add(db.paragraphDao().getDiaryStartPositionByDate(targetDate, viewModel.isHiddenParagraphShown())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -1130,7 +1130,7 @@ public class DiaryReadActivity extends AppCompatActivity {
      * 搜索框菜单点击显示隐藏段落的回调
      */
     private void changeHiddenParagraphVisibility() {
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
         if (viewModel.isNotAuthed() && !viewModel.isHiddenParagraphShown()) {
             BiometricHelper.showBiometricPrompt("隐私保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
                 @Override

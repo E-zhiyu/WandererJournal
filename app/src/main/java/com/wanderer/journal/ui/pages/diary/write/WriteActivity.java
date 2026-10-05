@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.pages;
+package com.wanderer.journal.ui.pages.diary.write;
 
 import android.Manifest;
 import android.content.Intent;
@@ -85,7 +85,6 @@ import com.wanderer.journal.ui.others.bottom.role.RoleSelectBottomSheet;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderItemDecoration;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
 import com.wanderer.journal.ui.others.viewmodel.MediaAddOptionViewModel;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
 import com.wanderer.journal.ui.others.bottom.MediaAddBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.others.dialogs.ProgressDialogBuilder;
@@ -593,11 +592,11 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
-     * 初始化RecyclerView
+     * 初始化 RecyclerView
      */
     private void initParagraphRecycler() {
         //设置适配器
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+        WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
         ParagraphPagingAdapter adapter = new ParagraphPagingAdapter(
                 viewModel.contentDisplayIdSet,
                 this::showParagraphModifyMenu,
@@ -689,7 +688,8 @@ public class WriteActivity extends AppCompatActivity {
         //监听数据库的响应
         DiaryDb db = DiaryDb.getInstance(this);
         LocalDate diaryDate = getParentDiaryDate();
-        disposable.add(viewModel.getPagingDataFlow(diaryDate, diaryDate.plusDays(1), db)
+        viewModel.updateDate(diaryDate);
+        disposable.add(viewModel.getPagingDataFlow(db)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pagingData ->
@@ -1058,7 +1058,7 @@ public class WriteActivity extends AppCompatActivity {
                         }
 
                         //返回查询到的下标
-                        ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                        WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
                         return ParagraphService.addParagraph(
                                 startDate,
                                 paragraph,
@@ -1184,7 +1184,7 @@ public class WriteActivity extends AppCompatActivity {
                     }
 
                     //更新数据
-                    ParagraphFilterViewModel viewModel = new ViewModelProvider(this).get(ParagraphFilterViewModel.class);
+                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
                     DiaryDb db = DiaryDb.getInstance(this);
                     disposable.add(ParagraphService.modifyCreateTime(
                                             paragraph.getParagraphId(),
