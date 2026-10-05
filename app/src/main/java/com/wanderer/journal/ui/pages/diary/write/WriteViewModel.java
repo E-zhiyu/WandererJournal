@@ -60,6 +60,15 @@ public class WriteViewModel extends ViewModel {
     }
 
     /**
+     * 设置隐藏的段落的可见性
+     *
+     * @param isVisible 是否可见
+     */
+    public void showHiddenParagraph(boolean isVisible) {
+        showHiddenParagraphProcessor.onNext(isVisible);
+    }
+
+    /**
      * 判断是否未通过身份验证
      *
      * @return 是否未通过身份验证

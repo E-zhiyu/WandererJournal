@@ -27,7 +27,7 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
-import com.wanderer.journal.ui.pages.diary.read.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.diary.read.ReadActivity;
 import com.wanderer.journal.ui.pages.role.RoleListActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 
@@ -100,7 +100,7 @@ public class HomeFragment extends Fragment {
 
         //设置点击监听
         binding.diaryDateCard.setOnClickListener(view -> {
-            Intent skip2DiaryRead = new Intent(requireContext(), DiaryReadActivity.class);
+            Intent skip2DiaryRead = new Intent(requireContext(), ReadActivity.class);
             startActivity(skip2DiaryRead);
         });
         AppearanceHelper.attachMorphAnimation(binding.diaryDateCard);

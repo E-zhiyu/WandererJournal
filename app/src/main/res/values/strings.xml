@@ -178,6 +178,9 @@
     <string name="read_diary">看日记</string>
     <string name="show_or_hide_private_paragraph">显示/隐藏隐私段落</string>
     <string name="switch_privacy_type">切换隐私类别</string>
+    <string name="privacy_type_color_block">隐私类别色块</string>
+    <string name="btn_of_date_select">日期选择按钮</string>
+    <string name="btn_of_show_or_hide_private_paragraph">隐私段落显示或隐藏按钮</string>
     <string name="troubleshooting">问题解答</string>
     <string name="help_solve_some_common_problems">帮助解决一些常见的问题</string>
     <string name="floating_notification_question">Q : 为什么授予通知权限后不会弹出悬浮通知？</string>
@@ -192,7 +195,6 @@
     <string name="update_answer">A : 您可以直接访问项目仓库，从发行版(Release)中下载安装包。更推荐的方式是通过APP内的更新检测功能，APP会自动从仓库中下载最新版安装包，下载完成后点击立刻更新即可安装新版本。部分用户可能在安装时出现问题，此时您可以尝试进入手机上的文件管理应用，进入Downloads文件夹并手动安装新版本。</string>
     <string name="privacy_data_question">Q : APP会收集隐私数据吗？</string>
     <string name="privacy_data_answer">A : 本APP不收集任何数据，且使用过程中产生的所有数据都仅保存到本地，您无需担心任何隐私泄露问题。</string>
-    <string name="privacy_type_color_block">隐私类别色块</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

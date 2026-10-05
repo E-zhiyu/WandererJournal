@@ -73,7 +73,7 @@
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
-            android:name=".ui.pages.diary.read.DiaryReadActivity"
+            android:name=".ui.pages.diary.read.ReadActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
@@ -87,7 +87,7 @@
         <activity
             android:name=".ui.pages.share.SharePreviewActivity"
             android:exported="false"
-            android:parentActivityName=".ui.pages.diary.read.DiaryReadActivity" />
+            android:parentActivityName=".ui.pages.diary.read.ReadActivity" />
         <activity
             android:name=".ui.pages.role.RoleListActivity"
             android:exported="false"

@@ -45,11 +45,11 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
-import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
 import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
@@ -69,6 +69,7 @@ import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
+import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -99,6 +100,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -312,8 +314,36 @@ public class WriteActivity extends AppCompatActivity {
     private void initViews() {
         //工具栏
         binding.toolbar.setNavigationOnClickListener(view -> finish());
-        String date = CustomDateTimeFormatter.LOCAL_DATE.format(getParentDiaryDate());
-        binding.toolbar.setSubtitle(date);
+
+        //日期选择按钮
+        binding.dateSelectBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
+                getParentDiaryDate(),
+                getSupportFragmentManager(),
+                selection -> {
+                    //更新段落列表内容
+                    LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
+                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                    viewModel.updateDate(selectedDate);
+
+                    //更新 Bundle 中的数据
+                    if (initBundle != null) {
+                        initBundle.putLong(KeyStrings.INIT_DATE.v(), selection);
+                    } else {
+                        initBundle = new Bundle();
+                        initBundle.putLong(KeyStrings.INIT_DATE.v(), selection);
+                    }
+                }
+        ));
+
+        //隐私段落可见性切换按钮
+        binding.visibilityToggleBtn.setOnClickListener(view -> {
+            WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+            boolean currentStat = viewModel.isHiddenParagraphShown();
+            viewModel.showHiddenParagraph(!currentStat);
+
+            String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
+            Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+        });
 
         //初始化RecyclerView
         initParagraphRecycler();
@@ -1132,29 +1162,101 @@ public class WriteActivity extends AppCompatActivity {
         menu.getMenuInflater().inflate(R.menu.menu_paragraph_edit, menu.getMenu());
 
         menu.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_modify_content) {
+            int id = item.getItemId();
+            if (id == R.id.action_modify_content) {
                 setEditMode(true, paragraph, model.getMediaList());
                 return true;
-            } else if (item.getItemId() == R.id.action_modify_time) {
+            } else if (id == R.id.action_modify_time) {
                 modifyCreateTime(paragraph);
                 return true;
-            } else if (item.getItemId() == R.id.action_modify_emotion) {
+            } else if (id == R.id.action_modify_emotion) {
                 modifyEmotion(paragraph);
                 return true;
-            } else if (item.getItemId() == R.id.action_copy_paragraph) {
+            } else if (id == R.id.action_copy_paragraph) {
                 TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
                 Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                 return true;
-            } else if (item.getItemId() == R.id.action_delete_paragraph) {
+            } else if (id == R.id.action_delete_paragraph) {
                 deleteParagraph(paragraph);
                 return true;
-            } else {
-                return false;
+            } else if (id == R.id.action_change_privacy_type) {
+                switchParagraphPrivacyType(paragraph);
+                return true;
             }
+
+            return false;
         });
 
         menu.show();
         ImmHelper.hideImm(binding.contentTextInput, false); //收起键盘
+    }
+
+    /**
+     * 切换段落的隐私类别
+     *
+     * @param paragraph 需要修改隐私类别的段落
+     */
+    private void switchParagraphPrivacyType(@NonNull ParagraphEntity paragraph) {
+        //获取种类和标题数组
+        ParagraphPrivacyType[] types = ParagraphPrivacyType.values();
+        String[] titles = Arrays.stream(types)
+                .map(ParagraphPrivacyType::getTitle)
+                .toArray(String[]::new);
+
+        //显示对话框
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.switch_privacy_type)
+                .setSingleChoiceItems(titles, paragraph.getPrivacyType(), (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+
+                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                    if ((i == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal() ||
+                            paragraph.getPrivacyType() == ParagraphPrivacyType.HIDE_FROM_LIST.ordinal()) &&
+                            viewModel.isNotAuthed()) {
+                        BiometricHelper.showBiometricPrompt("隐私段落保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
+                            @Override
+                            public void onSuccess() {
+                                DiaryDb db = DiaryDb.getInstance(WriteActivity.this);
+                                disposable.add(db.paragraphDao().updatePrivacyTypeCompletable(paragraph.getParagraphId(), i)
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribeOn(Schedulers.io())
+                                        .subscribe(
+                                                () -> Toast.makeText(WriteActivity.this, "隐私类别修改成功", Toast.LENGTH_SHORT).show(),
+                                                e -> ExceptionHelper.showExceptionDialog(WriteActivity.this, e)
+                                        )
+                                );
+                                viewModel.setIsAuthed(true);
+                            }
+
+                            @Override
+                            public void onError(int errCode, CharSequence errStr) {
+                                Toast.makeText(WriteActivity.this, errStr, Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onFailed() {
+                            }
+                        });
+                    } else {
+                        //从隐藏内容切换为别的类型时取消显示其内容
+                        if (paragraph.getPrivacyType() == ParagraphPrivacyType.HIDE_CONTENT.ordinal() &&
+                                i != ParagraphPrivacyType.HIDE_CONTENT.ordinal()) {
+                            viewModel.contentDisplayIdSet.remove(paragraph.getParagraphId());
+                        }
+
+                        DiaryDb db = DiaryDb.getInstance(this);
+                        disposable.add(db.paragraphDao().updatePrivacyTypeCompletable(paragraph.getParagraphId(), i)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(
+                                        () -> Toast.makeText(this, "隐私类别修改成功", Toast.LENGTH_SHORT).show(),
+                                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                                )
+                        );
+                    }
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /**
