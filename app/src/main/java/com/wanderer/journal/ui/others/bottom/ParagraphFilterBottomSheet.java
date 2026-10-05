@@ -19,7 +19,7 @@ import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
-import com.wanderer.journal.ui.others.viewmodel.ParagraphFilterViewModel;
+import com.wanderer.journal.ui.pages.diary.read.ReadViewModel;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
 import java.util.Set;
@@ -52,7 +52,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         //绑定消失监听器
         setOnDismissListener(() -> {
-            ParagraphFilterViewModel viewModel = new ViewModelProvider(requireActivity()).get(ParagraphFilterViewModel.class);
+            ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
             viewModel.notifyFilterUpdated();
         });
 
@@ -71,7 +71,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
      */
     private void initViews() {
         //设置适配器
-        ParagraphFilterViewModel viewModel = new ViewModelProvider(requireActivity()).get(ParagraphFilterViewModel.class);
+        ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
         EmotionTagFilterAdapter adapter = new EmotionTagFilterAdapter(
                 viewModel.getCheckedEmotionIdSet(),
                 (emotionTag, isChecked) -> {

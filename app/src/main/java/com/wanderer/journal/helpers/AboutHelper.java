@@ -10,7 +10,18 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.0\n" +
+    private final static String CHANGELOG = "# v1.7.1\n" +
+            "\n" +
+            "### 新增内容\n" +
+            "\n" +
+            "- 写日记界面添加日期选择和隐私段落可见性切换功能\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复读日记界面取消搜索可能无法取消关键词高亮的BUG\n" +
+            "- 修复写日记界面无法修改段落隐私类型的BUG\n" +
+            "\n" +
+            "# v1.7.0\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +

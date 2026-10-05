@@ -36,7 +36,7 @@ import com.wanderer.journal.databinding.PopupWindowMemeryPixelBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.MonthHeaderDecoration;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
+import com.wanderer.journal.ui.pages.diary.read.ReadActivity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -273,7 +273,7 @@ public class StatisticsActivity extends AppCompatActivity {
 
                     //设置查看日记按钮点击监听
                     windowBinding.checkDiaryBtn.setOnClickListener(view1 -> {
-                        Intent skip2DiaryRead = new Intent(this, DiaryReadActivity.class);
+                        Intent skip2DiaryRead = new Intent(this, ReadActivity.class);
                         Bundle bundle = new Bundle();
 
                         bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDate(model.getDiaryDate()));

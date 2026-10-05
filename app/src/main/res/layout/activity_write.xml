@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.pages.WriteActivity">
+    tools:context=".ui.pages.diary.write.WriteActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinator_layout"
@@ -31,7 +31,28 @@
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     app:layout_collapseMode="pin"
-                    app:title="@string/write_diary" />
+                    app:title="@string/write_diary">
+
+                    <ImageButton
+                        android:id="@+id/date_select_btn"
+                        style="@style/ImageButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="15dp"
+                        android:contentDescription="@string/btn_of_date_select"
+                        android:src="@drawable/outline_date_range_24" />
+
+                    <ImageButton
+                        android:id="@+id/visibility_toggle_btn"
+                        style="@style/ImageButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="15dp"
+                        android:contentDescription="@string/btn_of_show_or_hide_private_paragraph"
+                        android:src="@drawable/outline_visibility_lock_24" />
+                </com.google.android.material.appbar.MaterialToolbar>
             </com.google.android.material.appbar.CollapsingToolbarLayout>
         </com.google.android.material.appbar.AppBarLayout>
 

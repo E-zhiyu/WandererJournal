@@ -7,8 +7,8 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 
 import com.wanderer.journal.R;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.WriteActivity;
+import com.wanderer.journal.ui.pages.diary.read.ReadActivity;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 
 import java.util.function.Function;
 
@@ -29,7 +29,7 @@ public enum ShortcutBuildInfo {
             "read_diary",
             R.drawable.outline_undereye_24,
             context -> {
-                Intent intent = new Intent(context, DiaryReadActivity.class);
+                Intent intent = new Intent(context, ReadActivity.class);
                 intent.setAction(Intent.ACTION_VIEW);
                 return intent;
             },

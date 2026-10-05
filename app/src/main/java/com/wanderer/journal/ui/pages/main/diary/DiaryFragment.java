@@ -32,8 +32,8 @@ import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.time.DateTimePickerHelper;
-import com.wanderer.journal.ui.pages.DiaryReadActivity;
-import com.wanderer.journal.ui.pages.WriteActivity;
+import com.wanderer.journal.ui.pages.diary.read.ReadActivity;
+import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 
 import java.time.LocalDate;
 
@@ -131,7 +131,7 @@ public class DiaryFragment extends Fragment {
         //日记列表
         DiaryAdapter adapter = new DiaryAdapter(
                 (diary, anchor) -> {
-                    Intent skip2Read = new Intent(requireContext(), DiaryReadActivity.class);
+                    Intent skip2Read = new Intent(requireContext(), ReadActivity.class);
                     Bundle bundle = new Bundle();
 
                     bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDate(diary.getDiaryDate()));
