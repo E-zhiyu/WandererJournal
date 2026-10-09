@@ -133,6 +133,11 @@ public class WriteActivity extends AppCompatActivity {
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
     private boolean needCursorSkipToTail = false;           //输入框文本变化时需要让光标移动到末尾
 
+    {
+        //初始化意图启动器
+        initLaunchers();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,7 +154,17 @@ public class WriteActivity extends AppCompatActivity {
                     AppearanceHelper.dpToPx(this, 20),
                     AppearanceHelper.dpToPx(this, 10),
                     AppearanceHelper.dpToPx(this, 10),
-                    systemBars.bottom
+                    systemBars.bottom   //防止被小白条遮蔽
+            );
+
+            //失去焦点时监听键盘高度
+            int imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+            v.postDelayed(
+                    () -> {
+                        if (hasWindowFocus()) return;
+                        changeEdittextHeight(imeHeight - systemBars.bottom, true);
+                    },
+                    10
             );
 
             return insets;
@@ -169,7 +184,7 @@ public class WriteActivity extends AppCompatActivity {
             public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
                 Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                 Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
+                changeEdittextHeight(imeInsets.bottom - systemBars.bottom, false);
                 return insets;
             }
 
@@ -179,7 +194,7 @@ public class WriteActivity extends AppCompatActivity {
                 if (insets != null) {
                     Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
                     Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                    changeEdittextHeight(imeInsets.bottom - systemBars.bottom);
+                    changeEdittextHeight(imeInsets.bottom - systemBars.bottom, false);
                 }
             }
         });
@@ -187,7 +202,6 @@ public class WriteActivity extends AppCompatActivity {
         receiveIntent();
         initViews();
         observeLiveData();
-        initLaunchers();
         initOnBackPressedHandlers();
 
         //第一次加载界面时显示草稿恢复对话框
@@ -205,30 +219,6 @@ public class WriteActivity extends AppCompatActivity {
                         .setNegativeButton("取消", null)
                         .show();
             }
-        }
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        if (!hasFocus) {
-            binding.bottomLayout
-                    .animate()
-                    .translationY(0)
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .setDuration(250)
-                    .start();
-            binding.emptyText
-                    .animate()
-                    .translationY(0)
-                    .setInterpolator(new FastOutSlowInInterpolator())
-                    .setDuration(250)
-                    .start();
-            binding.contentRecycler.setPadding(
-                    0,
-                    0,
-                    0,
-                    AppearanceHelper.dpToPx(WriteActivity.this, 5)
-            );
         }
     }
 
@@ -251,17 +241,40 @@ public class WriteActivity extends AppCompatActivity {
      * 更改输入框的高度
      *
      * @param keyboardHeight 键盘高度
+     * @param withAnimation  高度变化时是否有平移动画
      */
-    private void changeEdittextHeight(int keyboardHeight) {
+    private void changeEdittextHeight(int keyboardHeight, boolean withAnimation) {
+        //清理旧动画
+        binding.bottomLayout.clearAnimation();
+        binding.emptyText.clearAnimation();
+
+        //应用新高度
         int height = Math.max(keyboardHeight, 0);
-        binding.bottomLayout.setTranslationY(-height);
+        if (withAnimation) {
+            binding.bottomLayout
+                    .animate()
+                    .translationY(height)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250)
+                    .start();
+            binding.emptyText
+                    .animate()
+                    .translationY(height)
+                    .setInterpolator(new FastOutSlowInInterpolator())
+                    .setDuration(250)
+                    .start();
+        } else {
+            binding.bottomLayout.setTranslationY(-height);
+            binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
+        }
+
+        //列表视图修改内边距
         binding.contentRecycler.setPadding(
                 0,
                 0,
                 0,
                 height + AppearanceHelper.dpToPx(WriteActivity.this, 5)
         );
-        binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
     }
 
     /**
