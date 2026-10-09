@@ -177,6 +177,7 @@ public class WriteActivity extends AppCompatActivity {
             @Override
             public void onPrepare(@NonNull WindowInsetsAnimationCompat animation) {
                 binding.bottomLayout.clearAnimation();
+                binding.emptyText.clearAnimation();
             }
 
             @NonNull
@@ -253,19 +254,19 @@ public class WriteActivity extends AppCompatActivity {
         if (withAnimation) {
             binding.bottomLayout
                     .animate()
-                    .translationY(height)
+                    .translationY(-height)
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
             binding.emptyText
                     .animate()
-                    .translationY(-keyboardHeight * 2 / 5f)
+                    .translationY(-height * .4f)
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
         } else {
             binding.bottomLayout.setTranslationY(-height);
-            binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
+            binding.emptyText.setTranslationY(-height * .4f);
         }
 
         //列表视图修改内边距
