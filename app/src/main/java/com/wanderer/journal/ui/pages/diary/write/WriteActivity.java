@@ -259,7 +259,7 @@ public class WriteActivity extends AppCompatActivity {
                     .start();
             binding.emptyText
                     .animate()
-                    .translationY(height)
+                    .translationY(-keyboardHeight * 2 / 5f)
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
