@@ -62,8 +62,8 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**
