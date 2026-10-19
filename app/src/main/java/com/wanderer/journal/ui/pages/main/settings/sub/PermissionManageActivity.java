@@ -74,13 +74,6 @@ public class PermissionManageActivity extends AppCompatActivity {
         refreshPermissionStat();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        binding = null;
-    }
-
     /**
      * 初始化视图
      */

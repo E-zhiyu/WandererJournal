@@ -76,7 +76,6 @@ public class RoleInputActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        binding = null;
         disposable.dispose();
     }
 

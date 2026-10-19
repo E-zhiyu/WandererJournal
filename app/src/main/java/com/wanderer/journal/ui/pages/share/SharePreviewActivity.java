@@ -114,7 +114,6 @@ public class SharePreviewActivity extends AppCompatActivity {
         //清空临时媒体目录
         FileHelper.clearMediaTempDir(this);
 
-        binding = null;
         disposable.dispose();
     }
 

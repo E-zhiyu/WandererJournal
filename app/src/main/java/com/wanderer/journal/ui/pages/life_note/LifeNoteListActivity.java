@@ -64,8 +64,6 @@ public class LifeNoteListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        binding = null;
         disposable.dispose();
     }
 

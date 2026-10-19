@@ -231,7 +231,6 @@ public class WriteActivity extends AppCompatActivity {
         draftSavingHandler.removeCallbacks(draftSavingRunnable);
         saveDraft();
 
-        binding = null;
         disposable.dispose();
 
         //清空临时媒体目录

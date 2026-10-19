@@ -152,7 +152,6 @@ public class ReadActivity extends AppCompatActivity {
         }
 
         disposable.dispose();
-        binding = null;
     }
 
     /**

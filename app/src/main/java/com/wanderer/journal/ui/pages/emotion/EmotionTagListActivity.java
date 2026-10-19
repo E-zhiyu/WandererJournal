@@ -57,8 +57,6 @@ public class EmotionTagListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
-        binding = null;
         disposable.dispose();
     }
 

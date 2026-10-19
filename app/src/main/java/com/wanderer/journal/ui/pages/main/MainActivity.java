@@ -66,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         disposable.dispose();
-        binding = null;
     }
 
     /**
