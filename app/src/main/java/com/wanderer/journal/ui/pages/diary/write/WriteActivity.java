@@ -49,7 +49,7 @@ import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.text.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDb;

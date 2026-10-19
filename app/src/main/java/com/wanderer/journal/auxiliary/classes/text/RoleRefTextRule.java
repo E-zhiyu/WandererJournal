@@ -3,7 +3,7 @@ package com.wanderer.journal.auxiliary.classes.text;
 import androidx.annotation.NonNull;
 
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.text.RichTextRegex;
 import com.wanderer.journal.auxiliary.interfaces.RichTextRule;
 
 import java.util.regex.Matcher;
