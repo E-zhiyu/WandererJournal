@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.2\n" +
+    private final static String CHANGELOG = "# v1.7.3\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复HyperOS 4中退出写日记界面就崩溃的BUG\n" +
+            "\n" +
+            "# v1.7.2\n" +
             "\n" +
             "### 优化的内容\n" +
             "\n" +
