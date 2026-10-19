@@ -14,7 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.text.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
@@ -76,7 +76,6 @@ public class RoleInputActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        binding = null;
         disposable.dispose();
     }
 

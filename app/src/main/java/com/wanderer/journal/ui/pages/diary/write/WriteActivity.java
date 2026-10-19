@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.TransitionManager;
@@ -48,7 +49,7 @@ import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.bottom_options.MediaAddOption;
-import com.wanderer.journal.auxiliary.enums.RichTextRegex;
+import com.wanderer.journal.auxiliary.enums.text.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -177,6 +178,7 @@ public class WriteActivity extends AppCompatActivity {
             @Override
             public void onPrepare(@NonNull WindowInsetsAnimationCompat animation) {
                 binding.bottomLayout.clearAnimation();
+                binding.emptyText.clearAnimation();
             }
 
             @NonNull
@@ -230,7 +232,6 @@ public class WriteActivity extends AppCompatActivity {
         draftSavingHandler.removeCallbacks(draftSavingRunnable);
         saveDraft();
 
-        binding = null;
         disposable.dispose();
 
         //清空临时媒体目录
@@ -253,19 +254,19 @@ public class WriteActivity extends AppCompatActivity {
         if (withAnimation) {
             binding.bottomLayout
                     .animate()
-                    .translationY(height)
+                    .translationY(-height)
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
             binding.emptyText
                     .animate()
-                    .translationY(height)
+                    .translationY(-height * .4f)
                     .setInterpolator(new FastOutSlowInInterpolator())
                     .setDuration(250)
                     .start();
         } else {
             binding.bottomLayout.setTranslationY(-height);
-            binding.emptyText.setTranslationY(-keyboardHeight * 2 / 5f);
+            binding.emptyText.setTranslationY(-height * .4f);
         }
 
         //列表视图修改内边距
@@ -331,6 +332,7 @@ public class WriteActivity extends AppCompatActivity {
         //日期选择按钮
         binding.dateSelectBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
                 getParentDiaryDate(),
+                new Pair<>(null, LocalDate.now()),
                 getSupportFragmentManager(),
                 selection -> {
                     //更新段落列表内容

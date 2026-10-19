@@ -57,12 +57,6 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         addPermissions();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        binding = null;
-    }
-
     /**
      * 初始化视图
      */

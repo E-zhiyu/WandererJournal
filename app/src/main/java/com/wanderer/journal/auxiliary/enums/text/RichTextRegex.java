@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.enums;
+package com.wanderer.journal.auxiliary.enums.text;
 
 import androidx.annotation.NonNull;
 

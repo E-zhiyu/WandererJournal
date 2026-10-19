@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.util.Pair;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -63,8 +64,8 @@ public class DiaryFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null;
         disposable.dispose();
+        binding = null;
     }
 
     /**
@@ -80,6 +81,7 @@ public class DiaryFragment extends Fragment {
         binding.addFab.setOnLongClickListener(view -> {
             DateTimePickerHelper.selectDate(
                     LocalDate.now(),
+                    new Pair<>(null, LocalDate.now()),
                     getParentFragmentManager(),
                     selection -> {
                         //跳转到写日记界面并传递选择的日期
@@ -111,6 +113,7 @@ public class DiaryFragment extends Fragment {
             //弹出日期选择对话框
             DateTimePickerHelper.selectDate(
                     initDate,
+                    new Pair<>(null, LocalDate.now()),
                     getParentFragmentManager(),
                     "选择跳转到的日期",
                     selection -> {
@@ -259,6 +262,7 @@ public class DiaryFragment extends Fragment {
     private void showDiaryDatePicker(@NonNull DiaryEntity diary) {
         DateTimePickerHelper.selectDate(
                 diary.getDiaryDate(),
+                new Pair<>(null, LocalDate.now()),
                 getParentFragmentManager(),
                 selection -> {
                     LocalDate targetDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
