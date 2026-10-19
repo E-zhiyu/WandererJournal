@@ -16,6 +16,7 @@ public class AboutHelper {
             "\n" +
             "- 修复HyperOS 4中退出写日记界面就崩溃的BUG\n" +
             "- 修复分享设置项圆角大小不对的BUG\n" +
+            "- 修复添加媒体后可能导致段落文本内容异常排版的BUG\n" +
             "\n" +
             "# v1.7.2\n" +
             "\n" +
