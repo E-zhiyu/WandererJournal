@@ -229,7 +229,7 @@ public class SettingsFragment extends Fragment {
                 R.string.share_settings,
                 "跳转至分享设置界面",
                 R.drawable.outline_share_24,
-                RadiusStyle.MIDDLE
+                RadiusStyle.BOTTOM
         );
         shareOption.setFunctionListener(view -> {
             Intent skip2ShareSettings = new Intent(requireContext(), ShareSettingsActivity.class);

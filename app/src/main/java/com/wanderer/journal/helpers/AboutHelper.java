@@ -15,6 +15,7 @@ public class AboutHelper {
             "### BUG修复\n" +
             "\n" +
             "- 修复HyperOS 4中退出写日记界面就崩溃的BUG\n" +
+            "- 修复分享设置项圆角大小不对的BUG\n" +
             "\n" +
             "# v1.7.2\n" +
             "\n" +
