@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
 import androidx.transition.TransitionManager;
@@ -331,6 +332,7 @@ public class WriteActivity extends AppCompatActivity {
         //日期选择按钮
         binding.dateSelectBtn.setOnClickListener(view -> DateTimePickerHelper.selectDate(
                 getParentDiaryDate(),
+                new Pair<>(null, LocalDate.now()),
                 getSupportFragmentManager(),
                 selection -> {
                     //更新段落列表内容

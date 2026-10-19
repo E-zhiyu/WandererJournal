@@ -21,6 +21,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.biometric.BiometricManager;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.graphics.Insets;
+import androidx.core.util.Pair;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
@@ -416,25 +417,26 @@ public class ReadActivity extends AppCompatActivity {
                         return true;
                     } else if (id == R.id.action_skip_date) {
                         //获取当前正在显示的段落的日期
-                        LocalDate currentDate;
+                        LocalDate currentDisplayDate;
                         LinearLayoutManager layoutManager = (LinearLayoutManager) binding.contentRecycler.getLayoutManager();
                         if (layoutManager != null) {
                             int firstVisiblePosition = layoutManager.findFirstVisibleItemPosition();
                             ParagraphUiModel model = adapter.peek(firstVisiblePosition);
                             if (model instanceof ParagraphUiModel.Separator) {
-                                currentDate = ((ParagraphUiModel.Separator) model).date;
+                                currentDisplayDate = ((ParagraphUiModel.Separator) model).date;
                             } else if (model instanceof ParagraphUiModel.Item) {
-                                currentDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
+                                currentDisplayDate = ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().toLocalDate();
                             } else {
-                                currentDate = LocalDate.now();
+                                currentDisplayDate = LocalDate.now();
                             }
                         } else {
-                            currentDate = LocalDate.now();
+                            currentDisplayDate = LocalDate.now();
                         }
 
                         //显示日期选择对话框
                         DateTimePickerHelper.selectDate(
-                                currentDate,
+                                currentDisplayDate,
+                                new Pair<>(null, LocalDate.now()),
                                 getSupportFragmentManager(),
                                 selection -> {
                                     LocalDate selectedDate = DateTimePickerHelper.getLocalDateFromTimeMilli(selection);
