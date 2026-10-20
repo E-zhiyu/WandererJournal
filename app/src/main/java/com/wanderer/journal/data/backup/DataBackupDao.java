@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
+import com.wanderer.journal.auxiliary.enums.types.ImportResultType;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.backup.maps.LifeNoteDataMap;
 import com.wanderer.journal.data.backup.maps.RoleDataMap;
@@ -30,6 +31,7 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -80,12 +82,14 @@ public interface DataBackupDao {
      * 导入“日记数据”选项对应的数据
      *
      * @param map 日记数据集合
+     * @return 数据导入的结果
      */
     @Transaction
-    default void importDiaryData(Context context, DiaryDataMap map) {
-        if (map == null) return;
+    default int importDiaryData(Context context, DiaryDataMap map) {
+        if (map == null) return ImportResultType.MISSING.ordinal();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+        List<Boolean> resultList = new ArrayList<>();
 
         //清空旧数据
         clearEmotionParagraphRef();
@@ -99,6 +103,9 @@ public interface DataBackupDao {
         if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
             List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
             writeDiaryData(diaryEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入段落数据
@@ -106,6 +113,9 @@ public interface DataBackupDao {
         if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
             List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
             writeParagraphData(paragraphEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入媒体数据
@@ -129,6 +139,9 @@ public interface DataBackupDao {
                     .collect(Collectors.toList());
 
             writeMediaData(mapper.toMediaEntityList(uriConvertedPojoList));
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入情绪标签数据
@@ -137,6 +150,9 @@ public interface DataBackupDao {
             List<EmotionTagEntity> emotionTagEntityList =
                     mapper.toEmotionTagEntityList(emotionTagPojoList);
             writeEmotionTagData(emotionTagEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入情绪标签与段落关系数据
@@ -145,6 +161,18 @@ public interface DataBackupDao {
             List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
                     mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
             writeEmotionParagraphRefData(emotionParagraphRefEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
+        }
+
+        //返回导入结果
+        if (!resultList.contains(false)) {
+            return ImportResultType.SUCCEED.ordinal();
+        } else if (!resultList.contains(true)) {
+            return ImportResultType.MISSING.ordinal();
+        } else {
+            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
         }
     }
 
@@ -173,12 +201,14 @@ public interface DataBackupDao {
      * 导入所有角色数据
      *
      * @param map 角色数据集合
+     * @return 数据导入的结果
      */
     @Transaction
-    default void importRoleData(RoleDataMap map) {
-        if (map == null) return;
+    default int importRoleData(RoleDataMap map) {
+        if (map == null) return ImportResultType.MISSING.ordinal();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+        List<Boolean> resultList = new ArrayList<>();
 
         //清空旧数据
         clearRoleAlia();
@@ -189,6 +219,9 @@ public interface DataBackupDao {
         if (rolePojoList != null && !rolePojoList.isEmpty()) {
             List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
             writeRoleData(roleEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入角色别名数据
@@ -196,6 +229,18 @@ public interface DataBackupDao {
         if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
             List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
             writeRoleAliaList(roleAliaEntityList);
+            resultList.add(true);
+        }else {
+            resultList.add(false);
+        }
+
+        //返回导入结果
+        if (!resultList.contains(false)) {
+            return ImportResultType.SUCCEED.ordinal();
+        } else if (!resultList.contains(true)) {
+            return ImportResultType.MISSING.ordinal();
+        } else {
+            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
         }
     }
 
@@ -226,12 +271,14 @@ public interface DataBackupDao {
      * 导入所有人生笔记数据
      *
      * @param map 包含所有人生笔记数据的集合
+     * @return 数据导入的结果
      */
     @Transaction
-    default void importLifeNoteData(LifeNoteDataMap map) {
-        if (map == null) return;
+    default int importLifeNoteData(LifeNoteDataMap map) {
+        if (map == null) return ImportResultType.MISSING.ordinal();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+        List<Boolean> resultList = new ArrayList<>();
 
         //清空旧数据
         clearLifeNote();
@@ -241,12 +288,27 @@ public interface DataBackupDao {
         List<LifeNotePojo> lifeNotePojoList = map.getLifeNoteList();
         if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
             writeLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
+            resultList.add(true);
+        }else {
+            resultList.add(false);
         }
 
         //导入人生笔记历史记录数据
         List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = map.getLifeNoteHistoryList();
         if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
             writeLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
+            resultList.add(true);
+        }else {
+            resultList.add(false);
+        }
+
+        //返回导入结果
+        if (!resultList.contains(false)) {
+            return ImportResultType.SUCCEED.ordinal();
+        } else if (!resultList.contains(true)) {
+            return ImportResultType.MISSING.ordinal();
+        } else {
+            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
         }
     }
 

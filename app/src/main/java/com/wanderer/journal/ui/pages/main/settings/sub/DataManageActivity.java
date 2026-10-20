@@ -607,49 +607,49 @@ public class DataManageActivity extends AppCompatActivity {
                 sendBackgroundProgress("导入数据", "正在导入数据……")
         );
 
-        //监听运行状态
-        WorkManager.getInstance(this)
-                .getWorkInfoByIdLiveData(uuid)
-                .observe(this, workInfo -> {
-                    if (workInfo == null) return;
-
-                    //判断 Worker 是否运行结束
-                    if (workInfo.getState().isFinished()) {
-                        String text;
-                        switch (workInfo.getState()) {
-                            case SUCCEEDED:
-                                text = "数据导入成功";
-                                break;
-                            case CANCELLED:
-                                text = "数据导入已取消";
-                                break;
-                            case FAILED:
-                            default:
-                                text = "数据导入失败";
-                        }
-
-                        if (progressDialog.isShowing()) {
-                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
-                        } else {
-                            //构建通知
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
-                                    .setSmallIcon(R.mipmap.ic_launcher)
-                                    .setContentTitle("导入数据")
-                                    .setContentText(text)
-                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
-
-                            //发送通知
-                            NotificationHelper.sendNotification(
-                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
-                                    builder,
-                                    this
-                            );
-                        }
-
-                        progressDialog.dismiss();
-                    }
-                });
+//        //监听运行状态
+//        WorkManager.getInstance(this)
+//                .getWorkInfoByIdLiveData(uuid)
+//                .observe(this, workInfo -> {
+//                    if (workInfo == null) return;
+//
+//                    //判断 Worker 是否运行结束
+//                    if (workInfo.getState().isFinished()) {
+//                        String text;
+//                        switch (workInfo.getState()) {
+//                            case SUCCEEDED:
+//                                text = "数据导入完成，请在通知中查看结果";
+//                                break;
+//                            case CANCELLED:
+//                                text = "数据导入已取消";
+//                                break;
+//                            case FAILED:
+//                            default:
+//                                text = "数据导入失败";
+//                        }
+//
+//                        if (progressDialog.isShowing()) {
+//                            Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+//                        } else {
+//                            //构建通知
+//                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, ChannelInfo.BACKUP_AND_RESTORE.getId())
+//                                    .setSmallIcon(R.mipmap.ic_launcher)
+//                                    .setContentTitle("导入数据")
+//                                    .setContentText(text)
+//                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//                                    .setCategory(NotificationCompat.CATEGORY_PROGRESS);
+//
+//                            //发送通知
+//                            NotificationHelper.sendNotification(
+//                                    NotificationID.BACKUP_AND_RESTORE.ordinal(),
+//                                    builder,
+//                                    this
+//                            );
+//                        }
+//
+//                        progressDialog.dismiss();
+//                    }
+//                });
     }
 
     /**

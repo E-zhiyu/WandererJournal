@@ -27,8 +27,8 @@ public class RoleBackupHelper extends BackupHelperBase<DiaryDb, RoleDataMap> {
     }
 
     @Override
-    protected void saveDataInMapToDb(Context context, RoleDataMap map) {
-        db.dataBackupDao().importRoleData(map);
+    protected int saveDataInMapToDb(Context context, RoleDataMap map) {
+        return db.dataBackupDao().importRoleData(map);
     }
 
     @Override

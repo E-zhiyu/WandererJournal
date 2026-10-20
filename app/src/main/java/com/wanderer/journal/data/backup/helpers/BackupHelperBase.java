@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Single;
 
 /**
  * 数据帮助器基类
@@ -30,18 +31,52 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
         tempDataFileName = getTempDataFileName();
     }
 
+    /**
+     * 子类继承用来获取数据集合类型的方法
+     *
+     * @return 数据集合类型
+     */
     protected abstract Class<M> getMapClass();
 
-    protected abstract D getDatabase(Context context); //子类需要实现的生成数据库实例的方法
+    /**
+     * 子类继承用来获取数据库实例的方法
+     *
+     * @param context 上下文
+     * @return 数据库实例
+     */
+    protected abstract D getDatabase(Context context);
 
-    protected abstract M getAllDataInMap();             //获取数据字典的方法
+    /**
+     * 从数据库中获取数据集合
+     *
+     * @return 数据集合
+     */
+    protected abstract M getAllDataInMap();
 
-    protected abstract void saveDataInMapToDb(Context context, M map);  //将map中的数据保存至数据库的方法
+    /**
+     * 将 map 中的数据保存至数据库的方法
+     *
+     * @param context 上下文
+     * @param map     数据集合
+     */
+    protected abstract int saveDataInMapToDb(Context context, M map);
 
-    protected abstract String getTempDataFileName();    //设置临时数据文件名称
+    /**
+     * 待继承的设置临时 JSON 文件名称的方法
+     *
+     * @return 临时 JSON 文件名称
+     */
+    protected abstract String getTempDataFileName();
 
-    public Completable importDataFromTempFile(Context context, File file) {
-        return Completable.defer(() -> {
+    /**
+     * 从临时文件中导入数据
+     *
+     * @param context 上下文
+     * @param file    临时文件对象
+     * @return 带有导入结果的{@link Single}对象
+     */
+    public Single<Integer> importDataFromTempFile(Context context, File file) {
+        return Single.defer(() -> {
             try {
                 //读取文件内容
                 String json = FileHelper.readContent(file);
@@ -51,11 +86,11 @@ abstract public class BackupHelperBase<D extends RoomDatabase, M> {
                 M dataMap = mapper.readValue(json, mapClass);
 
                 //将对应的数据写入数据库
-                saveDataInMapToDb(context, dataMap);
+                int resultFlag = saveDataInMapToDb(context, dataMap);
 
-                return Completable.complete();
+                return Single.just(resultFlag);
             } catch (IOException e) {
-                return Completable.error(e);
+                return Single.error(e);
             }
         });
     }
