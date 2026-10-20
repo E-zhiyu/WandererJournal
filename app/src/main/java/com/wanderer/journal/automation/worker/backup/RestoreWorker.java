@@ -140,7 +140,7 @@ public class RestoreWorker extends RxWorker {
                 strBuilder.append("，“").append(dataType.getTitle()).append("”").append(resultType.getTitle());
             }
         }
-        return strBuilder;
+        return strBuilder.append("。");
     }
 
     /**
