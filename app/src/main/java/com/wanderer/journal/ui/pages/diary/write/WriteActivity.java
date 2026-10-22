@@ -116,7 +116,6 @@ import kotlin.Unit;
 
 public class WriteActivity extends AppCompatActivity {
     private ActivityWriteBinding binding;                   //绑定的XML布局
-    private ParagraphEntity modifyingParagraph = null;      //正在编辑的段落
     private BackPressedCallbackHelper backHelper;           //返回逻辑管理器
     private BackPressedCallbackHelper.BackHandler selectionBackHandler; //媒体多选返回处理器
     private BackPressedCallbackHelper.BackHandler mediaBackHandler;     //媒体显示返回处理器
@@ -301,10 +300,11 @@ public class WriteActivity extends AppCompatActivity {
                             }
 
                             //启用编辑模式
+                            WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
                             ParagraphUnionModel model = paragraphOptional.get();
                             ParagraphEntity paragraph = model.getParagraph();
                             List<MediaEntity> mediaList = model.getMediaList();
-                            setEditMode(true, paragraph, mediaList);
+                            viewModel.updateModifying(new Pair<>(paragraph, mediaList));
                         }
                 )
         );
@@ -428,7 +428,8 @@ public class WriteActivity extends AppCompatActivity {
                 File targetDir = DirectoryPaths.MEDIA.getDir(this);
 
                 for (MediaEntity originMedia : currentMediaList) {
-                    long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                    long paragraphId = viewModel.getModifyingParagraphId();
                     if (newMediaSet.contains(originMedia)) {
                         File originFile = new File(Objects.requireNonNull(originMedia.getFileUri().getPath()));
                         File movedFile = FileHelper.moveFile(originFile, targetDir);
@@ -537,13 +538,26 @@ public class WriteActivity extends AppCompatActivity {
         });
 
         //内容编辑关闭按钮
-        binding.modifyCloseBtn.setOnClickListener(view -> setEditMode(false, null, null));
+        binding.modifyCloseBtn.setOnClickListener(view -> {
+            WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+            viewModel.updateModifying(null);
+        });
     }
 
     /**
      * 观察 ViewModel 的 LiveData
      */
     private void observeLiveData() {
+        //段落编辑状态
+        WriteViewModel writeViewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+        writeViewModel.getModifyingLiveData().observe(this, pair -> {
+            if (pair != null) {
+                setEditMode(pair.first, pair.second);
+            } else {
+                setEditMode(null, null);
+            }
+        });
+
         //角色选择情况
         RoleSelectViewModel roleSelectViewModel = new ViewModelProvider(this).get(RoleSelectViewModel.class);
         roleSelectViewModel.getSelectedRoleEvent().observe(this, role -> {
@@ -924,7 +938,8 @@ public class WriteActivity extends AppCompatActivity {
         editBackHandler = new BackPressedCallbackHelper.BackHandler() {
             @Override
             public boolean handleBack() {
-                setEditMode(false, null, null);
+                WriteViewModel viewModel = new ViewModelProvider(WriteActivity.this).get(WriteViewModel.class);
+                viewModel.updateModifying(null);
                 backHelper.unregisterHandler(this);
 
                 //一并清除媒体列表
@@ -987,7 +1002,8 @@ public class WriteActivity extends AppCompatActivity {
         setMediaRecyclerVisible(true);
 
         //更新列表
-        long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
+        WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+        long paragraphId = viewModel.getModifyingParagraphId();
         mediaList.add(new MediaEntity(paragraphId, tempPictureUri));
         mediaAdapter.submitList(mediaList);
     }
@@ -1032,8 +1048,9 @@ public class WriteActivity extends AppCompatActivity {
                 }
 
                 //保存到列表中
+                WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                long paragraphId = viewModel.getModifyingParagraphId();
                 Uri successfulUri = Uri.fromFile(resultFile);
-                long paragraphId = modifyingParagraph == null ? 0 : modifyingParagraph.getParagraphId();
                 MediaEntity media = new MediaEntity(paragraphId, successfulUri);
                 mediaList.add(media);
 
@@ -1082,7 +1099,9 @@ public class WriteActivity extends AppCompatActivity {
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
 
         //保存数据
-        if (modifyingParagraph == null) {
+        WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+        Pair<ParagraphEntity, List<MediaEntity>> modifyingPair = viewModel.getModifyingLiveData().getValue();
+        if (modifyingPair == null || modifyingPair.first == null) {
             DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                     .flatMap(diaryId -> {
@@ -1103,7 +1122,6 @@ public class WriteActivity extends AppCompatActivity {
                         }
 
                         //返回查询到的下标
-                        WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
                         return ParagraphService.addParagraph(
                                 startDate,
                                 paragraph,
@@ -1135,22 +1153,21 @@ public class WriteActivity extends AppCompatActivity {
         } else {
             //生成更新后的段落实例
             ParagraphEntity paragraph = new ParagraphEntity(
-                    modifyingParagraph.getParentDiaryId(),
+                    modifyingPair.first.getParentDiaryId(),
                     content,
-                    modifyingParagraph.getCreateTime()
+                    modifyingPair.first.getCreateTime()
             );
-            paragraph.setParagraphId(modifyingParagraph.getParagraphId());
+            paragraph.setParagraphId(modifyingPair.first.getParagraphId());
 
             disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, this)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
                             () -> {
-                                binding.contentTextInput.setText(null);
-                                setEditMode(false, null, null);
+                                viewModel.updateModifying(null);
                             },
                             throwable -> {
-                                setEditMode(false, null, null);
+                                viewModel.updateModifying(null);
                                 ExceptionHelper.showExceptionDialog(this, throwable);
 
                                 for (MediaEntity mediaEntity : mediaEntityList) {
@@ -1179,7 +1196,8 @@ public class WriteActivity extends AppCompatActivity {
         menu.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if (id == R.id.action_modify_content) {
-                setEditMode(true, paragraph, model.getMediaList());
+                WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                viewModel.updateModifying(new Pair<>(paragraph, model.getMediaList()));
                 return true;
             } else if (id == R.id.action_modify_time) {
                 modifyCreateTime(paragraph);
@@ -1354,10 +1372,9 @@ public class WriteActivity extends AppCompatActivity {
                 .setTitle(R.string.delete_paragraph)
                 .setMessage("此操作将删除该段落，确定继续吗？")
                 .setPositiveButton("确定", (dialogInterface, i) -> {
-                    //判断是否为正在编辑的段落，是则退出编辑
-                    if (modifyingParagraph != null && paragraph.getParagraphId() == modifyingParagraph.getParagraphId()) {
-                        setEditMode(false, null, null);
-                    }
+                    //退出编辑
+                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                    viewModel.updateModifying(null);
 
                     //多线程删除段落
                     disposable.add(ParagraphService.deleteParagraphAndMedia(paragraph, this)
@@ -1379,20 +1396,19 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 设置编辑模式
      *
-     * @param isEditMode         是否启用编辑模式
-     * @param modifyingParagraph 如果启用编辑模式，该参数传递的是正在编辑的段落实体
+     * @param modifyingParagraph 需要编辑的段落，传递 null 表示退出编辑
      * @param mediaList          正在编辑的段落的媒体列表
      */
-    private void setEditMode(boolean isEditMode, ParagraphEntity modifyingParagraph, @Nullable List<MediaEntity> mediaList) {
+    private void setEditMode(@Nullable ParagraphEntity modifyingParagraph, @Nullable List<MediaEntity> mediaList) {
         //如果启用则注册返回处理器
-        if (isEditMode) {
+        if (modifyingParagraph != null) {
             backHelper.registerHandler(editBackHandler);
         } else {
             backHelper.unregisterHandler(editBackHandler);
         }
 
         //执行状态改变
-        if (isEditMode) {
+        if (modifyingParagraph != null) {
             //自动显示输入法
             ImmHelper.showImm(binding.contentTextInput);
 
@@ -1402,7 +1418,6 @@ public class WriteActivity extends AppCompatActivity {
                     null,
                     binding.contentEditCard
             );
-            this.modifyingParagraph = modifyingParagraph;
             CharSequence richText = TextHelper.hierarchicFromString(
                     this,
                     null,
@@ -1425,7 +1440,6 @@ public class WriteActivity extends AppCompatActivity {
                     null,
                     binding.contentEditCard
             );
-            this.modifyingParagraph = null;
             binding.contentTextInput.setText(null);
         }
 
