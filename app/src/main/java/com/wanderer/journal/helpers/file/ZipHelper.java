@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
@@ -68,39 +67,6 @@ public class ZipHelper {
     }
 
     /**
-     * 创建备份文件压缩包
-     *
-     * @param tempDir      临时数据目录
-     * @param imageDir     媒体目录，若为 null 则不添加媒体目录
-     * @param outputStream 由 SAF Uri 转换而来的输出流
-     * @param includeMedia 是否打包媒体文件
-     * @throws IOException 文件写入失败引发的异常
-     */
-    public static void createBackupZip(
-            @NonNull File tempDir,
-            @Nullable File imageDir,
-            OutputStream outputStream,
-            boolean includeMedia
-    ) throws IOException {
-        // 将 ZipOutputStream 包装在外部传入的流上
-        try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
-
-            // 1. 打包临时 JSON 目录下的所有文件（不包含目录本身）
-            File[] tempFiles = tempDir.listFiles();
-            if (tempFiles != null) {
-                for (File file : tempFiles) {
-                    addToZip(file, file.getName(), zos);
-                }
-            }
-
-            // 2. 将图片目录整体添加进去
-            if (includeMedia && imageDir != null && imageDir.exists() && imageDir.isDirectory()) {
-                addToZip(imageDir, imageDir.getName(), zos);
-            }
-        }
-    }
-
-    /**
      * 生成备份文件
      *
      * @param targetUri    目标压缩包的 Uri
@@ -124,7 +90,22 @@ public class ZipHelper {
             }
 
             try {
-                ZipHelper.createBackupZip(tempDir, mediaDir, os, includeMedia);
+                // 将 ZipOutputStream 包装在外部传入的流上
+                try (ZipOutputStream zos = new ZipOutputStream(os)) {
+
+                    // 1. 打包临时 JSON 目录下的所有文件（不包含目录本身）
+                    File[] tempFiles = tempDir.listFiles();
+                    if (tempFiles != null) {
+                        for (File file : tempFiles) {
+                            addToZip(file, file.getName(), zos);
+                        }
+                    }
+
+                    // 2. 将图片目录整体添加进去
+                    if (includeMedia && mediaDir != null && mediaDir.exists() && mediaDir.isDirectory()) {
+                        addToZip(mediaDir, mediaDir.getName(), zos);
+                    }
+                }
             } finally {
                 // 3. 无论成功失败，清理临时 JSON 目录
                 FileHelper.clearTempDataDir(context);
