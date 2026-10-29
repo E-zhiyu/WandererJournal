@@ -11,9 +11,10 @@ import androidx.work.WorkerParameters;
 import androidx.work.rxjava3.RxWorker;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.ImportResult;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
-import com.wanderer.journal.auxiliary.enums.types.ImportResultType;
+import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
@@ -22,7 +23,10 @@ import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -49,35 +53,53 @@ public class RestoreWorker extends RxWorker {
             return Single.just(Result.failure());
         }
 
-        //获取需要解压的文件名列表
-        List<String> allowedFileNameList = Arrays.stream(BackupDataType.values())
-                .filter(type -> choices == null || choices[type.ordinal()])
-                .map(BackupDataType::getFileName)
-                .collect(Collectors.toList());
-        boolean includeMedia = choices == null || choices[BackupDataType.DIARY.ordinal()];
-
         //解压文件并写入数据
         sendProgressNotification(context);  //发送通知
         Uri uri = Uri.parse(inputUriStr);
-        List<Integer> resultFlagList = Arrays.stream(BackupDataType.values())
-                .map(type -> ImportResultType.MISSING.ordinal())
+        List<ImportResult> resultFlagList = Arrays.stream(BackupDataType.values())
+                .map(type -> choices == null || choices[type.ordinal()] ?
+                        ImportResult.missed() : ImportResult.success()
+                )
                 .collect(Collectors.toList());  //存有数据导入结果的列表
-        return ZipHelper.unpackBackupFileWithFilter(context, uri, allowedFileNameList, includeMedia)
+        AtomicReference<ImportDataVersionType> versionType = new AtomicReference<>();
+        return Single.fromCallable(() -> ZipHelper.getDataInfoFromBackupFile(context, uri))
+                .flatMap(infoMap -> {
+                    if (infoMap == null) {
+                        throw new RuntimeException("无法读取备份文件信息，请选择正确的备份文件");
+                    }
+
+                    //识别数据版本
+                    versionType.set(ImportDataVersionType.getDataVersionByVersionCode(infoMap.getAppVersionCode()));
+
+                    //获取需要解压的文件名
+                    Set<String> allowedFileNameSet = new HashSet<>();
+                    List<String> fileNameList = infoMap.getFileNames();
+                    for (int i = 0; i < fileNameList.size(); i++) {
+                        String fileName = fileNameList.get(i);
+                        if (choices == null || choices[i] && fileName != null) {
+                            allowedFileNameSet.add(fileName);
+                        }
+                    }
+
+                    boolean includeMedia = choices == null || choices[BackupDataType.DIARY.ordinal()] &&
+                            fileNameList.get(BackupDataType.DIARY.ordinal()) != null;
+                    return ZipHelper.unpackBackupFileWithFilter(context, uri, allowedFileNameSet, includeMedia);
+                })
                 .flatMapObservable(Observable::fromIterable)
                 .flatMapCompletable(file -> {
                     //根据文件名判断数据类型
-                    BackupDataType type = BackupDataType.fromFileName(file.getName());
+                    BackupDataType type = BackupDataType.fromFileName(file.getName(), versionType.get());
 
                     //使用对应的备份Helper导入数据
                     if (type != null) {
                         BackupHelperBase<?, ?> helper = type.createBackupHelper(context);
-                        return helper.importDataFromTempFile(context, file)
+                        return helper.importDataFromTempFile(context, file, versionType.get())
                                 .flatMapCompletable(resultFlag -> {
                                     resultFlagList.set(type.ordinal(), resultFlag); //更新结果
                                     return Completable.complete();
                                 })
                                 .onErrorComplete(e -> {
-                                    resultFlagList.set(type.ordinal(), ImportResultType.JSON_ERROR.ordinal());
+                                    resultFlagList.set(type.ordinal(), ImportResult.failure(e));
                                     Log.e(LogTags.RESTORE_WORKER.n(), "导入失败：\n" + e.getMessage());
                                     return true;
                                 });
@@ -87,13 +109,9 @@ public class RestoreWorker extends RxWorker {
                 })
                 .subscribeOn(Schedulers.io())
                 .toSingleDefault(Result.success())
-                .onErrorReturn(e -> {
-                    Log.e(LogTags.RESTORE_WORKER.n(), "导入失败");
-                    return Result.failure();
-                })
                 .doFinally(() -> {
                     String message;
-                    if (resultFlagList.stream().allMatch(flag -> flag == ImportResultType.SUCCEED.ordinal())) {
+                    if (resultFlagList.stream().allMatch(result -> result.getClass() == ImportResult.Success.class)) {
                         message = "所有数据均导入成功。";
                     } else {
                         StringBuilder strBuilder = getStrBuilder(resultFlagList, choices);
@@ -107,38 +125,31 @@ public class RestoreWorker extends RxWorker {
                             .setSmallIcon(R.mipmap.ic_launcher)
                             .setContentTitle(context.getString(R.string.import_data))
                             .setContentText(message)
+                            .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
                             .setCategory(NotificationCompat.CATEGORY_CALL)
                             .setAutoCancel(true);
                     NotificationHelper.sendNotification(NotificationID.BACKUP_AND_RESTORE.ordinal(), notificationBuilder, context);
                 });
-
     }
 
     /**
      * 根据数据导入情况生成通知内容
      *
-     * @param resultFlagList 数据导入标识符列表
-     * @param choices        用户导入数据的选择情况
+     * @param resultList 数据导入标识符列表
+     * @param choices    用户导入数据的选择情况
      * @return 数据导入反馈通知的内容
      */
     @NonNull
-    private static StringBuilder getStrBuilder(@NonNull List<Integer> resultFlagList, boolean[] choices) {
-        StringBuilder strBuilder;
-        if (resultFlagList.contains(ImportResultType.SUCCEED.ordinal())) {
-            strBuilder = new StringBuilder("部分数据导入成功");
-        } else {
-            strBuilder = new StringBuilder("所有数据均导入失败");
-        }
+    private static StringBuilder getStrBuilder(@NonNull List<ImportResult> resultList, boolean[] choices) {
+        StringBuilder strBuilder = new StringBuilder("数据导入发生异常");
 
         //根据结果生成反馈信息
-        ImportResultType[] resultTypes = ImportResultType.values();
         for (BackupDataType dataType : BackupDataType.values()) {
-            ImportResultType resultType = resultTypes[resultFlagList.get(dataType.ordinal())];
-            if (resultType != ImportResultType.SUCCEED &&
-                    choices[dataType.ordinal()]) {
-                strBuilder.append("，“").append(dataType.getTitle()).append("”").append(resultType.getTitle());
-            }
+            ImportResult result = resultList.get(dataType.ordinal());
+            if (result instanceof ImportResult.Success || !choices[dataType.ordinal()]) continue;
+
+            strBuilder.append("，“").append(dataType.getTitle()).append("”").append(result.getTitle());
         }
         return strBuilder.append("。");
     }

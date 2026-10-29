@@ -11,6 +11,7 @@ import androidx.work.Data;
 import androidx.work.WorkerParameters;
 import androidx.work.rxjava3.RxWorker;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
 import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
@@ -18,11 +19,13 @@ import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
+import com.wanderer.journal.data.backup.maps.DataInfoMap;
 import com.wanderer.journal.data.save.preference.AutoBackupPreference;
 import com.wanderer.journal.helpers.NotificationHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.ZipHelper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +56,7 @@ public class BackupWorker extends RxWorker {
                 taskList.add(backupHelper.exportDataToTempFile(context));
             }
         } else {
+            //处理自动备份不传递选择状态的情况
             for (BackupDataType type : BackupDataType.values()) {
                 BackupHelperBase<?, ?> backupHelper = type.createBackupHelper(context);
                 taskList.add(backupHelper.exportDataToTempFile(context));
@@ -87,12 +91,13 @@ public class BackupWorker extends RxWorker {
         //执行备份逻辑
         sendProgressNotification(context);  //发送通知
         boolean includeMedia = choices == null || choices[BackupDataType.DIARY.ordinal()];
-        return Completable.merge(taskList)
+        return writeDataInfoToFile(context, choices)
+                .andThen(Completable.merge(taskList))
                 .andThen(ZipHelper.createBackupFile(finalBackupFileUri, context, includeMedia))
                 .subscribeOn(Schedulers.io())
                 .toSingleDefault(Result.success())
                 .onErrorReturn(e -> {
-                    Log.e(LogTags.BACKUP_WORKER.n(), "备份失败");
+                    Log.e(LogTags.BACKUP_WORKER.n(), "备份失败\n" + e.getMessage());
                     return Result.failure();
                 })
                 .doFinally(() -> {
@@ -108,6 +113,28 @@ public class BackupWorker extends RxWorker {
                             .setAutoCancel(true);
                     NotificationHelper.sendNotification(NotificationID.BACKUP_AND_RESTORE.ordinal(), notificationBuilder, context);
                 });
+    }
+
+    /**
+     * 将备份数据信息写入到 JSON 文件中
+     *
+     * @param context 上下文
+     * @param choice  备份数据类型的选择状况
+     * @return 是否成功
+     */
+    public Completable writeDataInfoToFile(Context context, boolean[] choice) {
+        return Completable.defer(() -> {
+            try {
+                DataInfoMap infoMap = BackupHelperBase.generateDataInfo(context, choice);
+                ObjectMapper mapper = new ObjectMapper();
+                String content = mapper.writeValueAsString(infoMap);
+                FileHelper.writeContentToTempDataFile(context, BackupHelperBase.DATA_INFO_JSON, content);
+
+                return Completable.complete();
+            } catch (IOException e) {
+                return Completable.error(e);
+            }
+        });
     }
 
     /**

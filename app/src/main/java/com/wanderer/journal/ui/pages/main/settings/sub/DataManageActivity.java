@@ -31,6 +31,7 @@ import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency;
+import com.wanderer.journal.data.backup.maps.DataInfoMap;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -68,6 +69,7 @@ import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -483,16 +485,19 @@ public class DataManageActivity extends AppCompatActivity {
                 .show();
 
         //扫描压缩包并显示多选对话框
-        disposables.add(ZipHelper.scanBackupFile(uri, this)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(fileNameSet -> {
-                    progressDialog.dismiss();
+        disposables.add(Single
+                .fromCallable(() -> {
+                    //读取备份文件信息
+                    DataInfoMap infoMap = ZipHelper.getDataInfoFromBackupFile(this, uri);
+                    if (infoMap == null) {
+                        throw new RuntimeException("无法读取备份文件信息，请选择正确的备份文件");
+                    }
+                    List<String> exportedFileNames = infoMap.getFileNames();
 
                     //实例化选项列表
-                    List<MultiChoiceDialogBuilder.ChoiceItem> itemList = Arrays.stream(BackupDataType.values())
+                    return Arrays.stream(BackupDataType.values())
                             .map(backupDataType -> {
-                                if (fileNameSet.contains(backupDataType.getFileName())) {
+                                if (exportedFileNames.get(backupDataType.ordinal()) != null) {
                                     return new MultiChoiceDialogBuilder.ChoiceItem(
                                             true,
                                             backupDataType.getTitle(),
@@ -507,18 +512,17 @@ public class DataManageActivity extends AppCompatActivity {
                                 }
                             })
                             .collect(Collectors.toList());
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(itemList -> {
+                    progressDialog.dismiss();
 
                     //显示多选对话框
                     new MultiChoiceDialogBuilder(this, "导入数据", itemList)
-                            .setPositiveButton("确认", checkedStatList -> {
-                                //判断是否选择了数据
-                                if (checkedStatList.stream().noneMatch(Boolean::booleanValue)) {
-                                    Toast.makeText(this, "请选择至少一个选项", Toast.LENGTH_SHORT).show();
-                                    return;
-                                }
-
-                                importData(uri, checkedStatList);
-                            })
+                            .setPositiveButton("确认", checkedStatList ->
+                                    importData(uri, checkedStatList)
+                            )
                             .setNegativeButton("取消", null)
                             .show();
                 }, e -> {

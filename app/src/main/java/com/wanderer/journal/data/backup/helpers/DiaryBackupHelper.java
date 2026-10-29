@@ -4,6 +4,10 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanderer.journal.auxiliary.classes.ImportResult;
+import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
@@ -29,12 +33,18 @@ public class DiaryBackupHelper extends BackupHelperBase<DiaryDb, DiaryDataMap> {
     }
 
     @Override
-    protected int saveDataInMapToDb(Context context, @NonNull DiaryDataMap map) {
+    protected ImportResult saveDataInMapToDb(Context context, @NonNull DiaryDataMap map) {
         return db.dataBackupDao().importDiaryData(context, map);
     }
 
     @Override
     protected String getTempDataFileName() {
-        return BackupDataType.DIARY.getFileName();
+        return BackupDataType.DIARY.getLatestVersionFileName();
+    }
+
+    @Override
+    protected DiaryDataMap getDataMap(String json, ImportDataVersionType versionType) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, mapClass);
     }
 }

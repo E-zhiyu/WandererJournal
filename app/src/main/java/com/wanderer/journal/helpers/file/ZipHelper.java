@@ -5,10 +5,15 @@ import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
+import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
+import com.wanderer.journal.data.backup.maps.DataInfoMap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -115,29 +119,42 @@ public class ZipHelper {
     }
 
     /**
-     * 扫描压缩文件并返回所有位于根目录下的文件名
+     * 从备份文件中获取备份数据信息
      *
-     * @param uri     需要扫描的压缩文件的 Uri
      * @param context 上下文
-     * @return 可通过 RxJava 观察的文件名字符串集合
+     * @param zipUri  指向备份文件的 Uri
+     * @return 备份数据信息
      */
-    public static Single<Set<String>> scanBackupFile(Uri uri, @NonNull Context context) {
-        return Single.fromCallable(() -> {
-            Set<String> fileNameList = new HashSet<>();
-            try (InputStream is = context.getContentResolver().openInputStream(uri);
-                 ZipInputStream zis = new ZipInputStream(is)) {
+    @Nullable
+    public static DataInfoMap getDataInfoFromBackupFile(Context context, Uri zipUri) throws IOException {
+        byte[] jsonBuffer = new byte[1024 * 8];
+        try (InputStream is = context.getContentResolver().openInputStream(zipUri);
+             ZipInputStream zis = new ZipInputStream(is)) {
 
-                ZipEntry entry;
-                while ((entry = zis.getNextEntry()) != null) {
-                    fileNameList.add(entry.getName());
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                String name = entry.getName();
+
+                if (name.equals(BackupHelperBase.DATA_INFO_JSON) && !entry.isDirectory()) {
+                    //读取文件内容
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    int len;
+                    // 读到当前条目末尾时 read 返回 -1
+                    while ((len = zis.read(jsonBuffer)) != -1) {
+                        buffer.write(jsonBuffer, 0, len);
+                    }
+                    String content = buffer.toString();
+
+                    //反序列化
+                    ObjectMapper mapper = new ObjectMapper();
+                    return mapper.readValue(content, DataInfoMap.class);
+                } else {
                     zis.closeEntry();
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("压缩包扫描失败", e);
             }
+        }
 
-            return fileNameList;
-        });
+        return null;
     }
 
     /**
@@ -152,7 +169,7 @@ public class ZipHelper {
     public static Single<List<File>> unpackBackupFileWithFilter(
             Context context,
             Uri zipUri,
-            List<String> allowedFiles,
+            Set<String> allowedFiles,
             boolean includeMedia
     ) {
         return Single.fromCallable(() -> {
@@ -179,21 +196,15 @@ public class ZipHelper {
                 while ((entry = zis.getNextEntry()) != null) {
                     String name = entry.getName();
 
-                    if (name.startsWith(mediaDirName)
-                            && !name.equals(mediaDirName)
-                            && includeMedia
-                    ) {  //处理媒体文件
-                        File outFile = new File(mediaDir, name.substring(mediaDirName.length()));    //去掉开头的文件夹路径
+                    if (name.startsWith(mediaDirName) && !name.equals(mediaDirName) && includeMedia) {  //处理媒体文件
+                        File outFile = new File(mediaDir, name.substring(mediaDirName.length()));   //去掉开头的文件夹路径
                         extractFile(zis, outFile, mediaBuffer);
-                        zis.closeEntry();
                     } else if (allowedFiles.contains(name)) {   //处理根目录下的 JSON 文件
                         File outFile = new File(tempJsonDir, name);
                         extractFile(zis, outFile, jsonBuffer);
                         extractedJsonFiles.add(outFile);
-                        zis.closeEntry();
-                    } else {    //非媒体文件且非允许的根目录 JSON 文件直接不解压
-                        zis.closeEntry();
                     }
+                    zis.closeEntry();
                 }
             }
             return extractedJsonFiles;

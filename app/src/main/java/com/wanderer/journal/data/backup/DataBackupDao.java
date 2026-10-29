@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.wanderer.journal.auxiliary.enums.types.ImportResultType;
+import com.wanderer.journal.auxiliary.classes.ImportResult;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.backup.maps.LifeNoteDataMap;
 import com.wanderer.journal.data.backup.maps.RoleDataMap;
@@ -81,15 +81,15 @@ public interface DataBackupDao {
     /**
      * 导入“日记数据”选项对应的数据
      *
-     * @param map 日记数据集合
+     * @param data 日记数据集合
      * @return 数据导入的结果
      */
     @Transaction
-    default int importDiaryData(Context context, DiaryDataMap map) {
-        if (map == null) return ImportResultType.MISSING.ordinal();
+    default ImportResult importDiaryData(Context context, DiaryDataMap data) {
+        if (data == null) return ImportResult.missed();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Boolean> resultList = new ArrayList<>();
+        List<Throwable> exceptionList = new ArrayList<>();
 
         //清空旧数据
         clearEmotionParagraphRef();
@@ -99,80 +99,83 @@ public interface DataBackupDao {
         clearDiaryData();
 
         //导入日记数据
-        List<DiaryPojo> diaryPojoList = map.getDiaryList();
-        if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
-            List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
-            writeDiaryData(diaryEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<DiaryPojo> diaryPojoList = data.getDiaryList();
+            if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
+                List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
+                writeDiaryData(diaryEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入段落数据
-        List<ParagraphPojo> paragraphPojoList = map.getParagraphList();
-        if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
-            List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
-            writeParagraphData(paragraphEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<ParagraphPojo> paragraphPojoList = data.getParagraphList();
+            if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
+                List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
+                writeParagraphData(paragraphEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入媒体数据
-        List<MediaPojo> mediaPojoList = map.getMediaList();
-        if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
-            //替换包名为当前包名
-            String replacement = String.format(
-                    Locale.getDefault(),
-                    "Android/data/%s/files/",
-                    context.getPackageName()
-            );
-            List<MediaPojo> uriConvertedPojoList = mediaPojoList.stream()
-                    .peek(media -> {
-                        String uriStr = media.getFileUri();
-                        String currentPackageNameUri = uriStr.replaceAll(
-                                "Android/data/([^/]+)/files/",
-                                replacement
-                        );
-                        media.setFileUri(currentPackageNameUri);
-                    })
-                    .collect(Collectors.toList());
+        try {
+            List<MediaPojo> mediaPojoList = data.getMediaList();
+            if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
+                //替换包名为当前包名
+                String replacement = String.format(
+                        Locale.getDefault(),
+                        "Android/data/%s/files/",
+                        context.getPackageName()
+                );
+                List<MediaPojo> uriConvertedPojoList = mediaPojoList.stream()
+                        .peek(media -> {
+                            String uriStr = media.getFileUri();
+                            String currentPackageNameUri = uriStr.replaceAll(
+                                    "Android/data/([^/]+)/files/",
+                                    replacement
+                            );
+                            media.setFileUri(currentPackageNameUri);
+                        })
+                        .collect(Collectors.toList());
 
-            writeMediaData(mapper.toMediaEntityList(uriConvertedPojoList));
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+                writeMediaData(mapper.toMediaEntityList(uriConvertedPojoList));
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入情绪标签数据
-        List<EmotionTagPojo> emotionTagPojoList = map.getEmotionTagList();
-        if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
-            List<EmotionTagEntity> emotionTagEntityList =
-                    mapper.toEmotionTagEntityList(emotionTagPojoList);
-            writeEmotionTagData(emotionTagEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<EmotionTagPojo> emotionTagPojoList = data.getEmotionTagList();
+            if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
+                List<EmotionTagEntity> emotionTagEntityList =
+                        mapper.toEmotionTagEntityList(emotionTagPojoList);
+                writeEmotionTagData(emotionTagEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入情绪标签与段落关系数据
-        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = map.getEmotionParagraphRefList();
-        if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
-            List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
-                    mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
-            writeEmotionParagraphRefData(emotionParagraphRefEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = data.getEmotionParagraphRefList();
+            if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
+                List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
+                        mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
+                writeEmotionParagraphRefData(emotionParagraphRefEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //返回导入结果
-        if (!resultList.contains(false)) {
-            return ImportResultType.SUCCEED.ordinal();
-        } else if (!resultList.contains(true)) {
-            return ImportResultType.MISSING.ordinal();
+        if (exceptionList.isEmpty()) {
+            return ImportResult.success();
         } else {
-            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
+            return ImportResult.partlySuccess(exceptionList);
         }
     }
 
@@ -200,47 +203,47 @@ public interface DataBackupDao {
     /**
      * 导入所有角色数据
      *
-     * @param map 角色数据集合
+     * @param data 角色数据集合
      * @return 数据导入的结果
      */
     @Transaction
-    default int importRoleData(RoleDataMap map) {
-        if (map == null) return ImportResultType.MISSING.ordinal();
+    default ImportResult importRoleData(RoleDataMap data) {
+        if (data == null) return ImportResult.missed();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Boolean> resultList = new ArrayList<>();
+        List<Throwable> exceptionList = new ArrayList<>();
 
         //清空旧数据
         clearRoleAlia();
         clearRole();
 
         //导入角色数据
-        List<RolePojo> rolePojoList = map.getRoleList();
-        if (rolePojoList != null && !rolePojoList.isEmpty()) {
-            List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
-            writeRoleData(roleEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<RolePojo> rolePojoList = data.getRoleList();
+            if (rolePojoList != null && !rolePojoList.isEmpty()) {
+                List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
+                writeRoleData(roleEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入角色别名数据
-        List<RoleAliaPojo> roleAliaPojoList = map.getRoleAliaList();
-        if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
-            List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
-            writeRoleAliaList(roleAliaEntityList);
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<RoleAliaPojo> roleAliaPojoList = data.getRoleAliaList();
+            if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
+                List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
+                writeRoleAliaList(roleAliaEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //返回导入结果
-        if (!resultList.contains(false)) {
-            return ImportResultType.SUCCEED.ordinal();
-        } else if (!resultList.contains(true)) {
-            return ImportResultType.MISSING.ordinal();
+        if (exceptionList.isEmpty()) {
+            return ImportResult.success();
         } else {
-            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
+            return ImportResult.partlySuccess(exceptionList);
         }
     }
 
@@ -270,45 +273,45 @@ public interface DataBackupDao {
     /**
      * 导入所有人生笔记数据
      *
-     * @param map 包含所有人生笔记数据的集合
+     * @param data 包含所有人生笔记数据的集合
      * @return 数据导入的结果
      */
     @Transaction
-    default int importLifeNoteData(LifeNoteDataMap map) {
-        if (map == null) return ImportResultType.MISSING.ordinal();
+    default ImportResult importLifeNoteData(LifeNoteDataMap data) {
+        if (data == null) return ImportResult.missed();
 
         EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Boolean> resultList = new ArrayList<>();
+        List<Throwable> exceptionList = new ArrayList<>();
 
         //清空旧数据
         clearLifeNote();
         clearLifeNoteHistory();
 
         //导入人生笔记数据
-        List<LifeNotePojo> lifeNotePojoList = map.getLifeNoteList();
-        if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
-            writeLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<LifeNotePojo> lifeNotePojoList = data.getLifeNoteList();
+            if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
+                writeLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //导入人生笔记历史记录数据
-        List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = map.getLifeNoteHistoryList();
-        if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
-            writeLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
-            resultList.add(true);
-        }else {
-            resultList.add(false);
+        try {
+            List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = data.getLifeNoteHistoryList();
+            if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
+                writeLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
         }
 
         //返回导入结果
-        if (!resultList.contains(false)) {
-            return ImportResultType.SUCCEED.ordinal();
-        } else if (!resultList.contains(true)) {
-            return ImportResultType.MISSING.ordinal();
+        if (exceptionList.isEmpty()) {
+            return ImportResult.success();
         } else {
-            return ImportResultType.PARTIALLY_SUCCEED.ordinal();
+            return ImportResult.partlySuccess(exceptionList);
         }
     }
 
