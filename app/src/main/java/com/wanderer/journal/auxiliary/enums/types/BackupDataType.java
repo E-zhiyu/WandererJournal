@@ -2,12 +2,15 @@ package com.wanderer.journal.auxiliary.enums.types;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.data.backup.helpers.DiaryBackupHelper;
 import com.wanderer.journal.data.backup.helpers.LifeNoteBackupHelper;
 import com.wanderer.journal.data.backup.helpers.RoleBackupHelper;
+
+import org.jetbrains.annotations.Contract;
 
 import java.util.function.Function;
 
@@ -17,35 +20,46 @@ import java.util.function.Function;
 public enum BackupDataType {
     DIARY(
             "日记数据",
-            "diary.json",
-            DiaryBackupHelper::new
+            DiaryBackupHelper::new,
+            "diary.json"
     ),
     ROLE(
             "角色数据",
-            "role.json",
-            RoleBackupHelper::new
+            RoleBackupHelper::new,
+            "role.json"
     ),
     LIFE_NOTE(
             "人生笔记数据",
-            "life_note.json",
-            LifeNoteBackupHelper::new
+            LifeNoteBackupHelper::new,
+            "life_note.json"
     );
     private final String title;
-    private final String fileName;
     private final Function<Context, BackupHelperBase<?, ?>> helperFactory;
+    private final String[] fileNames;
 
-    BackupDataType(String title, String fileName, Function<Context, BackupHelperBase<?, ?>> helperFactory) {
+    BackupDataType(String title, Function<Context, BackupHelperBase<?, ?>> helperFactory,String... fileNames) {
         this.title = title;
-        this.fileName = fileName;
         this.helperFactory = helperFactory;
+        this.fileNames = fileNames;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public String getFileName() {
-        return fileName;
+    /**
+     * 获取最新版本的备份文件名称
+     *
+     * @return 最新版本的备份文件名称
+     */
+    @Nullable
+    @Contract(pure = true)
+    public String getLatestVersionFileName() {
+        if (fileNames.length > 0) {
+            return fileNames[fileNames.length - 1];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -65,12 +79,14 @@ public enum BackupDataType {
      * @return 数据类型，若无法匹配类型则返回 null
      */
     @Nullable
-    public static BackupDataType fromFileName(String fileName) {
+    public static BackupDataType fromFileName(String fileName, @NonNull ImportDataVersionType versionType) {
+        int ordinal = versionType.ordinal();
         for (BackupDataType type : values()) {
-            if (type.getFileName().equals(fileName)) {
+            String effectiveFileName = type.fileNames[ordinal];
+            if (effectiveFileName != null && effectiveFileName.equals(fileName)) {
                 return type;
             }
         }
-        return null; // 或者返回一个表示“未知”的类型
+        return null;
     }
 }

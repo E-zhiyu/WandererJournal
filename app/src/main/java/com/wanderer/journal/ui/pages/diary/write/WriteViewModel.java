@@ -1,6 +1,9 @@
 package com.wanderer.journal.ui.pages.diary.write;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.Pair;
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
 import androidx.paging.Pager;
@@ -10,12 +13,15 @@ import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
+import com.wanderer.journal.data.save.db.entities.MediaEntity;
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -24,6 +30,7 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class WriteViewModel extends ViewModel {
+    private final MutableLiveData<Pair<ParagraphEntity, List<MediaEntity>>> modifyingLiveData = new MutableLiveData<>();    //正在编辑的段落和它的媒体列表
     private final BehaviorProcessor<LocalDate> dateProcessor =
             BehaviorProcessor.createDefault(LocalDate.now());       //日期的处理器
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
@@ -39,6 +46,29 @@ public class WriteViewModel extends ViewModel {
             this.date = date;
             this.isHiddenShown = isHiddenShown;
         }
+    }
+
+    public MutableLiveData<Pair<ParagraphEntity, List<MediaEntity>>> getModifyingLiveData() {
+        return modifyingLiveData;
+    }
+
+    /**
+     * 获取正在编辑的段落编号
+     *
+     * @return 正在编辑的段落编号，没有正在编辑的段落时返回0
+     */
+    public long getModifyingParagraphId() {
+        Pair<ParagraphEntity, List<MediaEntity>> modifyingPair = modifyingLiveData.getValue();
+        return modifyingPair != null && modifyingPair.first != null ? modifyingPair.first.getParagraphId() : 0;
+    }
+
+    /**
+     * 更改正在编辑的段落
+     *
+     * @param pair 正在编辑的段落和它的媒体列表，传递 null 表示没有正在编辑的段落
+     */
+    public void updateModifying(@Nullable Pair<ParagraphEntity, List<MediaEntity>> pair) {
+        modifyingLiveData.setValue(pair);
     }
 
     /**

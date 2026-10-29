@@ -10,7 +10,23 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.3\n" +
+    private final static String CHANGELOG = "# v1.7.4\n" +
+            "\n" +
+            "### 优化和修改的内容\n" +
+            "\n" +
+            "- 优化导入备份后的通知内容\n" +
+            "- 修改默认备份文件名称\n" +
+            "- 修改备份文件格式，不再支持旧版备份文件的导入\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复压缩图片后立刻进行备份，会在备份文件顶层留下压缩后图片的BUG\n" +
+            "\n" +
+            "# v1.7.3\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 导入数据时能够通过通知显示导入结果\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

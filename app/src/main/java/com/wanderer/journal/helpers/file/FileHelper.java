@@ -41,6 +41,8 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
+    private final static String BACKUP_FILE_NAME = "Wanderer Journal Backup";
+
     /**
      * 获取文件扩展名
      */
@@ -62,7 +64,8 @@ public class FileHelper {
     public static String generateBackupFileName() {
         return String.format(
                 Locale.getDefault(),
-                "WandererJournalBackup_%s.zip",
+                "%s_%s.zip",
+                BACKUP_FILE_NAME,
                 LocalDateTime.now().format(CustomDateTimeFormatter.BACKUP)
         );
     }
