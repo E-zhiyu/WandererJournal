@@ -24,12 +24,13 @@ glide = "5.0.9"
 photoview = "2.3.0"
 activityKtx = "1.13.0"
 constraintlayout = "2.2.1"
-devicecompat = "2.6"
 biometric = "1.1.0"
 flexbox = "3.0.0"
 jacksonDatabind = "2.22.1"
 core = "4.6.2"
 workRuntime = "2.11.2"
+devicecompat = "2.6"
+xxpermissions = "28.3"
 
 [libraries]
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
@@ -66,6 +67,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 core = { module = "io.noties.markwon:core", version.ref = "core" }
 work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
 work-rxjava3 = { module = "androidx.work:work-rxjava3", version.ref = "workRuntime" }
+xxpermissions = { module = "com.github.getActivity:XXPermissions", version.ref = "xxpermissions" }
 zibin-luban = { module = "top.zibin:luban", version.ref = "lubanVersion" }
 
 [plugins]
