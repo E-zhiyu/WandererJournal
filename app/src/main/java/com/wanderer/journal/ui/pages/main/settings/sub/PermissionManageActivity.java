@@ -167,7 +167,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                 binding.batteryOption,
                 R.string.ignore_battery_optimization,
                 "设置安卓原生的电池优化策略",
-                R.drawable.outline_battery_android_4_24,
+                R.drawable.outline_battery_android_frame_3_24,
                 RadiusStyle.MIDDLE
         );
         battery.setFunctionListener(v -> PermissionHelper.requestBatteryIgnoration(
