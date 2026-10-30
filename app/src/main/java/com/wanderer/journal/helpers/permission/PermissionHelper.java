@@ -17,9 +17,6 @@ import com.wanderer.journal.WandererJournal;
 
 import java.util.List;
 
-/**
- * 在打开Activity时申请权限的工具类
- */
 public class PermissionHelper {
     public interface PermissionCallback {
         /**
@@ -77,16 +74,6 @@ public class PermissionHelper {
 
         WandererJournal.lockLifecycleObserver(true);
         context.startActivity(intent);
-    }
-
-    /**
-     * 申请权限
-     *
-     * @param context     上下文
-     * @param permissions 需要申请的权限
-     */
-    public static void requestPermission(Context context, @Nullable IPermission... permissions) {
-        requestPermission(context, null, null, permissions);
     }
 
     /**
