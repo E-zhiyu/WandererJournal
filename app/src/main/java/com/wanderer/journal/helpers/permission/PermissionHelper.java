@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
+import com.hjq.permissions.OnPermissionDescription;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
@@ -79,12 +80,12 @@ public class PermissionHelper {
     /**
      * 申请权限
      *
-     * @param context               上下文
-     * @param permissionDialogDescription 申请权限时向用户展示提示信息的类
-     * @param permissionCallback    权限被拒绝时的回调，传递 null 默认为显示权限被拒绝的对话框，并提供前往设置界面的选项
-     * @param permissions           需要申请的权限
+     * @param context            上下文
+     * @param description        申请权限时向用户展示提示信息的类
+     * @param permissionCallback 权限被拒绝时的回调，传递 null 默认为显示权限被拒绝的对话框，并提供前往设置界面的选项
+     * @param permissions        需要申请的权限
      */
-    public static void requestPermission(Context context, @Nullable PermissionDialogDescription permissionDialogDescription, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
+    public static void requestPermission(Context context, @Nullable OnPermissionDescription description, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
         if (permissions == null || permissions.length == 0) return;
 
         if (XXPermissions.isGrantedPermissions(context, permissions)) {
@@ -95,7 +96,7 @@ public class PermissionHelper {
             WandererJournal.lockLifecycleObserver(true);
             XXPermissions.with(context)
                     .permissions(permissions)
-                    .description(permissionDialogDescription)
+                    .description(description)
                     .request((grantedList, deniedList) -> {
                         WandererJournal.lockLifecycleObserver(false);
 
@@ -126,9 +127,10 @@ public class PermissionHelper {
     /**
      * 申请忽略电池优化
      *
-     * @param context 上下文
+     * @param context     上下文
+     * @param description 申请权限时用于进行说明的类
      */
-    public static void requestBatteryIgnoration(Context context) {
+    public static void requestBatteryIgnoration(Context context, @Nullable OnPermissionDescription description) {
         IPermission batteryPermission = PermissionLists.getRequestIgnoreBatteryOptimizationsPermission();
         if (XXPermissions.isGrantedPermission(context, batteryPermission)) {
             Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
@@ -136,6 +138,7 @@ public class PermissionHelper {
             WandererJournal.lockLifecycleObserver(true);
             if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
                 XXPermissions.with(context)
+                        .description(description)
                         .permission(batteryPermission)
                         .request((grantedList, deniedList) -> {
                             WandererJournal.lockLifecycleObserver(false);
@@ -147,10 +150,11 @@ public class PermissionHelper {
                             } else {
                                 new MaterialAlertDialogBuilder(context)
                                         .setTitle("请求被拒绝")
-                                        .setMessage("请求被拒绝，是否跳转至权限设置界面授予权限？")
-                                        .setPositiveButton("前往设置", (dialog, which) ->
-                                                XXPermissions.startPermissionActivity(context, deniedList)
-                                        )
+                                        .setMessage("请求被拒绝，是否跳转至电池优化界面授予权限？")
+                                        .setPositiveButton("前往设置", (dialog, which) -> {
+                                            Toast.makeText(context, "请点击开关左侧文本并选择“无限制”", Toast.LENGTH_SHORT).show();
+                                            XXPermissions.startPermissionActivity(context, deniedList);
+                                        })
                                         .setNegativeButton("取消", null)
                                         .show();
                             }
