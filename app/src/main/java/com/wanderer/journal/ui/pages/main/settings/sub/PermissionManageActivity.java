@@ -173,7 +173,10 @@ public class PermissionManageActivity extends AppCompatActivity {
         battery.setFunctionListener(v -> PermissionHelper.requestBatteryIgnoration(
                 this,
                 new PermissionDialogDescription(permissionList ->
-                        "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。"
+                        "该设置项是原生安卓的一个重要设置项，可以更加底层地调整应用的省电策略。" +
+                                "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
+                                "影响范围如下：\n" +
+                                "- 日记提醒是否能够准点发送通知\n"
                 )
         ));
         battery.setOnLongClickListener(view -> {
