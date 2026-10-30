@@ -199,7 +199,7 @@ public class RoleInputActivity extends AppCompatActivity {
                 return;
             }
 
-            onConfirm();
+            saveData();
         });
     }
 
@@ -232,7 +232,7 @@ public class RoleInputActivity extends AppCompatActivity {
     /**
      * 确认按钮点击回调
      */
-    private void onConfirm() {
+    private void saveData() {
         //获取输入内容
         String name = String.valueOf(binding.nameInput.getText()).trim();
         String displayName = String.valueOf(binding.displayNameInput.getText()).trim();
