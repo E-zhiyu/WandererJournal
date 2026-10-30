@@ -1161,9 +1161,7 @@ public class WriteActivity extends AppCompatActivity {
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
-                            () -> {
-                                viewModel.updateModifying(null);
-                            },
+                            () -> viewModel.updateModifying(null),
                             throwable -> {
                                 viewModel.updateModifying(null);
                                 ExceptionHelper.showExceptionDialog(this, throwable);
