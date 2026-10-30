@@ -22,8 +22,8 @@ android {
         applicationId "com.wanderer.journal"
         minSdk 28
         targetSdk 37
-        versionCode 49
-        versionName "1.7.4"
+        versionCode 50
+        versionName "1.7.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
