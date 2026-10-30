@@ -20,13 +20,13 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
+import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback;
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
@@ -63,7 +63,7 @@ public class MediaListActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                new PermissionDescription(permissionList -> {
+                new PermissionDialogDescription(permissionList -> {
                     StringBuilder message = new StringBuilder();
 
                     //逐个权限添加通知

@@ -16,11 +16,11 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
+import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
@@ -61,7 +61,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                new PermissionDescription(permissionList -> {
+                new PermissionDialogDescription(permissionList -> {
                     StringBuilder message = new StringBuilder();
 
                     if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {

@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.classes.permission;
+package com.wanderer.journal.helpers.permission;
 
 import android.app.Activity;
 
@@ -11,10 +11,10 @@ import com.hjq.permissions.permission.base.IPermission;
 import java.util.List;
 import java.util.function.Function;
 
-public class PermissionDescription implements OnPermissionDescription {
+public class PermissionDialogDescription implements OnPermissionDescription {
     private final Function<List<IPermission>, String> descriptionFunction;
 
-    public PermissionDescription(Function<List<IPermission>, String> descriptionFunction) {
+    public PermissionDialogDescription(Function<List<IPermission>, String> descriptionFunction) {
         this.descriptionFunction = descriptionFunction;
     }
 

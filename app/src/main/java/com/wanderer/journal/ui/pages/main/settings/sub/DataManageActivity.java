@@ -28,7 +28,7 @@ import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.automation.worker.backup.RestoreWorker;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
-import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
+import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
@@ -44,7 +44,7 @@ import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.NotificationHelper;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
@@ -109,7 +109,7 @@ public class DataManageActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                new PermissionDescription(permissionList -> {
+                new PermissionDialogDescription(permissionList -> {
                     StringBuilder message = new StringBuilder();
 
                     //逐个权限添加通知
