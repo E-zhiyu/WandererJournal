@@ -82,6 +82,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                         "- 写日记时使用系统相机添加媒体文件\n",
                 () -> PermissionHelper.requestPermission(
                         this,
+                        null,
                         new PermissionHelper.PermissionCallback() {
                             @Override
                             public void allGranted(List<IPermission> permissionList) {
@@ -123,6 +124,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                         "- 没写日记时发送提醒通知\n",
                 () -> PermissionHelper.requestPermission(
                         this,
+                        null,
                         new PermissionHelper.PermissionCallback() {
                             @Override
                             public void allGranted(List<IPermission> permissionList) {

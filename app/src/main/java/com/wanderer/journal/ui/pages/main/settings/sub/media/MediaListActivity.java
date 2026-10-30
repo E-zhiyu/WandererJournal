@@ -62,6 +62,7 @@ public class MediaListActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
+                null,
                 new PermissionHelper.PermissionCallback() {
                     @Override
                     public void allGranted(List<IPermission> permissionList) {

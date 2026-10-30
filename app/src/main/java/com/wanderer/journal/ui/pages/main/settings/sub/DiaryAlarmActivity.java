@@ -16,6 +16,7 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
@@ -58,8 +59,20 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         initViews();
 
         //申请权限
-        binding.getRoot().postDelayed(() -> PermissionHelper.requestPermission(
+        PermissionHelper.requestPermission(
                 this,
+                new PermissionDescription(permissionList -> {
+                    StringBuilder message = new StringBuilder();
+
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
+                        message.append("请授予通知权限用于发生提醒通知。\n");
+                    }
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getScheduleExactAlarmPermission())) {
+                        message.append("请授予精确闹钟权限以允许应用在指定时刻发送通知提醒。\n");
+                    }
+
+                    return message.toString();
+                }),
                 new PermissionHelper.PermissionCallback() {
                     @Override
                     public void allGranted(List<IPermission> permissionList) {
@@ -93,7 +106,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                 },
                 PermissionLists.getPostNotificationsPermission(),
                 PermissionLists.getScheduleExactAlarmPermission()
-        ), 500);
+        );
     }
 
     /**

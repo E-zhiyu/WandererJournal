@@ -14,6 +14,7 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.WandererJournal;
+import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
 
 import java.util.List;
 
@@ -86,17 +87,18 @@ public class PermissionHelper {
      * @param permissions 需要申请的权限
      */
     public static void requestPermission(Context context, @Nullable IPermission... permissions) {
-        requestPermission(context, null, permissions);
+        requestPermission(context, null, null, permissions);
     }
 
     /**
      * 申请权限
      *
-     * @param context            上下文
-     * @param permissionCallback 权限被拒绝时的回调，传递 null 默认为显示权限被拒绝的对话框，并提供前往设置界面的选项
-     * @param permissions        需要申请的权限
+     * @param context               上下文
+     * @param permissionDescription 申请权限时向用户展示提示信息的类
+     * @param permissionCallback    权限被拒绝时的回调，传递 null 默认为显示权限被拒绝的对话框，并提供前往设置界面的选项
+     * @param permissions           需要申请的权限
      */
-    public static void requestPermission(Context context, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
+    public static void requestPermission(Context context, @Nullable PermissionDescription permissionDescription, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
         if (permissions == null || permissions.length == 0) return;
 
         if (XXPermissions.isGrantedPermissions(context, permissions)) {
@@ -107,6 +109,7 @@ public class PermissionHelper {
             WandererJournal.lockLifecycleObserver(true);
             XXPermissions.with(context)
                     .permissions(permissions)
+                    .description(permissionDescription)
                     .request((grantedList, deniedList) -> {
                         WandererJournal.lockLifecycleObserver(false);
 
