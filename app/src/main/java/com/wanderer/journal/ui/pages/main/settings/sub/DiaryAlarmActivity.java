@@ -120,6 +120,12 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         boolean isSwitchOpened = DiaryAlarmPreference.getSwitchStat(this);
         SettingSwitchView diaryAlarmSwitch = getSettingSwitchView(isSwitchOpened);
 
+        //自启动提示文本
+        binding.autoStartTipText.setVisibility(PermissionHelper.isAutoStartDefined() ? View.VISIBLE : View.GONE);
+        binding.autoStartTipText.setOnClickListener(v ->
+                PermissionHelper.requestAutoStartPermission(this)
+        );
+
         //提醒时间 RecyclerView
         adapter = new AlarmTimeAdapter(time -> {
             if (adapter == null) return;

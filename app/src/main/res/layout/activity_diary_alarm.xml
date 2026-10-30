@@ -57,6 +57,16 @@
                 android:id="@+id/add_alarm_time_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 提示文本 -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/auto_start_tip_text"
+                style="@style/TipTextViewStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="15dp"
+                android:text="@string/alarm_auto_start_tip" />
+
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/alarm_time_title"
                 android:layout_width="wrap_content"
