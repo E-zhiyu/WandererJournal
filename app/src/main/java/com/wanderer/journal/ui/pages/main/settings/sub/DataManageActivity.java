@@ -28,6 +28,7 @@ import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.automation.worker.backup.BackupWorker;
 import com.wanderer.journal.automation.worker.backup.RestoreWorker;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.classes.permission.PermissionDescription;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
@@ -108,7 +109,16 @@ public class DataManageActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                null,
+                new PermissionDescription(permissionList -> {
+                    StringBuilder message = new StringBuilder();
+
+                    //逐个权限添加通知
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
+                        message.append("请授予通知权限用于发送操作进度通知。\n");
+                    }
+
+                    return message.toString();
+                }),
                 new PermissionHelper.PermissionCallback() {
                     @Override
                     public void allGranted(List<IPermission> permissionList) {

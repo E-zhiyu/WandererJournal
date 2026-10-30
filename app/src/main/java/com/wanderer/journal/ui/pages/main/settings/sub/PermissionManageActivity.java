@@ -210,7 +210,28 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.string.alarm_permission,
                 "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
                         "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
-                () -> PermissionHelper.requestPermission(this, PermissionLists.getScheduleExactAlarmPermission())
+                () -> PermissionHelper.requestPermission(
+                        this,
+                        null,
+                        new PermissionHelper.PermissionCallback() {
+                            @Override
+                            public void allGranted(List<IPermission> permissionList) {
+                                Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                                boolean noDenied = deniedList.isEmpty();
+                                boolean noGranted = grantedList.isEmpty();
+                                if (noDenied && !noGranted) {
+                                    Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        },
+                        PermissionLists.getScheduleExactAlarmPermission()
+                )
         ));
         alarm.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);

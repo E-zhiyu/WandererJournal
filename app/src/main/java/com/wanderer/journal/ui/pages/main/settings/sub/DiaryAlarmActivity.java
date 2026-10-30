@@ -65,7 +65,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                     StringBuilder message = new StringBuilder();
 
                     if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
-                        message.append("请授予通知权限用于发生提醒通知。\n");
+                        message.append("请授予通知权限用于发送提醒通知。\n");
                     }
                     if (XXPermissions.containsPermission(permissionList, PermissionLists.getScheduleExactAlarmPermission())) {
                         message.append("请授予精确闹钟权限以允许应用在指定时刻发送通知提醒。\n");
@@ -87,7 +87,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
 
                             //逐个权限添加通知
                             if (XXPermissions.containsPermission(deniedList, PermissionLists.getPostNotificationsPermission())) {
-                                message.append("请授予通知权限用于发生提醒通知。\n");
+                                message.append("请授予通知权限用于发送提醒通知。\n");
                             }
                             if (XXPermissions.containsPermission(deniedList, PermissionLists.getScheduleExactAlarmPermission())) {
                                 message.append("请授予精确闹钟权限以允许应用在指定时刻发送通知提醒。\n");
