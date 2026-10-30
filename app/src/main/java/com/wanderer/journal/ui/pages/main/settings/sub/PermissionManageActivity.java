@@ -1,11 +1,10 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
-import android.Manifest;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.StringRes;
@@ -16,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
@@ -24,6 +24,8 @@ import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
+
+import java.util.List;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
@@ -78,7 +80,27 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.string.camera_permission,
                 "该权限允许应用调用摄像头，应用范围如下：\n" +
                         "- 写日记时使用系统相机添加媒体文件\n",
-                () -> PermissionHelper.requestPermission(this, PermissionLists.getCameraPermission())
+                () -> PermissionHelper.requestPermission(
+                        this,
+                        new PermissionHelper.PermissionCallback() {
+                            @Override
+                            public void allGranted(List<IPermission> permissionList) {
+                                Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                                boolean noDenied = deniedList.isEmpty();
+                                boolean noGranted = grantedList.isEmpty();
+                                if (noDenied && !noGranted) {
+                                    Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        },
+                        PermissionLists.getCameraPermission()
+                )
         ));
         camera.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);
@@ -99,7 +121,27 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.string.notification_permission,
                 "该权限允许应用发送通知，应用范围如下：\n" +
                         "- 没写日记时发送提醒通知\n",
-                () -> PermissionHelper.requestPermission(this, PermissionLists.getPostNotificationsPermission())
+                () -> PermissionHelper.requestPermission(
+                        this,
+                        new PermissionHelper.PermissionCallback() {
+                            @Override
+                            public void allGranted(List<IPermission> permissionList) {
+                                Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                                boolean noDenied = deniedList.isEmpty();
+                                boolean noGranted = grantedList.isEmpty();
+                                if (noDenied && !noGranted) {
+                                    Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        },
+                        PermissionLists.getPostNotificationsPermission()
+                )
         ));
         notification.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);
@@ -197,20 +239,19 @@ public class PermissionManageActivity extends AppCompatActivity {
         final String NOT_GRANTED = "未授予";
 
         //相机权限
-        boolean isCameraGranted = PermissionHelper.isRuntimePermissionGranted(Manifest.permission.CAMERA, this);
+        boolean isCameraGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getCameraPermission());
         camera.getFunctionComponent().setText(isCameraGranted ? GRANTED : NOT_GRANTED);
 
         //通知权限
-        boolean isNotificationGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                PermissionHelper.isRuntimePermissionGranted(Manifest.permission.POST_NOTIFICATIONS, this);
+        boolean isNotificationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getPostNotificationsPermission());
         notification.getFunctionComponent().setText(isNotificationGranted ? GRANTED : NOT_GRANTED);
 
         //电池优化
-        boolean isBatteryIgnored = PermissionHelper.SpecialPermissionType.BATTERY.isGranted(this);
+        boolean isBatteryIgnored = XXPermissions.isGrantedPermission(this, PermissionLists.getRequestIgnoreBatteryOptimizationsPermission());
         battery.getFunctionComponent().setText(isBatteryIgnored ? "已忽略" : "未忽略");
 
         //精确闹钟权限
-        boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
+        boolean isAlarmGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getScheduleExactAlarmPermission());
         alarm.getFunctionComponent().setText(isAlarmGranted ? GRANTED : NOT_GRANTED);
     }
 }
