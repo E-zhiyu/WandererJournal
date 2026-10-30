@@ -1,10 +1,8 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -22,6 +20,9 @@ import androidx.work.Data;
 import androidx.work.WorkManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.automation.worker.backup.BackupWorker;
@@ -103,7 +104,40 @@ public class DataManageActivity extends AppCompatActivity {
 
         initActivityLaunchers();
         initViews();
-        initPermissionRequests();
+
+        //申请权限
+        PermissionHelper.requestPermission(
+                this,
+                new PermissionHelper.PermissionCallback() {
+                    @Override
+                    public void allGranted(List<IPermission> permissionList) {
+                    }
+
+                    @Override
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                        boolean noDenied = deniedList.isEmpty();
+
+                        if (!noDenied) {
+                            StringBuilder message = new StringBuilder();
+
+                            //逐个权限添加通知
+                            if (XXPermissions.containsPermission(deniedList, PermissionLists.getPostNotificationsPermission())) {
+                                message.append("请授予通知权限用于发送操作进度通知。\n");
+                            }
+
+                            new MaterialAlertDialogBuilder(DataManageActivity.this)
+                                    .setTitle("请求被拒绝")
+                                    .setMessage(message)
+                                    .setPositiveButton("前往设置", (dialog, which) ->
+                                            XXPermissions.startPermissionActivity(DataManageActivity.this, deniedList)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    }
+                },
+                PermissionLists.getPostNotificationsPermission()
+        );
     }
 
     /**
@@ -204,16 +238,6 @@ public class DataManageActivity extends AppCompatActivity {
 
         //初始化日记数据设置
         initDiaryDataSettings();
-    }
-
-    /**
-     * 初始化权限请求
-     */
-    private void initPermissionRequests() {
-        PermissionHelper helper = new PermissionHelper(this);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            helper.addPermission(Manifest.permission.POST_NOTIFICATIONS, "请授予通知权限以发送操作进度通知");
-        }
     }
 
     /**

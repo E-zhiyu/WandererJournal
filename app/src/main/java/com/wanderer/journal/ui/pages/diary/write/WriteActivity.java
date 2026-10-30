@@ -44,6 +44,8 @@ import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
@@ -72,7 +74,6 @@ import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.ImmHelper;
-import com.wanderer.journal.helpers.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
@@ -593,10 +594,7 @@ public class WriteActivity extends AppCompatActivity {
             MediaAddOption option = MediaAddOption.values()[integer];
 
             if (option == MediaAddOption.TAKE_PICTURE) {
-                if (PermissionHelper.isRuntimePermissionGranted(
-                        Manifest.permission.CAMERA,
-                        this
-                )) {
+                if (XXPermissions.isGrantedPermission(this, PermissionLists.getCameraPermission())) {
                     launchSystemCamera();
                 } else {
                     permissionLauncher.launch(Manifest.permission.CAMERA);

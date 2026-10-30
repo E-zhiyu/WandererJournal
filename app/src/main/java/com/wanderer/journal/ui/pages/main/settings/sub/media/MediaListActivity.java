@@ -1,9 +1,7 @@
 package com.wanderer.journal.ui.pages.main.settings.sub.media;
 
-import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -17,6 +15,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
@@ -29,6 +31,8 @@ import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
+
+import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -54,7 +58,40 @@ public class MediaListActivity extends AppCompatActivity {
 
         initViews();
         observeLiveData();
-        initPermissionRequests();
+
+        //申请权限
+        PermissionHelper.requestPermission(
+                this,
+                new PermissionHelper.PermissionCallback() {
+                    @Override
+                    public void allGranted(List<IPermission> permissionList) {
+                    }
+
+                    @Override
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                        boolean noDenied = deniedList.isEmpty();
+
+                        if (!noDenied) {
+                            StringBuilder message = new StringBuilder();
+
+                            //逐个权限添加通知
+                            if (XXPermissions.containsPermission(deniedList, PermissionLists.getPostNotificationsPermission())) {
+                                message.append("请授予通知权限用于在压缩图片时显示进度。\n");
+                            }
+
+                            new MaterialAlertDialogBuilder(MediaListActivity.this)
+                                    .setTitle("请求被拒绝")
+                                    .setMessage(message)
+                                    .setPositiveButton("前往设置", (dialog, which) ->
+                                            XXPermissions.startPermissionActivity(MediaListActivity.this, deniedList)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    }
+                },
+                PermissionLists.getPostNotificationsPermission()
+        );
     }
 
     @Override
@@ -182,16 +219,6 @@ public class MediaListActivity extends AppCompatActivity {
         mediaListViewModel.getOrdering().observe(this, ordering ->
                 binding.orderLeadingBtn.setText(ordering.getTitle(this))
         );
-    }
-
-    /**
-     * 初始化权限请求
-     */
-    private void initPermissionRequests() {
-        PermissionHelper helper = new PermissionHelper(this);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            helper.addPermission(Manifest.permission.POST_NOTIFICATIONS, "请授予通知权限，用于在压缩图片时显示进度。");
-        }
     }
 
     /**
