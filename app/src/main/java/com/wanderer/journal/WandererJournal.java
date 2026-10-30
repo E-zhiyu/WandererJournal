@@ -142,7 +142,7 @@ public class WandererJournal extends Application {
     /**
      * 锁定生命周期观察者
      */
-    public static void lockLifecycleObserver() {
-        isLifecycleObserverLocked = true;
+    public static void lockLifecycleObserver(boolean isLocked) {
+        isLifecycleObserverLocked = isLocked;
     }
 }

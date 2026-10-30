@@ -25,6 +25,9 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.device.compat.DeviceOs;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
@@ -270,7 +273,7 @@ public class PermissionHelper {
                     .setPositiveButton("去设置", (d, w) -> {
                         isProcessing = false;    //未直接调用processNextSpecial()，需要标记为未处理
 
-                        WandererJournal.lockLifecycleObserver();
+                        WandererJournal.lockLifecycleObserver(true);
                         activity.startActivity(type.getIntent(activity));
 
                         //如果是自启动权限，则下次不再提醒
@@ -384,15 +387,6 @@ public class PermissionHelper {
     }
 
     /**
-     * 判断是否能够跳转到原生忽略电池优化白名单界面
-     *
-     * @return 是否能跳转原生界面
-     */
-    private static boolean canSkip2ProtogeneticBatteryOptimizationsPage() {
-        return !DeviceOs.isHyperOs() && !DeviceOs.isMiui();    //小米系统无法弹出允许电池优化对话框
-    }
-
-    /**
      * 构建精确闹钟权限Intent
      *
      * @param context 上下文
@@ -417,7 +411,7 @@ public class PermissionHelper {
      */
     @NonNull
     private static Intent buildIgnoringBatteryOptimizationsIntent(Context context) {
-        if (canSkip2ProtogeneticBatteryOptimizationsPage()) {
+        if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
             @SuppressLint("BatteryLife") Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
             intent.setData(Uri.parse("package:" + context.getPackageName()));
             return intent;
@@ -444,6 +438,109 @@ public class PermissionHelper {
         } else {
             Toast.makeText(context, "请手动前往自启动界面授权", Toast.LENGTH_SHORT).show();
             return new Intent(Settings.ACTION_SETTINGS);
+        }
+    }
+
+    /**
+     * 申请自启动权限
+     *
+     * @param context 上下文
+     */
+    public static void requestAutoStartPermission(Context context) {
+        if (!isAutoStartDefined()) {
+            Toast.makeText(context, "当前系统无需申请自启动权限", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent;
+        if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
+            Toast.makeText(context, "请手动前往自启动设置界面授权", Toast.LENGTH_SHORT).show();
+            intent = new Intent(Settings.ACTION_SETTINGS);
+        } else {
+            intent = new Intent();
+            intent.setComponent(new ComponentName(
+                    "com.miui.securitycenter",
+                    "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+        }
+
+        WandererJournal.lockLifecycleObserver(true);
+        context.startActivity(intent);
+    }
+
+    /**
+     * 申请权限
+     *
+     * @param context     上下文
+     * @param permissions 需要申请的权限
+     */
+    public static void requestPermission(Context context, @Nullable IPermission... permissions) {
+        if (permissions == null || permissions.length == 0) return;
+
+        if (XXPermissions.isGrantedPermissions(context, permissions)) {
+            Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
+        } else {
+            WandererJournal.lockLifecycleObserver(true);
+            XXPermissions.with(context)
+                    .permissions(permissions)
+                    .request((grantedList, deniedList) -> {
+                        WandererJournal.lockLifecycleObserver(false);
+
+                        boolean noDenied = deniedList.isEmpty();
+                        boolean noGranted = grantedList.isEmpty();
+                        if (noDenied && !noGranted) {
+                            Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
+                        } else {
+                            String message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
+                                    "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                            new MaterialAlertDialogBuilder(context)
+                                    .setTitle("请求被拒绝")
+                                    .setMessage(message)
+                                    .setPositiveButton("前往设置", (dialog, which) ->
+                                            XXPermissions.startPermissionActivity(context, deniedList)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    });
+        }
+    }
+
+    /**
+     * 申请忽略电池优化
+     *
+     * @param context 上下文
+     */
+    public static void requestBatteryIgnoration(Context context) {
+        IPermission batteryPermission = PermissionLists.getRequestIgnoreBatteryOptimizationsPermission();
+        if (XXPermissions.isGrantedPermission(context, batteryPermission)) {
+            Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
+        } else {
+            WandererJournal.lockLifecycleObserver(true);
+            if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
+                XXPermissions.with(context)
+                        .permission(batteryPermission)
+                        .request((grantedList, deniedList) -> {
+                            WandererJournal.lockLifecycleObserver(false);
+
+                            boolean noDenied = deniedList.isEmpty();
+                            boolean noGranted = grantedList.isEmpty();
+                            if (noDenied && !noGranted) {
+                                Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
+                            } else {
+                                new MaterialAlertDialogBuilder(context)
+                                        .setTitle("请求被拒绝")
+                                        .setMessage("请求被拒绝，是否跳转至权限设置界面授予权限？")
+                                        .setPositiveButton("前往设置", (dialog, which) ->
+                                                XXPermissions.startPermissionActivity(context, deniedList)
+                                        )
+                                        .setNegativeButton("取消", null)
+                                        .show();
+                            }
+                        });
+            } else {
+                Toast.makeText(context, "请点击开关左侧文本并选择“无限制”", Toast.LENGTH_SHORT).show();
+                XXPermissions.startPermissionActivity(context, batteryPermission);
+            }
         }
     }
 }

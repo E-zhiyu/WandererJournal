@@ -22,11 +22,6 @@
         <item name="layout_scrollFlags">scroll|exitUntilCollapsed|snap</item>
     </style>
 
-    <!-- 底部导航栏指示器颜色 -->
-    <style name="NaviActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:color">?attr/colorSecondaryContainer</item>
-    </style>
-
     <!-- 卡片样式基类 -->
     <style name="CardStyleBase" parent="Widget.Material3.CardView.Elevated">
         <item name="strokeWidth">0dp</item>
@@ -136,7 +131,7 @@
     </style>
 
     <!-- 可点击的文本框样式 -->
-    <style name="ClickableTextViewStyle">
+    <style name="ClickableTextViewStyle" parent="Widget.MaterialComponents.TextView">
         <item name="drawableTint">?attr/colorPrimary</item>
         <item name="android:background">?attr/selectableItemBackground</item>
         <item name="android:paddingTop">15dp</item>
@@ -144,5 +139,15 @@
         <item name="android:textSize">17sp</item>
         <item name="android:drawablePadding">15dp</item>
         <item name="android:paddingStart">20dp</item>
+    </style>
+
+    <!-- 提示文本样式 -->
+    <style name="TipTextViewStyle" parent="Widget.MaterialComponents.TextView">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">5dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOutline</item>
+        <item name="drawableStartCompat">@drawable/outline_info_24</item>
+        <item name="android:drawableTint">?attr/colorOutline</item>
     </style>
 </resources>
