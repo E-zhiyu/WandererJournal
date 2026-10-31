@@ -22,8 +22,8 @@ android {
         applicationId "com.wanderer.journal"
         minSdk 28
         targetSdk 37
-        versionCode 49
-        versionName "1.7.4"
+        versionCode 50
+        versionName "1.7.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -73,7 +73,6 @@ dependencies {
     implementation libs.swiperefreshlayout
     implementation libs.glide                       //图片显示
     implementation libs.photoview
-    implementation libs.devicecompat                //系统名称判断
     implementation libs.biometric                   //生物验证依赖
     implementation libs.room.runtime                // Room 核心库
     implementation libs.room.paging                 // Room 的Paging 3支持
@@ -91,4 +90,6 @@ dependencies {
     implementation libs.lifecycle.process           // 生命周期监听
     implementation libs.pinyin4j                    //拼音首字母获取
     implementation libs.zibin.luban                 //图片压缩
+    implementation libs.devicecompat                //系统判断
+    implementation libs.xxpermissions               //权限申请框架
 }

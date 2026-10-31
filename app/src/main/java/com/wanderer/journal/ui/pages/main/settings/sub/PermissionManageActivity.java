@@ -1,48 +1,56 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
-import android.Manifest;
 import android.content.Intent;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.StringRes;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
-import java.util.Objects;
+import java.util.List;
+import java.util.function.Function;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
-    private final ActivityResultLauncher<String> runtimeLauncher =  //申请运行时权限的启动器
-            registerForActivityResult(
-                    new ActivityResultContracts.RequestPermission(),
-                    isGranted -> {
-                        if (isGranted) {
-                            Toast.makeText(this, "成功授予该权限", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(this, "该权限被拒绝，请长按进入系统设置后授权", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-            );
     private SettingClickableTextView camera, notification, battery, alarm;  //权限申请视图
+    private final PermissionHelper.PermissionCallback REQUEST_CALLBACK = new PermissionHelper.PermissionCallback() {
+        @Override
+        public void allGranted(List<IPermission> permissionList) {
+            Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void requested(@NonNull List<IPermission> grantedList, @NonNull List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
+            boolean noDenied = deniedList.isEmpty();
+            boolean noGranted = grantedList.isEmpty();
+            if (noDenied && !noGranted) {
+                Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
+            } else if (!XXPermissions.isDoNotAskAgainPermissions(PermissionManageActivity.this, deniedList)) {
+                Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(PermissionManageActivity.this, "请手动开启权限", Toast.LENGTH_SHORT).show();
+                XXPermissions.startPermissionActivity(PermissionManageActivity.this, deniedList);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,18 +97,16 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.drawable.baseline_photo_camera_24,
                 RadiusStyle.TOP
         );
-        camera.setFunctionListener(v -> showExplanationDialog(
-                R.string.camera_permission,
-                "该权限允许应用调用摄像头，应用范围如下：\n" +
-                        "- 写日记时使用系统相机添加媒体文件\n",
-                () -> requestRuntimePermission(Manifest.permission.CAMERA)
+        camera.setFunctionListener(v -> PermissionHelper.requestPermission(
+                this,
+                permissionList ->
+                        "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件\n",
+                REQUEST_CALLBACK,
+                PermissionLists.getCameraPermission()
         ));
         camera.setOnLongClickListener(view -> {
-            WandererJournal.lockLifecycleObserver();
-            Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package", getPackageName(), null);
-            skip2Settings.setData(uri);
-            startActivity(skip2Settings);
+            WandererJournal.lockLifecycleObserver(true);
+            XXPermissions.startPermissionActivity(this, PermissionLists.getCameraPermission());
             return true;
         });
 
@@ -113,25 +119,16 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.drawable.outline_notification_settings_24,
                 RadiusStyle.MIDDLE
         );
-        notification.setFunctionListener(v -> showExplanationDialog(
-                        R.string.notification_permission,
-                        "该权限允许应用发送通知，应用范围如下：\n" +
-                                "- 没写日记时发送提醒通知\n",
-                        () -> {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                requestRuntimePermission(Manifest.permission.POST_NOTIFICATIONS);
-                            } else {
-                                Toast.makeText(this, "权限已授予", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                )
-        );
+        notification.setFunctionListener(v -> PermissionHelper.requestPermission(
+                this,
+                permissionList ->
+                        "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知\n",
+                REQUEST_CALLBACK,
+                PermissionLists.getPostNotificationsPermission()
+        ));
         notification.setOnLongClickListener(view -> {
-            WandererJournal.lockLifecycleObserver();
-            Intent skip2Settings = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            Uri uri = Uri.fromParts("package", getPackageName(), null);
-            skip2Settings.setData(uri);
-            startActivity(skip2Settings);
+            WandererJournal.lockLifecycleObserver(true);
+            XXPermissions.startPermissionActivity(this, PermissionLists.getPostNotificationsPermission());
             return true;
         });
 
@@ -145,17 +142,20 @@ public class PermissionManageActivity extends AppCompatActivity {
                     R.drawable.outline_autorenew_24,
                     RadiusStyle.MIDDLE
             );
-            autoStart.setFunctionListener(v -> showExplanationDialog(
-                            R.string.auto_start_permission,
-                            "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
-                                    "- 确保定时任务能够在后台自动执行\n",
-                            () -> {
-                                WandererJournal.lockLifecycleObserver();
-                                Intent skip2AutoStartPermission = PermissionHelper.SpecialPermissionType.AUTO_START.getIntent(this);
-                                startActivity(skip2AutoStartPermission);
-                            }
+            autoStart.setFunctionListener(v -> new MarkdownDialogBuilder(
+                    this,
+                    getString(R.string.auto_start_permission),
+                    "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
+                            "- 确保定时任务能够在后台自动执行\n")
+                    .setPositiveButton("前往设置", (dialogInterface, i) ->
+                            PermissionHelper.requestAutoStartPermission(this)
                     )
-            );
+                    .setNegativeButton("取消", null)
+                    .show());
+            autoStart.setOnLongClickListener(v -> {
+                PermissionHelper.requestAutoStartPermission(this);
+                return true;
+            });
         } else {
             binding.autoStartOption.getRoot().setVisibility(View.GONE);
         }
@@ -166,28 +166,19 @@ public class PermissionManageActivity extends AppCompatActivity {
                 binding.batteryOption,
                 R.string.ignore_battery_optimization,
                 "设置安卓原生的电池优化策略",
-                R.drawable.outline_battery_android_4_24,
+                R.drawable.outline_battery_android_frame_3_24,
                 RadiusStyle.MIDDLE
         );
-        battery.setFunctionListener(v -> showExplanationDialog(
-                R.string.ignore_battery_optimization,
-                "将电池优化策略设置为“无限制”能够一定程度保障后台自动任务执行。",
-                () -> {
-                    if (PermissionHelper.SpecialPermissionType.BATTERY.isGranted(this)) {
-                        Toast.makeText(this, "已忽略电池优化，长按强制跳转电池优化界面", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    Intent intent = PermissionHelper.SpecialPermissionType.BATTERY.getIntent(this);
-                    if (Objects.equals(intent.getAction(), Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) {
-                        Toast.makeText(this, "请找到本应用并设置电池优化策略为“无限制”", Toast.LENGTH_SHORT).show();
-                    }
-                    WandererJournal.lockLifecycleObserver();
-                    startActivity(intent);
-                }
+        battery.setFunctionListener(v -> PermissionHelper.requestBatteryIgnoration(
+                this,
+                permissionList ->
+                        "该设置项是原生安卓的一个重要设置项，可以更加底层地调整应用的省电策略。" +
+                                "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
+                                "影响范围如下：\n" +
+                                "- 日记提醒是否能够准点发送通知\n"
         ));
         battery.setOnLongClickListener(view -> {
-            WandererJournal.lockLifecycleObserver();
+            WandererJournal.lockLifecycleObserver(true);
             Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             startActivity(intent);
             return true;
@@ -202,43 +193,19 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.drawable.outline_alarm_24,
                 RadiusStyle.BOTTOM
         );
-        alarm.setFunctionListener(v -> showExplanationDialog(
-                R.string.alarm_permission,
-                "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-                        "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
-                () -> {
-                    WandererJournal.lockLifecycleObserver();
-                    Intent skip2ExactAlarm = PermissionHelper.SpecialPermissionType.ALARM.getIntent(this);
-                    startActivity(skip2ExactAlarm);
-                }
+        alarm.setFunctionListener(v -> PermissionHelper.requestPermission(
+                this,
+                permissionList ->
+                        "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
+                                "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
+                REQUEST_CALLBACK,
+                PermissionLists.getScheduleExactAlarmPermission()
         ));
-    }
-
-    /**
-     * 显示权限解释对话框
-     *
-     * @param title   对话框标题
-     * @param message 对话框内容，支持Markdown格式
-     * @param action  点击确定按钮后执行的操作
-     */
-    private void showExplanationDialog(@StringRes int title, String message, Runnable action) {
-        new MarkdownDialogBuilder(this, getString(title), message)
-                .setPositiveButton("前往设置", (dialogInterface, i) -> action.run())
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    /**
-     * 申请运行时权限
-     *
-     * @param permission 运行时权限
-     */
-    private void requestRuntimePermission(String permission) {
-        if (PermissionHelper.isRuntimePermissionGranted(permission, this)) {
-            Toast.makeText(this, "权限已授予", Toast.LENGTH_SHORT).show();
-        } else {
-            runtimeLauncher.launch(permission);
-        }
+        alarm.setOnLongClickListener(view -> {
+            WandererJournal.lockLifecycleObserver(true);
+            XXPermissions.startPermissionActivity(this, PermissionLists.getScheduleExactAlarmPermission());
+            return true;
+        });
     }
 
     /**
@@ -249,20 +216,19 @@ public class PermissionManageActivity extends AppCompatActivity {
         final String NOT_GRANTED = "未授予";
 
         //相机权限
-        boolean isCameraGranted = PermissionHelper.isRuntimePermissionGranted(Manifest.permission.CAMERA, this);
+        boolean isCameraGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getCameraPermission());
         camera.getFunctionComponent().setText(isCameraGranted ? GRANTED : NOT_GRANTED);
 
         //通知权限
-        boolean isNotificationGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                PermissionHelper.isRuntimePermissionGranted(Manifest.permission.POST_NOTIFICATIONS, this);
+        boolean isNotificationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getPostNotificationsPermission());
         notification.getFunctionComponent().setText(isNotificationGranted ? GRANTED : NOT_GRANTED);
 
         //电池优化
-        boolean isBatteryIgnored = PermissionHelper.SpecialPermissionType.BATTERY.isGranted(this);
+        boolean isBatteryIgnored = XXPermissions.isGrantedPermission(this, PermissionLists.getRequestIgnoreBatteryOptimizationsPermission());
         battery.getFunctionComponent().setText(isBatteryIgnored ? "已忽略" : "未忽略");
 
         //精确闹钟权限
-        boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
+        boolean isAlarmGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getScheduleExactAlarmPermission());
         alarm.getFunctionComponent().setText(isAlarmGranted ? GRANTED : NOT_GRANTED);
     }
 }

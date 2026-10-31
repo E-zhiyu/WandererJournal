@@ -1,10 +1,8 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -22,6 +20,9 @@ import androidx.work.Data;
 import androidx.work.WorkManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.automation.worker.WorkerScheduler;
 import com.wanderer.journal.automation.worker.backup.BackupWorker;
@@ -42,7 +43,7 @@ import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.NotificationHelper;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
 import com.wanderer.journal.helpers.file.SAFHelper;
@@ -65,6 +66,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -103,7 +105,43 @@ public class DataManageActivity extends AppCompatActivity {
 
         initActivityLaunchers();
         initViews();
-        initPermissionRequests();
+
+        //申请权限
+        PermissionHelper.requestPermission(
+                this,
+                permissionList -> {
+                    StringBuilder message = new StringBuilder();
+
+                    //逐个权限添加通知
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
+                        message.append("请授予通知权限用于发送操作进度通知。\n");
+                    }
+
+                    return message.toString();
+                },
+                new PermissionHelper.PermissionCallback() {
+                    @Override
+                    public void allGranted(List<IPermission> permissionList) {
+                    }
+
+                    @Override
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
+                        boolean noDenied = deniedList.isEmpty();
+
+                        if (!noDenied) {
+                            new MaterialAlertDialogBuilder(DataManageActivity.this)
+                                    .setTitle("请求被拒绝")
+                                    .setMessage(descriptionFun.apply(deniedList))
+                                    .setPositiveButton("前往设置", (dialog, which) ->
+                                            XXPermissions.startPermissionActivity(DataManageActivity.this, deniedList)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    }
+                },
+                PermissionLists.getPostNotificationsPermission()
+        );
     }
 
     /**
@@ -204,16 +242,6 @@ public class DataManageActivity extends AppCompatActivity {
 
         //初始化日记数据设置
         initDiaryDataSettings();
-    }
-
-    /**
-     * 初始化权限请求
-     */
-    private void initPermissionRequests() {
-        PermissionHelper helper = new PermissionHelper(this);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            helper.addPermission(Manifest.permission.POST_NOTIFICATIONS, "请授予通知权限以发送操作进度通知");
-        }
     }
 
     /**

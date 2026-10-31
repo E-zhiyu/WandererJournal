@@ -1,7 +1,5 @@
 package com.wanderer.journal.ui.pages.main.settings.sub;
 
-import android.Manifest;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -13,11 +11,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
-import com.wanderer.journal.helpers.PermissionHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.time.AlarmHelper;
@@ -30,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class DiaryAlarmActivity extends AppCompatActivity {
     private ActivityDiaryAlarmBinding binding;  //绑定的 XML 布局
@@ -54,7 +57,46 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         });
 
         initViews();
-        addPermissions();
+
+        //申请权限
+        PermissionHelper.requestPermission(
+                this,
+                permissionList -> {
+                    StringBuilder message = new StringBuilder();
+
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
+                        message.append("请授予通知权限用于发送提醒通知。\n");
+                    }
+                    if (XXPermissions.containsPermission(permissionList, PermissionLists.getScheduleExactAlarmPermission())) {
+                        message.append("请授予精确闹钟权限以允许应用在指定时刻发送通知提醒。\n");
+                    }
+
+                    return message.toString();
+                },
+                new PermissionHelper.PermissionCallback() {
+                    @Override
+                    public void allGranted(List<IPermission> permissionList) {
+                    }
+
+                    @Override
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
+                        boolean noDenied = deniedList.isEmpty();
+
+                        if (!noDenied) {
+                            new MaterialAlertDialogBuilder(DiaryAlarmActivity.this)
+                                    .setTitle("请求被拒绝")
+                                    .setMessage(descriptionFun.apply(deniedList))
+                                    .setPositiveButton("前往设置", (dialog, which) ->
+                                            XXPermissions.startPermissionActivity(DiaryAlarmActivity.this, deniedList)
+                                    )
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        }
+                    }
+                },
+                PermissionLists.getPostNotificationsPermission(),
+                PermissionLists.getScheduleExactAlarmPermission()
+        );
     }
 
     /**
@@ -67,6 +109,12 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         //开关
         boolean isSwitchOpened = DiaryAlarmPreference.getSwitchStat(this);
         SettingSwitchView diaryAlarmSwitch = getSettingSwitchView(isSwitchOpened);
+
+        //自启动提示文本
+        binding.autoStartTipText.setVisibility(PermissionHelper.isAutoStartDefined() ? View.VISIBLE : View.GONE);
+        binding.autoStartTipText.setOnClickListener(v ->
+                PermissionHelper.requestAutoStartPermission(this)
+        );
 
         //提醒时间 RecyclerView
         adapter = new AlarmTimeAdapter(time -> {
@@ -162,16 +210,8 @@ public class DiaryAlarmActivity extends AppCompatActivity {
             //打开开关时检查权限
             if (b) {
                 //判断权限授予情况
-                boolean isAlarmGranted = PermissionHelper.SpecialPermissionType.ALARM.isGranted(this);
-                boolean isNotificationGranted;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    isNotificationGranted = PermissionHelper.isRuntimePermissionGranted(
-                            Manifest.permission.POST_NOTIFICATIONS,
-                            this
-                    );
-                } else {
-                    isNotificationGranted = true;
-                }
+                boolean isAlarmGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getScheduleExactAlarmPermission());
+                boolean isNotificationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getPostNotificationsPermission());
 
                 //若权限未授予则拒绝打开
                 if (!isAlarmGranted || !isNotificationGranted) {
@@ -187,45 +227,12 @@ public class DiaryAlarmActivity extends AppCompatActivity {
 
             //安排提醒闹钟
             if (b) {
-                //有自启动权限的系统弹出提示
-                if (PermissionHelper.isAutoStartDefined()) {
-                    Toast.makeText(this, "提醒已开启，请确保已授予自启动权限", Toast.LENGTH_SHORT).show();
-                }
                 AlarmHelper.setDiaryAlarm(this);
             } else {
                 AlarmHelper.cancelDiaryAlarm(this);
             }
         });
         return diaryAlarmSwitch;
-    }
-
-    /**
-     * 向 PermissionHelper 提交需要申请的权限
-     */
-    private void addPermissions() {
-        PermissionHelper permissionHelper = new PermissionHelper(this);
-
-        //通知权限
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissionHelper.addPermission(
-                    Manifest.permission.POST_NOTIFICATIONS,
-                    "通知权限：允许应用发送通知提醒"
-            );
-        }
-
-        //自启动权限
-        permissionHelper.addPermission(
-                PermissionHelper.SpecialPermissionType.AUTO_START,
-                "自启动权限",
-                "请授予自启动权限以允许在后台触发定时任务"
-        );
-
-        //精确闹钟权限
-        permissionHelper.addPermission(
-                PermissionHelper.SpecialPermissionType.ALARM,
-                "精确闹钟权限",
-                "请授予精确闹钟权限以允许应用在指定时刻发送通知提醒"
-        );
     }
 
     /**

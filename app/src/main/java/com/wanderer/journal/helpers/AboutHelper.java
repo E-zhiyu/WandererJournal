@@ -10,7 +10,18 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.4\n" +
+    private final static String CHANGELOG = "# v1.7.5\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复自动备份只能生成空备份文件的BUG\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 优化权限申请流程\n" +
+            "- 优化最近任务隐藏的效果，现在息屏不再会隐藏，且隐藏后再次进入APP能够回到退出前的界面\n" +
+            "\n" +
+            "# v1.7.4\n" +
             "\n" +
             "### 优化和修改的内容\n" +
             "\n" +

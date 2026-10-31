@@ -181,6 +181,8 @@
     <string name="privacy_type_color_block">隐私类别色块</string>
     <string name="btn_of_date_select">日期选择按钮</string>
     <string name="btn_of_show_or_hide_private_paragraph">隐私段落显示或隐藏按钮</string>
+    <string name="permission_long_click_tip">可长按进入对应权限的设置界面</string>
+    <string name="alarm_auto_start_tip">此功能需要允许应用自启动，点击进入设置界面</string>
     <string name="troubleshooting">问题解答</string>
     <string name="help_solve_some_common_problems">帮助解决一些常见的问题</string>
     <string name="floating_notification_question">Q : 为什么授予通知权限后不会弹出悬浮通知？</string>

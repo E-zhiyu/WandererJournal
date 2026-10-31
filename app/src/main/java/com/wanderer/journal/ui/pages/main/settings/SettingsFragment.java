@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen;
 import com.wanderer.journal.data.save.preference.AppSettingsPreference;
 import com.wanderer.journal.data.save.preference.MediaPreference;
@@ -392,10 +393,10 @@ public class SettingsFragment extends Fragment {
         );
         boolean isHidden = SecurityPreference.getHideRecentTask(requireContext());
         hideRecentTask.setChecked(isHidden);
-        hideRecentTask.setFunctionListener(
-                (compoundButton, checked) ->
-                        SecurityPreference.setHideRecentTask(checked, requireContext())
-        );
+        hideRecentTask.setFunctionListener((compoundButton, checked) -> {
+            SecurityPreference.setHideRecentTask(checked, requireContext());
+            WandererJournal.hideTaskFromRecents(requireContext(), checked);
+        });
     }
 
     /**
