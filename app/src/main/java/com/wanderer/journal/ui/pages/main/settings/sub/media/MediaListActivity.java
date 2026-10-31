@@ -20,7 +20,6 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
-import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback;
@@ -34,6 +33,7 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 
 import java.util.List;
+import java.util.function.Function;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -63,7 +63,7 @@ public class MediaListActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                new PermissionDialogDescription(permissionList -> {
+                permissionList -> {
                     StringBuilder message = new StringBuilder();
 
                     //逐个权限添加通知
@@ -72,27 +72,20 @@ public class MediaListActivity extends AppCompatActivity {
                     }
 
                     return message.toString();
-                }),
+                },
                 new PermissionHelper.PermissionCallback() {
                     @Override
                     public void allGranted(List<IPermission> permissionList) {
                     }
 
                     @Override
-                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
                         boolean noDenied = deniedList.isEmpty();
 
                         if (!noDenied) {
-                            StringBuilder message = new StringBuilder();
-
-                            //逐个权限添加通知
-                            if (XXPermissions.containsPermission(deniedList, PermissionLists.getPostNotificationsPermission())) {
-                                message.append("请授予通知权限用于在压缩图片时显示进度。\n");
-                            }
-
                             new MaterialAlertDialogBuilder(MediaListActivity.this)
                                     .setTitle("请求被拒绝")
-                                    .setMessage(message)
+                                    .setMessage(descriptionFun.apply(deniedList))
                                     .setPositiveButton("前往设置", (dialog, which) ->
                                             XXPermissions.startPermissionActivity(MediaListActivity.this, deniedList)
                                     )

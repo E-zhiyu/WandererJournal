@@ -16,7 +16,6 @@ import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
-import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;
 import com.wanderer.journal.databinding.ActivityDiaryAlarmBinding;
@@ -33,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class DiaryAlarmActivity extends AppCompatActivity {
     private ActivityDiaryAlarmBinding binding;  //绑定的 XML 布局
@@ -61,7 +61,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         //申请权限
         PermissionHelper.requestPermission(
                 this,
-                new PermissionDialogDescription(permissionList -> {
+                permissionList -> {
                     StringBuilder message = new StringBuilder();
 
                     if (XXPermissions.containsPermission(permissionList, PermissionLists.getPostNotificationsPermission())) {
@@ -72,30 +72,20 @@ public class DiaryAlarmActivity extends AppCompatActivity {
                     }
 
                     return message.toString();
-                }),
+                },
                 new PermissionHelper.PermissionCallback() {
                     @Override
                     public void allGranted(List<IPermission> permissionList) {
                     }
 
                     @Override
-                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+                    public void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
                         boolean noDenied = deniedList.isEmpty();
 
                         if (!noDenied) {
-                            StringBuilder message = new StringBuilder();
-
-                            //逐个权限添加通知
-                            if (XXPermissions.containsPermission(deniedList, PermissionLists.getPostNotificationsPermission())) {
-                                message.append("请授予通知权限用于发送提醒通知。\n");
-                            }
-                            if (XXPermissions.containsPermission(deniedList, PermissionLists.getScheduleExactAlarmPermission())) {
-                                message.append("请授予精确闹钟权限以允许应用在指定时刻发送通知提醒。\n");
-                            }
-
                             new MaterialAlertDialogBuilder(DiaryAlarmActivity.this)
                                     .setTitle("请求被拒绝")
-                                    .setMessage(message)
+                                    .setMessage(descriptionFun.apply(deniedList))
                                     .setPositiveButton("前往设置", (dialog, which) ->
                                             XXPermissions.startPermissionActivity(DiaryAlarmActivity.this, deniedList)
                                     )

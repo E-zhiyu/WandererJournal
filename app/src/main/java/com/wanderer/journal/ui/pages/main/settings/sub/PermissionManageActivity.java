@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -19,13 +20,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
-import com.wanderer.journal.helpers.permission.PermissionDialogDescription;
 import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
@@ -37,7 +38,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         }
 
         @Override
-        public void requested(List<IPermission> grantedList, List<IPermission> deniedList) {
+        public void requested(@NonNull List<IPermission> grantedList, @NonNull List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
             boolean noDenied = deniedList.isEmpty();
             boolean noGranted = grantedList.isEmpty();
             if (noDenied && !noGranted) {
@@ -98,9 +99,8 @@ public class PermissionManageActivity extends AppCompatActivity {
         );
         camera.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
-                new PermissionDialogDescription(permissionList ->
-                        "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件\n"
-                ),
+                permissionList ->
+                        "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getCameraPermission()
         ));
@@ -121,9 +121,8 @@ public class PermissionManageActivity extends AppCompatActivity {
         );
         notification.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
-                new PermissionDialogDescription(permissionList ->
-                        "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知\n"
-                ),
+                permissionList ->
+                        "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getPostNotificationsPermission()
         ));
@@ -172,12 +171,11 @@ public class PermissionManageActivity extends AppCompatActivity {
         );
         battery.setFunctionListener(v -> PermissionHelper.requestBatteryIgnoration(
                 this,
-                new PermissionDialogDescription(permissionList ->
+                permissionList ->
                         "该设置项是原生安卓的一个重要设置项，可以更加底层地调整应用的省电策略。" +
                                 "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
                                 "影响范围如下：\n" +
                                 "- 日记提醒是否能够准点发送通知\n"
-                )
         ));
         battery.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);
@@ -197,10 +195,9 @@ public class PermissionManageActivity extends AppCompatActivity {
         );
         alarm.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
-                new PermissionDialogDescription(permissionList ->
+                permissionList ->
                         "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-                                "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n"
-                ),
+                                "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getScheduleExactAlarmPermission()
         ));

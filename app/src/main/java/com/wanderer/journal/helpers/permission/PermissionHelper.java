@@ -17,6 +17,7 @@ import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.WandererJournal;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class PermissionHelper {
     public interface PermissionCallback {
@@ -30,10 +31,11 @@ public class PermissionHelper {
         /**
          * 权限授予情况回调
          *
-         * @param grantedList 授予的权限
-         * @param deniedList  拒绝的权限
+         * @param grantedList    授予的权限
+         * @param deniedList     拒绝的权限
+         * @param descriptionFun 根据权限生成权限描述的方法
          */
-        void requested(List<IPermission> grantedList, List<IPermission> deniedList);
+        void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun);
     }
 
     /**
@@ -81,11 +83,11 @@ public class PermissionHelper {
      * 申请权限
      *
      * @param context            上下文
-     * @param description        申请权限时向用户展示提示信息的类
+     * @param descriptionFun     根据权限列表动态生成权限描述的方法
      * @param permissionCallback 权限被拒绝时的回调，传递 null 默认为显示权限被拒绝的对话框，并提供前往设置界面的选项
      * @param permissions        需要申请的权限
      */
-    public static void requestPermission(Context context, @Nullable OnPermissionDescription description, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
+    public static void requestPermission(Context context, @Nullable Function<List<IPermission>, String> descriptionFun, @Nullable PermissionCallback permissionCallback, @Nullable IPermission... permissions) {
         if (permissions == null || permissions.length == 0) return;
 
         if (XXPermissions.isGrantedPermissions(context, permissions)) {
@@ -94,6 +96,12 @@ public class PermissionHelper {
             }
         } else {
             WandererJournal.lockLifecycleObserver(true);
+            OnPermissionDescription description;
+            if (descriptionFun == null) {
+                description = null;
+            } else {
+                description = new PermissionDialogDescription(descriptionFun);
+            }
             XXPermissions.with(context)
                     .permissions(permissions)
                     .description(description)
@@ -118,7 +126,7 @@ public class PermissionHelper {
                                         .show();
                             }
                         } else {
-                            permissionCallback.requested(grantedList, deniedList);
+                            permissionCallback.requested(grantedList, deniedList, descriptionFun);
                         }
                     });
         }
@@ -128,15 +136,21 @@ public class PermissionHelper {
      * 申请忽略电池优化
      *
      * @param context     上下文
-     * @param description 申请权限时用于进行说明的类
+     * @param descriptionFun 根据权限列表动态生成权限描述的方法
      */
-    public static void requestBatteryIgnoration(Context context, @Nullable OnPermissionDescription description) {
+    public static void requestBatteryIgnoration(Context context, @Nullable Function<List<IPermission>, String> descriptionFun) {
         IPermission batteryPermission = PermissionLists.getRequestIgnoreBatteryOptimizationsPermission();
         if (XXPermissions.isGrantedPermission(context, batteryPermission)) {
             Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
         } else {
             WandererJournal.lockLifecycleObserver(true);
             if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
+                OnPermissionDescription description;
+                if (descriptionFun == null) {
+                    description = null;
+                } else {
+                    description = new PermissionDialogDescription(descriptionFun);
+                }
                 XXPermissions.with(context)
                         .description(description)
                         .permission(batteryPermission)
