@@ -12,6 +12,10 @@ import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 public class AboutHelper {
     private final static String CHANGELOG = "# v1.7.6\n" +
             "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复开启后台隐藏后无法长久隐藏后台的BUG\n" +
+            "\n" +
             "### 修改的内容\n" +
             "\n" +
             "- 搜索历史修改为保存最近15个\n" +
