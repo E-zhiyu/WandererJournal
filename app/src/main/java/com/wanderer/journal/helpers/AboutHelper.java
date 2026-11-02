@@ -10,7 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.7.5\n" +
+    private final static String CHANGELOG = "# v1.7.6\n" +
+            "\n" +
+            "### 修改的内容\n" +
+            "\n" +
+            "- 搜索历史修改为保存最近15个\n" +
+            "\n" +
+            "# v1.7.5\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
