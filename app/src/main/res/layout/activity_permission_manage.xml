@@ -69,6 +69,11 @@
                 android:id="@+id/alarm_option"
                 layout="@layout/view_setting_option" />
 
+            <!-- 定位权限 -->
+            <include
+                android:id="@+id/location_option"
+                layout="@layout/view_setting_option" />
+
             <!-- 提示文本 -->
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/long_click_tip_text"
