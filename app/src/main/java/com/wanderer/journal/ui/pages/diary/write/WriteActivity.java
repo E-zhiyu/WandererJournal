@@ -46,6 +46,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
@@ -77,6 +78,7 @@ import com.wanderer.journal.helpers.ImmHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -107,6 +109,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -359,6 +362,66 @@ public class WriteActivity extends AppCompatActivity {
 
             String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
             Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+        });
+
+        //定位按钮
+        binding.locationBtn.setOnClickListener(v -> {
+            WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+            boolean isLocationOn = viewModel.isLocationOn();
+
+            if (isLocationOn) {
+                binding.locationBtn.setImageResource(R.drawable.outline_location_off_24);
+                viewModel.setLocationOn(false);
+                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+            } else {
+                PermissionHelper.requestPermission(
+                        this,
+                        permissionList -> {
+                            StringBuilder builder = new StringBuilder();
+
+                            if (XXPermissions.containsPermission(permissionList, PermissionLists.getAccessFineLocationPermission()) ||
+                                    XXPermissions.containsPermission(permissionList, PermissionLists.getAccessCoarseLocationPermission())) {
+                                builder.append("该功能需要使用定位权限，请授予定位权限以允许APP获取保存段落时所处的位置。\n");
+                            }
+
+                            return builder.toString();
+                        },
+                        new PermissionHelper.PermissionCallback() {
+                            @Override
+                            public void allGranted(List<IPermission> permissionList) {
+                                binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
+                                viewModel.setLocationOn(true);
+                                Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun) {
+                                if (!grantedList.isEmpty()) {
+                                    binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
+                                    viewModel.setLocationOn(true);
+                                    Toast.makeText(WriteActivity.this, "权限已授予，开启段落定位", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    String message;
+                                    if (descriptionFun == null) {
+                                        message = "权限申请被拒绝，是否跳转至权限设置界面授予权限？";
+                                    } else {
+                                        message = descriptionFun.apply(deniedList);
+                                    }
+                                    new MaterialAlertDialogBuilder(WriteActivity.this)
+                                            .setTitle("请求被拒绝")
+                                            .setMessage(message)
+                                            .setPositiveButton("前往设置", (dialog, which) ->
+                                                    XXPermissions.startPermissionActivity(WriteActivity.this, deniedList)
+                                            )
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                }
+                            }
+                        },
+                        PermissionLists.getAccessFineLocationPermission(),
+                        PermissionLists.getAccessCoarseLocationPermission()
+                );
+            }
         });
 
         //初始化RecyclerView

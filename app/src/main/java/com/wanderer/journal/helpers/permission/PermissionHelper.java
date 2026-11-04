@@ -35,7 +35,7 @@ public class PermissionHelper {
          * @param deniedList     拒绝的权限
          * @param descriptionFun 根据权限生成权限描述的方法
          */
-        void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun);
+        void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun);
     }
 
     /**
@@ -114,8 +114,13 @@ public class PermissionHelper {
                             if (noDenied && !noGranted) {
                                 Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
                             } else {
-                                String message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
-                                        "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                                String message;
+                                if (descriptionFun == null) {
+                                    message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
+                                            "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                                } else {
+                                    message = descriptionFun.apply(deniedList);
+                                }
                                 new MaterialAlertDialogBuilder(context)
                                         .setTitle("请求被拒绝")
                                         .setMessage(message)
@@ -135,7 +140,7 @@ public class PermissionHelper {
     /**
      * 申请忽略电池优化
      *
-     * @param context     上下文
+     * @param context        上下文
      * @param descriptionFun 根据权限列表动态生成权限描述的方法
      */
     public static void requestBatteryIgnoration(Context context, @Nullable Function<List<IPermission>, String> descriptionFun) {

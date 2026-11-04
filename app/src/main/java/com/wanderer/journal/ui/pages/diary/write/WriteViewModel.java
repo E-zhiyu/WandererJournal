@@ -36,7 +36,16 @@ public class WriteViewModel extends ViewModel {
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
             BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
     private long lastAuthTimeMillis = 0;
-    public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
+    public final Set<Long> contentDisplayIdSet = new HashSet<>();   //标记为显示内容的段落编号
+    private boolean isLocationOn = false;                           //是否打开定位
+
+    public boolean isLocationOn() {
+        return isLocationOn;
+    }
+
+    public void setLocationOn(boolean locationOn) {
+        isLocationOn = locationOn;
+    }
 
     private static class Query {
         final LocalDate date;
