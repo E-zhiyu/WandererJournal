@@ -229,7 +229,7 @@ public class PermissionHelper {
                 }
                 XXPermissions.with(context)
                         .description(description)
-                        .permissions(Arrays.asList(fineLocation, coarseLocation))
+                        .permission(fineLocation)
                         .request((grantedList, deniedList) -> {
                             boolean noGranted = grantedList.isEmpty();
                             if (!noGranted) {
@@ -290,6 +290,5 @@ public class PermissionHelper {
                         }
                     });
         }
-        //TODO:处理设置了不再询问的情况（比如说精度升级的时候）
     }
 }
