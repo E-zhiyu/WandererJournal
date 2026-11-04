@@ -39,9 +39,8 @@ public class PermissionManageActivity extends AppCompatActivity {
 
         @Override
         public void requested(@NonNull List<IPermission> grantedList, @NonNull List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
-            boolean noDenied = deniedList.isEmpty();
             boolean noGranted = grantedList.isEmpty();
-            if (noDenied && !noGranted) {
+            if (!noGranted) {
                 Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
             } else if (!XXPermissions.isDoNotAskAgainPermissions(PermissionManageActivity.this, deniedList)) {
                 Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
@@ -216,14 +215,12 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.drawable.outline_location_on_24,
                 RadiusStyle.BOTTOM
         );
-        location.setFunctionListener(v -> PermissionHelper.requestPermission(
+        location.setFunctionListener(v -> PermissionHelper.requestLocationPermission(
                 this,
                 permissionList ->
                         "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
                                 "- 写日记时将位置信息保存至日记段落中。\n",
-                REQUEST_CALLBACK,
-                PermissionLists.getAccessCoarseLocationPermission(),
-                PermissionLists.getAccessFineLocationPermission()
+                REQUEST_CALLBACK
         ));
         location.setOnLongClickListener(v -> {
             WandererJournal.lockLifecycleObserver(true);
@@ -258,5 +255,16 @@ public class PermissionManageActivity extends AppCompatActivity {
         //精确闹钟权限
         boolean isAlarmGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getScheduleExactAlarmPermission());
         alarm.getFunctionComponent().setText(isAlarmGranted ? GRANTED : NOT_GRANTED);
+
+        //定位权限
+        boolean isFineLocationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getAccessFineLocationPermission());
+        boolean isCoarseLocationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getAccessCoarseLocationPermission());
+        if (isFineLocationGranted) {
+            location.getFunctionComponent().setText("精确位置");
+        } else if (isCoarseLocationGranted) {
+            location.getFunctionComponent().setText("粗略位置");
+        } else {
+            location.getFunctionComponent().setText(NOT_GRANTED);
+        }
     }
 }
