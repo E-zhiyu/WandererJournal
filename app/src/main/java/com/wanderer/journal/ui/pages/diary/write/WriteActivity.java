@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.pages.diary.write;
 
 import android.Manifest;
 import android.content.Intent;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -75,6 +76,7 @@ import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.ImmHelper;
+import com.wanderer.journal.helpers.LocationHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
@@ -533,8 +535,22 @@ public class WriteActivity extends AppCompatActivity {
                                         .filter(mediaEntity -> mediaEntity.getFileUri() != null)
                                         .collect(Collectors.toList());
 
-                                //调用数据写入方法
-                                saveData(content, succeedMediaList);
+                                WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                                if (viewModel.isLocationOn()) {
+                                    LocationHelper.getLocation(this, new LocationHelper.OnceLocationListener() {
+                                        @Override
+                                        public void onFailed(String message) {
+                                            Toast.makeText(WriteActivity.this, message, Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onSucceed(Location location) {
+                                            saveData(content, succeedMediaList, location);
+                                        }
+                                    });
+                                } else {
+                                    saveData(content, succeedMediaList, null);
+                                }
                             }
                     )
             );
@@ -1158,11 +1174,14 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param content         最终的段落文本内容
      * @param mediaEntityList 最终处于永久目录下的媒体实体列表
+     * @param location        段落的定位信息
      */
-    private void saveData(String content, List<MediaEntity> mediaEntityList) {
+    private void saveData(String content, List<MediaEntity> mediaEntityList, @Nullable Location location) {
         //生成段落各属性
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
+
+        //TODO:保存定位信息
 
         //保存数据
         WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);

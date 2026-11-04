@@ -18,6 +18,7 @@ public enum LogTags {
     FILE_HELPER("FileHelper"),
     PERMISSION_HELPER("PermissionHelper"),
     SCROLL_HELPER("ScrollHelper"),
+    LOCATION_HELPER("LocationHelper"),
     BOOT_RECEIVER("BootReceiver"),
     DIARY_ALARM_RECEIVER("DiaryAlarmReceiver"),
     ALARM_HELPER("AlarmHelper"),
