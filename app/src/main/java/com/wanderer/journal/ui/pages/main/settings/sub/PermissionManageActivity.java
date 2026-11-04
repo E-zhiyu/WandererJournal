@@ -220,7 +220,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                 permissionList ->
                         "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
                                 "- 写日记时将位置信息保存至日记段落中。\n",
-                REQUEST_CALLBACK
+                null
         ));
         location.setOnLongClickListener(v -> {
             WandererJournal.lockLifecycleObserver(true);

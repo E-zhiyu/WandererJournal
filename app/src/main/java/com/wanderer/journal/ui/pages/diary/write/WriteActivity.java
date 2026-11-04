@@ -374,7 +374,7 @@ public class WriteActivity extends AppCompatActivity {
                 viewModel.setLocationOn(false);
                 Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
             } else {
-                PermissionHelper.requestPermission(
+                PermissionHelper.requestLocationPermission(
                         this,
                         permissionList -> {
                             StringBuilder builder = new StringBuilder();
@@ -386,12 +386,19 @@ public class WriteActivity extends AppCompatActivity {
 
                             return builder.toString();
                         },
-                        new PermissionHelper.PermissionCallback() {
+                        new PermissionHelper.LocationPermissionCallback() {
                             @Override
-                            public void allGranted(List<IPermission> permissionList) {
+                            public void hasFineLocation() {
                                 binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
                                 viewModel.setLocationOn(true);
                                 Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void justCoarseLocation() {
+                                binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
+                                viewModel.setLocationOn(true);
+                                Toast.makeText(WriteActivity.this, "已开启段落定位（粗略位置）", Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
@@ -417,9 +424,7 @@ public class WriteActivity extends AppCompatActivity {
                                             .show();
                                 }
                             }
-                        },
-                        PermissionLists.getAccessFineLocationPermission(),
-                        PermissionLists.getAccessCoarseLocationPermission()
+                        }
                 );
             }
         });
