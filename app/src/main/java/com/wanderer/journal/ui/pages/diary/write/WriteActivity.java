@@ -475,7 +475,7 @@ public class WriteActivity extends AppCompatActivity {
             //获取定位
             LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
             if (locationViewModel.isLocationOn() && locationViewModel.getLocation() == null) {
-                Toast.makeText(this, "请等待位置获取……", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "暂未获取到位置，请稍后重试……", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -1179,8 +1179,6 @@ public class WriteActivity extends AppCompatActivity {
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
 
-        //TODO:保存定位信息
-
         //保存数据
         WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
         Pair<ParagraphEntity, List<MediaEntity>> modifyingPair = viewModel.getModifyingLiveData().getValue();
@@ -1209,6 +1207,7 @@ public class WriteActivity extends AppCompatActivity {
                                 startDate,
                                 paragraph,
                                 mediaEntityList,
+                                location,
                                 viewModel.isHiddenParagraphShown(),
                                 db
                         );
@@ -1242,7 +1241,7 @@ public class WriteActivity extends AppCompatActivity {
             );
             paragraph.setParagraphId(modifyingPair.first.getParagraphId());
 
-            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, this)
+            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, location, this)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
