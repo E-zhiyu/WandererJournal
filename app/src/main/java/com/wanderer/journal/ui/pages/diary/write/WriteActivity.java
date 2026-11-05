@@ -378,7 +378,6 @@ public class WriteActivity extends AppCompatActivity {
             boolean isLocationOn = viewModel.isLocationOn();
 
             if (isLocationOn) {
-                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
                 requestLocation(false);
             } else {
                 PermissionHelper.requestLocationPermission(
@@ -1609,6 +1608,18 @@ public class WriteActivity extends AppCompatActivity {
         LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
 
         if (open) {
+            //弹出提示
+            IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
+            IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
+            boolean isFineGranted = XXPermissions.isGrantedPermission(this, fineLocation);
+            boolean isCoarseGranted = XXPermissions.isGrantedPermission(this, coarseLocation);
+            if (isFineGranted && isCoarseGranted) {
+                Toast.makeText(this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+            } else if (isCoarseGranted) {
+                Toast.makeText(this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
+            }
+
+            //监听位置
             LocationHelper.removeLocationListeners(this, locationListenerList);  //清理旧的监听器
             locationListenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
                 @Override
@@ -1637,6 +1648,7 @@ public class WriteActivity extends AppCompatActivity {
             locationListenerList = null;
             viewModel.setLocationOn(false);
             viewModel.setLocation(null);
+            Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
         }
     }
 
