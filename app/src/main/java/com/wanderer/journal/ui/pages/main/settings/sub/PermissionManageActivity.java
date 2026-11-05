@@ -30,7 +30,7 @@ import java.util.function.Function;
 
 public class PermissionManageActivity extends AppCompatActivity {
     private ActivityPermissionManageBinding binding;                //绑定的XML视图
-    private SettingClickableTextView camera, notification, battery, alarm;  //权限申请视图
+    private SettingClickableTextView camera, notification, battery, alarm, location;    //权限申请视图
     private final PermissionHelper.PermissionCallback REQUEST_CALLBACK = new PermissionHelper.PermissionCallback() {
         @Override
         public void allGranted(List<IPermission> permissionList) {
@@ -39,9 +39,8 @@ public class PermissionManageActivity extends AppCompatActivity {
 
         @Override
         public void requested(@NonNull List<IPermission> grantedList, @NonNull List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun) {
-            boolean noDenied = deniedList.isEmpty();
             boolean noGranted = grantedList.isEmpty();
-            if (noDenied && !noGranted) {
+            if (!noGranted) {
                 Toast.makeText(PermissionManageActivity.this, "权限已授予", Toast.LENGTH_SHORT).show();
             } else if (!XXPermissions.isDoNotAskAgainPermissions(PermissionManageActivity.this, deniedList)) {
                 Toast.makeText(PermissionManageActivity.this, "请求被拒绝", Toast.LENGTH_SHORT).show();
@@ -94,13 +93,13 @@ public class PermissionManageActivity extends AppCompatActivity {
                 binding.cameraOption,
                 R.string.camera_permission,
                 "允许使用摄像头",
-                R.drawable.baseline_photo_camera_24,
+                R.drawable.outline_photo_camera_24,
                 RadiusStyle.TOP
         );
         camera.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
                 permissionList ->
-                        "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件\n",
+                        "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getCameraPermission()
         ));
@@ -122,7 +121,7 @@ public class PermissionManageActivity extends AppCompatActivity {
         notification.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
                 permissionList ->
-                        "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知\n",
+                        "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知。\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getPostNotificationsPermission()
         ));
@@ -146,7 +145,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                     this,
                     getString(R.string.auto_start_permission),
                     "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
-                            "- 确保定时任务能够在后台自动执行\n")
+                            "- 确保定时任务能够在后台自动执行。\n")
                     .setPositiveButton("前往设置", (dialogInterface, i) ->
                             PermissionHelper.requestAutoStartPermission(this)
                     )
@@ -175,7 +174,7 @@ public class PermissionManageActivity extends AppCompatActivity {
                         "该设置项是原生安卓的一个重要设置项，可以更加底层地调整应用的省电策略。" +
                                 "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
                                 "影响范围如下：\n" +
-                                "- 日记提醒是否能够准点发送通知\n"
+                                "- 日记提醒是否能够准点发送通知。\n"
         ));
         battery.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);
@@ -191,19 +190,45 @@ public class PermissionManageActivity extends AppCompatActivity {
                 R.string.alarm_permission,
                 "允许设置定时任务",
                 R.drawable.outline_alarm_24,
-                RadiusStyle.BOTTOM
+                RadiusStyle.MIDDLE
         );
         alarm.setFunctionListener(v -> PermissionHelper.requestPermission(
                 this,
                 permissionList ->
                         "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-                                "- 根据用户设置自动检测当天是否有日记并发送通知提醒\n",
+                                "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n",
                 REQUEST_CALLBACK,
                 PermissionLists.getScheduleExactAlarmPermission()
         ));
         alarm.setOnLongClickListener(view -> {
             WandererJournal.lockLifecycleObserver(true);
             XXPermissions.startPermissionActivity(this, PermissionLists.getScheduleExactAlarmPermission());
+            return true;
+        });
+
+        //定位权限
+        location = new SettingClickableTextView(
+                this,
+                binding.locationOption,
+                R.string.location_permission,
+                "允许获取所处位置",
+                R.drawable.outline_location_on_24,
+                RadiusStyle.BOTTOM
+        );
+        location.setFunctionListener(v -> PermissionHelper.requestLocationPermission(
+                this,
+                permissionList ->
+                        "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
+                                "- 写日记时将位置信息保存至日记段落中。\n",
+                null
+        ));
+        location.setOnLongClickListener(v -> {
+            WandererJournal.lockLifecycleObserver(true);
+            XXPermissions.startPermissionActivity(
+                    this,
+                    PermissionLists.getAccessFineLocationPermission(),
+                    PermissionLists.getAccessCoarseLocationPermission()
+            );
             return true;
         });
     }
@@ -230,5 +255,16 @@ public class PermissionManageActivity extends AppCompatActivity {
         //精确闹钟权限
         boolean isAlarmGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getScheduleExactAlarmPermission());
         alarm.getFunctionComponent().setText(isAlarmGranted ? GRANTED : NOT_GRANTED);
+
+        //定位权限
+        boolean isFineLocationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getAccessFineLocationPermission());
+        boolean isCoarseLocationGranted = XXPermissions.isGrantedPermission(this, PermissionLists.getAccessCoarseLocationPermission());
+        if (isFineLocationGranted) {
+            location.getFunctionComponent().setText("精确位置");
+        } else if (isCoarseLocationGranted) {
+            location.getFunctionComponent().setText("粗略位置");
+        } else {
+            location.getFunctionComponent().setText(NOT_GRANTED);
+        }
     }
 }

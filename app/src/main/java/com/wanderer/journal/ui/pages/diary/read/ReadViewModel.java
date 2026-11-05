@@ -43,6 +43,7 @@ public class ReadViewModel extends ViewModel {
     public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
     private long lastAuthTimeMillis = 0;
     private boolean filterMedia = false;
+    private boolean filterLocation = false;
     private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
     private static class FilterQuery {
@@ -55,6 +56,14 @@ public class ReadViewModel extends ViewModel {
             this.isAndMode = isAndMode;
             this.keyword = keyword;
         }
+    }
+
+    public boolean isFilterLocation() {
+        return filterLocation;
+    }
+
+    public void setFilterLocation(boolean filterLocation) {
+        this.filterLocation = filterLocation;
     }
 
     public boolean getFilterMedia() {
@@ -221,6 +230,7 @@ public class ReadViewModel extends ViewModel {
                             getValidKeywordList(),
                             checkedEmotionIdSet,
                             filterMedia,
+                            filterLocation,
                             filterQuery.isHiddenShown,
                             db,
                             filterQuery.isAndMode
@@ -263,6 +273,7 @@ public class ReadViewModel extends ViewModel {
         String searchText = searchKeywordProcessor.getValue();
         return checkedEmotionIdSet.isEmpty() &&
                 !filterMedia &&
+                !filterLocation &&
                 (searchText == null || searchText.isEmpty());
     }
 
@@ -271,6 +282,7 @@ public class ReadViewModel extends ViewModel {
      */
     public void clearFilter() {
         filterMedia = false;
+        filterLocation = false;
         checkedEmotionIdSet.clear();
         searchKeywordProcessor.onNext("");
 

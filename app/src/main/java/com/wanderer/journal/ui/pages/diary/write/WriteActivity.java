@@ -2,6 +2,8 @@ package com.wanderer.journal.ui.pages.diary.write;
 
 import android.Manifest;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -46,6 +48,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
@@ -74,9 +77,11 @@ import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.BackPressedCallbackHelper;
 import com.wanderer.journal.helpers.BiometricHelper;
 import com.wanderer.journal.helpers.ImmHelper;
+import com.wanderer.journal.helpers.LocationHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.text.ParagraphTextConverter;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -107,6 +112,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -128,11 +134,13 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private WriteMediaAdapter mediaAdapter;                      //媒体文件列表适配器
+    private WriteMediaAdapter mediaAdapter;                     //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
     private boolean needCursorSkipToTail = false;           //输入框文本变化时需要让光标移动到末尾
+    @Nullable
+    private List<LocationListener> locationListenerList;        //位置监听器的列表
 
     {
         //初始化意图启动器
@@ -227,6 +235,9 @@ public class WriteActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        //清理位置监听器
+        requestLocation(false);
 
         //清空草稿保存任务并直接保存一次草稿
         draftSavingHandler.removeCallbacks(draftSavingRunnable);
@@ -361,6 +372,65 @@ public class WriteActivity extends AppCompatActivity {
             Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
         });
 
+        //定位按钮
+        binding.locationBtn.setOnClickListener(v -> {
+            LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+            boolean isLocationOn = viewModel.isLocationOn();
+
+            if (isLocationOn) {
+                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+                requestLocation(false);
+            } else {
+                PermissionHelper.requestLocationPermission(
+                        this,
+                        permissionList -> {
+                            StringBuilder builder = new StringBuilder();
+
+                            if (XXPermissions.containsPermission(permissionList, PermissionLists.getAccessFineLocationPermission()) ||
+                                    XXPermissions.containsPermission(permissionList, PermissionLists.getAccessCoarseLocationPermission())) {
+                                builder.append("该功能需要使用定位权限，请授予定位权限以允许APP获取保存段落时所处的位置。\n");
+                            }
+
+                            return builder.toString();
+                        },
+                        new PermissionHelper.LocationPermissionCallback() {
+                            @Override
+                            public void hasFineLocation() {
+                                requestLocation(true);
+                            }
+
+                            @Override
+                            public void justCoarseLocation() {
+                                Toast.makeText(WriteActivity.this, "仅有粗略位置权限，无法定位精确位置", Toast.LENGTH_SHORT).show();
+                                requestLocation(true);
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun) {
+                                if (!grantedList.isEmpty()) {
+                                    requestLocation(true);
+                                } else {
+                                    String message;
+                                    if (descriptionFun == null) {
+                                        message = "权限申请被拒绝，是否跳转至权限设置界面授予权限？";
+                                    } else {
+                                        message = descriptionFun.apply(deniedList);
+                                    }
+                                    new MaterialAlertDialogBuilder(WriteActivity.this)
+                                            .setTitle("请求被拒绝")
+                                            .setMessage(message)
+                                            .setPositiveButton("前往设置", (dialog, which) ->
+                                                    XXPermissions.startPermissionActivity(WriteActivity.this, deniedList)
+                                            )
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                }
+                            }
+                        }
+                );
+            }
+        });
+
         //初始化RecyclerView
         initParagraphRecycler();
 
@@ -399,6 +469,13 @@ public class WriteActivity extends AppCompatActivity {
             //获取输入内容
             String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
             if (content.trim().isEmpty()) {
+                return;
+            }
+
+            //获取定位
+            LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+            if (locationViewModel.isLocationOn() && locationViewModel.getLocation() == null) {
+                Toast.makeText(this, "暂未获取到位置，请稍后重试……", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -465,8 +542,7 @@ public class WriteActivity extends AppCompatActivity {
                                         .filter(mediaEntity -> mediaEntity.getFileUri() != null)
                                         .collect(Collectors.toList());
 
-                                //调用数据写入方法
-                                saveData(content, succeedMediaList);
+                                saveData(content, succeedMediaList, locationViewModel.getLocation());
                             }
                     )
             );
@@ -646,6 +722,12 @@ public class WriteActivity extends AppCompatActivity {
                 );
             }
         });
+
+        //位置监听开关
+        LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+        locationViewModel.getIsLocationOnLiveData().observe(this, isLocationOn ->
+                binding.locationBtn.setImageResource(isLocationOn ? R.drawable.outline_location_on_24 : R.drawable.outline_location_off_24)
+        );
     }
 
     /**
@@ -1090,8 +1172,9 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param content         最终的段落文本内容
      * @param mediaEntityList 最终处于永久目录下的媒体实体列表
+     * @param location        段落的定位数据
      */
-    private void saveData(String content, List<MediaEntity> mediaEntityList) {
+    private void saveData(String content, List<MediaEntity> mediaEntityList, @Nullable Location location) {
         //生成段落各属性
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
@@ -1124,6 +1207,7 @@ public class WriteActivity extends AppCompatActivity {
                                 startDate,
                                 paragraph,
                                 mediaEntityList,
+                                location,
                                 viewModel.isHiddenParagraphShown(),
                                 db
                         );
@@ -1157,7 +1241,7 @@ public class WriteActivity extends AppCompatActivity {
             );
             paragraph.setParagraphId(modifyingPair.first.getParagraphId());
 
-            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, this)
+            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, location, this)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
@@ -1517,12 +1601,50 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
+     * 监听当前位置
+     *
+     * @param open 是否监听
+     */
+    private void requestLocation(boolean open) {
+        LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+
+        if (open) {
+            LocationHelper.removeLocationListeners(this, locationListenerList);  //清理旧的监听器
+            locationListenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
+                @Override
+                public void onUpdated(Location location) {
+                    viewModel.setLocation(location);
+                }
+
+                @Override
+                public void onDisabled(String provider) {
+                    requestLocation(false);
+                }
+
+                @Override
+                public void onListenStarted() {
+                    viewModel.setLocationOn(true);
+                }
+
+                @Override
+                public void onRequestFailed(String message) {
+                    Toast.makeText(WriteActivity.this, message, Toast.LENGTH_SHORT).show();
+                    requestLocation(false);
+                }
+            });
+        } else {
+            LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
+            locationListenerList = null;
+            viewModel.setLocationOn(false);
+            viewModel.setLocation(null);
+        }
+    }
+
+    /**
      * 保存草稿到 SharedPreference
      */
     private void saveDraft() {
-        if (binding != null) {
-            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
-            DraftPreference.setDraft(this, content);
-        }
+        String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
+        DraftPreference.setDraft(this, content);
     }
 }

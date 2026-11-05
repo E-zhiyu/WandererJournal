@@ -117,10 +117,6 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
 
                     EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
                     viewModel.setCheckedEmotionTag(model.getEmotionTag(), false, 1);
-                },
-                () -> {
-                    Intent skip2EmotionAdd = new Intent(requireContext(), EmotionTagInputActivity.class);
-                    startActivity(skip2EmotionAdd);
                 }
         );
         binding.recycler.setAdapter(adapter);
@@ -131,13 +127,16 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        emotionList -> {
-                            emotionList.add(null);  //加上一个 null 占位符，作为添加标签的功能按钮
-                            adapter.submitList(emotionList);
-                        },
+                        adapter::submitList,
                         e -> ExceptionHelper.showExceptionDialog(requireContext(), e)
                 )
         );
+
+        //添加按钮
+        binding.addBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), EmotionTagInputActivity.class);
+            startActivity(intent);
+        });
     }
 
     /**
@@ -147,16 +146,16 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
      * @param anchor 浮动滑块绑定的视图
      */
     private void showSuspendedSlider(@NonNull EmotionTagUiModel model, @NonNull View anchor) {
-        // 1. 加载悬浮窗布局
+        //加载悬浮窗布局
         Context context = anchor.getContext();
         PopupWindowSliderBinding popupWindowBinding = PopupWindowSliderBinding.inflate(
                 LayoutInflater.from(context)
         );
 
-        // 2. 初始化 Slider 的值
+        //初始化 Slider 的值
         popupWindowBinding.popupSlider.setValue(model.getDegree());
 
-        // 3. 创建 PopupWindow
+        //创建 PopupWindow
         PopupWindow popupWindow = new PopupWindow(
                 popupWindowBinding.getRoot(),
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -164,11 +163,11 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 true // true 代表点击外部时自动消失
         );
 
-        // 设置背景以允许点击外部消失（MDC 环境下可选）
+        //设置背景以允许点击外部消失（MDC 环境下可选）
         popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popupWindow.setOutsideTouchable(true);
 
-        // 4. 设置 Slider 滑动监听
+        //设置 Slider 滑动监听
         popupWindowBinding.popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {
@@ -182,7 +181,7 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
             }
         });
 
-        // 5. 测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
+        //测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
         popupWindowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         int popupHeight = popupWindowBinding.getRoot().getMeasuredHeight();
         int popupWidth = popupWindowBinding.getRoot().getMeasuredWidth();

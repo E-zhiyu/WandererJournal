@@ -6,8 +6,8 @@ import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -47,22 +47,22 @@ public class EmotionTagService {
     public static Flowable<List<EmotionListUiModel>> getAllEmotionTagWithSeparator(@NonNull DiaryDb db) {
         EmotionTagDao dao = db.emotionTagDao();
         EmotionType[] types = EmotionType.values();
-        return dao.getAllEmotionTagFlowable()
+        return dao.getEmotionTagUseCountModelFlowable()
                 .map(emotionTagEntityList -> {
                     List<EmotionListUiModel> resultList = new ArrayList<>();
                     //判空
                     if (emotionTagEntityList.isEmpty()) return resultList;
 
                     //分组
-                    Map<Integer, List<EmotionTagEntity>> groupedMap = emotionTagEntityList.stream()
+                    Map<Integer, List<EmotionTagUseCountUnionModel>> groupedMap = emotionTagEntityList.stream()
                             .collect(Collectors.groupingBy(
-                                    EmotionTagEntity::getType,
+                                    model -> model.getEmotionTag().getType(),
                                     LinkedHashMap::new,
                                     Collectors.toList()
                             ));
 
                     //循环添加分隔符和 Item 项
-                    for (Map.Entry<Integer, List<EmotionTagEntity>> entry : groupedMap.entrySet()) {
+                    for (Map.Entry<Integer, List<EmotionTagUseCountUnionModel>> entry : groupedMap.entrySet()) {
                         String separatorText = types[entry.getKey()].getTitle();
                         resultList.add(new EmotionListUiModel.Separator(separatorText));
 

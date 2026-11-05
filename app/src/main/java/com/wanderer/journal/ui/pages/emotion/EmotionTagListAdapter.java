@@ -18,24 +18,27 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListe
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
+
+import java.util.Locale;
 
 public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
     private static final int TYPE_ITEM = 1;
     private static final int TYPE_SEPARATOR = 0;
     private final AdapterOnClickListener<EmotionTagEntity> clickListener;           //点击监听器
-    private final AdapterOnLongClickListener<EmotionTagEntity> longClickListener;   //长按监听器
+    private final AdapterOnLongClickListener<EmotionTagUseCountUnionModel> longClickListener;   //长按监听器
     private static final DiffUtil.ItemCallback<EmotionListUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionListUiModel oldItem, @NonNull EmotionListUiModel newItem) {
             if (oldItem instanceof EmotionListUiModel.Item && newItem instanceof EmotionListUiModel.Item) {
                 EmotionListUiModel.Item oldI = (EmotionListUiModel.Item) oldItem;
                 EmotionListUiModel.Item newI = (EmotionListUiModel.Item) newItem;
-                return oldI.entity.getEmotionId() == newI.entity.getEmotionId();
+                return oldI.model.getEmotionTag().getEmotionId() == newI.model.getEmotionTag().getEmotionId();
             } else if (oldItem instanceof EmotionListUiModel.Separator && newItem instanceof EmotionListUiModel.Separator) {
                 EmotionListUiModel.Separator oldS = (EmotionListUiModel.Separator) oldItem;
                 EmotionListUiModel.Separator newS = (EmotionListUiModel.Separator) newItem;
@@ -50,9 +53,12 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
             if (oldItem instanceof EmotionListUiModel.Item && newItem instanceof EmotionListUiModel.Item) {
                 EmotionListUiModel.Item oldI = (EmotionListUiModel.Item) oldItem;
                 EmotionListUiModel.Item newI = (EmotionListUiModel.Item) newItem;
-                return oldI.entity.getType() == newI.entity.getType() &&
-                        oldI.entity.getName().equals(newI.entity.getName()) &&
-                        oldI.entity.getDescription().equals(newI.entity.getDescription());
+                EmotionTagEntity oldTag = oldI.model.getEmotionTag();
+                EmotionTagEntity newTag = newI.model.getEmotionTag();
+                return oldTag.getType() == newTag.getType() &&
+                        oldTag.getName().equals(newTag.getName()) &&
+                        oldTag.getDescription().equals(newTag.getDescription()) &&
+                        oldI.model.getUseCount() == newI.model.getUseCount();
             } else
                 return oldItem instanceof EmotionListUiModel.Separator && newItem instanceof EmotionListUiModel.Separator;
         }
@@ -95,7 +101,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
      */
     public EmotionTagListAdapter(
             AdapterOnClickListener<EmotionTagEntity> clickListener,
-            AdapterOnLongClickListener<EmotionTagEntity> longClickListener
+            AdapterOnLongClickListener<EmotionTagUseCountUnionModel> longClickListener
     ) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
@@ -138,7 +144,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
         if (model instanceof EmotionListUiModel.Separator) {
             return ((EmotionListUiModel.Separator) model).text;
         } else if (model instanceof EmotionListUiModel.Item) {
-            int type = ((EmotionListUiModel.Item) model).entity.getType();
+            int type = ((EmotionListUiModel.Item) model).model.getEmotionTag().getType();
             return EmotionType.values()[type].getTitle();
         } else {
             return context.getString(R.string.not_applicable);
@@ -168,7 +174,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
                         public void onClick(int position, View anchor) {
                             EmotionListUiModel emotionTag = getItem(position);
                             if (emotionTag instanceof EmotionListUiModel.Item) {
-                                clickListener.onClick(((EmotionListUiModel.Item) emotionTag).entity, anchor);
+                                clickListener.onClick(((EmotionListUiModel.Item) emotionTag).model.getEmotionTag(), anchor);
                             }
                         }
 
@@ -176,7 +182,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
                         public void onLongClick(int position, View view) {
                             EmotionListUiModel emotionTag = getItem(position);
                             if (emotionTag instanceof EmotionListUiModel.Item) {
-                                longClickListener.onLongClick(((EmotionListUiModel.Item) emotionTag).entity, view);
+                                longClickListener.onLongClick(((EmotionListUiModel.Item) emotionTag).model, view);
                             }
                         }
                     }
@@ -196,7 +202,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
         EmotionListUiModel model = getItem(position);
 
         if (model instanceof EmotionListUiModel.Item && holder instanceof EmotionTagViewHolder) {
-            EmotionTagEntity emotionTag = ((EmotionListUiModel.Item) model).entity;
+            EmotionTagEntity emotionTag = ((EmotionListUiModel.Item) model).model.getEmotionTag();
             EmotionTagViewHolder itemHolder = (EmotionTagViewHolder) holder;
 
             //标签名称
@@ -205,6 +211,13 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
             //标签描述
             String description = emotionTag.getDescription();
             itemHolder.binding.descriptionText.setText(description.isEmpty() ? "<无描述>" : description);
+
+            //使用次数
+            int useCount = ((EmotionListUiModel.Item) model).model.getUseCount();
+            String useCountStr = useCount > 0 ?
+                    String.format(Locale.getDefault(), "使用%d次", useCount) :
+                    "未使用";
+            itemHolder.binding.useCountText.setText(useCountStr);
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), position);

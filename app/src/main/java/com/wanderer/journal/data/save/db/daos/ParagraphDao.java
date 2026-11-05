@@ -1,7 +1,9 @@
 package com.wanderer.journal.data.save.db.daos;
 
+import android.location.Location;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -14,6 +16,7 @@ import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
@@ -234,11 +237,20 @@ public interface ParagraphDao {
     int getNewParagraphPosition(LocalDate startDate, LocalDateTime paragraphTime, long paragraphId, int isAuthed);
 
     /**
+     * 插入位置信息
+     *
+     * @param location 位置信息实体
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void insertLocation(LocationEntity location);
+
+    /**
      * 插入段落的事务
      *
      * @param startDate              写日记界面的起始日期
      * @param paragraph              新段落实例
      * @param mediaList              该段落新添加的媒体列表
+     * @param location               段落的位置信息
      * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @param mediaDao               媒体 Dao 类
      * @return 新添加的段落在当前界面中的下标
@@ -248,6 +260,7 @@ public interface ParagraphDao {
             LocalDate startDate,
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            @Nullable Location location,
             boolean isHiddenParagraphShown,
             MediaDao mediaDao
     ) {
@@ -272,6 +285,15 @@ public interface ParagraphDao {
                 .peek(media -> media.setParentParagraphId(paragraphId))
                 .collect(Collectors.toList());
         mediaDao.insertMedia(availableMediaList);
+
+        //插入位置信息
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            double altitude = location.getAltitude();
+            LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
+            insertLocation(locationEntity);
+        }
 
         return earlierThanNewParagraph + dateSeparatorCount;
     }
@@ -370,10 +392,19 @@ public interface ParagraphDao {
     List<Uri> getMediaUriByParagraphId(long paragraphId);
 
     /**
+     * 通过段落编号删除位置
+     *
+     * @param paragraphId 段落编号
+     */
+    @Query("DELETE FROM locations WHERE paragraphId = :paragraphId")
+    void deleteLocationByParagraphId(long paragraphId);
+
+    /**
      * 段落更新事务
      *
      * @param paragraph 更新后的段落实体
      * @param mediaList 最终的媒体列表
+     * @param location  段落的位置信息
      * @param mediaDao  媒体 Dao 类
      * @return 需要删除的媒体文件的 Uri 集合
      */
@@ -381,6 +412,7 @@ public interface ParagraphDao {
     default Set<Uri> modifyParagraph(
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            @Nullable Location location,
             MediaDao mediaDao
     ) {
         if (paragraph == null) return null;
@@ -399,6 +431,16 @@ public interface ParagraphDao {
         //更新媒体
         mediaDao.deleteMediaByParagraphId(paragraphId);
         mediaDao.insertMedia(mediaList);
+
+        //更新位置信息
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            double altitude = location.getAltitude();
+            LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
+            deleteLocationByParagraphId(paragraphId);
+            insertLocation(locationEntity);
+        }
 
         return oldMediaUriSet;
     }

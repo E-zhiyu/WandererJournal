@@ -1,5 +1,7 @@
 package com.wanderer.journal.ui.pages.diary.write;
 
+import android.location.Location;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
@@ -36,7 +38,7 @@ public class WriteViewModel extends ViewModel {
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
             BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
     private long lastAuthTimeMillis = 0;
-    public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
+    public final Set<Long> contentDisplayIdSet = new HashSet<>();   //标记为显示内容的段落编号
 
     private static class Query {
         final LocalDate date;

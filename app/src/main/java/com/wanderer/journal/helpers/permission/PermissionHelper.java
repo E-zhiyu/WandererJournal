@@ -16,6 +16,7 @@ import com.hjq.permissions.permission.PermissionLists;
 import com.hjq.permissions.permission.base.IPermission;
 import com.wanderer.journal.WandererJournal;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -35,7 +36,22 @@ public class PermissionHelper {
          * @param deniedList     拒绝的权限
          * @param descriptionFun 根据权限生成权限描述的方法
          */
-        void requested(List<IPermission> grantedList, List<IPermission> deniedList, Function<List<IPermission>, String> descriptionFun);
+        void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun);
+    }
+
+    public interface LocationPermissionCallback {
+        void hasFineLocation();
+
+        void justCoarseLocation();
+
+        /**
+         * 权限授予情况回调
+         *
+         * @param grantedList    授予的权限
+         * @param deniedList     拒绝的权限
+         * @param descriptionFun 根据权限生成权限描述的方法
+         */
+        void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun);
     }
 
     /**
@@ -114,8 +130,13 @@ public class PermissionHelper {
                             if (noDenied && !noGranted) {
                                 Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
                             } else {
-                                String message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
-                                        "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                                String message;
+                                if (descriptionFun == null) {
+                                    message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
+                                            "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                                } else {
+                                    message = descriptionFun.apply(deniedList);
+                                }
                                 new MaterialAlertDialogBuilder(context)
                                         .setTitle("请求被拒绝")
                                         .setMessage(message)
@@ -135,7 +156,7 @@ public class PermissionHelper {
     /**
      * 申请忽略电池优化
      *
-     * @param context     上下文
+     * @param context        上下文
      * @param descriptionFun 根据权限列表动态生成权限描述的方法
      */
     public static void requestBatteryIgnoration(Context context, @Nullable Function<List<IPermission>, String> descriptionFun) {
@@ -177,6 +198,97 @@ public class PermissionHelper {
                 Toast.makeText(context, "请点击开关左侧文本并选择“无限制”", Toast.LENGTH_SHORT).show();
                 XXPermissions.startPermissionActivity(context, batteryPermission);
             }
+        }
+    }
+
+    /**
+     * 申请定位权限
+     *
+     * @param context        上下文
+     * @param descriptionFun 获取权限说明文本的方法
+     * @param callback       权限授予情况回调
+     */
+    public static void requestLocationPermission(Context context, @Nullable Function<List<IPermission>, String> descriptionFun, @Nullable LocationPermissionCallback callback) {
+        IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
+        IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
+        boolean isFineGranted = XXPermissions.isGrantedPermission(context, fineLocation);
+        boolean isCoarseGranted = XXPermissions.isGrantedPermission(context, coarseLocation);
+        if (isFineGranted && isCoarseGranted) {
+            if (callback == null) {
+                Toast.makeText(context, "已授予精确定位权限", Toast.LENGTH_SHORT).show();
+            } else {
+                callback.hasFineLocation();
+            }
+        } else if (isCoarseGranted) {
+            if (callback == null) {
+                OnPermissionDescription description;
+                if (descriptionFun == null) {
+                    description = null;
+                } else {
+                    description = new PermissionDialogDescription(descriptionFun);
+                }
+                XXPermissions.with(context)
+                        .description(description)
+                        .permission(fineLocation)
+                        .request((grantedList, deniedList) -> {
+                            boolean noGranted = grantedList.isEmpty();
+                            if (!noGranted) {
+                                Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
+                            } else {
+                                String message;
+                                if (descriptionFun == null) {
+                                    message = "权限申请被拒绝，是否跳转至权限设置界面授予权限？";
+                                } else {
+                                    message = descriptionFun.apply(deniedList);
+                                }
+                                new MaterialAlertDialogBuilder(context)
+                                        .setTitle("请求被拒绝")
+                                        .setMessage(message)
+                                        .setPositiveButton("前往设置", (dialog, which) ->
+                                                XXPermissions.startPermissionActivity(context, deniedList)
+                                        )
+                                        .setNegativeButton("取消", null)
+                                        .show();
+                            }
+                        });
+            } else {
+                callback.justCoarseLocation();
+            }
+        } else {
+            OnPermissionDescription description;
+            if (descriptionFun == null) {
+                description = null;
+            } else {
+                description = new PermissionDialogDescription(descriptionFun);
+            }
+            XXPermissions.with(context)
+                    .description(description)
+                    .permissions(Arrays.asList(fineLocation, coarseLocation))
+                    .request((grantedList, deniedList) -> {
+                        if (callback == null) {
+                            boolean noGranted = grantedList.isEmpty();
+                            if (!noGranted) {
+                                Toast.makeText(context, "权限已授予", Toast.LENGTH_SHORT).show();
+                            } else {
+                                String message;
+                                if (descriptionFun == null) {
+                                    message = "权限申请被拒绝，是否跳转至权限设置界面授予权限？";
+                                } else {
+                                    message = descriptionFun.apply(deniedList);
+                                }
+                                new MaterialAlertDialogBuilder(context)
+                                        .setTitle("请求被拒绝")
+                                        .setMessage(message)
+                                        .setPositiveButton("前往设置", (dialog, which) ->
+                                                XXPermissions.startPermissionActivity(context, deniedList)
+                                        )
+                                        .setNegativeButton("取消", null)
+                                        .show();
+                            }
+                        } else {
+                            callback.requested(grantedList, deniedList, descriptionFun);
+                        }
+                    });
         }
     }
 }
