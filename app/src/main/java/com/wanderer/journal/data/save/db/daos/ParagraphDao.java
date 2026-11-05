@@ -3,6 +3,7 @@ package com.wanderer.journal.data.save.db.daos;
 import android.location.Location;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
 import androidx.paging.PagingSource;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -259,7 +260,7 @@ public interface ParagraphDao {
             LocalDate startDate,
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
-            Location location,
+            @Nullable Location location,
             boolean isHiddenParagraphShown,
             MediaDao mediaDao
     ) {
@@ -286,11 +287,13 @@ public interface ParagraphDao {
         mediaDao.insertMedia(availableMediaList);
 
         //插入位置信息
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-        double altitude = location.getAltitude();
-        LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
-        insertLocation(locationEntity);
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            double altitude = location.getAltitude();
+            LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
+            insertLocation(locationEntity);
+        }
 
         return earlierThanNewParagraph + dateSeparatorCount;
     }
@@ -409,7 +412,7 @@ public interface ParagraphDao {
     default Set<Uri> modifyParagraph(
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
-            Location location,
+            @Nullable Location location,
             MediaDao mediaDao
     ) {
         if (paragraph == null) return null;
@@ -430,12 +433,14 @@ public interface ParagraphDao {
         mediaDao.insertMedia(mediaList);
 
         //更新位置信息
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
-        double altitude = location.getAltitude();
-        LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
-        deleteLocationByParagraphId(paragraphId);
-        insertLocation(locationEntity);
+        if (location != null) {
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            double altitude = location.getAltitude();
+            LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
+            deleteLocationByParagraphId(paragraphId);
+            insertLocation(locationEntity);
+        }
 
         return oldMediaUriSet;
     }
