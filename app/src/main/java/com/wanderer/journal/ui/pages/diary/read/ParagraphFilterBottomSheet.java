@@ -88,7 +88,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         //获取数据源
         EmotionTagDao emotionTagDao = DiaryDb.getInstance(requireContext()).emotionTagDao();
-        disposable.add(emotionTagDao.getAllEmotionTagFlowable()
+        disposable.add(emotionTagDao.getEmotionTagFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(

@@ -90,7 +90,18 @@ public interface EmotionTagDao {
      * @return 所有情绪标签组成的列表
      */
     @Query("SELECT * FROM emotionTags ORDER BY type")
-    Flowable<List<EmotionTagEntity>> getAllEmotionTagFlowable();
+    Flowable<List<EmotionTagEntity>> getEmotionTagFlowable();
+
+    /**
+     * 获取所有情绪标签并带有使用次数
+     *
+     * @return 所有情绪标签组成的列表
+     */
+    @Query("SELECT e.*, " +
+            "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
+            "FROM emotionTags e " +
+            "ORDER BY type")
+    Flowable<List<EmotionTagUseCountUnionModel>> getEmotionTagUseCountModelFlowable();
 
     /**
      * 获取使用过的情绪标签及其使用次数

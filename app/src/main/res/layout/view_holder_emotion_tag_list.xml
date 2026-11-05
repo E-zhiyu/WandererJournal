@@ -15,6 +15,7 @@
         android:paddingEnd="15dp"
         android:paddingBottom="10dp">
 
+        <!-- 名称 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/name_text"
             android:layout_width="wrap_content"
@@ -22,10 +23,9 @@
             android:text="@string/emotion_tag"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/description_text"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- 描述 -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/description_text"
             android:layout_width="wrap_content"
@@ -35,8 +35,18 @@
             android:text="@string/emotion_tag"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOutline"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/name_text" />
+
+        <!-- 使用次数 -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/use_count_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/emotion_tag"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOutline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/description_text" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
