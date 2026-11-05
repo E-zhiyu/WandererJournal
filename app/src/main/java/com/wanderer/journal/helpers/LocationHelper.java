@@ -18,6 +18,7 @@ import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 
 public class LocationHelper {
@@ -192,5 +193,78 @@ public class LocationHelper {
                 listenerList.set(i, null);
             }
         }
+    }
+
+    /**
+     * 将经纬度和海拔转换为表示坐标的字符串
+     *
+     * @param latitude  纬度
+     * @param longitude 经度
+     * @param altitude  海拔
+     * @return 表示坐标的字符串
+     */
+    @NonNull
+    public static String locationToString(@Nullable Double latitude, @Nullable Double longitude, @Nullable Double altitude) {
+        StringBuilder builder = new StringBuilder();
+
+        //纬度
+        if (latitude != null) {
+            builder.append(convertToDMS(latitude,true));
+        }
+
+        //经度
+        if (longitude!=null) {
+            if (latitude!=null) {
+                builder.append(" ");
+            }
+
+            builder.append(convertToDMS(longitude,false));
+        }
+
+        //海拔
+        if (altitude!=null) {
+            builder.append("\n");
+
+            String altitudeStr = String.format(
+                    Locale.getDefault(),
+                    "海拔：%.2f米",
+                    altitude
+            );
+            builder.append(altitudeStr);
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * 将单个十进制度数值转换为度分秒字符串
+     *
+     * @param coordinate 经度或者纬度
+     * @param isLatitude 是否为纬度
+     */
+    @NonNull
+    private static String convertToDMS(double coordinate, boolean isLatitude) {
+        char hemisphere;
+        if (isLatitude) {
+            hemisphere = coordinate >= 0 ? 'N' : 'S'; // 北纬 N，南纬 S
+        } else {
+            hemisphere = coordinate >= 0 ? 'E' : 'W'; // 东经 E，西经 W
+        }
+
+        double abs = Math.abs(coordinate);
+
+        //度
+        int degrees = (int) abs;
+
+        //分
+        double minutesNotTruncated = (abs - degrees) * 60;
+        int minutes = (int) minutesNotTruncated;
+
+        //秒
+        double seconds = (minutesNotTruncated - minutes) * 60;
+
+        return String.format(java.util.Locale.getDefault(),
+                "%d°%d′%.2f″%c",
+                degrees, minutes, seconds, hemisphere);
     }
 }

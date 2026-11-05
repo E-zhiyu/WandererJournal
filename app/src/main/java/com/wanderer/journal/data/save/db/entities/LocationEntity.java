@@ -3,6 +3,8 @@ package com.wanderer.journal.data.save.db.entities;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 
+import java.util.Objects;
+
 @Entity(
         tableName = "locations",
         primaryKeys = {"paragraphId"},
@@ -58,5 +60,17 @@ public class LocationEntity {
 
     public void setAltitude(double altitude) {
         this.altitude = altitude;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        LocationEntity that = (LocationEntity) o;
+        return Double.compare(latitude, that.latitude) == 0 && Double.compare(longitude, that.longitude) == 0 && Double.compare(altitude, that.altitude) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(latitude, longitude, altitude);
     }
 }

@@ -18,6 +18,7 @@ import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
@@ -25,6 +26,7 @@ import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnion
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.databinding.ViewHolderParagraphBinding;
+import com.wanderer.journal.helpers.LocationHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.text.TextHelper;
 import com.wanderer.journal.ui.others.decoration.sticky.StickyHeaderAdapter;
@@ -33,6 +35,7 @@ import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, RecyclerView.ViewHolder>
         implements StickyHeaderAdapter<String> {
@@ -61,10 +64,13 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
                 List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
+                LocationEntity oldLocation = ((ParagraphUiModel.Item) oldItem).model.getLocation();
+                LocationEntity newLocation = ((ParagraphUiModel.Item) newItem).model.getLocation();
                 return oldParagraph.getContent().equals(newParagraph.getContent()) &&
                         oldParagraph.getCreateTime().isEqual(newParagraph.getCreateTime()) &&
                         oldEmotionList.equals(newEmotionList) &&
-                        oldMediaList.equals(newMediaList);
+                        oldMediaList.equals(newMediaList) &&
+                        Objects.equals(oldLocation, newLocation);
             } else {
                 return true;
             }
@@ -258,6 +264,16 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 }
 
                 itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
+            }
+
+            //位置
+            LocationEntity location = dataModel.getLocation();
+            if (location != null) {
+                itemHolder.binding.locationText.setText(LocationHelper.locationToString(
+                        location.getLatitude(), location.getLongitude(), location.getAltitude())
+                );
+            } else {
+                itemHolder.binding.locationText.setText("");
             }
 
             //时间
