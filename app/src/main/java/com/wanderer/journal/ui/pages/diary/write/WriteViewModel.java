@@ -1,5 +1,7 @@
 package com.wanderer.journal.ui.pages.diary.write;
 
+import android.location.Location;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
@@ -37,15 +39,6 @@ public class WriteViewModel extends ViewModel {
             BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
     private long lastAuthTimeMillis = 0;
     public final Set<Long> contentDisplayIdSet = new HashSet<>();   //标记为显示内容的段落编号
-    private boolean isLocationOn = false;                           //是否打开定位
-
-    public boolean isLocationOn() {
-        return isLocationOn;
-    }
-
-    public void setLocationOn(boolean locationOn) {
-        isLocationOn = locationOn;
-    }
 
     private static class Query {
         final LocalDate date;

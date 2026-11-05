@@ -2,12 +2,12 @@ package com.wanderer.journal.helpers;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Handler;
-import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -22,22 +22,16 @@ import java.util.function.Function;
 
 public class LocationHelper {
     static class LocationRequestListener implements LocationListener {
-        private final int targetIndex;                      //缓冲区的目标的下标
-        private final Location[] locationBuffer;            //外部传递的位置对象缓冲区
         private final Function<Location, Void> successFun;  //位置更新回调
         private final Runnable clearAction;                 //清理方法
-        private final Function<String, Location> providerDisabledFun;   //提供者被禁用的回调
+        private final Function<String, Void> providerDisabledFun;   //提供者被禁用的回调
 
         /**
-         * @param targetIndex         修改的缓冲区的下标
-         * @param locationBuffer      位置缓冲区
          * @param updateFun           位置更新回调
          * @param clearAction         清理方法
          * @param providerDisabledFun 提供者被禁用的回调
          */
-        LocationRequestListener(int targetIndex, Location[] locationBuffer, Function<Location, Void> updateFun, Function<String, Location> providerDisabledFun, Runnable clearAction) {
-            this.targetIndex = targetIndex;
-            this.locationBuffer = locationBuffer;
+        LocationRequestListener(Function<Location, Void> updateFun, Function<String, Void> providerDisabledFun, Runnable clearAction) {
             this.successFun = updateFun;
             this.clearAction = clearAction;
             this.providerDisabledFun = providerDisabledFun;
@@ -45,150 +39,152 @@ public class LocationHelper {
 
         @Override
         public void onLocationChanged(@NonNull Location location) {
-            locationBuffer[targetIndex] = location;
             successFun.apply(location);
-            clearAction.run();
         }
 
         @Override
         public void onProviderDisabled(@NonNull String provider) {
             clearAction.run();
-            Log.w(LogTags.LOCATION_HELPER.n(), provider + "关闭，但是没有获取到有效位置，改为获取最近已知位置");
-            Location lastLocation = providerDisabledFun.apply(provider);
-            if (lastLocation != null) {
-                locationBuffer[targetIndex] = lastLocation;
-                Log.i(LogTags.LOCATION_HELPER.n(), provider + "已获取到最近已知位置");
-            } else {
-                Log.w(LogTags.LOCATION_HELPER.n(), provider + "无法获取最近已知位置");
-            }
+            providerDisabledFun.apply(provider);
         }
     }
 
-    public interface OnceLocationListener {
+    public interface CurrentLocationListener {
         /**
-         * 位置获取失败回调
+         * 位置更新回调
          *
-         * @param message 失败原因
+         * @param location 更新后的位置
          */
-        void onFailed(String message);
+        void onUpdated(Location location);
 
         /**
-         * 位置获取成功回调
+         * 定位服务关闭回调
          *
-         * @param location 成功原因
+         * @param provider 关闭的位置 Provider
          */
-        void onSucceed(Location location);
+        void onDisabled(String provider);
+
+        /**
+         * 开始监听的回调
+         */
+        void onListenStarted();
+
+        /**
+         * 请求失败回调
+         *
+         * @param message 失败提示
+         */
+        void onRequestFailed(String message);
     }
 
     /**
-     * 获取缓存的定位结果
+     * 持续监听当前位置
      *
-     * @param context 上下文
+     * @param context  上下文
+     * @param listener 位置监听器
+     * @return 用于取消监听的{@link LocationListener}实例
      */
-    public static void getLocation(@NonNull Context context, @NonNull OnceLocationListener listener) {
+    @Nullable
+    public static List<LocationListener> requestCurrentLocation(@NonNull Context context, @NonNull CurrentLocationListener listener) {
         //获取定位服务
         Log.d(LogTags.LOCATION_HELPER.n(), "开始获取当前位置");
         LocationManager locationManager = context.getSystemService(LocationManager.class);
         if (locationManager == null) {
             Log.e(LogTags.LOCATION_HELPER.n(), "无法获取LocationManager");
-            listener.onFailed("位置服务初始化异常");
-            return;
+            listener.onRequestFailed("位置服务初始化异常");
+            return null;
         }
 
         //检查权限
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e(LogTags.LOCATION_HELPER.n(), "没有定位权限");
-            listener.onFailed("请授予定位权限");
-            return;
+            listener.onRequestFailed("请授予定位权限");
+            return null;
         }
 
-        // 检查手机的 GPS 或网络定位开关是否开启
+        //检查手机的 GPS 或网络定位开关是否开启
         boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         if (!isGPSEnabled && !isNetworkEnabled) {
             Log.e(LogTags.LOCATION_HELPER.n(), "定位服务开关未启用");
-            listener.onFailed("定位服务开关未启用");
-            return;
+            listener.onRequestFailed("请开启定位服务");
+
+            //跳转到定位服务开关界面
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            context.startActivity(intent);
+
+            return null;
         }
 
-        //设置超时机制
-        final int GPS_INDEX = 0;
-        final int NET_INDEX = 1;
-        final Location[] LOCATION_BUFFER = {null, null};
-        List<LocationListener> listenerList = new ArrayList<>();
-        Handler handler = new Handler(Looper.getMainLooper());
-        Runnable timeoutRun = () -> {
-            Log.w(LogTags.LOCATION_HELPER.n(), "触发超时机制");
-            removeLocationRequests(locationManager, listenerList);
-
-            for (Location location : LOCATION_BUFFER) {
-                if (location != null) {
-                    listener.onSucceed(location);
-                    Log.i(LogTags.LOCATION_HELPER.n(), "超时后有可用位置" + location);
-                    return;
-                }
-            }
-
-            Log.e(LogTags.LOCATION_HELPER.n(), "超时后没有可用位置");
-            listener.onFailed("无法获取位置，请重试或关闭定位功能");
-        };
-        handler.postDelayed(timeoutRun, 1500);
-
         //实例化位置更新监听
+        List<LocationListener> listenerList = new ArrayList<>();
         LocationRequestListener gpsListener = new LocationRequestListener(
-                GPS_INDEX,
-                LOCATION_BUFFER,
                 location -> {
-                    //移除超时计时器
-                    handler.removeCallbacks(timeoutRun);
-
                     Log.i(LogTags.LOCATION_HELPER.n(), "位置成功更新" + location);
-                    listener.onSucceed(location);
+                    listener.onUpdated(location);
                     return null;
                 },
-                provider -> getLastKnownLocation(context, provider),
-                () -> removeLocationRequests(locationManager, listenerList)
+                provider -> {
+                    Log.w(LogTags.LOCATION_HELPER.n(), provider + "关闭");
+                    listener.onDisabled(provider);
+                    return null;
+                },
+                () -> removeLocationListeners(context, listenerList)
         );
         listenerList.add(gpsListener);
-        LocationRequestListener netListener = new LocationRequestListener(
-                NET_INDEX,
-                LOCATION_BUFFER,
+        LocationRequestListener networkListener = new LocationRequestListener(
                 location -> {
-                    //移除超时计时器
-                    handler.removeCallbacks(timeoutRun);
-
                     Log.i(LogTags.LOCATION_HELPER.n(), "位置成功更新" + location);
-                    listener.onSucceed(location);
+                    listener.onUpdated(location);
                     return null;
                 },
-                provider -> getLastKnownLocation(context, provider),
-                () -> removeLocationRequests(locationManager, listenerList)
+                provider -> {
+                    Log.w(LogTags.LOCATION_HELPER.n(), provider + "关闭");
+                    listener.onDisabled(provider);
+                    return null;
+                },
+                () -> removeLocationListeners(context, listenerList)
         );
-        listenerList.add(netListener);
+        listenerList.add(networkListener);
 
         //同时监听 GPS 和网络的位置
+        listener.onListenStarted();
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                200,
+                1000,
                 1.0f,
                 gpsListener
         );
         locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                200,
+                1000,
                 1.0f,
-                gpsListener
+                networkListener
         );
+
+        return listenerList;
     }
 
     /**
      * 取消位置监听
      *
-     * @param manager      {@link LocationManager}实例
+     * @param context      上下文
      * @param listenerList 需要取消监听的监听器
      */
-    private static void removeLocationRequests(LocationManager manager, @NonNull List<LocationListener> listenerList) {
+    public static void removeLocationListeners(Context context, @Nullable List<LocationListener> listenerList) {
+        //判空
+        Log.d(LogTags.LOCATION_HELPER.n(), "开始移除位置监听");
+        if (listenerList == null || listenerList.isEmpty()) {
+            Log.w(LogTags.LOCATION_HELPER.n(), "监听器列表为空");
+            return;
+        }
+
+        //获取服务
+        LocationManager manager = context.getSystemService(LocationManager.class);
+        if (manager == null) return;
+
+        //移除监听
         for (int i = 0; i < listenerList.size(); i++) {
             LocationListener savedListener = listenerList.get(i);
             if (savedListener != null) {
@@ -196,34 +192,5 @@ public class LocationHelper {
                 listenerList.set(i, null);
             }
         }
-    }
-
-    /**
-     * 获取上次已知的位置
-     *
-     * @param context  上下文
-     * @param provider 位置提供者
-     * @return 上次已知的位置
-     */
-    @Nullable
-    public static Location getLastKnownLocation(@NonNull Context context, String provider) {
-        //获取服务
-        LocationManager locationManager = context.getSystemService(LocationManager.class);
-        if (locationManager == null) {
-            Log.e(LogTags.LOCATION_HELPER.n(), "无法获取LocationManager");
-            return null;
-        }
-
-        //权限检查
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(LogTags.LOCATION_HELPER.n(), provider + "没有定位权限，无法获取最近已知位置");
-            return null;
-        }
-
-        //获取定位
-        Location location = locationManager.getLastKnownLocation(provider);
-        Log.i(LogTags.LOCATION_HELPER.n(), location == null ? "无法获取上次的位置" : "获取到上次的位置" + location);
-        return location;
     }
 }

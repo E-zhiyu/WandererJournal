@@ -3,6 +3,7 @@ package com.wanderer.journal.ui.pages.diary.write;
 import android.Manifest;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -233,6 +234,10 @@ public class WriteActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
+        //清理位置监听器
+        LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+        LocationHelper.removeLocationListeners(this, locationViewModel.getListenerList());
+
         //清空草稿保存任务并直接保存一次草稿
         draftSavingHandler.removeCallbacks(draftSavingRunnable);
         saveDraft();
@@ -368,13 +373,12 @@ public class WriteActivity extends AppCompatActivity {
 
         //定位按钮
         binding.locationBtn.setOnClickListener(v -> {
-            WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+            LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
             boolean isLocationOn = viewModel.isLocationOn();
 
             if (isLocationOn) {
-                binding.locationBtn.setImageResource(R.drawable.outline_location_off_24);
-                viewModel.setLocationOn(false);
                 Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+                requestLocation(false);
             } else {
                 PermissionHelper.requestLocationPermission(
                         this,
@@ -391,24 +395,19 @@ public class WriteActivity extends AppCompatActivity {
                         new PermissionHelper.LocationPermissionCallback() {
                             @Override
                             public void hasFineLocation() {
-                                binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
-                                viewModel.setLocationOn(true);
-                                Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                                requestLocation(true);
                             }
 
                             @Override
                             public void justCoarseLocation() {
-                                binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
-                                viewModel.setLocationOn(true);
-                                Toast.makeText(WriteActivity.this, "已开启段落定位（粗略位置）", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(WriteActivity.this, "仅有粗略位置权限，无法定位精确位置", Toast.LENGTH_SHORT).show();
+                                requestLocation(true);
                             }
 
                             @Override
                             public void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun) {
                                 if (!grantedList.isEmpty()) {
-                                    binding.locationBtn.setImageResource(R.drawable.outline_location_on_24);
-                                    viewModel.setLocationOn(true);
-                                    Toast.makeText(WriteActivity.this, "权限已授予，开启段落定位", Toast.LENGTH_SHORT).show();
+                                    requestLocation(true);
                                 } else {
                                     String message;
                                     if (descriptionFun == null) {
@@ -535,22 +534,7 @@ public class WriteActivity extends AppCompatActivity {
                                         .filter(mediaEntity -> mediaEntity.getFileUri() != null)
                                         .collect(Collectors.toList());
 
-                                WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
-                                if (viewModel.isLocationOn()) {
-                                    LocationHelper.getLocation(this, new LocationHelper.OnceLocationListener() {
-                                        @Override
-                                        public void onFailed(String message) {
-                                            Toast.makeText(WriteActivity.this, message, Toast.LENGTH_SHORT).show();
-                                        }
-
-                                        @Override
-                                        public void onSucceed(Location location) {
-                                            saveData(content, succeedMediaList, location);
-                                        }
-                                    });
-                                } else {
-                                    saveData(content, succeedMediaList, null);
-                                }
+                                saveData(content, succeedMediaList);
                             }
                     )
             );
@@ -730,6 +714,12 @@ public class WriteActivity extends AppCompatActivity {
                 );
             }
         });
+
+        //位置监听开关
+        LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+        locationViewModel.getIsLocationOnLiveData().observe(this, isLocationOn ->
+                binding.locationBtn.setImageResource(isLocationOn ? R.drawable.outline_location_on_24 : R.drawable.outline_location_off_24)
+        );
     }
 
     /**
@@ -1174,9 +1164,8 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param content         最终的段落文本内容
      * @param mediaEntityList 最终处于永久目录下的媒体实体列表
-     * @param location        段落的定位信息
      */
-    private void saveData(String content, List<MediaEntity> mediaEntityList, @Nullable Location location) {
+    private void saveData(String content, List<MediaEntity> mediaEntityList) {
         //生成段落各属性
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
@@ -1604,12 +1593,51 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
+     * 监听当前位置
+     *
+     * @param open 是否监听
+     */
+    private void requestLocation(boolean open) {
+        LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+
+        if (open) {
+            LocationHelper.removeLocationListeners(this, viewModel.getListenerList());  //清理旧的监听器
+            List<LocationListener> listenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
+                @Override
+                public void onUpdated(Location location) {
+                    viewModel.setLocation(location);
+                }
+
+                @Override
+                public void onDisabled(String provider) {
+                    requestLocation(false);
+                }
+
+                @Override
+                public void onListenStarted() {
+                    viewModel.setLocationOn(true);
+                }
+
+                @Override
+                public void onRequestFailed(String message) {
+                    Toast.makeText(WriteActivity.this, message, Toast.LENGTH_SHORT).show();
+                    requestLocation(false);
+                }
+            });
+            viewModel.setListenerList(listenerList);
+        } else {
+            LocationHelper.removeLocationListeners(this, viewModel.getListenerList());  //清理旧的监听器
+            viewModel.setLocationOn(false);
+            viewModel.setLocation(null);
+            viewModel.setListenerList(null);
+        }
+    }
+
+    /**
      * 保存草稿到 SharedPreference
      */
     private void saveDraft() {
-        if (binding != null) {
-            String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
-            DraftPreference.setDraft(this, content);
-        }
+        String content = ParagraphTextConverter.flatten(binding.contentTextInput.getEditableText());
+        DraftPreference.setDraft(this, content);
     }
 }
