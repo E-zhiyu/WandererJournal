@@ -152,13 +152,13 @@ public class LocationHelper {
         listener.onListenStarted();
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                1000,
+                1500,
                 1.0f,
                 gpsListener
         );
         locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                1000,
+                1500,
                 1.0f,
                 networkListener
         );
