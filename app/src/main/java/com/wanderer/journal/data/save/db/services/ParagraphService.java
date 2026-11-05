@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.services;
 
 import android.content.Context;
+import android.location.Location;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,7 @@ public class ParagraphService {
      * @param startDate              写日记界面的起始日期
      * @param paragraph              新段落实体
      * @param mediaList              媒体列表
+     * @param location               段落的位置信息
      * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @param db                     数据库实例
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
@@ -39,6 +41,7 @@ public class ParagraphService {
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            Location location,
             boolean isHiddenParagraphShown,
             @NonNull DiaryDb db
     ) {
@@ -46,7 +49,7 @@ public class ParagraphService {
         return Single.fromCallable(() -> {
             if (!paragraph.getContent().isEmpty()) {
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.addParagraph(startDate, paragraph, mediaList, isHiddenParagraphShown, db.mediaDao());
+                return paragraphDao.addParagraph(startDate, paragraph, mediaList, location, isHiddenParagraphShown, db.mediaDao());
             } else {
                 return -1;
             }
@@ -58,18 +61,20 @@ public class ParagraphService {
      *
      * @param paragraph 更新后的段落
      * @param mediaList 最终的媒体列表
+     * @param location  段落的位置信息
      * @param context   上下文
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
     public static Completable modifyParagraph(
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
+            Location location,
             Context context
     ) {
         return Completable.fromAction(() -> {
             DiaryDb db = DiaryDb.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
-            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, db.mediaDao());
+            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, location, db.mediaDao());
 
             //删除旧媒体文件
             if (oldMediaUriSet != null) {

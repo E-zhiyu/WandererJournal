@@ -90,4 +90,12 @@ public class DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_paragraphs_privacyType` ON `paragraphs` (`privacyType`)");
         }
     };
+
+    //添加位置信息表
+    static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `locations` (`paragraphId` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `altitude` REAL NOT NULL, PRIMARY KEY(`paragraphId`), FOREIGN KEY(`paragraphId`) REFERENCES `paragraphs`(`paragraphId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
+        }
+    };
 }

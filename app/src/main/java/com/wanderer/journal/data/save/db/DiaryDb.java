@@ -20,6 +20,7 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
@@ -30,6 +31,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
         entities = {
                 DiaryEntity.class,
                 ParagraphEntity.class,
+                LocationEntity.class,
                 MediaEntity.class,
                 EmotionTagEntity.class,
                 EmotionParagraphRefEntity.class,
@@ -38,7 +40,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
                 LifeNoteEntity.class,
                 LifeNoteHistoryEntity.class
         },
-        version = 9
+        version = 10
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -70,7 +72,8 @@ public abstract class DiaryDb extends RoomDatabase {
                                     DatabaseMigrations.MIGRATION_5_6,
                                     DatabaseMigrations.MIGRATION_6_7,
                                     DatabaseMigrations.MIGRATION_7_8,
-                                    DatabaseMigrations.MIGRATION_8_9
+                                    DatabaseMigrations.MIGRATION_8_9,
+                                    DatabaseMigrations.MIGRATION_9_10
                             )
                             .build();
                 }
@@ -91,5 +94,6 @@ public abstract class DiaryDb extends RoomDatabase {
     public abstract RoleDao roleDao();
 
     public abstract DataBackupDao dataBackupDao();
+
     public abstract LifeNoteDao lifeNoteDao();
 }
