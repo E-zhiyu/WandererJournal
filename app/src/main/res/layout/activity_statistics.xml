@@ -389,13 +389,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="15dp">
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
-                        android:layout_marginTop="15dp"
                         android:layout_marginBottom="7dp"
                         android:text="@string/role_statistics"
                         android:textAppearance="?attr/textAppearanceHeadline6" />
@@ -404,7 +404,6 @@
                         android:id="@+id/common_role_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:text="@string/common_role_top_5"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -415,8 +414,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
                         app:chipSpacingHorizontal="6dp"
                         app:chipSpacingVertical="0dp" />
 
@@ -424,8 +421,6 @@
                         android:id="@+id/role_summary_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginEnd="10dp"
                         android:text="@string/role_relationship"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
                         android:textColor="?attr/colorOutline" />
@@ -434,9 +429,6 @@
                         android:id="@+id/role_relationship_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="20dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
                         app:chipSpacingHorizontal="6dp"
                         app:chipSpacingVertical="0dp" />
                 </LinearLayout>
@@ -453,13 +445,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:padding="15dp">
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_horizontal"
-                        android:layout_marginTop="15dp"
                         android:layout_marginBottom="7dp"
                         android:text="@string/emotion_statistics"
                         android:textAppearance="?attr/textAppearanceHeadline6" />
@@ -467,7 +459,6 @@
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:text="@string/common_emotion_tag_top_5"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -478,15 +469,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
                         app:chipSpacingHorizontal="6dp"
                         app:chipSpacingVertical="0dp" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
                         android:layout_marginTop="10dp"
                         android:text="@string/used_emotion_tag_type"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -496,11 +484,100 @@
                         android:id="@+id/emotion_type_chip_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="20dp"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
                         app:chipSpacingHorizontal="6dp"
                         app:chipSpacingVertical="0dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 段落统计 -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/paragraph_statistics_card"
+                style="@style/MediumRadiusCardStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/emotion_statistics_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="15dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginBottom="7dp"
+                        android:text="@string/paragraph_statistics"
+                        android:textAppearance="?attr/textAppearanceHeadline6" />
+
+                    <!-- 最短段落长度 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/min_paragraph_length"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/min_paragraph_length_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
+                    </LinearLayout>
+
+                    <!-- 最长段落长度 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/max_paragraph_length"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/max_paragraph_length_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
+                    </LinearLayout>
+
+                    <!-- 平均段落长度 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/avg_paragraph_length"
+                            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/avg_paragraph_length_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceBodyLarge"
+                            android:textColor="?attr/colorOutline" />
+                    </LinearLayout>
+
+                    <!-- 段落时间统计 -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/paragraph_time_statistics_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="15dp"
+                        android:textAppearance="?attr/textAppearanceBodyLarge" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,8 +24,6 @@ public class MarkdownDialogBuilder extends CustomDialogBuilderBase<DialogMarkdow
         //渲染 Markdown 文本
         Markwon markwon = Markwon.create(context);
         markwon.setMarkdown(binding.mdTextviewInDialog, markdown);
-
-
     }
 
     @Override

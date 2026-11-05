@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
+import com.wanderer.journal.auxiliary.classes.ParagraphStatistics;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
@@ -46,8 +47,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import io.noties.markwon.Markwon;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -169,6 +172,9 @@ public class StatisticsActivity extends AppCompatActivity {
 
         //情绪标签统计
         initEmotionStatisticsCard();
+
+        //段落统计
+        initParagraphStatisticsCard();
     }
 
     /**
@@ -309,7 +315,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                            modelList -> {
+                        modelList -> {
                             adapter.submitList(modelList, () ->
                                     layoutManager.scrollToPositionWithOffset(adapter.getItemCount() - 1, 0)
                             );
@@ -465,5 +471,75 @@ public class StatisticsActivity extends AppCompatActivity {
                         e -> ExceptionHelper.showExceptionDialog(this, e)
                 )
         );
+    }
+
+    /**
+     * 初始化段落统计卡片
+     */
+    private void initParagraphStatisticsCard() {
+        DiaryDb db = DiaryDb.getInstance(this);
+        disposable.add(db.paragraphDao().getParagraphStatisticsFlowable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        statistic -> {
+                            //字数
+                            Function<Integer, String> charCountFun = count ->
+                                    String.format(Locale.getDefault(), "%d字", count);
+                            binding.maxParagraphLengthText.setText(charCountFun.apply(statistic.getMaxLength()));
+                            binding.minParagraphLengthText.setText(charCountFun.apply(statistic.getMinLength()));
+                            binding.avgParagraphLengthText.setText(charCountFun.apply(statistic.getAvgLength()));
+
+                            //段落时间统计
+                            if (statistic.getTotalCount() > 0) {
+                                Markwon markwon = Markwon.create(this);
+                                markwon.setMarkdown(binding.paragraphTimeStatisticsText, getParagraphTimeStatistic(statistic));
+                            } else {
+                                binding.paragraphTimeStatisticsText.setText("截至目前还没有写任何日记……");
+                            }
+                        },
+                        e -> ExceptionHelper.showExceptionDialog(this, e)
+                )
+        );
+    }
+
+    /**
+     * 获取段落时间总结
+     *
+     * @param statistic 段落总结数据
+     * @return 段落时间总结字符串
+     */
+    @NonNull
+    private static String getParagraphTimeStatistic(@NonNull ParagraphStatistics statistic) {
+        String start = String.format(
+                Locale.getDefault(),
+                "在共计`%d`条段落中",
+                statistic.getTotalCount()
+        );
+        StringBuilder builder = new StringBuilder(start);
+
+        if (statistic.getWeeHoursCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getWeeHoursCount()).append("`条段落在**凌晨**编写");
+        }
+        if (statistic.getForenoonCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getForenoonCount()).append("`条段落在**上午**编写");
+        }
+        if (statistic.getNoonCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getNoonCount()).append("`条段落在**中午**编写");
+        }
+        if (statistic.getAfternoonCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getAfternoonCount()).append("`条段落在**下午**编写");
+        }
+        if (statistic.getNightCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getNightCount()).append("`条段落在**晚上**编写");
+        }
+        if (statistic.getMidnightCount() > 0) {
+            builder.append("，  \n有`").append(statistic.getMidnightCount()).append("`条段落在**半夜**编写");
+        }
+        if (statistic.getTimeUnknownCount() > 0) {
+            builder.append("，  \n还有`").append(statistic.getTimeUnknownCount()).append("`条段落的编写时间**未知**");
+        }
+        builder.append("。");
+        return builder.toString();
     }
 }

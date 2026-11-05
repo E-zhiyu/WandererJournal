@@ -15,6 +15,7 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
+import com.wanderer.journal.auxiliary.classes.ParagraphStatistics;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -494,4 +495,23 @@ public interface ParagraphDao {
      */
     @Query("UPDATE paragraphs SET privacyType = :type WHERE paragraphId = :paragraphId")
     Completable updatePrivacyTypeCompletable(long paragraphId, int type);
+
+    /**
+     * 获取段落总结数据
+     *
+     * @return 段落总结数据，包括段落长度和时间的总结数据
+     */
+    @Query("SELECT " +
+            "(SELECT MAX(LENGTH(content)) FROM paragraphs) AS maxLength, " +
+            "(SELECT MIN(LENGTH(content)) FROM paragraphs) AS minLength, " +
+            "(SELECT AVG(LENGTH(content)) FROM paragraphs) AS avgLength, " +
+            "(SELECT COUNT(*) FROM paragraphs) AS totalCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 3600000 AND createTime % 86400000 < 18000000) AS weeHoursCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 18000000 AND createTime % 86400000 < 39600000) AS forenoonCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 39600000 AND createTime % 86400000 < 50400000) AS noonCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 50400000 AND createTime % 86400000 < 64800000) AS afternoonCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 64800000 AND createTime % 86400000 < 82800000) AS nightCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 >= 82800000 OR createTime % 86400000 < 3600000 AND createTime % 86400000 != 0) AS midnightCount, " +
+            "(SELECT COUNT(*) FROM paragraphs WHERE createTime % 86400000 = 0) AS timeUnknownCount")
+    Flowable<ParagraphStatistics> getParagraphStatisticsFlowable();
 }
