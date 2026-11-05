@@ -72,7 +72,6 @@ import com.wanderer.journal.ui.others.selections.paragraph.ParagraphKeyProvider;
 import com.wanderer.journal.ui.others.selections.paragraph.ParagraphLookup;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
-import com.wanderer.journal.ui.others.bottom.ParagraphFilterBottomSheet;
 import com.wanderer.journal.ui.others.bottom.EmotionTagSelectBottomSheet;
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;

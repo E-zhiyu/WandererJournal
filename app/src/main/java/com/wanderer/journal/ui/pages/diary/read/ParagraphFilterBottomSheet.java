@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.others.bottom;
+package com.wanderer.journal.ui.pages.diary.read;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,7 +19,7 @@ import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
-import com.wanderer.journal.ui.pages.diary.read.ReadViewModel;
+import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
 import java.util.Set;
