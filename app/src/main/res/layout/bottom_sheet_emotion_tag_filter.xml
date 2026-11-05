@@ -64,7 +64,7 @@
         app:layout_constraintTop_toBottomOf="@id/emotion_tag_recycler" />
 
     <!-- 其他筛选条件开关 -->
-    <com.google.android.flexbox.FlexboxLayout
+    <com.google.android.material.chip.ChipGroup
         android:id="@+id/others_filter_options_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -73,11 +73,20 @@
         android:paddingEnd="10dp"
         app:layout_constraintTop_toBottomOf="@id/other_title_text">
 
+        <!-- 包含媒体 -->
         <com.google.android.material.chip.Chip
             android:id="@+id/media_filter_chip"
             style="@style/Widget.Material3.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/include_media" />
-    </com.google.android.flexbox.FlexboxLayout>
+
+        <!-- 包含位置 -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/location_filter_chip"
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/include_location" />
+    </com.google.android.material.chip.ChipGroup>
 </androidx.constraintlayout.widget.ConstraintLayout>

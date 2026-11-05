@@ -98,6 +98,7 @@
     <string name="auto_start_permission">自启动权限</string>
     <string name="others">其他</string>
     <string name="include_media">包含媒体</string>
+    <string name="include_location">包含位置</string>
     <string name="skip_date">日期跳转</string>
     <string name="role">角色</string>
     <string name="role_search_hint">搜索角色信息……</string>

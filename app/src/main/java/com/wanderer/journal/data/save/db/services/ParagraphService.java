@@ -168,6 +168,7 @@ public class ParagraphService {
             List<String> keywordList,
             Set<Long> emotionIds,
             boolean useMediaFilter,
+            boolean useLocationFilter,
             boolean isHiddenParagraphShown,
             @NonNull DiaryDb db,
             boolean isAndMode
@@ -181,8 +182,14 @@ public class ParagraphService {
 
         List<Object> args = getSearchArgs(keywordList, emotionIds, sql, isAndMode);
 
+        //媒体
         if (useMediaFilter) {
             sql.append(" AND p.paragraphId IN (SELECT parentParagraphId FROM medias)");
+        }
+
+        //位置
+        if (useLocationFilter) {
+            sql.append(" AND p.paragraphId IN (SELECT paragraphId FROM locations)");
         }
 
         SimpleSQLiteQuery rawQuery = new SimpleSQLiteQuery(sql.toString(), args.toArray());
