@@ -472,6 +472,13 @@ public class WriteActivity extends AppCompatActivity {
                 return;
             }
 
+            //获取定位
+            LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+            if (locationViewModel.isLocationOn() && locationViewModel.getLocation() == null) {
+                Toast.makeText(this, "请等待位置获取……", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             //显示进度条对话框
             ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
                     this,
@@ -535,7 +542,7 @@ public class WriteActivity extends AppCompatActivity {
                                         .filter(mediaEntity -> mediaEntity.getFileUri() != null)
                                         .collect(Collectors.toList());
 
-                                saveData(content, succeedMediaList);
+                                saveData(content, succeedMediaList, locationViewModel.getLocation());
                             }
                     )
             );
@@ -1165,8 +1172,9 @@ public class WriteActivity extends AppCompatActivity {
      *
      * @param content         最终的段落文本内容
      * @param mediaEntityList 最终处于永久目录下的媒体实体列表
+     * @param location        段落的定位数据
      */
-    private void saveData(String content, List<MediaEntity> mediaEntityList) {
+    private void saveData(String content, List<MediaEntity> mediaEntityList, @Nullable Location location) {
         //生成段落各属性
         LocalDate diaryDate = getParentDiaryDate();
         LocalDateTime paragraphDateTime = diaryDate.atTime(LocalTime.now());
