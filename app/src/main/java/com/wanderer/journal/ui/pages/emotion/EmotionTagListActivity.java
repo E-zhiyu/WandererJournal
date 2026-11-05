@@ -18,6 +18,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.databinding.ActivityEmotionTagListBinding;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
@@ -151,53 +152,39 @@ public class EmotionTagListActivity extends AppCompatActivity {
     }
 
     /**
-     * 显示PopupMenu
+     * 显示 PopupMenu
      *
-     * @param emotionTag 需要被操作的情绪标签
-     * @param view       PopupMenu绑定的视图
+     * @param model 需要被操作的情绪标签
+     * @param view  PopupMenu绑定的视图
      */
-    private void showEmotionTagPopupMenu(EmotionTagEntity emotionTag, View view) {
+    private void showEmotionTagPopupMenu(EmotionTagUseCountUnionModel model, View view) {
         PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_emotion_tag_edit, popupMenu.getMenu());
 
         //设置监听
         popupMenu.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_delete_emotion_tag) {
-                //获取段落数量
-                EmotionTagDao dao = DiaryDb
-                        .getInstance(EmotionTagListActivity.this)
-                        .emotionTagDao();
-                disposable.add(dao.getParagraphCountSingleById(emotionTag.getEmotionId())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                count -> {
-                                    //生成对话框消息
-                                    String message;
-                                    if (count == 0) {
-                                        message = "该标签没有被使用，确认删除它吗？";
-                                    } else {
-                                        message = String.format(
-                                                Locale.getDefault(),
-                                                "该标签被%d条段落使用，确认删除它吗？",
-                                                count
-                                        );
-                                    }
+                //生成对话框消息
+                String message;
+                if (model.getUseCount() == 0) {
+                    message = "该标签没有被使用，确认删除它吗？";
+                } else {
+                    message = String.format(
+                            Locale.getDefault(),
+                            "该标签被%d条段落使用，确认删除它吗？",
+                            model.getUseCount()
+                    );
+                }
 
-                                    //显示对话框
-                                    new MaterialAlertDialogBuilder(EmotionTagListActivity.this)
-                                            .setTitle(R.string.delete_emotion_tag)
-                                            .setMessage(message)
-                                            .setPositiveButton(
-                                                    "确定",
-                                                    (dialogInterface, i) ->
-                                                            deleteEmotionTag(emotionTag)
-                                            )
-                                            .setNegativeButton("取消", null)
-                                            .show();
-                                }
+                //显示对话框
+                new MaterialAlertDialogBuilder(EmotionTagListActivity.this)
+                        .setTitle(R.string.delete_emotion_tag)
+                        .setMessage(message)
+                        .setPositiveButton("确定", (dialogInterface, i) ->
+                                deleteEmotionTag(model.getEmotionTag())
                         )
-                );
+                        .setNegativeButton("取消", null)
+                        .show();
 
                 return true;
             }

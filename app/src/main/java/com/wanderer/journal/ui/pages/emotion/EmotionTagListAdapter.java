@@ -18,6 +18,7 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListe
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
 import com.wanderer.journal.databinding.ViewHolderEmotionTagListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
@@ -30,7 +31,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
     private static final int TYPE_ITEM = 1;
     private static final int TYPE_SEPARATOR = 0;
     private final AdapterOnClickListener<EmotionTagEntity> clickListener;           //点击监听器
-    private final AdapterOnLongClickListener<EmotionTagEntity> longClickListener;   //长按监听器
+    private final AdapterOnLongClickListener<EmotionTagUseCountUnionModel> longClickListener;   //长按监听器
     private static final DiffUtil.ItemCallback<EmotionListUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionListUiModel oldItem, @NonNull EmotionListUiModel newItem) {
@@ -100,7 +101,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
      */
     public EmotionTagListAdapter(
             AdapterOnClickListener<EmotionTagEntity> clickListener,
-            AdapterOnLongClickListener<EmotionTagEntity> longClickListener
+            AdapterOnLongClickListener<EmotionTagUseCountUnionModel> longClickListener
     ) {
         super(ITEM_CALLBACK);
         this.clickListener = clickListener;
@@ -181,7 +182,7 @@ public class EmotionTagListAdapter extends ListAdapter<EmotionListUiModel, Recyc
                         public void onLongClick(int position, View view) {
                             EmotionListUiModel emotionTag = getItem(position);
                             if (emotionTag instanceof EmotionListUiModel.Item) {
-                                longClickListener.onLongClick(((EmotionListUiModel.Item) emotionTag).model.getEmotionTag(), view);
+                                longClickListener.onLongClick(((EmotionListUiModel.Item) emotionTag).model, view);
                             }
                         }
                     }

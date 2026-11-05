@@ -145,15 +145,6 @@ public interface EmotionTagDao {
     Single<Optional<EmotionTagEntity>> getEmotionTagOptionalSingleById(long id);
 
     /**
-     * 查询某个情绪标签绑定的段落数量
-     *
-     * @param emotionTagId 情绪标签的 ID
-     * @return 包含绑定段落数量的{@link Single}对象
-     */
-    @Query("SELECT COUNT(*) FROM emotionParagraphCrossRef WHERE emotionId == :emotionTagId")
-    Single<Integer> getParagraphCountSingleById(long emotionTagId);
-
-    /**
      * 删除单个情绪标签
      *
      * @param emotionTag 需要被删除的情绪标签
