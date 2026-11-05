@@ -134,11 +134,13 @@ public class WriteActivity extends AppCompatActivity {
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
     private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
-    private WriteMediaAdapter mediaAdapter;                      //媒体文件列表适配器
+    private WriteMediaAdapter mediaAdapter;                     //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
     private final Runnable draftSavingRunnable = this::saveDraft;   //保存草稿的 Runnable 实例
     private boolean needCursorSkipToTail = false;           //输入框文本变化时需要让光标移动到末尾
+    @Nullable
+    private List<LocationListener> locationListenerList;        //位置监听器的列表
 
     {
         //初始化意图启动器
@@ -235,8 +237,7 @@ public class WriteActivity extends AppCompatActivity {
         super.onDestroy();
 
         //清理位置监听器
-        LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
-        LocationHelper.removeLocationListeners(this, locationViewModel.getListenerList());
+        requestLocation(false);
 
         //清空草稿保存任务并直接保存一次草稿
         draftSavingHandler.removeCallbacks(draftSavingRunnable);
@@ -1601,8 +1602,8 @@ public class WriteActivity extends AppCompatActivity {
         LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
 
         if (open) {
-            LocationHelper.removeLocationListeners(this, viewModel.getListenerList());  //清理旧的监听器
-            List<LocationListener> listenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
+            LocationHelper.removeLocationListeners(this, locationListenerList);  //清理旧的监听器
+            locationListenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
                 @Override
                 public void onUpdated(Location location) {
                     viewModel.setLocation(location);
@@ -1624,12 +1625,11 @@ public class WriteActivity extends AppCompatActivity {
                     requestLocation(false);
                 }
             });
-            viewModel.setListenerList(listenerList);
         } else {
-            LocationHelper.removeLocationListeners(this, viewModel.getListenerList());  //清理旧的监听器
+            LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
+            locationListenerList = null;
             viewModel.setLocationOn(false);
             viewModel.setLocation(null);
-            viewModel.setListenerList(null);
         }
     }
 
