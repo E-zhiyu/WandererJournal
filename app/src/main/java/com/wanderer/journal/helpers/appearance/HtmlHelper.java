@@ -80,8 +80,6 @@ public class HtmlHelper {
         backgroundWebView.getSettings().setLoadWithOverviewMode(true);
         backgroundWebView.getSettings().setSupportZoom(false);      //禁用缩放
         backgroundWebView.getSettings().setAllowFileAccess(true);   //允许加载本地文件
-        backgroundWebView.getSettings().setAllowFileAccessFromFileURLs(true);
-        backgroundWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
 
         //动态获取当前手机屏幕的真实物理像素宽度 (px)
         int screenWidthPx = AppearanceHelper.getScreenWidth(context);
@@ -95,10 +93,7 @@ public class HtmlHelper {
 
         //注入 JS 桥梁
         bridge = new AndroidBridge(backgroundWebView, jsonData, listener);
-        backgroundWebView.addJavascriptInterface(
-                bridge,
-                "AndroidShareBridge"
-        );
+        backgroundWebView.addJavascriptInterface(bridge, "AndroidShareBridge");
 
         //监听加载完成
         backgroundWebView.setWebViewClient(new WebViewClient() {

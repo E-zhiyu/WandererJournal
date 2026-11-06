@@ -32,23 +32,38 @@ body {
     display: block;
 }
 
-/* 时间戳的精致样式 */
-.bubble-time {
-    float: right;            /* 让时间戳向右浮动 */
-    font-size: 12px;         /* 字体小巧 */
-    color: #aaaaaa;          /* 淡淡的灰色，高级感 */
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 选用无衬线西文字体，数字更好看 */
-    margin-top: 8px;         /* 与上方内容拉开轻微距离 */
-    margin-left: 12px;        /* 留出左侧间距，防止文字和它贴太近 */
-    line-height: 12px;
-    user-select: none;
+/* ===== 位置 + 时间：同一行 meta 栏 ===== */
+.bubble-meta {
+    display: flex;
+    align-items: center;             /* 垂直居中 */
+    gap: 12px;                       /* 左右两块之间保底间距，防止贴在一起 */
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* 防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
-.bubble-content-wrapper::after {
-    content: "";
-    display: block;
-    clear: both;
+/* 位置文本 */
+.bubble-location {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    color: #aaaaaa;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 12px;
+    user-select: none;
+    white-space: nowrap;
+}
+
+/* 时间戳：去掉 float，改为 flex 子项 */
+.bubble-time {
+    flex: 0 0 auto;
+    font-size: 12px;
+    margin-left: auto;
+    color: #aaaaaa;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 12px;
+    user-select: none;
+    white-space: nowrap;
 }
 
 /* ================= 智能网格数量控制 ================= */

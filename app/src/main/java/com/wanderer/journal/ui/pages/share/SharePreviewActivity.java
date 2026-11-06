@@ -30,6 +30,7 @@ import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.enums.bottom_options.DiaryShareOption;
 import com.wanderer.journal.data.save.db.DiaryDb;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagRefUnionModel;
@@ -39,6 +40,7 @@ import com.wanderer.journal.data.save.preference.ShareSettingsPreference;
 import com.wanderer.journal.databinding.ActivitySharePreviewBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
+import com.wanderer.journal.helpers.LocationHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.HtmlHelper;
 import com.wanderer.journal.helpers.file.FileHelper;
@@ -153,16 +155,15 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //调用系统分享 API
                     disposable.add(FileHelper.shareFileCompletable(
-                                    SharePreviewActivity.this,
+                                    this,
                                     imageFile,
-                                    mimeType
-                            )
+                                    mimeType)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
                                     () -> Log.i(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API成功"),
                                     e -> {
-                                        ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e);
+                                        ExceptionHelper.showExceptionDialog(this, e);
                                         Log.e(LogTags.SHARE_PREVIEW_ACTIVITY.n(), "调用分享API时失败");
                                     }
                             ));
@@ -171,18 +172,12 @@ public class SharePreviewActivity extends AppCompatActivity {
                 generateImageAndDoAction(imageFile -> {
                     //保存至相册
                     Uri currentUri = Uri.fromFile(imageFile);
-                    disposable.add(MediaHelper.saveMediaToGalleryObservable(SharePreviewActivity.this, currentUri)
+                    disposable.add(MediaHelper.saveMediaToGalleryObservable(this, currentUri)
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(
-                                    uri -> Toast.makeText(
-                                            SharePreviewActivity.this,
-                                            "图片已保存至相册", Toast.LENGTH_SHORT
-                                    ).show(),
-                                    e -> ExceptionHelper.showExceptionDialog(
-                                            SharePreviewActivity.this,
-                                            e
-                                    )
+                                    uri -> Toast.makeText(this, "图片已保存至相册", Toast.LENGTH_SHORT).show(),
+                                    e -> ExceptionHelper.showExceptionDialog(SharePreviewActivity.this, e)
                             )
                     );
                 });
@@ -309,6 +304,8 @@ public class SharePreviewActivity extends AppCompatActivity {
         boolean enableMedia = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_MEDIA);
         boolean enableEmotion = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_EMOTION);
         boolean enableTime = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_TIME);
+        boolean enableLocation = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_LOCATION);
+        //TODO:添加位置分享开关
 
         //分段并转换为 JSON 字符串列表
         final int STEP = 1;
@@ -329,6 +326,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                 } else if (model instanceof ParagraphUiModel.Item) {
                     ParagraphUnionModel entityModel = ((ParagraphUiModel.Item) model).model;
                     ParagraphEntity paragraph = entityModel.getParagraph();
+                    LocationEntity location = entityModel.getLocation();
 
                     //添加段落内容字段
                     builder.append("\"type\":\"paragraph\",\"content\":");
@@ -382,14 +380,26 @@ public class SharePreviewActivity extends AppCompatActivity {
                         builder.append("]");
                     }
 
+                    //添加位置字段
+                    if (enableLocation && location != null) {
+                        builder.append(",");
+                        builder.append("\"location\":");
+
+                        String rawLocationStr = LocationHelper.locationToString(
+                                location.getLatitude(),
+                                location.getLongitude(),
+                                location.getAltitude());
+                        builder.append("\"")
+                                .append(rawLocationStr.replace("\n", "<br />"))
+                                .append("\"");
+                    }
+
                     //添加时间字段
                     if (enableTime) {
                         String time = paragraph.getCreateTime().format(CustomDateTimeFormatter.TIME);
                         builder.append(",");
                         builder.append("\"time\":");
-                        builder.append("\"");
-                        builder.append(time);
-                        builder.append("\"");
+                        builder.append("\"").append(time).append("\"");
                     }
                 }
 

@@ -51,20 +51,33 @@ function addData(jsonString) {
                 emotionHtml = `<div class="bubble-emotions-container">${chipItemsHtml}</div>`;
             }
 
-            //添加时间
+            // ===== 位置 + 时间：合并到同一行 =====
+            let locationHtml = '';
+            if (item.location && item.location.trim() !== '') {
+                locationHtml = `<span class="bubble-location">${item.location}</span>`;
+            }
+
+            //TODO:不应该用浮动，应该用弹性布局
+
             let timeHtml = '';
             if (item.time && item.time.trim() !== '') {
                 timeHtml = `<span class="bubble-time">${item.time}</span>`;
             }
 
-            //如果有图片，时间戳会顺延到图片右下方；如果是纯文本，时间戳会在文本右下方。
+            // 只有位置或时间任一存在时才输出 meta 行
+            let metaHtml = '';
+            if (locationHtml || timeHtml) {
+                metaHtml = `<div class="bubble-meta">${locationHtml}${timeHtml}</div>`;
+            }
+
+            // 显示 JSON 内容
             htmlContent += `
                 <div class="paragraph-bubble">
                     <div class="bubble-content-wrapper">
                         ${innerImgHtml}
                         <div class="bubble-text">${item.content}</div>
                         ${emotionHtml}
-                        ${timeHtml}
+                        ${metaHtml}
                     </div>
                 </div>
             `;
