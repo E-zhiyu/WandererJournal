@@ -330,7 +330,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     //添加段落内容字段
                     builder.append("\"type\":\"paragraph\",\"content\":");
                     builder.append("\"");
-                    String paragraphContent = paragraph.getContent();
+                    String paragraphContent = paragraph.getContent().replace("\n", "\\n");
                     builder.append(TextHelper.hierarchicButNormalText(paragraphContent, new RoleRefTextRule() {
                         @Override
                         public void onClick(String clickData) {
