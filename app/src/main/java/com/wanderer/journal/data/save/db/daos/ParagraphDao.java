@@ -434,12 +434,12 @@ public interface ParagraphDao {
         mediaDao.insertMedia(mediaList);
 
         //更新位置信息
+        deleteLocationByParagraphId(paragraphId);
         if (location != null) {
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             double altitude = location.getAltitude();
             LocationEntity locationEntity = new LocationEntity(paragraphId, latitude, longitude, altitude);
-            deleteLocationByParagraphId(paragraphId);
             insertLocation(locationEntity);
         }
 

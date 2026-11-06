@@ -32,7 +32,7 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class WriteViewModel extends ViewModel {
-    private final MutableLiveData<Pair<ParagraphEntity, List<MediaEntity>>> modifyingLiveData = new MutableLiveData<>();    //正在编辑的段落和它的媒体列表
+    private final MutableLiveData<Pair<ParagraphUnionModel, List<MediaEntity>>> modifyingLiveData = new MutableLiveData<>();    //正在编辑的段落和它的媒体列表
     private final BehaviorProcessor<LocalDate> dateProcessor =
             BehaviorProcessor.createDefault(LocalDate.now());       //日期的处理器
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
@@ -50,7 +50,7 @@ public class WriteViewModel extends ViewModel {
         }
     }
 
-    public MutableLiveData<Pair<ParagraphEntity, List<MediaEntity>>> getModifyingLiveData() {
+    public MutableLiveData<Pair<ParagraphUnionModel, List<MediaEntity>>> getModifyingLiveData() {
         return modifyingLiveData;
     }
 
@@ -60,8 +60,9 @@ public class WriteViewModel extends ViewModel {
      * @return 正在编辑的段落编号，没有正在编辑的段落时返回0
      */
     public long getModifyingParagraphId() {
-        Pair<ParagraphEntity, List<MediaEntity>> modifyingPair = modifyingLiveData.getValue();
-        return modifyingPair != null && modifyingPair.first != null ? modifyingPair.first.getParagraphId() : 0;
+        Pair<ParagraphUnionModel, List<MediaEntity>> modifyingPair = modifyingLiveData.getValue();
+        return modifyingPair != null && modifyingPair.first != null ?
+                modifyingPair.first.getParagraph().getParagraphId() : 0;
     }
 
     /**
@@ -69,7 +70,7 @@ public class WriteViewModel extends ViewModel {
      *
      * @param pair 正在编辑的段落和它的媒体列表，传递 null 表示没有正在编辑的段落
      */
-    public void updateModifying(@Nullable Pair<ParagraphEntity, List<MediaEntity>> pair) {
+    public void updateModifying(@Nullable Pair<ParagraphUnionModel, List<MediaEntity>> pair) {
         modifyingLiveData.setValue(pair);
     }
 
