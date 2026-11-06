@@ -1643,12 +1643,15 @@ public class WriteActivity extends AppCompatActivity {
                     requestLocation(false);
                 }
             });
-        } else if (!open && viewModel.isLocationOn()) {
+        } else if (!open) {
             LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
             locationListenerList = null;
             viewModel.setLocationOn(false);
             viewModel.setLocation(null);
-            Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+
+            if (viewModel.isLocationOn()) {
+                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
