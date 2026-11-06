@@ -1607,18 +1607,7 @@ public class WriteActivity extends AppCompatActivity {
     private void requestLocation(boolean open) {
         LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
 
-        if (open) {
-            //弹出提示
-            IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
-            IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
-            boolean isFineGranted = XXPermissions.isGrantedPermission(this, fineLocation);
-            boolean isCoarseGranted = XXPermissions.isGrantedPermission(this, coarseLocation);
-            if (isFineGranted && isCoarseGranted) {
-                Toast.makeText(this, "已开启段落定位", Toast.LENGTH_SHORT).show();
-            } else if (isCoarseGranted) {
-                Toast.makeText(this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
-            }
-
+        if (open && !viewModel.isLocationOn()) {
             //监听位置
             LocationHelper.removeLocationListeners(this, locationListenerList);  //清理旧的监听器
             locationListenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
@@ -1628,12 +1617,23 @@ public class WriteActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onDisabled(String provider) {
+                public void onProviderDisabled(String provider) {
                     requestLocation(false);
                 }
 
                 @Override
                 public void onListenStarted() {
+                    //弹出提示
+                    IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
+                    IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
+                    boolean isFineGranted = XXPermissions.isGrantedPermission(WriteActivity.this, fineLocation);
+                    boolean isCoarseGranted = XXPermissions.isGrantedPermission(WriteActivity.this, coarseLocation);
+                    if (isFineGranted && isCoarseGranted) {
+                        Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                    } else if (isCoarseGranted) {
+                        Toast.makeText(WriteActivity.this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
+                    }
+
                     viewModel.setLocationOn(true);
                 }
 
@@ -1643,7 +1643,7 @@ public class WriteActivity extends AppCompatActivity {
                     requestLocation(false);
                 }
             });
-        } else {
+        } else if (!open && viewModel.isLocationOn()) {
             LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
             locationListenerList = null;
             viewModel.setLocationOn(false);
