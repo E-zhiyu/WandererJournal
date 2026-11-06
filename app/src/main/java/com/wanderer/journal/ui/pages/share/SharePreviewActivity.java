@@ -389,7 +389,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                                 location.getLongitude(),
                                 location.getAltitude());
                         builder.append("\"")
-                                .append(rawLocationStr.replace("\n", "<br />"))
+                                .append(rawLocationStr.replace("\n", "\\n"))
                                 .append("\"");
                     }
 
