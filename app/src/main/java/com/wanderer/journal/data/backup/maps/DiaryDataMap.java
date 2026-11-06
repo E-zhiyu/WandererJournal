@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wanderer.journal.data.backup.pojo.DiaryPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
+import com.wanderer.journal.data.backup.pojo.LocationPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 
@@ -14,10 +15,20 @@ public class DiaryDataMap {
     private List<DiaryPojo> diaryList;                              //日记列表
     private List<ParagraphPojo> paragraphList;                      //段落列表
     private List<MediaPojo> mediaList;                              //媒体文件列表
+    private List<LocationPojo> locationList;                        //段落位置信息
     private List<EmotionTagPojo> emotionTagList;                    //情绪标签列表
     private List<EmotionParagraphRefPojo> emotionParagraphRefList;  //情绪标签与段落关系列表
 
     public DiaryDataMap() {
+    }
+
+    public DiaryDataMap(List<DiaryPojo> diaryList, List<ParagraphPojo> paragraphList, List<MediaPojo> mediaList, List<LocationPojo> locationList, List<EmotionTagPojo> emotionTagList, List<EmotionParagraphRefPojo> emotionParagraphRefList) {
+        this.diaryList = diaryList;
+        this.paragraphList = paragraphList;
+        this.mediaList = mediaList;
+        this.locationList = locationList;
+        this.emotionTagList = emotionTagList;
+        this.emotionParagraphRefList = emotionParagraphRefList;
     }
 
     public List<DiaryPojo> getDiaryList() {
@@ -42,6 +53,14 @@ public class DiaryDataMap {
 
     public void setMediaList(List<MediaPojo> mediaList) {
         this.mediaList = mediaList;
+    }
+
+    public List<LocationPojo> getLocationList() {
+        return locationList;
+    }
+
+    public void setLocationList(List<LocationPojo> locationList) {
+        this.locationList = locationList;
     }
 
     public List<EmotionTagPojo> getEmotionTagList() {

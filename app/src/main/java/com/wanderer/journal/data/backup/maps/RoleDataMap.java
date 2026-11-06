@@ -8,8 +8,16 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
 public class RoleDataMap {
-    private List<RolePojo> roleList;                                //角色列表
-    private List<RoleAliaPojo> roleAliaList;
+    private List<RolePojo> roleList;            //角色列表
+    private List<RoleAliaPojo> roleAliaList;    //角色别称
+
+    public RoleDataMap() {
+    }
+
+    public RoleDataMap(List<RolePojo> roleList, List<RoleAliaPojo> roleAliaList) {
+        this.roleList = roleList;
+        this.roleAliaList = roleAliaList;
+    }
 
     public List<RolePojo> getRoleList() {
         return roleList;

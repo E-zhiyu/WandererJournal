@@ -17,6 +17,7 @@ import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
 import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
+import com.wanderer.journal.data.backup.pojo.LocationPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
@@ -26,6 +27,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
@@ -45,37 +47,40 @@ public interface DataBackupDao {
      */
     @Transaction
     default DiaryDataMap exportDiaryData() {
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
         //读取日记数据
         List<DiaryEntity> diaryEntityList = readDiaryData();
-        List<DiaryPojo> diaryPojoList = EntityPojoMapper.INSTANCE.toDiaryPojoList(diaryEntityList);
+        List<DiaryPojo> diaryPojoList = mapper.toDiaryPojoList(diaryEntityList);
 
         //读取段落数据
         List<ParagraphEntity> paragraphEntityList = readParagraphData();
-        List<ParagraphPojo> paragraphPojoList = EntityPojoMapper.INSTANCE.toParagraphPojoList(paragraphEntityList);
+        List<ParagraphPojo> paragraphPojoList = mapper.toParagraphPojoList(paragraphEntityList);
 
         //读取媒体数据
         List<MediaEntity> mediaEntityList = readMediaData();
-        List<MediaPojo> mediaPojoList = EntityPojoMapper.INSTANCE.toMediaPojoList(mediaEntityList);
+        List<MediaPojo> mediaPojoList = mapper.toMediaPojoList(mediaEntityList);
+
+        //读取位置数据
+        List<LocationEntity> locationEntityList = readLocationData();
+        List<LocationPojo> locationPojoList = mapper.toLocationPojoList(locationEntityList);
 
         //读取情绪标签数据
         List<EmotionTagEntity> emotionTagWithParagraphList = readEmotionData();
-        List<EmotionTagPojo> emotionTagPojoList =
-                EntityPojoMapper.INSTANCE.toEmotionTagPojoList(emotionTagWithParagraphList);
+        List<EmotionTagPojo> emotionTagPojoList = mapper.toEmotionTagPojoList(emotionTagWithParagraphList);
 
         //读取情绪标签与段落关系数据
         List<EmotionParagraphRefEntity> emotionParagraphRefEntityList = readEmotionRefData();
-        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList =
-                EntityPojoMapper.INSTANCE.toEmotionParagraphRefPojoList(emotionParagraphRefEntityList);
+        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = mapper.toEmotionParagraphRefPojoList(emotionParagraphRefEntityList);
 
-        //实例化Map类
-        DiaryDataMap map = new DiaryDataMap();
-        map.setDiaryList(diaryPojoList);
-        map.setParagraphList(paragraphPojoList);
-        map.setMediaList(mediaPojoList);
-        map.setEmotionTagList(emotionTagPojoList);
-        map.setEmotionParagraphRefList(emotionParagraphRefPojoList);
-
-        return map;
+        return new DiaryDataMap(
+                diaryPojoList,
+                paragraphPojoList,
+                mediaPojoList,
+                locationPojoList,
+                emotionTagPojoList,
+                emotionParagraphRefPojoList
+        );
     }
 
     /**
@@ -95,6 +100,7 @@ public interface DataBackupDao {
         clearEmotionParagraphRef();
         clearEmotionTag();
         clearMediaData();
+        clearLocationData();
         clearParagraphData();
         clearDiaryData();
 
@@ -147,6 +153,17 @@ public interface DataBackupDao {
             exceptionList.add(e);
         }
 
+        //导入位置数据
+        try {
+            List<LocationPojo> locationPojoList = data.getLocationList();
+            if (locationPojoList != null && !locationPojoList.isEmpty()) {
+                List<LocationEntity> locationEntityList = mapper.toLocationEntityList(locationPojoList);
+                writeLocationData(locationEntityList);
+            }
+        } catch (Exception e) {
+            exceptionList.add(e);
+        }
+
         //导入情绪标签数据
         try {
             List<EmotionTagPojo> emotionTagPojoList = data.getEmotionTagList();
@@ -186,18 +203,17 @@ public interface DataBackupDao {
      */
     @Transaction
     default RoleDataMap exportRoleData() {
+        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+
         //读取角色数据
         List<RoleEntity> roleEntityList = readRoleData();
-        List<RolePojo> rolePojoList = EntityPojoMapper.INSTANCE.toRolePojoList(roleEntityList);
+        List<RolePojo> rolePojoList = mapper.toRolePojoList(roleEntityList);
 
         //读取角色别名数据
         List<RoleAliaEntity> roleAliaEntityList = readRoleAliaData();
-        List<RoleAliaPojo> roleAliaPojoList = EntityPojoMapper.INSTANCE.toRoleAliaPojoList(roleAliaEntityList);
+        List<RoleAliaPojo> roleAliaPojoList = mapper.toRoleAliaPojoList(roleAliaEntityList);
 
-        RoleDataMap map = new RoleDataMap();
-        map.setRoleList(rolePojoList);
-        map.setRoleAliaList(roleAliaPojoList);
-        return map;
+        return new RoleDataMap(rolePojoList,roleAliaPojoList);
     }
 
     /**
@@ -264,10 +280,7 @@ public interface DataBackupDao {
         List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = readLifeNoteHistoryData();
         List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = mapper.toLifeNoteHistoryPojoList(lifeNoteHistoryEntityList);
 
-        LifeNoteDataMap map = new LifeNoteDataMap();
-        map.setLifeNoteList(lifeNotePojoList);
-        map.setLifeNoteHistoryList(lifeNoteHistoryPojoList);
-        return map;
+        return new LifeNoteDataMap(lifeNotePojoList,lifeNoteHistoryPojoList);
     }
 
     /**
@@ -424,6 +437,28 @@ public interface DataBackupDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void writeMediaData(List<MediaEntity> mediaEntityList);
+
+    /**
+     * 读取段落位置信息
+     *
+     * @return 段落位置信息
+     */
+    @Query("SELECT * FROM locations")
+    List<LocationEntity> readLocationData();
+
+    /**
+     * 清空段落位置信息
+     */
+    @Query("DELETE FROM locations")
+    void clearLocationData();
+
+    /**
+     * 写入段落位置信息
+     *
+     * @param list 段落位置数据
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void writeLocationData(List<LocationEntity> list);
 
     /**
      * 导出角色数据

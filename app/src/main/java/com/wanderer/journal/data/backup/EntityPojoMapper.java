@@ -7,6 +7,7 @@ import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
 import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
 import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
 import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
+import com.wanderer.journal.data.backup.pojo.LocationPojo;
 import com.wanderer.journal.data.backup.pojo.MediaPojo;
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
 import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
@@ -18,6 +19,7 @@ import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
 import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
@@ -149,4 +151,12 @@ public interface EntityPojoMapper {
     LifeNoteHistoryPojo toLifeNoteHistoryPojo(LifeNoteHistoryEntity entity);
 
     List<LifeNoteHistoryPojo> toLifeNoteHistoryPojoList(List<LifeNoteHistoryEntity> historyEntityList);
+
+    LocationEntity toLocationEntity(LocationPojo pojo);
+
+    List<LocationEntity> toLocationEntityList(List<LocationPojo> pojoList);
+
+    LocationPojo toLocationPojo(LocationEntity entity);
+
+    List<LocationPojo> toLocationPojoList(List<LocationEntity> entityList);
 }
