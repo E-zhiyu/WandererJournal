@@ -305,7 +305,6 @@ public class SharePreviewActivity extends AppCompatActivity {
         boolean enableEmotion = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_EMOTION);
         boolean enableTime = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_TIME);
         boolean enableLocation = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_LOCATION);
-        //TODO:添加位置分享开关
 
         //分段并转换为 JSON 字符串列表
         final int STEP = 1;

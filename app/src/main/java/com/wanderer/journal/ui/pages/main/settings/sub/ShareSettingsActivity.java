@@ -88,7 +88,7 @@ public class ShareSettingsActivity extends AppCompatActivity {
                 this,
                 binding.mediaSwitch,
                 R.string.include_media,
-                "打开后分享内容将包含媒体预览图",
+                "分享日记内容包括段落的媒体预览图",
                 R.drawable.outline_perm_media_24,
                 RadiusStyle.TOP
         );
@@ -103,7 +103,7 @@ public class ShareSettingsActivity extends AppCompatActivity {
                 this,
                 binding.emotionSwitch,
                 R.string.emotion_tag,
-                "打开后分享内容将包含情绪标签",
+                "分享日记内容包括段落的情绪标签",
                 R.drawable.outline_mood_24,
                 RadiusStyle.MIDDLE
         );
@@ -112,13 +112,28 @@ public class ShareSettingsActivity extends AppCompatActivity {
                 ShareSettingsPreference.setSwitchStat(this, ShareSettingsPreference.KEY_EMOTION, b)
         );
 
+        //位置
+        boolean enableLocation = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_LOCATION);
+        SettingSwitchView locationSwitch = new SettingSwitchView(
+                this,
+                binding.locationSwitch,
+                R.string.paragraph_location,
+                "分享日记内容包括段落的位置数据",
+                R.drawable.outline_location_on_24,
+                RadiusStyle.MIDDLE
+        );
+        locationSwitch.setChecked(enableLocation);
+        locationSwitch.setFunctionListener((buttonView, isChecked) ->
+                ShareSettingsPreference.setSwitchStat(this, ShareSettingsPreference.KEY_LOCATION, isChecked)
+        );
+
         //时间
         boolean enableTime = ShareSettingsPreference.getSwitchStat(this, ShareSettingsPreference.KEY_TIME);
         SettingSwitchView timeSwitch = new SettingSwitchView(
                 this,
                 binding.timeSwitch,
                 R.string.paragraph_time,
-                "打开后分享内容将包括段落时间",
+                "分享日记内容包括段落的编写时间",
                 R.drawable.outline_nest_clock_farsight_analog_24,
                 RadiusStyle.BOTTOM
         );
