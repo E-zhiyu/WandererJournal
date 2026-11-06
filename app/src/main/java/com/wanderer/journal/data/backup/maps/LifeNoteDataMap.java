@@ -6,8 +6,16 @@ import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
 import java.util.List;
 
 public class LifeNoteDataMap {
-    private List<LifeNotePojo> lifeNoteList;
-    private List<LifeNoteHistoryPojo> lifeNoteHistoryList;
+    private List<LifeNotePojo> lifeNoteList;                //人生笔记
+    private List<LifeNoteHistoryPojo> lifeNoteHistoryList;  //人生笔记历史
+
+    public LifeNoteDataMap() {
+    }
+
+    public LifeNoteDataMap(List<LifeNotePojo> lifeNoteList, List<LifeNoteHistoryPojo> lifeNoteHistoryList) {
+        this.lifeNoteList = lifeNoteList;
+        this.lifeNoteHistoryList = lifeNoteHistoryList;
+    }
 
     public List<LifeNotePojo> getLifeNoteList() {
         return lifeNoteList;

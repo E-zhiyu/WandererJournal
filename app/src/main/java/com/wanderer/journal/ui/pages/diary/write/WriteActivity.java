@@ -61,6 +61,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
+import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
@@ -314,9 +315,8 @@ public class WriteActivity extends AppCompatActivity {
                             //启用编辑模式
                             WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
                             ParagraphUnionModel model = paragraphOptional.get();
-                            ParagraphEntity paragraph = model.getParagraph();
                             List<MediaEntity> mediaList = model.getMediaList();
-                            viewModel.updateModifying(new Pair<>(paragraph, mediaList));
+                            viewModel.updateModifying(new Pair<>(model, mediaList));
                         }
                 )
         );
@@ -628,7 +628,7 @@ public class WriteActivity extends AppCompatActivity {
         WriteViewModel writeViewModel = new ViewModelProvider(this).get(WriteViewModel.class);
         writeViewModel.getModifyingLiveData().observe(this, pair -> {
             if (pair != null) {
-                setEditMode(pair.first, pair.second);
+                setEditMode(pair.first.getParagraph(), pair.second);
             } else {
                 setEditMode(null, null);
             }
@@ -1180,7 +1180,7 @@ public class WriteActivity extends AppCompatActivity {
 
         //保存数据
         WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
-        Pair<ParagraphEntity, List<MediaEntity>> modifyingPair = viewModel.getModifyingLiveData().getValue();
+        Pair<ParagraphUnionModel, List<MediaEntity>> modifyingPair = viewModel.getModifyingLiveData().getValue();
         if (modifyingPair == null || modifyingPair.first == null) {
             DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
@@ -1233,31 +1233,57 @@ public class WriteActivity extends AppCompatActivity {
             );
         } else {
             //生成更新后的段落实例
+            ParagraphEntity oldParagraph = modifyingPair.first.getParagraph();
             ParagraphEntity paragraph = new ParagraphEntity(
-                    modifyingPair.first.getParentDiaryId(),
+                    oldParagraph.getParentDiaryId(),
                     content,
-                    modifyingPair.first.getCreateTime()
+                    oldParagraph.getCreateTime()
             );
-            paragraph.setParagraphId(modifyingPair.first.getParagraphId());
+            paragraph.setParagraphId(oldParagraph.getParagraphId());
 
-            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, location, this)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            () -> viewModel.updateModifying(null),
-                            throwable -> {
-                                viewModel.updateModifying(null);
-                                ExceptionHelper.showExceptionDialog(this, throwable);
+            Function<Location, Void> saveFun = finalLocation -> {
+                disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, finalLocation, this)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                () -> viewModel.updateModifying(null),
+                                throwable -> {
+                                    viewModel.updateModifying(null);
+                                    ExceptionHelper.showExceptionDialog(this, throwable);
 
-                                for (MediaEntity mediaEntity : mediaEntityList) {
-                                    //删除新添加的媒体文件
-                                    if (mediaEntity.getMediaId() == 0) {
-                                        FileHelper.deleteFile(mediaEntity.getFileUri(), this);
+                                    for (MediaEntity mediaEntity : mediaEntityList) {
+                                        //删除新添加的媒体文件
+                                        if (mediaEntity.getMediaId() == 0) {
+                                            FileHelper.deleteFile(mediaEntity.getFileUri(), this);
+                                        }
                                     }
                                 }
-                            }
-                    )
-            );
+                        )
+                );
+                return null;
+            };
+
+            //若当前没有开启段落定位，且修改的段落有位置信息，则让用户选择是否保留原位置
+            LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+            if (!locationViewModel.isLocationOn() && modifyingPair.first.getLocation() != null) {
+                LocationEntity oldLocationEntity = modifyingPair.first.getLocation();
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.paragraph_location)
+                        .setMessage("原段落带有位置信息，且当前并未开启段落定位，请您选择是否保留原有的位置信息。")
+                        .setPositiveButton("保留", (dialog, which) -> {
+                            Location tempLocation = new Location("provider");
+                            tempLocation.setAltitude(oldLocationEntity.getAltitude());
+                            tempLocation.setLongitude(oldLocationEntity.getLongitude());
+                            tempLocation.setLatitude(oldLocationEntity.getLatitude());
+                            saveFun.apply(tempLocation);
+                        })
+                        .setNegativeButton("移除", (dialog, which) ->
+                                saveFun.apply(null)
+                        )
+                        .show();
+            } else {
+                saveFun.apply(location);
+            }
         }
     }
 
@@ -1276,7 +1302,7 @@ public class WriteActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.action_modify_content) {
                 WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
-                viewModel.updateModifying(new Pair<>(paragraph, model.getMediaList()));
+                viewModel.updateModifying(new Pair<>(model, model.getMediaList()));
                 return true;
             } else if (id == R.id.action_modify_time) {
                 modifyCreateTime(paragraph);
@@ -1607,18 +1633,7 @@ public class WriteActivity extends AppCompatActivity {
     private void requestLocation(boolean open) {
         LocationViewModel viewModel = new ViewModelProvider(this).get(LocationViewModel.class);
 
-        if (open) {
-            //弹出提示
-            IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
-            IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
-            boolean isFineGranted = XXPermissions.isGrantedPermission(this, fineLocation);
-            boolean isCoarseGranted = XXPermissions.isGrantedPermission(this, coarseLocation);
-            if (isFineGranted && isCoarseGranted) {
-                Toast.makeText(this, "已开启段落定位", Toast.LENGTH_SHORT).show();
-            } else if (isCoarseGranted) {
-                Toast.makeText(this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
-            }
-
+        if (open && !viewModel.isLocationOn()) {
             //监听位置
             LocationHelper.removeLocationListeners(this, locationListenerList);  //清理旧的监听器
             locationListenerList = LocationHelper.requestCurrentLocation(this, new LocationHelper.CurrentLocationListener() {
@@ -1628,12 +1643,23 @@ public class WriteActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onDisabled(String provider) {
+                public void onProviderDisabled(String provider) {
                     requestLocation(false);
                 }
 
                 @Override
                 public void onListenStarted() {
+                    //弹出提示
+                    IPermission fineLocation = PermissionLists.getAccessFineLocationPermission();
+                    IPermission coarseLocation = PermissionLists.getAccessCoarseLocationPermission();
+                    boolean isFineGranted = XXPermissions.isGrantedPermission(WriteActivity.this, fineLocation);
+                    boolean isCoarseGranted = XXPermissions.isGrantedPermission(WriteActivity.this, coarseLocation);
+                    if (isFineGranted && isCoarseGranted) {
+                        Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                    } else if (isCoarseGranted) {
+                        Toast.makeText(WriteActivity.this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
+                    }
+
                     viewModel.setLocationOn(true);
                 }
 
@@ -1643,12 +1669,15 @@ public class WriteActivity extends AppCompatActivity {
                     requestLocation(false);
                 }
             });
-        } else {
+        } else if (!open) {
             LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
             locationListenerList = null;
             viewModel.setLocationOn(false);
             viewModel.setLocation(null);
-            Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+
+            if (viewModel.isLocationOn()) {
+                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

@@ -10,7 +10,19 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.8.0\n" +
+    private final static String CHANGELOG = "# v1.8.1\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复段落定位开关提示会在错误时机弹出的BUG\n" +
+            "- 修复无法备份段落位置数据的BUG\n" +
+            "- 修复分享有换行的段落时会卡住的BUG\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 没有开启段落定位时，修改有位置的段落后会提示是否保留原位置\n" +
+            "\n" +
+            "# v1.8.0\n" +
             "\n" +
             "### 新增功能\n" +
             "\n" +

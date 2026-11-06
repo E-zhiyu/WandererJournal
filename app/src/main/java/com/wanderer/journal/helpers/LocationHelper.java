@@ -63,7 +63,7 @@ public class LocationHelper {
          *
          * @param provider 关闭的位置 Provider
          */
-        void onDisabled(String provider);
+        void onProviderDisabled(String provider);
 
         /**
          * 开始监听的回调
@@ -128,7 +128,7 @@ public class LocationHelper {
                 },
                 provider -> {
                     Log.w(LogTags.LOCATION_HELPER.n(), provider + "关闭");
-                    listener.onDisabled(provider);
+                    listener.onProviderDisabled(provider);
                     return null;
                 },
                 () -> removeLocationListeners(context, listenerList)
@@ -142,7 +142,7 @@ public class LocationHelper {
                 },
                 provider -> {
                     Log.w(LogTags.LOCATION_HELPER.n(), provider + "关闭");
-                    listener.onDisabled(provider);
+                    listener.onProviderDisabled(provider);
                     return null;
                 },
                 () -> removeLocationListeners(context, listenerList)

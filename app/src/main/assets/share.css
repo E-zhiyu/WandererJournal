@@ -1,191 +1,260 @@
+/* ============================================================
+   1. 全局重置 & 设计令牌
+   ============================================================ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;   /* 统一盒模型，删掉各处重复声明 */
+}
+
+:root {
+    /* 颜色令牌：收敛散落的色值，便于统一调整 */
+    --bg-page:            #f5f6f9;
+    --bg-bubble:          #ffffff;
+    --bg-footer:          #fcfcfc;
+    --color-text:         #222222;
+    --color-text-strong:  #333333;
+    --color-text-muted:   #aaaaaa;
+    --color-text-slogan:  #999999;
+    --color-divider-bg:   #e0e3ea;
+    --color-divider-text: #666666;
+    --color-border:       #eeeeee;
+    --color-chip-bg:      rgba(235, 240, 245, 0.8);
+    --color-chip-text:    #5a6e7f;
+
+    /* 字体栈：优先系统字体，中文设备显示更一致 */
+    --font-base: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 'Helvetica Neue', Helvetica, Arial,
+                 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+    /* 尺寸令牌 */
+    --radius-bubble: 20px;
+    --radius-image:  10px;
+    --gap-grid:      8px;
+}
+
+/* ============================================================
+   2. 基础排版
+   ============================================================ */
 body {
     height: auto;
     min-height: 0;
-    background-color: #f5f6f9;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    padding: 20px;
     margin: 0;
+    padding: 20px;
+    background-color: var(--bg-page);
+    font-family: var(--font-base);
 }
 
-/* 抬头标题样式 */
+/* 抬头标题 */
 .header {
     text-align: center;
 }
 
-/* 日期分隔符样式 */
+/* ============================================================
+   3. 日期分隔符
+   ============================================================ */
 .date-divider {
+    margin: 17px 0;
     text-align: center;
-    margin: 17px 0 17px 0;
 }
+
 .date-divider span {
-    background-color: #e0e3ea;
-    color: #666;
-    font-size: 12px;
     padding: 4px 12px;
     border-radius: 20px;
+    background-color: var(--color-divider-bg);
+    color: var(--color-divider-text);
+    font-size: 12px;
 }
 
-/* 气泡内部容器，开启相对定位，方便整体排版控制 */
+/* ============================================================
+   4. 气泡内容容器
+   ============================================================ */
 .bubble-content-wrapper {
-    position: relative;
-    width: 100%;
+    position: relative;   /* 保留：便于内部绝对定位扩展 */
     display: block;
+    width: 100%;
 }
 
-/* 时间戳的精致样式 */
-.bubble-time {
-    float: right;            /* 让时间戳向右浮动 */
-    font-size: 12px;         /* 字体小巧 */
-    color: #aaaaaa;          /* 淡淡的灰色，高级感 */
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* 选用无衬线西文字体，数字更好看 */
-    margin-top: 8px;         /* 与上方内容拉开轻微距离 */
-    margin-left: 12px;        /* 留出左侧间距，防止文字和它贴太近 */
-    line-height: 12px;
+/* ============================================================
+   5. 位置 + 时间 meta 栏（Flex）
+   ============================================================ */
+.bubble-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* 位置：支持 \n 换行；多行时可选择截断 */
+.bubble-location {
+    /* 用 pre-line 保留换行、折叠多余空格；不能与 nowrap 共存 */
+    white-space: pre-line;
+    overflow: hidden;
+
+    color: var(--color-text-muted);
+    font-size: 12px;
+    line-height: 1.4;          /* 由固定 12px 改为相对行高，多行更易读 */
     user-select: none;
 }
 
-/* 防止时间戳浮动后，导致气泡底部塌陷、高度缺失 */
-.bubble-content-wrapper::after {
-    content: "";
-    display: block;
-    clear: both;
+/* 时间：右对齐，不换行 */
+.bubble-time {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: nowrap;
+    user-select: none;
 }
 
-/* ================= 智能网格数量控制 ================= */
-
-/* 通用网格基础配置 */
+/* ============================================================
+   6. 图片网格（Grid）
+   ============================================================ */
 .bubble-image-grid {
     display: grid;
-    gap: 8px; /* 图片之间的间隙为 8px */
+    gap: var(--gap-grid);
     width: 100%;
     margin-bottom: 10px;
-    box-sizing: border-box; /* 确保 padding 和 border 不会撑大容器 */
 }
 
-/* img标签容器 */
 .grid-image-item {
     overflow: hidden;
-    box-sizing: border-box;
+    /* aspect-ratio 兼容兜底：不支持的旧 WebView 用 padding-top 撑正方形 */
+    position: relative;
 }
-/* 段落的img标签 */
+
+/* aspect-ratio 支持的浏览器走这里 */
+@supports (aspect-ratio: 1 / 1) {
+    .grid-image-item {
+        aspect-ratio: 1 / 1;
+    }
+}
+
+/* 兜底：不支持的浏览器用 padding-top: 100% 保持正方形 */
+@supports not (aspect-ratio: 1 / 1) {
+    .grid-image-item::before {
+        content: '';
+        display: block;
+        padding-top: 100%;
+    }
+    .bubble-image-node {
+        position: absolute;
+        inset: 0;
+    }
+}
+
 .bubble-image-node {
+    display: block;            /* 消除图片底部默认空白 */
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 10px;
-    display: block; /* 消除图片下方的默认空白间隙 */
+    border-radius: var(--radius-image);
 }
 
-/* --- 只有 1 张图 --- */
+/* 列数控制：网格布局下只需定义列模板，格子正方形由上面的规则统一处理 */
 .images-count-1 {
     grid-template-columns: 1fr;
 }
-.images-count-1 .grid-image-item {
-    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
-}
 
-/* --- 有 2 张图（双列布局） --- */
-/* 核心修复：两列之间有 1 个 8px 的间隙，所以每列宽度是 (100% - 8px) / 2 */
 .images-count-2 {
-    grid-template-columns: repeat(2, calc((100% - 8px) / 2));
+    /* 两列 + 1 个 gap：每列 (100% - gap) / 2 */
+    grid-template-columns: repeat(2, calc((100% - var(--gap-grid)) / 2));
 }
 
-.images-count-2 .grid-image-item {
-    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
-}
-
-/* --- 情况 C：3张、5张及以上（三列布局，如九宫格） --- */
-/* 核心修复：三列之间有 2 个 8px 的间隙，总共 16px。所以每列宽度是 (100% - 16px) / 3 */
 .images-count-3 {
-    grid-template-columns: repeat(3, calc((100% - 16px) / 3));
+    /* 三列 + 2 个 gap：每列 (100% - 2*gap) / 3 */
+    grid-template-columns: repeat(3, calc((100% - var(--gap-grid) * 2) / 3));
 }
 
-.images-count-3 .grid-image-item {
-    aspect-ratio: 1 / 1; /* 强制格子保持完美正方形 */
-}
-
-/* 日记消息气泡基本样式 */
+/* ============================================================
+   7. 日记气泡
+   ============================================================ */
 .paragraph-bubble {
-    background-color: #ffffff;
-    color: #222222;
-    padding: 16px;
-    border-radius: 20px;
     margin-bottom: 16px;
-    line-height: 1.6;
+    padding: 16px;
+    border-radius: var(--radius-bubble);
+    background-color: var(--bg-bubble);
+    color: var(--color-text);
     font-size: 16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    word-wrap: break-word;
+    line-height: 1.6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    overflow-wrap: break-word;   /* 现代等价写法，替代 word-wrap */
 }
 
-/* 气泡内部的纯文字区域 */
+/* 正文纯文字区 */
 .bubble-text {
-    margin-bottom: 0; /* 默认如果没有图片，文字居底 */
+    margin-bottom: 0;
+    white-space: pre-line
 }
 
-/* 情绪标签的外层包裹容器 */
+/* ============================================================
+   8. 情绪标签
+   ============================================================ */
 .bubble-emotions-container {
     display: flex;
-    flex-wrap: wrap;       /* 位置不够时，标签自动折行到下一行 */
-    gap: 6px;              /* 标签之间的横纵向间隙 */
-    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
     width: 100%;
+    margin-top: 10px;
     margin-bottom: 10px;
-    box-sizing: border-box;
 }
 
-/* 情绪 Chip 样式 */
 .emotion-chip {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 7px 10px;      /* 胶囊内边距，上下窄左右宽 */
-    font-size: 11px;        /* 字体精致小巧 */
-    font-weight: 500;       /* 字重中等，清晰可读 */
-    border-radius: 100px;   /* 大圆角，呈现完美的圆润胶囊形态 */
+    padding: 7px 10px;
+    border-radius: 100px;
+    background-color: var(--color-chip-bg);
+    color: var(--color-chip-text);
+    font-size: 11px;
+    font-weight: 500;
     line-height: 12px;
-    letter-spacing: 0.3px;  /* 字间距微调 */
-    transition: all 0.2s ease;
-    background-color: rgba(235, 240, 245, 0.8);
-    color: #5a6e7f;
+    letter-spacing: 0.3px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    /* 注：原 transition: all 会连布局属性一起动画，收窄为颜色更稳 */
 }
 
-/* --- 底部页脚样式 --- */
+/* ============================================================
+   9. 底部页脚
+   ============================================================ */
 .footer {
     display: flex;
-    justify-content: space-between; /* 左右两端对齐 */
-    align-items: center;            /* 垂直居中对齐 */
+    justify-content: space-between;
+    align-items: center;
     margin-top: 24px;
     padding: 16px 20px;
-    background-color: #fcfcfc;      /* 给底部一个极淡的独立背景色底栏 */
-    border-top: 1px solid #eeeeee;   /* 一条精致的分隔线 */
-    border-radius: 20px;
-    box-sizing: border-box;
+    border-top: 1px solid var(--color-border);
+    border-radius: var(--radius-bubble);
+    background-color: var(--bg-footer);
 }
-/* 页脚左侧文字区域 */
+
 .footer-left {
     display: flex;
-    max-width: 60%;
     flex-direction: column;
     gap: 4px;
+    max-width: 60%;
 }
-/* 页脚应用名称 */
+
 .app-name {
+    color: var(--color-text-strong);
     font-size: 16px;
     font-weight: bold;
-    color: #333333;
 }
-/* 页脚应用名称下方的文字 */
+
 .app-slogan {
+    color: var(--color-text-slogan);
     font-size: 12px;
-    color: #999999;
 }
-/* 页脚右侧二维码样式 */
+
 .project-qrcode {
-    width: 64px;               /* 严格控制二维码尺寸，不能太大，64px~80px 视觉效果最好 */
-    height: 64px;
-    border-radius: 6px;        /* 微微的圆角 */
-    border: 3px solid #ffffff; /* 高级感的白边相框 */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 淡淡的阴影，让二维码浮现出来 */
-    background-color: #ffffff;
     display: block;
+    width: 64px;
+    height: 64px;
+    border: 3px solid #ffffff;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }

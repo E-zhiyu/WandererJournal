@@ -10,6 +10,7 @@ public class ShareSettingsPreference {
     public static final String KEY_MEDIA = "media";         //媒体开关
     public static final String KEY_EMOTION = "emotion";     //情绪标签开关
     public static final String KEY_TIME = "time";           //时间开关
+    public static final String KEY_LOCATION = "location";   //位置
     private static final String KEY_PICTURE_BOTTOM_TEXT = "picture_bottom_text";    //分享图片底部文本
 
     /**

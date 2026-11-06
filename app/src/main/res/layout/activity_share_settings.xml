@@ -64,6 +64,11 @@
                 android:id="@+id/emotion_switch"
                 layout="@layout/view_setting_option" />
 
+            <!-- 位置 -->
+            <include
+                android:id="@+id/location_switch"
+                layout="@layout/view_setting_option" />
+
             <!-- 时间 -->
             <include
                 android:id="@+id/time_switch"
