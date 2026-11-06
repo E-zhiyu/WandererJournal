@@ -15,6 +15,7 @@ public class AboutHelper {
             "### BUG修复\n" +
             "\n" +
             "- 修复段落定位开关提示会在错误时机弹出的BUG\n" +
+            "- 修复无法备份段落位置数据的BUG\n" +
             "\n" +
             "# v1.8.0\n" +
             "\n" +
