@@ -270,8 +270,11 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             LocationEntity location = dataModel.getLocation();
             if (location != null) {
                 itemHolder.binding.locationText.setText(LocationHelper.locationToString(
-                        location.getLatitude(), location.getLongitude(), location.getAltitude())
-                );
+                        location.getLatitude(),
+                        location.getLongitude(),
+                        location.getAltitude(),
+                        location.isFineLocation()
+                ));
             } else {
                 itemHolder.binding.locationText.setText("");
             }

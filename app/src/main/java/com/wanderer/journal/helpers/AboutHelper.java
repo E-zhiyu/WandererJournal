@@ -10,7 +10,18 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.8.1\n" +
+    private final static String CHANGELOG = "# v1.8.2\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复修改段落位置时能够重复移动媒体文件的BUG\n" +
+            "\n" +
+            "### 优化的内容\n" +
+            "\n" +
+            "- 段落位置为粗略位置时会特别标注\n" +
+            "- 点击或长按呼出的段落菜单中添加分享选项\n" +
+            "\n" +
+            "# v1.8.1\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +

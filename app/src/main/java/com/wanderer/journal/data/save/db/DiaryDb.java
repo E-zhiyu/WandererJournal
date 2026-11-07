@@ -40,7 +40,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity;
                 LifeNoteEntity.class,
                 LifeNoteHistoryEntity.class
         },
-        version = 10
+        version = 11
 )
 @TypeConverters({
         DateTimeConverter.class,
@@ -73,7 +73,8 @@ public abstract class DiaryDb extends RoomDatabase {
                                     DatabaseMigrations.MIGRATION_6_7,
                                     DatabaseMigrations.MIGRATION_7_8,
                                     DatabaseMigrations.MIGRATION_8_9,
-                                    DatabaseMigrations.MIGRATION_9_10
+                                    DatabaseMigrations.MIGRATION_9_10,
+                                    DatabaseMigrations.MIGRATION_10_11
                             )
                             .build();
                 }
