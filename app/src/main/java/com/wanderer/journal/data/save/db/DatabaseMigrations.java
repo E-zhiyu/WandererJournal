@@ -98,4 +98,13 @@ public class DatabaseMigrations {
             db.execSQL("CREATE TABLE IF NOT EXISTS `locations` (`paragraphId` INTEGER NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `altitude` REAL NOT NULL, PRIMARY KEY(`paragraphId`), FOREIGN KEY(`paragraphId`) REFERENCES `paragraphs`(`paragraphId`) ON UPDATE NO ACTION ON DELETE CASCADE )");
         }
     };
+
+    //位置表添加 provider 和 isFineLocation 列
+    static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("ALTER TABLE locations ADD COLUMN `isFineLocation` INTEGER NOT NULL DEFAULT 1");
+            db.execSQL("ALTER TABLE locations ADD COLUMN `provider` TEXT DEFAULT ''");
+        }
+    };
 }

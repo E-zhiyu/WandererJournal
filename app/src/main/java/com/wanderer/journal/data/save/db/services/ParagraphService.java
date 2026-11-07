@@ -3,10 +3,14 @@ package com.wanderer.journal.data.save.db.services;
 import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.sqlite.db.SimpleSQLiteQuery;
 
+import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
 import com.wanderer.journal.auxiliary.classes.DiaryLength;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.MediaDao;
@@ -34,22 +38,31 @@ public class ParagraphService {
      * @param mediaList              媒体列表
      * @param location               段落的位置信息
      * @param isHiddenParagraphShown 隐藏的段落是否显示
-     * @param db                     数据库实例
+     * @param context                上下文
      * @return {@link Completable}实例，订阅后执行段落插入逻辑
      */
     public static Single<Integer> addParagraph(
             LocalDate startDate,
             @NonNull ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
-            Location location,
+            @Nullable Location location,
             boolean isHiddenParagraphShown,
-            @NonNull DiaryDb db
+            Context context
     ) {
         paragraph.setContent(paragraph.getContent().trim());
         return Single.fromCallable(() -> {
+            DiaryDb db = DiaryDb.getInstance(context);
             if (!paragraph.getContent().isEmpty()) {
+                Pair<Boolean, Location> locationPair;
+                if (location != null) {
+                    boolean isFineLocation = XXPermissions.isGrantedPermission(context, PermissionLists.getAccessFineLocationPermission());
+                    locationPair = new Pair<>(isFineLocation, location);
+                } else {
+                    locationPair = null;
+                }
+
                 ParagraphDao paragraphDao = db.paragraphDao();
-                return paragraphDao.addParagraph(startDate, paragraph, mediaList, location, isHiddenParagraphShown, db.mediaDao());
+                return paragraphDao.addParagraph(startDate, paragraph, mediaList, locationPair, isHiddenParagraphShown, db.mediaDao());
             } else {
                 return -1;
             }
@@ -68,13 +81,21 @@ public class ParagraphService {
     public static Completable modifyParagraph(
             ParagraphEntity paragraph,
             List<MediaEntity> mediaList,
-            Location location,
+            @Nullable Location location,
             Context context
     ) {
         return Completable.fromAction(() -> {
             DiaryDb db = DiaryDb.getInstance(context);
             ParagraphDao paragraphDao = db.paragraphDao();
-            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, location, db.mediaDao());
+
+            Pair<Boolean, Location> locationPair;
+            if (location != null) {
+                boolean isFineLocation = XXPermissions.isGrantedPermission(context, PermissionLists.getAccessFineLocationPermission());
+                locationPair = new Pair<>(isFineLocation, location);
+            } else {
+                locationPair = null;
+            }
+            Set<Uri> oldMediaUriSet = paragraphDao.modifyParagraph(paragraph, mediaList, locationPair, db.mediaDao());
 
             //删除旧媒体文件
             if (oldMediaUriSet != null) {

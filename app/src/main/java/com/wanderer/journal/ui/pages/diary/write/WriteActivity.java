@@ -1182,7 +1182,6 @@ public class WriteActivity extends AppCompatActivity {
         WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
         Pair<ParagraphUnionModel, List<MediaEntity>> modifyingPair = viewModel.getModifyingLiveData().getValue();
         if (modifyingPair == null || modifyingPair.first == null) {
-            DiaryDb db = DiaryDb.getInstance(this);
             disposable.add(DiaryService.getOrCreateDiaryIdByDate(diaryDate, this)
                     .flatMap(diaryId -> {
                         //实例化新段落对象
@@ -1208,7 +1207,7 @@ public class WriteActivity extends AppCompatActivity {
                                 mediaEntityList,
                                 location,
                                 viewModel.isHiddenParagraphShown(),
-                                db
+                                this
                         );
                     })
                     .subscribeOn(Schedulers.io())
