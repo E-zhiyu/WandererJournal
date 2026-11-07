@@ -101,6 +101,7 @@ import com.wanderer.journal.ui.others.selections.media.MediaIdKeyProvider;
 import com.wanderer.journal.ui.others.selections.media.MediaLookup;
 import com.wanderer.journal.ui.others.viewmodel.RoleSelectViewModel;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
+import com.wanderer.journal.ui.pages.share.SharePreviewActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -1321,19 +1322,28 @@ public class WriteActivity extends AppCompatActivity {
             } else if (id == R.id.action_modify_emotion) {
                 modifyEmotion(paragraph);
                 return true;
+            } else if (id == R.id.action_change_privacy_type) {
+                switchParagraphPrivacyType(paragraph);
+                return true;
             } else if (id == R.id.action_copy_paragraph) {
                 TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
                 Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                 return true;
+            } else if (id == R.id.action_share_paragraph) {
+                long[] sharedParagraphIds = new long[]{model.getParagraph().getParagraphId()};
+                Bundle bundle = new Bundle();
+                bundle.putLongArray(KeyStrings.PARAGRAPH_ID.v(), sharedParagraphIds);
+
+                Intent intent = new Intent(this, SharePreviewActivity.class);
+                intent.putExtras(bundle);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.action_delete_paragraph) {
                 deleteParagraph(paragraph);
                 return true;
-            } else if (id == R.id.action_change_privacy_type) {
-                switchParagraphPrivacyType(paragraph);
-                return true;
+            } else {
+                return false;
             }
-
-            return false;
         });
 
         menu.show();

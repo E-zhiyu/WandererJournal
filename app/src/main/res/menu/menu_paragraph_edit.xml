@@ -16,6 +16,9 @@
         android:id="@+id/action_copy_paragraph"
         android:title="@string/copy_paragraph" />
     <item
+        android:id="@+id/action_share_paragraph"
+        android:title="@string/share" />
+    <item
         android:id="@+id/action_delete_paragraph"
         android:title="@string/delete" />
 </menu>

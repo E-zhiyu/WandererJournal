@@ -893,6 +893,15 @@ public class ReadActivity extends AppCompatActivity {
                 TextHelper.copyToClipBoard(this, "日记段落", paragraph.getContent());
                 Toast.makeText(this, "段落内容已复制", Toast.LENGTH_SHORT).show();
                 return true;
+            } else if (id == R.id.action_share_paragraph) {
+                long[] sharedParagraphIds = new long[]{model.getParagraph().getParagraphId()};
+                Bundle bundle = new Bundle();
+                bundle.putLongArray(KeyStrings.PARAGRAPH_ID.v(), sharedParagraphIds);
+
+                Intent intent = new Intent(this, SharePreviewActivity.class);
+                intent.putExtras(bundle);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.action_delete_paragraph) {
                 deleteParagraph(paragraph);
                 return true;

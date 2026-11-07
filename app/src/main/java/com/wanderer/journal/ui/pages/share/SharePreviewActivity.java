@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
@@ -65,6 +66,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class SharePreviewActivity extends AppCompatActivity {
     private ActivitySharePreviewBinding binding;    //绑定的 XML 布局
+    @Nullable
     private Bundle initBundle = null;               //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //多线程任务订阅队列
     private ParagraphListAdapter adapter;           //段落列表适配器
@@ -225,27 +227,29 @@ public class SharePreviewActivity extends AppCompatActivity {
         binding.previewRecycler.addItemDecoration(decoration);
 
         //获取数据源
-        DiaryDb db = DiaryDb.getInstance(this);
-        long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v());
-        disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
-                .flatMap(paragraphEntityModels ->
-                        Single.just(insertDateSeparator(paragraphEntityModels))
-                )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        paragraphList -> {
-                            if (paragraphList.isEmpty()) {
-                                binding.emptyText.setVisibility(View.VISIBLE);
-                            } else {
-                                binding.emptyText.setVisibility(View.GONE);
-                            }
+        if (initBundle != null) {
+            DiaryDb db = DiaryDb.getInstance(this);
+            long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v());
+            disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
+                    .flatMap(paragraphEntityModels ->
+                            Single.just(insertDateSeparator(paragraphEntityModels))
+                    )
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            paragraphList -> {
+                                if (paragraphList.isEmpty()) {
+                                    binding.emptyText.setVisibility(View.VISIBLE);
+                                } else {
+                                    binding.emptyText.setVisibility(View.GONE);
+                                }
 
-                            adapter.submitList(paragraphList);
-                        },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
-        );
+                                adapter.submitList(paragraphList);
+                            },
+                            e -> ExceptionHelper.showExceptionDialog(this, e)
+                    )
+            );
+        }
     }
 
     /**
