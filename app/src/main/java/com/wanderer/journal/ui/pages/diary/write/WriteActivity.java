@@ -478,78 +478,34 @@ public class WriteActivity extends AppCompatActivity {
                 return;
             }
 
-            //显示进度条对话框
-            ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
-                    this,
-                    "保存媒体文件",
-                    "正在移动媒体文件……"
-            );
-            AlertDialog dialog = dialogBuilder
-                    .setNegativeButton("取消", (dialogInterface, i) -> {
-                        disposable.clear();
-                        Toast.makeText(this, "已取消媒体文件保存", Toast.LENGTH_SHORT).show();
-                    })
-                    .create();
-
-            //如果有新媒体，则显示对话框
-            List<MediaEntity> currentMediaList = mediaAdapter.getCurrentList();
-            Set<MediaEntity> newMediaSet = currentMediaList.stream()    //获取新添加的媒体
-                    .filter(mediaEntity -> mediaEntity.getMediaId() == 0)
-                    .collect(Collectors.toSet());
-            if (!newMediaSet.isEmpty()) {
-                dialog.show();
+            //判断是否在编辑并且未开启段落定位
+            WriteViewModel writeViewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+            Pair<ParagraphUnionModel, List<MediaEntity>> modifyPair = writeViewModel.getModifyingLiveData().getValue();
+            if (modifyPair != null &&
+                    modifyPair.first != null &&
+                    modifyPair.first.getLocation() != null &&
+                    !locationViewModel.isLocationOn()) {
+                LocationEntity oldLocationEntity = modifyPair.first.getLocation();
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.paragraph_location)
+                        .setMessage("原段落带有位置信息，且当前并未开启段落定位，请您选择是否保留原有的位置信息。")
+                        .setPositiveButton("保留", (dialog, which) -> {
+                            Location tempLocation = new Location(oldLocationEntity.getProvider());
+                            tempLocation.setLatitude(oldLocationEntity.getLatitude());
+                            tempLocation.setLongitude(oldLocationEntity.getLongitude());
+                            tempLocation.setAltitude(oldLocationEntity.getAltitude());
+                            moveMediaFiles(content, tempLocation);
+                        })
+                        .setNegativeButton("移除", (dialog, which) ->
+                                moveMediaFiles(content, locationViewModel.getLocation())
+                        )
+                        .show();
+            } else {
+                moveMediaFiles(
+                        content,
+                        locationViewModel.isLocationOn() ? locationViewModel.getLocation() : null
+                );
             }
-
-            //创建移动任务，并逐个返回移动成功的 File 型 Uri
-            Observable<MediaEntity> moveTask = Observable.create(emitter -> {
-                File targetDir = DirectoryPaths.MEDIA.getDir(this);
-
-                for (MediaEntity originMedia : currentMediaList) {
-                    WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
-                    long paragraphId = viewModel.getModifyingParagraphId();
-                    if (newMediaSet.contains(originMedia)) {
-                        File originFile = new File(Objects.requireNonNull(originMedia.getFileUri().getPath()));
-                        File movedFile = FileHelper.moveFile(originFile, targetDir);
-                        emitter.onNext(new MediaEntity(paragraphId, Uri.fromFile(movedFile)));  //不论是否成功都返回
-                    } else {
-                        emitter.onNext(originMedia);
-                    }
-                }
-
-                emitter.onComplete();
-            });
-
-            //多线程执行任务并调用段落添加/更新方法
-            List<MediaEntity> resultList = new ArrayList<>();   //移动结果列表（可能包含 null）
-            disposable.add(moveTask
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            media -> {
-                                resultList.add(media);
-                                dialogBuilder.updateProgress(resultList.size(), currentMediaList.size(), "正在移动媒体文件……");
-                            },
-                            e -> {
-                                ExceptionHelper.showExceptionDialog(this, e);
-                                dialog.dismiss();
-                            },
-                            () -> {
-                                dialog.dismiss();
-
-                                //排除移动失败的文件
-                                List<MediaEntity> succeedMediaList = resultList.stream()
-                                        .filter(mediaEntity -> mediaEntity.getFileUri() != null)
-                                        .collect(Collectors.toList());
-
-                                saveData(content, succeedMediaList, locationViewModel.getLocation());
-                            }
-                    )
-            );
-
-            //清理图片列表并隐藏
-            mediaAdapter.submitList(new ArrayList<>());
-            setMediaRecyclerVisible(false);
-            backHelper.unregisterHandler(mediaBackHandler);
         });
 
         //文本输入框
@@ -1167,6 +1123,87 @@ public class WriteActivity extends AppCompatActivity {
     }
 
     /**
+     * 移动媒体文件到永久目录
+     *
+     * @param content  段落内容文本（扁平化后）
+     * @param location 段落位置信息
+     */
+    private void moveMediaFiles(String content, @Nullable Location location) {
+        //显示进度条对话框
+        ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
+                this,
+                "保存媒体文件",
+                "正在移动媒体文件……"
+        );
+        AlertDialog dialog = dialogBuilder
+                .setNegativeButton("取消", (dialogInterface, i) -> {
+                    disposable.clear();
+                    Toast.makeText(this, "已取消媒体文件保存", Toast.LENGTH_SHORT).show();
+                })
+                .create();
+
+        //如果有新媒体，则显示对话框
+        List<MediaEntity> currentMediaList = mediaAdapter.getCurrentList();
+        Set<MediaEntity> newMediaSet = currentMediaList.stream()    //获取新添加的媒体
+                .filter(mediaEntity -> mediaEntity.getMediaId() == 0)
+                .collect(Collectors.toSet());
+        if (!newMediaSet.isEmpty()) {
+            dialog.show();
+        }
+
+        //创建移动任务，并逐个返回移动成功的 File 型 Uri
+        Observable<MediaEntity> moveTask = Observable.create(emitter -> {
+            File targetDir = DirectoryPaths.MEDIA.getDir(this);
+
+            for (MediaEntity originMedia : currentMediaList) {
+                WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
+                long paragraphId = viewModel.getModifyingParagraphId();
+                if (newMediaSet.contains(originMedia)) {
+                    File originFile = new File(Objects.requireNonNull(originMedia.getFileUri().getPath()));
+                    File movedFile = FileHelper.moveFile(originFile, targetDir);
+                    emitter.onNext(new MediaEntity(paragraphId, Uri.fromFile(movedFile)));  //不论是否成功都返回
+                } else {
+                    emitter.onNext(originMedia);
+                }
+            }
+
+            emitter.onComplete();
+        });
+
+        //多线程执行任务并调用段落添加/更新方法
+        List<MediaEntity> resultList = new ArrayList<>();   //移动结果列表（可能包含 null）
+        disposable.add(moveTask
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        media -> {
+                            resultList.add(media);
+                            dialogBuilder.updateProgress(resultList.size(), currentMediaList.size(), "正在移动媒体文件……");
+                        },
+                        e -> {
+                            ExceptionHelper.showExceptionDialog(this, e);
+                            dialog.dismiss();
+                        },
+                        () -> {
+                            dialog.dismiss();
+
+                            //排除移动失败的文件
+                            List<MediaEntity> succeedMediaList = resultList.stream()
+                                    .filter(mediaEntity -> mediaEntity.getFileUri() != null)
+                                    .collect(Collectors.toList());
+
+                            saveData(content, succeedMediaList, location);
+                        }
+                )
+        );
+
+        //清理图片列表并隐藏
+        mediaAdapter.submitList(new ArrayList<>());
+        setMediaRecyclerVisible(false);
+        backHelper.unregisterHandler(mediaBackHandler);
+    }
+
+    /**
      * 保存段落数据
      *
      * @param content         最终的段落文本内容
@@ -1240,49 +1277,25 @@ public class WriteActivity extends AppCompatActivity {
             );
             paragraph.setParagraphId(oldParagraph.getParagraphId());
 
-            Function<Location, Void> saveFun = finalLocation -> {
-                disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, finalLocation, this)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                () -> viewModel.updateModifying(null),
-                                throwable -> {
-                                    viewModel.updateModifying(null);
-                                    ExceptionHelper.showExceptionDialog(this, throwable);
+            //保存数据
+            disposable.add(ParagraphService.modifyParagraph(paragraph, mediaEntityList, location, this)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> viewModel.updateModifying(null),
+                            throwable -> {
+                                viewModel.updateModifying(null);
+                                ExceptionHelper.showExceptionDialog(this, throwable);
 
-                                    for (MediaEntity mediaEntity : mediaEntityList) {
-                                        //删除新添加的媒体文件
-                                        if (mediaEntity.getMediaId() == 0) {
-                                            FileHelper.deleteFile(mediaEntity.getFileUri(), this);
-                                        }
+                                for (MediaEntity mediaEntity : mediaEntityList) {
+                                    //删除新添加的媒体文件
+                                    if (mediaEntity.getMediaId() == 0) {
+                                        FileHelper.deleteFile(mediaEntity.getFileUri(), this);
                                     }
                                 }
-                        )
-                );
-                return null;
-            };
-
-            //若当前没有开启段落定位，且修改的段落有位置信息，则让用户选择是否保留原位置
-            LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
-            if (!locationViewModel.isLocationOn() && modifyingPair.first.getLocation() != null) {
-                LocationEntity oldLocationEntity = modifyingPair.first.getLocation();
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.paragraph_location)
-                        .setMessage("原段落带有位置信息，且当前并未开启段落定位，请您选择是否保留原有的位置信息。")
-                        .setPositiveButton("保留", (dialog, which) -> {
-                            Location tempLocation = new Location("provider");
-                            tempLocation.setAltitude(oldLocationEntity.getAltitude());
-                            tempLocation.setLongitude(oldLocationEntity.getLongitude());
-                            tempLocation.setLatitude(oldLocationEntity.getLatitude());
-                            saveFun.apply(tempLocation);
-                        })
-                        .setNegativeButton("移除", (dialog, which) ->
-                                saveFun.apply(null)
-                        )
-                        .show();
-            } else {
-                saveFun.apply(location);
-            }
+                            }
+                    )
+            );
         }
     }
 
