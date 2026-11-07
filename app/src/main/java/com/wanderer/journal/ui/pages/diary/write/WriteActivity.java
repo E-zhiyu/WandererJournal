@@ -400,7 +400,6 @@ public class WriteActivity extends AppCompatActivity {
 
                             @Override
                             public void justCoarseLocation() {
-                                Toast.makeText(WriteActivity.this, "仅有粗略位置权限，无法定位精确位置", Toast.LENGTH_SHORT).show();
                                 requestLocation(true);
                             }
 

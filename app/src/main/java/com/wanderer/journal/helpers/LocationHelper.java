@@ -198,31 +198,42 @@ public class LocationHelper {
     /**
      * 将经纬度和海拔转换为表示坐标的字符串
      *
-     * @param latitude  纬度
-     * @param longitude 经度
-     * @param altitude  海拔
+     * @param latitude       纬度
+     * @param longitude      经度
+     * @param altitude       海拔
+     * @param isFineLocation 是否为精确位置
      * @return 表示坐标的字符串
      */
     @NonNull
-    public static String locationToString(@Nullable Double latitude, @Nullable Double longitude, @Nullable Double altitude) {
+    public static String locationToString(
+            @Nullable Double latitude,
+            @Nullable Double longitude,
+            @Nullable Double altitude,
+            boolean isFineLocation
+    ) {
         StringBuilder builder = new StringBuilder();
 
         //纬度
         if (latitude != null) {
-            builder.append(convertToDMS(latitude,true));
+            builder.append(convertToDMS(latitude, true));
         }
 
         //经度
-        if (longitude!=null) {
-            if (latitude!=null) {
+        if (longitude != null) {
+            if (latitude != null) {
                 builder.append(" ");
             }
 
-            builder.append(convertToDMS(longitude,false));
+            builder.append(convertToDMS(longitude, false));
+        }
+
+        //是否为精确位置
+        if (!isFineLocation) {
+            builder.append("（粗略）");
         }
 
         //海拔
-        if (altitude!=null) {
+        if (altitude != null) {
             builder.append("\n");
 
             String altitudeStr = String.format(
