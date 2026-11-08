@@ -478,7 +478,7 @@ public class WriteActivity extends AppCompatActivity {
                 return;
             }
 
-            //判断是否在编辑并且未开启段落定位
+            //判断是否在编辑并且未开启位置记录
             WriteViewModel writeViewModel = new ViewModelProvider(this).get(WriteViewModel.class);
             Pair<ParagraphUnionModel, List<MediaEntity>> modifyPair = writeViewModel.getModifyingLiveData().getValue();
             if (modifyPair != null &&
@@ -488,7 +488,7 @@ public class WriteActivity extends AppCompatActivity {
                 LocationEntity oldLocationEntity = modifyPair.first.getLocation();
                 new MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.paragraph_location)
-                        .setMessage("原段落带有位置信息，且当前并未开启段落定位，请您选择是否保留原有的位置信息。")
+                        .setMessage("原段落带有位置信息，且目前并未开启位置记录功能，请您选择是否保留原有的位置信息。")
                         .setPositiveButton("保留", (dialog, which) -> {
                             Location tempLocation = new Location(oldLocationEntity.getProvider());
                             tempLocation.setLatitude(oldLocationEntity.getLatitude());
@@ -1676,9 +1676,9 @@ public class WriteActivity extends AppCompatActivity {
                     boolean isFineGranted = XXPermissions.isGrantedPermission(WriteActivity.this, fineLocation);
                     boolean isCoarseGranted = XXPermissions.isGrantedPermission(WriteActivity.this, coarseLocation);
                     if (isFineGranted && isCoarseGranted) {
-                        Toast.makeText(WriteActivity.this, "已开启段落定位", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(WriteActivity.this, "编写段落时将记录地理位置", Toast.LENGTH_SHORT).show();
                     } else if (isCoarseGranted) {
-                        Toast.makeText(WriteActivity.this, "已开启段落定位（模糊位置）", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(WriteActivity.this, "编写段落时将记录粗略的地理位置", Toast.LENGTH_SHORT).show();
                     }
 
                     viewModel.setLocationOn(true);
@@ -1691,14 +1691,14 @@ public class WriteActivity extends AppCompatActivity {
                 }
             });
         } else if (!open) {
+            if (viewModel.isLocationOn()) {
+                Toast.makeText(this, "已关闭位置记录", Toast.LENGTH_SHORT).show();
+            }
+
             LocationHelper.removeLocationListeners(this, locationListenerList); //清理旧的监听器
             locationListenerList = null;
             viewModel.setLocationOn(false);
             viewModel.setLocation(null);
-
-            if (viewModel.isLocationOn()) {
-                Toast.makeText(this, "已关闭段落定位", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
