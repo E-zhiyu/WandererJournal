@@ -94,8 +94,8 @@ public class InfoShower {
                 "\n\n";
 
         //显示对话框
-        MarkdownDialogBuilder dialogBuilder = new MarkdownDialogBuilder(context, "修改历史", info);
-        dialogBuilder
+        new MarkdownDialogBuilder(context, info)
+                .setTitle("修改历史")
                 .setNegativeButton("关闭", null)
                 .show();
     }

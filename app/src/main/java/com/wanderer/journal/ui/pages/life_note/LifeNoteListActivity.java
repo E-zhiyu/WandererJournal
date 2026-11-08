@@ -186,7 +186,8 @@ public class LifeNoteListActivity extends AppCompatActivity {
                                 "- 每次修改现存的人生笔记后，都会新增修改历史记录；\n" +
                                 "- 修改历史保存了修改的具体时间和修改前的内容等信息，便于您回顾思维变化的过程；\n" +
                                 "- 若某条人生笔记带有修改历史，进入其修改界面后会在输入框下方显示修改历史记录。\n";
-                        new MarkdownDialogBuilder(this, "功能说明", EXPLANATION)
+                        new MarkdownDialogBuilder(this, EXPLANATION)
+                                .setTitle("功能说明")
                                 .setNegativeButton("关闭", null)
                                 .show();
                         return true;

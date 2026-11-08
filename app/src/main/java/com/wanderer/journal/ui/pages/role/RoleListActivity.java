@@ -226,7 +226,8 @@ public class RoleListActivity extends AppCompatActivity {
                                 "- `名称`通常设置为角色的正式称呼，且作为该角色显示的默认名称；\n" +
                                 "- 当填写了`显示名称`时，角色在日记段落中仅显示“@显示名称”，在其他地方显示“名称（显示名称）”；\n" +
                                 "> 例：某角色的`名称`为“张三”，`显示名称`为“小张”。则他在日记段落中显示为“@张三”，而在其他地方（如角色列表和角色选择对话框）显示为“小张（张三）”。\n";
-                        new MarkdownDialogBuilder(this, "功能说明", EXPLANATION)
+                        new MarkdownDialogBuilder(this, EXPLANATION)
+                                .setTitle("功能说明")
                                 .setNegativeButton("关闭", null)
                                 .show();
                         return true;

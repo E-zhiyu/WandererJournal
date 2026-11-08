@@ -160,7 +160,8 @@ public class RoleInputActivity extends AppCompatActivity {
         });
 
         //添加别名
-        binding.aliaAddBtn.setOnClickListener(view -> new EditTextDialogBuilder(this, "输入别名", "别名")
+        binding.aliaAddBtn.setOnClickListener(view -> new EditTextDialogBuilder(this, "别名")
+                .setTitle("输入别名")
                 .setNegativeButton("取消", null)
                 .setPositiveButton("确定", inputStr -> {
                     if (inputStr.trim().isEmpty()) {

@@ -5,7 +5,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -63,12 +62,9 @@ public class ShareSettingsActivity extends AppCompatActivity {
         );
         bottomTextOption.setFunctionListener(view -> {
             String bottomText = ShareSettingsPreference.getPictureBottomText(this);
-            new EditTextDialogBuilder(
-                    this,
-                    ContextCompat.getString(this, R.string.share_picture_bottom_text),
-                    "底部文本",
-                    bottomText
-            )
+            new EditTextDialogBuilder(this, "底部文本")
+                    .setInputText(bottomText)
+                    .setTitle(R.string.share_picture_bottom_text)
                     .setNegativeButton("取消", null)
                     .setPositiveButton("确定", inputStr -> {
                         ShareSettingsPreference.setPictureBottomText(this, inputStr);

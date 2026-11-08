@@ -560,7 +560,8 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        new MarkdownDialogBuilder(context, context.getString(R.string.changelog), CHANGELOG)
+        new MarkdownDialogBuilder(context, CHANGELOG)
+                .setTitle(R.string.changelog)
                 .setPositiveButton("关闭", null)
                 .show();
     }
