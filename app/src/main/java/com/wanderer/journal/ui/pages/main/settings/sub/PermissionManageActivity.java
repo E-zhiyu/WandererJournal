@@ -143,9 +143,9 @@ public class PermissionManageActivity extends AppCompatActivity {
             );
             autoStart.setFunctionListener(v -> new MarkdownDialogBuilder(
                     this,
-                    getString(R.string.auto_start_permission),
                     "该权限是定制安卓中特有的权限，其允许应用在后台启动服务，应用范围如下：\n" +
                             "- 确保定时任务能够在后台自动执行。\n")
+                    .setTitle(R.string.auto_start_permission)
                     .setPositiveButton("前往设置", (dialogInterface, i) ->
                             PermissionHelper.requestAutoStartPermission(this)
                     )

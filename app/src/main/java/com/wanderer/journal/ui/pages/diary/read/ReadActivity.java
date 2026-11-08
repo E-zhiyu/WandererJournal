@@ -166,8 +166,9 @@ public class ReadActivity extends AppCompatActivity {
 
         //数量指示器
         binding.matchedItemsCounter.setOnClickListener(view ->
-                new EditTextDialogBuilder(this, "跳转位置", null)
+                new EditTextDialogBuilder(this, null)
                         .setInputType(InputType.TYPE_CLASS_NUMBER)
+                        .setTitle("跳转位置")
                         .setNegativeButton("取消", null)
                         .setPositiveButton("确定", input -> {
                             //判断是否有内容
@@ -407,7 +408,7 @@ public class ReadActivity extends AppCompatActivity {
                             //创建 Intent
                             Intent skip2SharePreview = new Intent(this, SharePreviewActivity.class);
                             Bundle bundle = new Bundle();
-                            bundle.putLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v(), selectedIds);
+                            bundle.putLongArray(KeyStrings.PARAGRAPH_ID.v(), selectedIds);
                             skip2SharePreview.putExtras(bundle);
 
                             //跳转界面

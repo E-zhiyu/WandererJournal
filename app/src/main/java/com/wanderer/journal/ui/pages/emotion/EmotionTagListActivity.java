@@ -85,7 +85,8 @@ public class EmotionTagListActivity extends AppCompatActivity {
                     "> 例：某个段落记录了特别令人高兴的事情时，可以为其标记“高兴”，并将强烈程度设置为5。\n" +
                     "- 情绪标签的强烈程度会以`罗马数字`的形式显示在`标签名称`后面。\n" +
                     "> 例：某个段落被标记为“伤心”，且该标签强烈程度为3，在段落内容下方会显示“伤心 III”字样。\n";
-            new MarkdownDialogBuilder(this, "功能介绍", EXPLANATION)
+            new MarkdownDialogBuilder(this, EXPLANATION)
+                    .setTitle("功能介绍")
                     .setNegativeButton("关闭", null)
                     .show();
         });

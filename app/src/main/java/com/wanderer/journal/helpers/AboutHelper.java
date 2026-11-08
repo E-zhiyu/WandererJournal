@@ -10,7 +10,14 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.8.2\n" +
+    private final static String CHANGELOG = "# v1.8.3\n" +
+            "\n" +
+            "### BUG修复\n" +
+            "\n" +
+            "- 修复无法显示隐私类别色块的BUG\n" +
+            "- 修复写日记界面无法正常分享日记的BUG\n" +
+            "\n" +
+            "# v1.8.2\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
@@ -560,7 +567,8 @@ public class AboutHelper {
      * @param context 上下文
      */
     public static void showChangelog(Context context) {
-        new MarkdownDialogBuilder(context, context.getString(R.string.changelog), CHANGELOG)
+        new MarkdownDialogBuilder(context, CHANGELOG)
+                .setTitle(R.string.changelog)
                 .setPositiveButton("关闭", null)
                 .show();
     }

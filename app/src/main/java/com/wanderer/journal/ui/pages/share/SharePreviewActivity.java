@@ -229,7 +229,7 @@ public class SharePreviewActivity extends AppCompatActivity {
         //获取数据源
         if (initBundle != null) {
             DiaryDb db = DiaryDb.getInstance(this);
-            long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.SHARED_PARAGRAPH_ID.v());
+            long[] sharedParagraphIds = initBundle.getLongArray(KeyStrings.PARAGRAPH_ID.v());
             disposable.add(db.paragraphDao().getParagraphSingleById(sharedParagraphIds)
                     .flatMap(paragraphEntityModels ->
                             Single.just(insertDateSeparator(paragraphEntityModels))
@@ -440,17 +440,15 @@ public class SharePreviewActivity extends AppCompatActivity {
      * @param listener 生成图片后需要执行的操作
      */
     private void generateImageAndDoAction(ImageGeneratedListener listener) {
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(
-                this,
-                "分享日记",
-                "正在加载图片内容……"
-        );
-        builder.setNegativeButton("取消", (dialogInterface, i) -> {
-            disposable.clear();
-            htmlHelper.cancelGenerateImage();
-            Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
-        });
-        AlertDialog dialog = builder.show();
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "正在加载图片内容……");
+        AlertDialog dialog = builder
+                .setTitle("分享日记")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
+                    disposable.clear();
+                    htmlHelper.cancelGenerateImage();
+                    Toast.makeText(this, "已取消图片生成", Toast.LENGTH_SHORT).show();
+                })
+                .show();
         dialog.setCancelable(false);    //不可取消
 
         List<String> jsonList = formatToJson();

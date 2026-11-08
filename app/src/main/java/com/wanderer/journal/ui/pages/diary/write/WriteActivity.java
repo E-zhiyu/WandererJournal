@@ -936,10 +936,8 @@ public class WriteActivity extends AppCompatActivity {
                                 .setTitle("申请权限")
                                 .setMessage("使用相机拍照需要先授予摄像头权限")
                                 .setNegativeButton("取消", null)
-                                .setPositiveButton(
-                                        "确定",
-                                        (dialogInterface, i) ->
-                                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                                .setPositiveButton("确定", (dialogInterface, i) ->
+                                        permissionLauncher.launch(Manifest.permission.CAMERA)
                                 )
                                 .show();
                     } else {
@@ -1091,9 +1089,10 @@ public class WriteActivity extends AppCompatActivity {
         }
 
         //显示进度条对话框
-        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "导入媒体", "正在复制媒体文件");
-        AlertDialog progressDialog = builder.
-                setNegativeButton("取消", (dialogInterface, i) -> {
+        ProgressDialogBuilder builder = new ProgressDialogBuilder(this, "正在复制媒体文件");
+        AlertDialog progressDialog = builder
+                .setTitle("导入媒体")
+                .setNegativeButton("取消", (dialogInterface, i) -> {
                     Toast.makeText(this, "已取消媒体导入", Toast.LENGTH_SHORT).show();
                     disposable.clear();
                 })
@@ -1165,12 +1164,9 @@ public class WriteActivity extends AppCompatActivity {
      */
     private void moveMediaFiles(String content, @Nullable Location location) {
         //显示进度条对话框
-        ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(
-                this,
-                "保存媒体文件",
-                "正在移动媒体文件……"
-        );
+        ProgressDialogBuilder dialogBuilder = new ProgressDialogBuilder(this, "正在移动媒体文件……");
         AlertDialog dialog = dialogBuilder
+                .setTitle("保存媒体文件")
                 .setNegativeButton("取消", (dialogInterface, i) -> {
                     disposable.clear();
                     Toast.makeText(this, "已取消媒体文件保存", Toast.LENGTH_SHORT).show();
