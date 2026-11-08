@@ -1,7 +1,5 @@
 package com.wanderer.journal.ui.pages.diary.write;
 
-import android.location.Location;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
@@ -16,7 +14,6 @@ import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 
@@ -33,6 +30,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class WriteViewModel extends ViewModel {
     private final MutableLiveData<Pair<ParagraphUnionModel, List<MediaEntity>>> modifyingLiveData = new MutableLiveData<>();    //正在编辑的段落和它的媒体列表
+    private final MutableLiveData<Boolean> showHiddenParagraphLiveData = new MutableLiveData<>(false);
     private final BehaviorProcessor<LocalDate> dateProcessor =
             BehaviorProcessor.createDefault(LocalDate.now());       //日期的处理器
     private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
@@ -89,7 +87,7 @@ public class WriteViewModel extends ViewModel {
      * @return 是否显示了隐藏的段落
      */
     public boolean isHiddenParagraphShown() {
-        return showHiddenParagraphProcessor.getValue() != null && showHiddenParagraphProcessor.getValue();
+        return showHiddenParagraphLiveData.getValue() != null && showHiddenParagraphLiveData.getValue();
     }
 
     /**
@@ -98,7 +96,12 @@ public class WriteViewModel extends ViewModel {
      * @param isVisible 是否可见
      */
     public void showHiddenParagraph(boolean isVisible) {
+        showHiddenParagraphLiveData.setValue(isVisible);
         showHiddenParagraphProcessor.onNext(isVisible);
+    }
+
+    public MutableLiveData<Boolean> getShowHiddenParagraphLiveData() {
+        return showHiddenParagraphLiveData;
     }
 
     /**
