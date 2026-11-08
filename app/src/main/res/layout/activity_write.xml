@@ -53,7 +53,7 @@
                         android:layout_gravity="end|center_vertical"
                         android:layout_marginEnd="15dp"
                         android:contentDescription="@string/btn_of_show_or_hide_private_paragraph"
-                        android:src="@drawable/outline_visibility_lock_24" />
+                        android:src="@drawable/outline_visibility_off_24" />
 
                     <!-- 定位开关按钮 -->
                     <ImageButton

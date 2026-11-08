@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.biometric.BiometricManager;
 import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.transition.Fade;
@@ -366,11 +367,36 @@ public class WriteActivity extends AppCompatActivity {
         //隐私段落可见性切换按钮
         binding.visibilityToggleBtn.setOnClickListener(view -> {
             WriteViewModel viewModel = new ViewModelProvider(this).get(WriteViewModel.class);
-            boolean currentStat = viewModel.isHiddenParagraphShown();
-            viewModel.showHiddenParagraph(!currentStat);
+            if (viewModel.isNotAuthed() && !viewModel.isHiddenParagraphShown()) {
+                BiometricHelper.showBiometricPrompt("隐私保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
+                    @Override
+                    public void onSuccess() {
+                        viewModel.showHiddenParagraph(true);
+                        Toast.makeText(WriteActivity.this, "已显示受保护的段落", Toast.LENGTH_SHORT).show();
+                        viewModel.setIsAuthed(true);
+                    }
 
-            String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
-            Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onError(int errCode, CharSequence errStr) {
+                        if (errCode == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
+                            viewModel.showHiddenParagraph(true);
+                            Toast.makeText(WriteActivity.this, "请设置锁屏验证方式以保护隐私段落", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(WriteActivity.this, errStr, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailed() {
+                    }
+                });
+            } else {
+                boolean currentStat = viewModel.isHiddenParagraphShown();
+                viewModel.showHiddenParagraph(!currentStat);
+
+                String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
+                Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
+            }
         });
 
         //定位按钮
@@ -678,11 +704,20 @@ public class WriteActivity extends AppCompatActivity {
             }
         });
 
-        //位置监听开关
+        //位置记录开关
         LocationViewModel locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
         locationViewModel.getIsLocationOnLiveData().observe(this, isLocationOn ->
                 binding.locationBtn.setImageResource(isLocationOn ? R.drawable.outline_location_on_24 : R.drawable.outline_location_off_24)
         );
+
+        //隐藏段落可见性开关
+        writeViewModel.getShowHiddenParagraphLiveData().observe(this, isShown -> {
+            if (isShown) {
+                binding.visibilityToggleBtn.setImageResource(R.drawable.outline_visibility_24);
+            } else {
+                binding.visibilityToggleBtn.setImageResource(R.drawable.outline_visibility_off_24);
+            }
+        });
     }
 
     /**
