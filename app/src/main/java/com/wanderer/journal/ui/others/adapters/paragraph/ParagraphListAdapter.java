@@ -13,10 +13,12 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -264,6 +266,29 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
                 }
 
                 itemHolder.binding.emotionChipGroup.setVisibility(View.VISIBLE);
+            }
+
+            //隐私种类色块
+            int privacy = paragraph.getPrivacyType();
+            if (privacy == ParagraphPrivacyType.PUBLIC.ordinal()) {
+                itemHolder.binding.privacyTypeColorBlock.setVisibility(View.GONE);
+            } else {
+                itemHolder.binding.privacyTypeColorBlock.setVisibility(View.VISIBLE);
+
+                int colorAttributeResId, errColor;
+                if (privacy == ParagraphPrivacyType.HIDE_CONTENT.ordinal()) {
+                    colorAttributeResId = com.google.android.material.R.attr.colorPrimaryVariant;
+                    errColor = Color.BLUE;
+                } else {
+                    colorAttributeResId = com.google.android.material.R.attr.colorSecondaryVariant;
+                    errColor = Color.GRAY;
+                }
+                int color = MaterialColors.getColor(
+                        context,
+                        colorAttributeResId,
+                        errColor
+                );
+                itemHolder.binding.privacyTypeColorBlock.setBackgroundColor(color);
             }
 
             //位置
