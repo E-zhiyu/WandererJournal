@@ -75,20 +75,21 @@ public class RoleInputActivity extends AppCompatActivity {
         Bundle initBundle = getIntent().getExtras();
         if (initBundle != null) {
             RoleInputViewModel inputViewModel = new ViewModelProvider(this).get(RoleInputViewModel.class);
-
-            DiaryDb db = DiaryDb.getInstance(this);
-            long roleId = initBundle.getLong(KeyStrings.ROLE_ID.v());
-            disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            optional -> {
-                                if (optional.isEmpty()) return;
-                                inputViewModel.setRoleModel(optional.get());
-                            },
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
-            );
+            if (inputViewModel.getRoleModel() == null) {
+                DiaryDb db = DiaryDb.getInstance(this);
+                long roleId = initBundle.getLong(KeyStrings.ROLE_ID.v());
+                disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                optional -> {
+                                    if (optional.isEmpty()) return;
+                                    inputViewModel.setRoleModel(optional.get());
+                                },
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
         }
     }
 
