@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -40,9 +41,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class RoleInputActivity extends AppCompatActivity {
     private ActivityRoleInputBinding binding;   //绑定的 XML 布局
-    @Nullable
-    private Bundle initBundle;                  //包含初始化数据的数据包
     private RoleRelationship relationship = RoleRelationship.NORMAL;    //角色关系程度
+    private RoleAliasAdapter aliasAdapter;      //别名列表适配器
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -68,30 +68,14 @@ public class RoleInputActivity extends AppCompatActivity {
             return insets;
         });
 
-        initBundle = getIntent().getExtras();
         initViews();
-    }
+        observeLiveData();
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        disposable.dispose();
-    }
-
-    /**
-     * 初始化视图
-     */
-    private void initViews() {
-        //别名列表
-        RoleAliasAdapter aliasAdapter = new RoleAliasAdapter();
-        binding.aliaRecycler.setAdapter(aliasAdapter);
-
-        //工具栏
+        //加载初始数据
+        Bundle initBundle = getIntent().getExtras();
         if (initBundle != null) {
-            binding.toolbar.setTitle(R.string.modify_role);
+            RoleInputViewModel inputViewModel = new ViewModelProvider(this).get(RoleInputViewModel.class);
 
-            //初始化文本框内容
             DiaryDb db = DiaryDb.getInstance(this);
             long roleId = initBundle.getLong(KeyStrings.ROLE_ID.v());
             disposable.add(db.roleDao().getRoleAndAliasSingleById(roleId)
@@ -100,23 +84,33 @@ public class RoleInputActivity extends AppCompatActivity {
                     .subscribe(
                             optional -> {
                                 if (optional.isEmpty()) return;
-
-                                RoleEntity role = optional.get().getRole();
-                                List<String> aliaList = optional.get().getRoleAliaList().stream()
-                                        .map(RoleAliaEntity::getAlia)
-                                        .collect(Collectors.toList());
-
-                                binding.nameInput.setText(role.getName());                  //名称
-                                binding.displayNameInput.setText(role.getDisplayName());    //显示名称
-                                binding.identityInput.setText(role.getIdentity());          //身份
-                                binding.impressionInput.setText(role.getImpression());      //印象
-                                relationship = RoleRelationship.values()[role.getRelationship()];
-                                binding.relationshipInput.setText(relationship.getTitle()); //关系程度
-                                aliasAdapter.submitList(aliaList);                          //别名
+                                inputViewModel.setRoleModel(optional.get());
                             },
                             e -> ExceptionHelper.showExceptionDialog(this, e)
                     )
             );
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        disposable.dispose();
+    }
+
+    /**
+     * 初始化视图
+     */
+    private void initViews() {
+        //别名列表
+        aliasAdapter = new RoleAliasAdapter();
+        binding.aliaRecycler.setAdapter(aliasAdapter);
+
+        //工具栏
+        if (getIntent().getExtras() != null) {
+            binding.toolbar.setTitle(R.string.modify_role);
+        } else {
+            binding.toolbar.setTitle(R.string.add_role);
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
@@ -205,6 +199,27 @@ public class RoleInputActivity extends AppCompatActivity {
     }
 
     /**
+     * 观察 ViewModel 中的 LiveData
+     */
+    private void observeLiveData() {
+        RoleInputViewModel inputViewModel = new ViewModelProvider(this).get(RoleInputViewModel.class);
+        inputViewModel.getRoleModelLiveData().observe(this, model -> {
+            RoleEntity role = model.getRole();
+            List<String> aliaList = model.getRoleAliaList().stream()
+                    .map(RoleAliaEntity::getAlia)
+                    .collect(Collectors.toList());
+
+            binding.nameInput.setText(role.getName());                  //名称
+            binding.displayNameInput.setText(role.getDisplayName());    //显示名称
+            binding.identityInput.setText(role.getIdentity());          //身份
+            binding.impressionInput.setText(role.getImpression());      //印象
+            relationship = RoleRelationship.values()[role.getRelationship()];
+            binding.relationshipInput.setText(relationship.getTitle()); //关系程度
+            aliasAdapter.submitList(aliaList);                          //别名
+        });
+    }
+
+    /**
      * 校验输入的内容
      *
      * @return 错误提示，无错误则返回 null
@@ -250,7 +265,11 @@ public class RoleInputActivity extends AppCompatActivity {
 
         //插入数据
         RoleEntity role = new RoleEntity(name, displayName, identity, impression, relationship);
-        role.setRoleId(initBundle == null ? 0 : initBundle.getLong(KeyStrings.ROLE_ID.v(), 0));  //设置传递过来的角色 ID
+        RoleInputViewModel inputViewModel = new ViewModelProvider(this).get(RoleInputViewModel.class);
+
+        role.setRoleId(
+                inputViewModel.getRoleModel() == null ? 0 : inputViewModel.getRoleModel().getRole().getRoleId()
+        );  //设置传递过来的角色 ID
         DiaryDb db = DiaryDb.getInstance(this);
         disposable.add(db.roleDao().getRoleCountWithSameNameSingle(name, role.getRoleId())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -264,7 +283,7 @@ public class RoleInputActivity extends AppCompatActivity {
                                         count
                                 );
                                 new MaterialAlertDialogBuilder(this)
-                                        .setTitle("角色同名警告")
+                                        .setTitle("角色重名")
                                         .setMessage(message)
                                         .setPositiveButton("确认", (dialogInterface, i) ->
                                                 doConfirmAction(role, aliaList)
@@ -288,7 +307,8 @@ public class RoleInputActivity extends AppCompatActivity {
      */
     private void doConfirmAction(RoleEntity role, List<String> aliaList) {
         DiaryDb db = DiaryDb.getInstance(this);
-        if (initBundle == null) {
+        RoleInputViewModel inputViewModel = new ViewModelProvider(this).get(RoleInputViewModel.class);
+        if (inputViewModel.getRoleModel() == null) {
             //添加角色
             disposable.add(RoleService.addRole(db, role, aliaList)
                     .observeOn(AndroidSchedulers.mainThread())
