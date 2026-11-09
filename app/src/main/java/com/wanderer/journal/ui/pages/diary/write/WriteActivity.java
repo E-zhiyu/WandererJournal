@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.diary.write;
 
-import android.Manifest;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
@@ -32,7 +31,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
-import androidx.core.app.ActivityCompat;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
@@ -136,7 +134,6 @@ public class WriteActivity extends AppCompatActivity {
     private final AtomicInteger scrollPosition = new AtomicInteger(-1); //段落列表加载完毕后需要滚动到的位置
     private ActivityResultLauncher<PickVisualMediaRequest> albumLauncher;   //相册图片选择启动器
     private ActivityResultLauncher<Uri> takePictureLauncher;    //调用系统相机的启动器
-    private ActivityResultLauncher<String> permissionLauncher;  //权限申请启动器
     private WriteMediaAdapter mediaAdapter;                     //媒体文件列表适配器
     private SelectionTracker<Long> selectionTracker;        //图片列表选择追踪器
     private final Handler draftSavingHandler = new Handler(Looper.getMainLooper()); //保存草稿的执行器
@@ -651,11 +648,48 @@ public class WriteActivity extends AppCompatActivity {
             MediaAddOption option = MediaAddOption.values()[integer];
 
             if (option == MediaAddOption.TAKE_PICTURE) {
-                if (XXPermissions.isGrantedPermission(this, PermissionLists.getCameraPermission())) {
-                    launchSystemCamera();
-                } else {
-                    permissionLauncher.launch(Manifest.permission.CAMERA);
-                }
+                PermissionHelper.requestPermission(
+                        this,
+                        permissionList -> {
+                            StringBuilder builder = new StringBuilder();
+                            if (XXPermissions.containsPermission(permissionList, PermissionLists.getCameraPermission())) {
+                                builder.append("请授予相机权限以用于拍摄图片。");
+                            }
+                            return builder.toString();
+                        },
+                        new PermissionHelper.PermissionCallback() {
+                            @Override
+                            public void allGranted(List<IPermission> permissionList) {
+                                launchSystemCamera();
+                            }
+
+                            @Override
+                            public void requested(List<IPermission> grantedList, List<IPermission> deniedList, @Nullable Function<List<IPermission>, String> descriptionFun) {
+                                boolean noDenied = deniedList.isEmpty();
+                                boolean noGranted = grantedList.isEmpty();
+                                if (noDenied && !noGranted) {
+                                    launchSystemCamera();
+                                } else {
+                                    String message;
+                                    if (descriptionFun == null) {
+                                        message = noGranted ? "权限申请被拒绝，是否跳转至权限设置界面授予权限？" :
+                                                "有权限没有授予，是否跳转至权限设置界面授予权限？";
+                                    } else {
+                                        message = descriptionFun.apply(deniedList);
+                                    }
+                                    new MaterialAlertDialogBuilder(WriteActivity.this)
+                                            .setTitle("请求被拒绝")
+                                            .setMessage(message)
+                                            .setPositiveButton("前往设置", (dialog, which) ->
+                                                    XXPermissions.startPermissionActivity(WriteActivity.this, deniedList)
+                                            )
+                                            .setNegativeButton("取消", null)
+                                            .show();
+                                }
+                            }
+                        },
+                        PermissionLists.getCameraPermission()
+                );
             } else if (option == MediaAddOption.OPEN_ALBUM) {
                 albumLauncher.launch(
                         new PickVisualMediaRequest.Builder()
@@ -920,28 +954,6 @@ public class WriteActivity extends AppCompatActivity {
                         //删除刚刚创建的照片文件
                         MediaAddOptionViewModel viewModel = new ViewModelProvider(this).get(MediaAddOptionViewModel.class);
                         FileHelper.deleteFile(viewModel.getCameraFileUri(), this);
-                    }
-                }
-        );
-
-        //权限申请启动器
-        permissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                result -> {
-                    if (result) {
-                        launchSystemCamera();
-                    } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                        //弹出解释对话框
-                        new MaterialAlertDialogBuilder(this)
-                                .setTitle("申请权限")
-                                .setMessage("使用相机拍照需要先授予摄像头权限")
-                                .setNegativeButton("取消", null)
-                                .setPositiveButton("确定", (dialogInterface, i) ->
-                                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                                )
-                                .show();
-                    } else {
-                        Toast.makeText(this, "请授予相机权限后再拍照", Toast.LENGTH_SHORT).show();
                     }
                 }
         );

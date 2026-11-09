@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -32,8 +33,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagInputActivity extends AppCompatActivity {
     private ActivityEmotionTagInputBinding binding;         //绑定的XML布局
-    @Nullable
-    private Bundle initBundle = null;                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
     private EmotionType emotionType = EmotionType.NEUTRAL;  //情绪种类
 
@@ -59,8 +58,31 @@ public class EmotionTagInputActivity extends AppCompatActivity {
             return insets;
         });
 
-        initBundle = getIntent().getExtras();
         initViews();
+        observeLiveData();
+
+        //加载初始数据
+        Bundle initBundle = getIntent().getExtras();
+        if (initBundle != null) {
+            EmotionTagInputViewModel inputViewModel = new ViewModelProvider(this).get(EmotionTagInputViewModel.class);
+            if (inputViewModel.getEmotionTag() == null) {
+                DiaryDb db = DiaryDb.getInstance(this);
+                long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.v());
+                disposable.add(db.emotionTagDao().getEmotionTagOptionalSingleById(emotionId)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                optional -> {
+                                    if (optional.isEmpty()) return;
+
+                                    EmotionTagEntity emotionTag = optional.get();
+                                    inputViewModel.setEmotionTag(emotionTag);
+                                },
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
+        }
     }
 
     @Override
@@ -75,29 +97,10 @@ public class EmotionTagInputActivity extends AppCompatActivity {
     private void initViews() {
         //初始化部分视图的内容
         binding.toolbar.setNavigationOnClickListener(view -> finish());
-        if (initBundle != null) {
+        if (getIntent().getExtras() != null) {
             binding.toolbar.setTitle(R.string.modify_emotion_tag);
-
-            //初始化输入框内容
-            DiaryDb db = DiaryDb.getInstance(this);
-            long emotionId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.v());
-            disposable.add(db.emotionTagDao().getEmotionTagOptionalSingleById(emotionId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            optional -> {
-                                if (optional.isEmpty()) return;
-
-                                EmotionTagEntity emotionTag = optional.get();
-                                binding.nameInput.setText(emotionTag.getName());    //名称
-                                binding.descriptionInput.setText(emotionTag.getDescription());  //描述
-                                int typeOrdinal = emotionTag.getType();
-                                emotionType = EmotionType.values()[typeOrdinal];
-                                binding.typeInput.setText(emotionType.getTitle());  //种类
-                            },
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
-            );
+        } else {
+            binding.toolbar.setTitle(R.string.add_emotion_tag);
         }
 
         //名称
@@ -138,6 +141,21 @@ public class EmotionTagInputActivity extends AppCompatActivity {
     }
 
     /**
+     * 观察 ViewModel 中的 LiveData
+     */
+    private void observeLiveData() {
+        //输入框数据
+        EmotionTagInputViewModel inputViewModel = new ViewModelProvider(this).get(EmotionTagInputViewModel.class);
+        inputViewModel.getEmotionTagLiveData().observe(this, emotionTag -> {
+            binding.nameInput.setText(emotionTag.getName());    //名称
+            binding.descriptionInput.setText(emotionTag.getDescription());  //描述
+            int typeOrdinal = emotionTag.getType();
+            emotionType = EmotionType.values()[typeOrdinal];
+            binding.typeInput.setText(emotionType.getTitle());  //种类
+        });
+    }
+
+    /**
      * 校验输入的内容
      *
      * @return 错误提示，无错误则返回 null
@@ -167,9 +185,9 @@ public class EmotionTagInputActivity extends AppCompatActivity {
         EmotionTagDao dao = DiaryDb.getInstance(this).emotionTagDao();
 
         //保存到数据库
-        if (initBundle != null) {
-            long emotionTagId = initBundle.getLong(KeyStrings.EMOTION_TAG_ID.v());
-            emotionTag.setEmotionId(emotionTagId);
+        EmotionTagInputViewModel inputViewModel = new ViewModelProvider(this).get(EmotionTagInputViewModel.class);
+        if (inputViewModel.getEmotionTag() != null) {
+            emotionTag.setEmotionId(inputViewModel.getEmotionTag().getEmotionId());
             disposable.add(dao.updateEmotionTagCompletable(emotionTag)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())

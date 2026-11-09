@@ -205,6 +205,7 @@
     <string name="privacy_data_answer">A : 本APP不收集任何数据，且使用过程中产生的所有数据都仅保存到本地，您无需担心任何隐私泄露问题。</string>
     <string name="paragraph_location">段落位置信息</string>
     <string name="share">分享</string>
+    <string name="btn_of_location_record">位置记录按钮</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

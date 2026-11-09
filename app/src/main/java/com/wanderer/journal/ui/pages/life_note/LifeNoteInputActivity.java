@@ -12,6 +12,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
@@ -34,8 +35,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class LifeNoteInputActivity extends AppCompatActivity {
     private ActivityLifeNoteInputBinding binding;   //绑定的 XML 布局
-    @Nullable
-    private Bundle initBundle;                      //包含初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     @Override
@@ -61,8 +60,53 @@ public class LifeNoteInputActivity extends AppCompatActivity {
             return insets;
         });
 
-        initBundle = getIntent().getExtras();
         initViews();
+        observeLiveData();
+
+        //加载初始数据
+        Bundle initBundle = getIntent().getExtras();
+        if (initBundle != null) {
+            LifeNoteInputViewModel inputViewModel = new ViewModelProvider(this).get(LifeNoteInputViewModel.class);
+            if (inputViewModel.getLifeNoteModel() == null) {
+                DiaryDb db = DiaryDb.getInstance(this);
+                long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
+                disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                noteOptional -> {
+                                    if (noteOptional.isEmpty()) return;
+                                    inputViewModel.setLifeNoteModel(noteOptional.get());
+                                },
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
+        }
+
+        //修改历史列表
+        if (getIntent().getExtras() != null) {
+            long noteId = getIntent().getExtras().getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
+            LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
+                    (entity, anchor) -> InfoShower.showLifeNoteHistory(this, entity),
+                    this::showEmotionTagPopupMenu
+            );
+            binding.historyRecycler.setAdapter(historyListAdapter);
+            DiaryDb db = DiaryDb.getInstance(this);
+            disposable.add(db.lifeNoteDao().getLifeNoteHistoryFlowableByNoteId(noteId)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            historyList -> {
+                                historyListAdapter.submitList(historyList);
+                                boolean isVisible = !historyList.isEmpty();
+                                VisibilityHelper.toggleVisibilityWithFade(binding.historyRecycler, isVisible);
+                                VisibilityHelper.toggleVisibilityWithFade(binding.modifyHistoryTitle, isVisible);
+                                VisibilityHelper.toggleVisibilityWithFade(binding.inputHistoryDivider, isVisible);
+                            }
+                    )
+            );
+        }
     }
 
     @Override
@@ -76,31 +120,14 @@ public class LifeNoteInputActivity extends AppCompatActivity {
      */
     private void initViews() {
         //工具栏
-        if (initBundle != null) {
+        if (getIntent().getExtras() != null) {
             binding.toolbar.setTitle(R.string.modify_life_note);
-
-            //初始化输入框内容
-            DiaryDb db = DiaryDb.getInstance(this);
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
-            disposable.add(db.lifeNoteDao().getLifeNoteOptionalSingleById(noteId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            noteOptional -> {
-                                if (noteOptional.isEmpty()) return;
-
-                                LifeNoteEntity lifeNote = noteOptional.get();
-                                binding.insightInput.setText(lifeNote.getInsight());            //洞见
-                                binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
-                            },
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
-            );
         } else {
             int gone = View.GONE;
             binding.modifyHistoryTitle.setVisibility(gone);
             binding.historyRecycler.setVisibility(gone);
             binding.inputHistoryDivider.setVisibility(gone);
+            binding.toolbar.setTitle(R.string.add_life_note);
         }
         binding.toolbar.setNavigationOnClickListener(view -> finish());
 
@@ -126,30 +153,18 @@ public class LifeNoteInputActivity extends AppCompatActivity {
 
             onConfirm();
         });
+    }
 
-        //修改历史列表
-        if (initBundle != null) {
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v(), 0);
-            LifeNoteHistoryListAdapter historyListAdapter = new LifeNoteHistoryListAdapter(
-                    (entity, anchor) -> InfoShower.showLifeNoteHistory(this, entity),
-                    this::showEmotionTagPopupMenu
-            );
-            binding.historyRecycler.setAdapter(historyListAdapter);
-            DiaryDb db = DiaryDb.getInstance(this);
-            disposable.add(db.lifeNoteDao().getLifeNoteHistoryFlowableByNoteId(noteId)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(
-                            historyList -> {
-                                historyListAdapter.submitList(historyList);
-                                boolean isVisible = !historyList.isEmpty();
-                                VisibilityHelper.toggleVisibilityWithFade(binding.historyRecycler, isVisible);
-                                VisibilityHelper.toggleVisibilityWithFade(binding.modifyHistoryTitle, isVisible);
-                                VisibilityHelper.toggleVisibilityWithFade(binding.inputHistoryDivider, isVisible);
-                            }
-                    )
-            );
-        }
+    /**
+     * 观察 ViewModel 中的 LiveData
+     */
+    private void observeLiveData() {
+        //输入框数据
+        LifeNoteInputViewModel inputViewModel = new ViewModelProvider(this).get(LifeNoteInputViewModel.class);
+        inputViewModel.getLifeNoteModelLiveData().observe(this, lifeNote -> {
+            binding.insightInput.setText(lifeNote.getInsight());            //洞见
+            binding.elaborationInput.setText(lifeNote.getElaboration());    //阐述
+        });
     }
 
     /**
@@ -185,7 +200,8 @@ public class LifeNoteInputActivity extends AppCompatActivity {
 
         //更新数据库
         DiaryDb db = DiaryDb.getInstance(this);
-        if (initBundle == null) {
+        LifeNoteInputViewModel inputViewModel = new ViewModelProvider(this).get(LifeNoteInputViewModel.class);
+        if (inputViewModel.getLifeNoteModel() == null) {
             disposable.add(db.lifeNoteDao().insertLifeNote(lifeNote)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
@@ -198,8 +214,7 @@ public class LifeNoteInputActivity extends AppCompatActivity {
                     )
             );
         } else {
-            long noteId = initBundle.getLong(KeyStrings.LIFE_NOTE_ID.v());
-            lifeNote.setNoteId(noteId);
+            lifeNote.setNoteId(inputViewModel.getLifeNoteModel().getNoteId());
             disposable.add(LifeNoteService.modifyLifeNoteCompletable(db, lifeNote)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
