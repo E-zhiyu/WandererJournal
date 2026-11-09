@@ -687,7 +687,8 @@ public class WriteActivity extends AppCompatActivity {
                                             .show();
                                 }
                             }
-                        }
+                        },
+                        PermissionLists.getCameraPermission()
                 );
             } else if (option == MediaAddOption.OPEN_ALBUM) {
                 albumLauncher.launch(
