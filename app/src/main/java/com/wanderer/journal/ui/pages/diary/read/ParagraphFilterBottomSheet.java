@@ -51,7 +51,9 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         //绑定消失监听器
         setOnDismissListener(() -> {
             ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
-            viewModel.notifyFilterUpdated();
+            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            viewModel.setFilterConditions(conditions);
+            setOnDismissListener(null);
         });
 
         return binding.getRoot();
@@ -68,14 +70,17 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
      * 初始化视图
      */
     private void initViews() {
-        //设置适配器
+        //读取已有的过滤条件
         ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
+        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+
+        //设置适配器
         EmotionTagFilterAdapter adapter = new EmotionTagFilterAdapter(
-                viewModel.getCheckedEmotionIdSet(),
+                conditions.emotionWhiteListIdSet,
                 (emotionTag, isChecked) -> {
                     if (emotionTag != null) {
                         long emotionId = emotionTag.getEmotionId();
-                        Set<Long> checkedEmotionIdSet = viewModel.getCheckedEmotionIdSet();
+                        Set<Long> checkedEmotionIdSet = conditions.emotionWhiteListIdSet;
                         if (isChecked) {
                             checkedEmotionIdSet.add(emotionId);
                         } else {
@@ -98,15 +103,15 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         );
 
         //图片过滤 Chip
-        binding.mediaFilterChip.setChecked(viewModel.getFilterMedia());
+        binding.mediaFilterChip.setChecked(conditions.filterMedia);
         binding.mediaFilterChip.setOnCheckedChangeListener((buttonView, isChecked) ->
-                viewModel.setFilterMedia(isChecked)
+                conditions.filterMedia = isChecked
         );
 
         //位置过滤 Chip
-        binding.locationFilterChip.setChecked(viewModel.isFilterLocation());
+        binding.locationFilterChip.setChecked(conditions.filterLocation);
         binding.locationFilterChip.setOnCheckedChangeListener((buttonView, isChecked) ->
-                viewModel.setFilterLocation(isChecked)
+                conditions.filterLocation = isChecked
         );
     }
 }

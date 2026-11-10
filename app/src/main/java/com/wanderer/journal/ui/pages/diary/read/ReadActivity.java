@@ -254,12 +254,9 @@ public class ReadActivity extends AppCompatActivity {
         //多词搜索模式切换按钮
         binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
             ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-            viewModel.toggleKeywordMode();
-            if (viewModel.isAndMode()) {
-                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
-            } else {
-                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_or);
-            }
+            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            conditions.isAndMode = !conditions.isAndMode;
+            viewModel.setFilterConditions(conditions);
         });
 
         //符合过滤条件的段落的下标
@@ -269,30 +266,31 @@ public class ReadActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
-                        idList -> {
-                            searchMatchedparagraphIdList = idList;
+                        filteredParagraphIdList -> {
+                            searchMatchedparagraphIdList = filteredParagraphIdList;
 
                             //高亮段落
-                            if (!idList.isEmpty()) {
+                            if (!filteredParagraphIdList.isEmpty()) {
+                                ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
                                 adapter.setHighlightTarget(
-                                        viewModel.getValidKeywordList(),
-                                        viewModel.getCheckedEmotionIdSet(),
-                                        idList
+                                        viewModel.getValidKeywordList(conditions.keyword),
+                                        conditions.emotionWhiteListIdSet,
+                                        filteredParagraphIdList
                                 );
                             } else {
                                 adapter.clearHighlight();
                             }
 
                             //设置跳转位置卡片文本
-                            currentIndex = idList.size() - 1;
-                            if (idList.isEmpty()) {
+                            currentIndex = filteredParagraphIdList.size() - 1;
+                            if (filteredParagraphIdList.isEmpty()) {
                                 binding.filteredParagraphCounterText.setText(R.string.not_applicable);
                             } else {
                                 String counterText = String.format(
                                         Locale.getDefault(),
                                         "%d/%d",
                                         currentIndex + 1,
-                                        idList.size()
+                                        filteredParagraphIdList.size()
                                 );
                                 binding.filteredParagraphCounterText.setText(counterText);
 
@@ -335,7 +333,7 @@ public class ReadActivity extends AppCompatActivity {
             @Override
             public boolean handleBack() {
                 ReadViewModel viewModel = new ViewModelProvider(ReadActivity.this).get(ReadViewModel.class);
-                viewModel.clearFilter();
+                viewModel.setFilterConditions(null);
                 return true;
             }
 
@@ -372,7 +370,9 @@ public class ReadActivity extends AppCompatActivity {
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
                     ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-                    viewModel.executeSearch(keyword);
+                    ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+                    conditions.keyword = keyword;
+                    viewModel.setFilterConditions(conditions);
                 },
                 item -> {
                     int id = item.getItemId();
@@ -567,11 +567,12 @@ public class ReadActivity extends AppCompatActivity {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
             LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
-            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, viewModel.isHiddenParagraphShown())
+            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, conditions.isHiddenShown)
                     .flatMapPublisher(
                             initPosition -> {
                                 initScrollPosition.set(initPosition);
-                                return viewModel.getPagingDataFlow(initPosition, db);
+                                return viewModel.getParagraphPagingDataFlow(initPosition, db);
                             }
                     )
                     .subscribeOn(Schedulers.io())
@@ -583,7 +584,7 @@ public class ReadActivity extends AppCompatActivity {
             );
         } else {    //没有传递参数直接从最顶部开始
             initScrollPosition.set(0);
-            disposable.add(viewModel.getPagingDataFlow(0, db)
+            disposable.add(viewModel.getParagraphPagingDataFlow(0, db)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeOn(Schedulers.io())
                     .subscribe(
@@ -664,10 +665,18 @@ public class ReadActivity extends AppCompatActivity {
      * 开始监听 ViewModel 的 LiveData
      */
     private void observeLiveData() {
+        //段落过滤条件
         ReadViewModel filterViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        filterViewModel.getFilterUpdatedLiveData().observe(this, v ->
-                setSearchMode(!filterViewModel.isNoFilter())
-        );
+        filterViewModel.getFilterUpdatedLiveData().observe(this, conditions -> {
+            //多词搜索模式按钮
+            if (!conditions.isAndMode) {
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);
+            } else {
+                binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_or);
+            }
+
+            setSearchMode(conditions.hasFilter());
+        });
 
         //段落的情绪标签选择状态
         EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
@@ -800,7 +809,8 @@ public class ReadActivity extends AppCompatActivity {
             //缓存中找不到则从数据库中读取具体位置
             DiaryDb db = DiaryDb.getInstance(this);
             ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-            disposable.add(db.paragraphDao().getParagraphPositionById(paragraphId, viewModel.isHiddenParagraphShown())
+            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            disposable.add(db.paragraphDao().getParagraphPositionById(paragraphId, conditions.isHiddenShown)
                     .subscribeOn(Schedulers.io())
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .subscribe(
@@ -935,11 +945,12 @@ public class ReadActivity extends AppCompatActivity {
                             .flatMap(optional -> {
                                 LocalDate startDate = optional.orElseGet(LocalDate::now);
                                 ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
+                                ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
                                 return ParagraphService.modifyCreateTime(
                                         paragraph.getParagraphId(),
                                         startDate,
                                         newDateTime,
-                                        viewModel.isHiddenParagraphShown(),
+                                        conditions.isHiddenShown,
                                         db
                                 );
                             })
@@ -1120,7 +1131,8 @@ public class ReadActivity extends AppCompatActivity {
         //跳转到对应位置
         DiaryDb db = DiaryDb.getInstance(this);
         ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        disposable.add(db.paragraphDao().getDiaryStartPositionByDate(targetDate, viewModel.isHiddenParagraphShown())
+        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        disposable.add(db.paragraphDao().getDiaryStartPositionByDate(targetDate, conditions.isHiddenShown)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -1141,19 +1153,22 @@ public class ReadActivity extends AppCompatActivity {
      */
     private void changeHiddenParagraphVisibility() {
         ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        if (viewModel.isNotAuthed() && !viewModel.isHiddenParagraphShown()) {
+        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        if (viewModel.isNotAuthed() && !conditions.isHiddenShown) {
             BiometricHelper.showBiometricPrompt("隐私保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
                 @Override
                 public void onSuccess() {
-                    viewModel.showHiddenParagraph(true);
-                    Toast.makeText(ReadActivity.this, "已显示受保护的段落", Toast.LENGTH_SHORT).show();
                     viewModel.setIsAuthed(true);
+                    conditions.isHiddenShown = true;
+                    viewModel.setFilterConditions(conditions);
+                    Toast.makeText(ReadActivity.this, "已显示受保护的段落", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
                 public void onError(int errCode, CharSequence errStr) {
                     if (errCode == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
-                        viewModel.showHiddenParagraph(true);
+                        conditions.isHiddenShown = true;
+                        viewModel.setFilterConditions(conditions);
                         Toast.makeText(ReadActivity.this, "请设置锁屏验证方式以保护隐私段落", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(ReadActivity.this, errStr, Toast.LENGTH_SHORT).show();
@@ -1165,10 +1180,10 @@ public class ReadActivity extends AppCompatActivity {
                 }
             });
         } else {
-            boolean currentStat = viewModel.isHiddenParagraphShown();
-            viewModel.showHiddenParagraph(!currentStat);
+            conditions.isHiddenShown = !conditions.isHiddenShown;
+            viewModel.setFilterConditions(conditions);
 
-            String tip = currentStat ? "已隐藏受保护的段落" : "已显示受保护的段落";
+            String tip = conditions.isHiddenShown ? "已隐藏受保护的段落" : "已显示受保护的段落";
             Toast.makeText(this, tip, Toast.LENGTH_SHORT).show();
         }
     }

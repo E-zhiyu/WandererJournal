@@ -180,8 +180,8 @@ public class ParagraphService {
      * @param emotionIds             情绪标签 ID 集合（如果传入空集合，代表不限制情绪，只按关键词搜索）
      * @param useMediaFilter         是否需要由媒体文件
      * @param isHiddenParagraphShown 隐藏的段落是否显示
-     * @param db                     数据库实例
      * @param isAndMode              多词搜索模式是否为“与”模式
+     * @param db                     数据库实例
      * @return 包含所有匹配搜索的段落编号列表
      */
     @NonNull
@@ -191,8 +191,8 @@ public class ParagraphService {
             boolean useMediaFilter,
             boolean useLocationFilter,
             boolean isHiddenParagraphShown,
-            @NonNull DiaryDb db,
-            boolean isAndMode
+            boolean isAndMode,
+            @NonNull DiaryDb db
     ) {
         ParagraphDao paragraphDao = db.paragraphDao();
         StringBuilder sql = new StringBuilder("SELECT p.paragraphId FROM paragraphs p WHERE 1=1 ");
