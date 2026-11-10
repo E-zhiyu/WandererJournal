@@ -7,7 +7,7 @@ import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionListUiModel;
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -54,7 +54,7 @@ public class EmotionTagService {
                     if (emotionTagEntityList.isEmpty()) return resultList;
 
                     //分组
-                    Map<Integer, List<EmotionTagUseCountUnionModel>> groupedMap = emotionTagEntityList.stream()
+                    Map<Integer, List<UsedEmotionTagUnionModel>> groupedMap = emotionTagEntityList.stream()
                             .collect(Collectors.groupingBy(
                                     model -> model.getEmotionTag().getType(),
                                     LinkedHashMap::new,
@@ -62,7 +62,7 @@ public class EmotionTagService {
                             ));
 
                     //循环添加分隔符和 Item 项
-                    for (Map.Entry<Integer, List<EmotionTagUseCountUnionModel>> entry : groupedMap.entrySet()) {
+                    for (Map.Entry<Integer, List<UsedEmotionTagUnionModel>> entry : groupedMap.entrySet()) {
                         String separatorText = types[entry.getKey()].getTitle();
                         resultList.add(new EmotionListUiModel.Separator(separatorText));
 

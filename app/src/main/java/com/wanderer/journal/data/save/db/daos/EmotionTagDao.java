@@ -7,9 +7,10 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import com.wanderer.journal.auxiliary.classes.statistics.ParagraphEmotionTagStatistics;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 
 import java.util.List;
@@ -101,7 +102,7 @@ public interface EmotionTagDao {
             "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
             "FROM emotionTags e " +
             "ORDER BY type")
-    Flowable<List<EmotionTagUseCountUnionModel>> getEmotionTagUseCountModelFlowable();
+    Flowable<List<UsedEmotionTagUnionModel>> getEmotionTagUseCountModelFlowable();
 
     /**
      * 获取使用过的情绪标签及其使用次数
@@ -113,27 +114,32 @@ public interface EmotionTagDao {
             "FROM emotionTags e " +
             "WHERE useCount > 0 " +
             "ORDER BY useCount DESC")
-    Flowable<List<EmotionTagUseCountUnionModel>> getUsedEmotionTagFlowable();
+    Flowable<List<UsedEmotionTagUnionModel>> getUsedEmotionTagFlowable();
 
     /**
-     * 获取一个段落中最多使用的情绪标签数量
-     *
-     * @return 一个段落中最多使用的情绪标签数量
+     * 获取一个段落与情绪标签映射表的统计数据
      */
-    @Query("SELECT MAX(tagCount) FROM (" +
-            "   SELECT COUNT(*) AS tagCount FROM emotionParagraphCrossRef GROUP BY paragraphId" +
-            ")")
-    Flowable<Integer> getMaxTagCountInOneParagraphFlowable();
-
-    /**
-     * 获取一个段落中平均使用的情绪标签数量
-     *
-     * @return 一个段落中平均使用的情绪标签数量
-     */
-    @Query("SELECT AVG(tagCount) FROM (" +
-            "   SELECT COUNT(*) AS tagCount FROM emotionParagraphCrossRef GROUP BY paragraphId" +
-            ")")
-    Flowable<Double> getAvgTagCountInOneParagraphFlowable();
+    @Query("WITH perParagraph AS (" +
+            "    SELECT" +
+            "        paragraphId," +
+            "        COUNT(*)     AS tagCountInParagraph," +
+            "        SUM(degree)  AS degreeSumInParagraph" +
+            "    FROM emotionParagraphCrossRef" +
+            "    GROUP BY paragraphId" +
+            ")," +
+            "avgCalc AS (" +
+            "    SELECT AVG(degreeSumInParagraph) AS avgDegree FROM perParagraph" +
+            ")" +
+            "SELECT" +
+            "    MAX(tagCountInParagraph) AS maxTagCountInOneParagraph," +
+            "    AVG(tagCountInParagraph) AS avgTagCountInOneParagraph," +
+            "    MAX(degreeSumInParagraph) AS maxEmotionDegreeInOneParagraph," +
+            "    AVG(degreeSumInParagraph) AS avgEmotionDegreeInOneParagraph," +
+            "    (SELECT COUNT(*) FROM perParagraph, avgCalc" +
+            "     WHERE degreeSumInParagraph > avgCalc.avgDegree)" +
+            "        AS strongEmotionDegreeParagraphCount " +
+            "FROM perParagraph;")
+    Flowable<ParagraphEmotionTagStatistics> getParagraphEmotionTagStatisticsFlowable();
 
     /**
      * 获取可以选择的情绪标签数据

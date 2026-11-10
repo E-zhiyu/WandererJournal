@@ -1,29 +1,23 @@
 package com.wanderer.journal.auxiliary.classes.statistics;
 
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 
 import java.util.List;
 
 public class EmotionTagStatistics {
-    private final List<EmotionTagUseCountUnionModel> tagUseCountModelList;
-    private final int maxTagCountInOneParagraph;
-    private final double avgTagCountInOneParagraph;
+    private final List<UsedEmotionTagUnionModel> tagUseCountModelList;
+    private final ParagraphEmotionTagStatistics paragraphEmotionTagStatistics;
 
-    public EmotionTagStatistics(List<EmotionTagUseCountUnionModel> tagUseCountModelList, int maxTagCountInOneParagraph, double avgTagCountInOneParagraph) {
+    public EmotionTagStatistics(List<UsedEmotionTagUnionModel> tagUseCountModelList, ParagraphEmotionTagStatistics paragraphEmotionTagStatistics) {
         this.tagUseCountModelList = tagUseCountModelList;
-        this.maxTagCountInOneParagraph = maxTagCountInOneParagraph;
-        this.avgTagCountInOneParagraph = avgTagCountInOneParagraph;
+        this.paragraphEmotionTagStatistics = paragraphEmotionTagStatistics;
     }
 
-    public List<EmotionTagUseCountUnionModel> getTagUseCountModelList() {
+    public List<UsedEmotionTagUnionModel> getTagUseCountModelList() {
         return tagUseCountModelList;
     }
 
-    public int getMaxTagCountInOneParagraph() {
-        return maxTagCountInOneParagraph;
-    }
-
-    public double getAvgTagCountInOneParagraph() {
-        return avgTagCountInOneParagraph;
+    public ParagraphEmotionTagStatistics getParagraphEmotionTagStatistics() {
+        return paragraphEmotionTagStatistics;
     }
 }
