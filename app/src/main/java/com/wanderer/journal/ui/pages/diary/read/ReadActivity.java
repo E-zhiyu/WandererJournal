@@ -97,7 +97,6 @@ public class ReadActivity extends AppCompatActivity {
     private Bundle initBundle = null;                                       //传递初始化数据的数据包
     private final CompositeDisposable disposable = new CompositeDisposable();           //多线程任务订阅队列
     private ParagraphPagingAdapter adapter;                                 //段落列表适配器
-    private List<Long> searchMatchedparagraphIdList;                        //符合过滤条件的段落的位置列表
     private int currentIndex = -1;                                          //搜索匹配项列表当前元素的下标
     private final AtomicInteger initScrollPosition = new AtomicInteger(-1);   //界面加载时初始滚动到的位置
     @Nullable
@@ -172,14 +171,16 @@ public class ReadActivity extends AppCompatActivity {
                         .setNegativeButton("取消", null)
                         .setPositiveButton("确定", input -> {
                             //判断是否有内容
-                            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
+                            ReadViewModel readViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
+                            List<Long> filteredParagraphIdList = readViewModel.getFilteredParagraphIdList();
+                            if (filteredParagraphIdList == null || filteredParagraphIdList.isEmpty()) {
                                 Toast.makeText(this, "无匹配的搜索项，无法跳转", Toast.LENGTH_SHORT).show();
                                 return;
                             }
 
                             //判断范围
                             int pos = Integer.parseInt(input);
-                            if (pos <= 0 || pos > searchMatchedparagraphIdList.size()) {
+                            if (pos <= 0 || pos > filteredParagraphIdList.size()) {
                                 Toast.makeText(this, "请输入有效范围内的位置", Toast.LENGTH_SHORT).show();
                                 return;
                             }
@@ -190,28 +191,31 @@ public class ReadActivity extends AppCompatActivity {
                                     Locale.getDefault(),
                                     "%d/%d",
                                     currentIndex + 1,
-                                    searchMatchedparagraphIdList.size()
+                                    filteredParagraphIdList.size()
                             );
                             binding.filteredParagraphCounterText.setText(counterText);
 
                             //执行跳转逻辑
-                            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
+                            scrollToParagraph(filteredParagraphIdList.get(currentIndex));
                         })
                         .show());
         AppearanceHelper.attachMorphAnimation(binding.matchedItemsCounter);
 
         //向上按钮
         binding.upFab.setOnClickListener(view -> {
+            ReadViewModel readViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
+            List<Long> filteredParagraphIdList = readViewModel.getFilteredParagraphIdList();
+
             //判空
-            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
+            if (filteredParagraphIdList == null || filteredParagraphIdList.isEmpty()) {
                 return;
             }
 
             //滚动列表
-            int model = searchMatchedparagraphIdList.size();
+            int model = filteredParagraphIdList.size();
             currentIndex = (currentIndex + model - 1) % model;
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentIndex);
-            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
+            scrollToParagraph(filteredParagraphIdList.get(currentIndex));
 
             //更新计数器
             String counterText = String.format(
@@ -226,16 +230,19 @@ public class ReadActivity extends AppCompatActivity {
 
         //向下按钮
         binding.downFab.setOnClickListener(view -> {
+            ReadViewModel readViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
+            List<Long> filteredParagraphIdList = readViewModel.getFilteredParagraphIdList();
+
             //判空
-            if (searchMatchedparagraphIdList == null || searchMatchedparagraphIdList.isEmpty()) {
+            if (filteredParagraphIdList == null || filteredParagraphIdList.isEmpty()) {
                 return;
             }
 
             //滚动视图
-            int model = searchMatchedparagraphIdList.size();
+            int model = filteredParagraphIdList.size();
             currentIndex = (currentIndex + model + 1) % model;
             Log.d(LogTags.DIARY_READ_ACTIVITY.n(), "当前匹配项下标：" + currentIndex);
-            scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
+            scrollToParagraph(filteredParagraphIdList.get(currentIndex));
 
             //更新计数器
             String counterText = String.format(
@@ -267,14 +274,12 @@ public class ReadActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                         filteredParagraphIdList -> {
-                            searchMatchedparagraphIdList = filteredParagraphIdList;
-
                             //高亮段落
                             if (!filteredParagraphIdList.isEmpty()) {
                                 ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
                                 adapter.setHighlightTarget(
                                         viewModel.getValidKeywordList(conditions.keyword),
-                                        conditions.emotionWhiteListIdSet,
+                                        conditions.emotionWhiteList.keySet(),   //TODO:改为传递 Map，以便过滤等级
                                         filteredParagraphIdList
                                 );
                             } else {
@@ -294,7 +299,7 @@ public class ReadActivity extends AppCompatActivity {
                                 );
                                 binding.filteredParagraphCounterText.setText(counterText);
 
-                                scrollToParagraph(searchMatchedparagraphIdList.get(currentIndex));
+                                scrollToParagraph(filteredParagraphIdList.get(currentIndex));
                             }
                         },
                         e -> ExceptionHelper.showExceptionDialog(this, e)
@@ -667,7 +672,7 @@ public class ReadActivity extends AppCompatActivity {
     private void observeLiveData() {
         //段落过滤条件
         ReadViewModel filterViewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        filterViewModel.getFilterUpdatedLiveData().observe(this, conditions -> {
+        filterViewModel.getFilterConditionsLiveData().observe(this, conditions -> {
             //多词搜索模式按钮
             if (!conditions.isAndMode) {
                 binding.multiSearchModeSwitchBtn.setText(R.string.multi_word_search_and);

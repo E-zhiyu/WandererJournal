@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -177,7 +178,7 @@ public class ParagraphService {
      * 获取匹配搜索的段落的编号
      *
      * @param keywordList            搜索关键词列表
-     * @param emotionIds             情绪标签 ID 集合（如果传入空集合，代表不限制情绪，只按关键词搜索）
+     * @param emotionWhiteList       情绪标签白名单（如果传入空集合，代表不限制情绪，只按关键词搜索）
      * @param useMediaFilter         是否需要由媒体文件
      * @param isHiddenParagraphShown 隐藏的段落是否显示
      * @param isAndMode              多词搜索模式是否为“与”模式
@@ -187,7 +188,7 @@ public class ParagraphService {
     @NonNull
     public static Flowable<List<Long>> getSearchMatchedParagraphPositionsFlowableInternal(
             List<String> keywordList,
-            Set<Long> emotionIds,
+            Map<Long, Integer> emotionWhiteList,
             boolean useMediaFilter,
             boolean useLocationFilter,
             boolean isHiddenParagraphShown,
@@ -201,7 +202,7 @@ public class ParagraphService {
             sql.append(" AND p.privacyType != 2 ");
         }
 
-        List<Object> args = getSearchArgs(keywordList, emotionIds, sql, isAndMode);
+        List<Object> args = getSearchArgs(keywordList, emotionWhiteList, sql, isAndMode);
 
         //媒体
         if (useMediaFilter) {
@@ -220,14 +221,14 @@ public class ParagraphService {
     /**
      * 获取搜索参数
      *
-     * @param keywordList 搜索关键词列表
-     * @param emotionIds  情绪标签 ID 集合
-     * @param sql         SQL 语句构建器
-     * @param isAndMode   多词搜索模式是否为“与”模式
+     * @param keywordList      搜索关键词列表
+     * @param emotionWhiteList 情绪标签白名单
+     * @param sql              SQL 语句构建器
+     * @param isAndMode        多词搜索模式是否为“与”模式
      * @return 匹配 SQL 中参数通配符的参数列表
      */
     @NonNull
-    private static List<Object> getSearchArgs(List<String> keywordList, Set<Long> emotionIds, StringBuilder sql, boolean isAndMode) {
+    private static List<Object> getSearchArgs(List<String> keywordList, Map<Long, Integer> emotionWhiteList, StringBuilder sql, boolean isAndMode) {
         List<Object> args = new ArrayList<>();
 
         // 2. 动态拼接多词内容过滤 (LIKE 方案)
@@ -241,7 +242,9 @@ public class ParagraphService {
             for (String keyword : keywordList) {
                 if (!keyword.isEmpty()) {
                     // 转义处理，防止用户输入 % 或 _ 导致逻辑崩溃
-                    String safeKeyword = keyword.replace("/", "//").replace("%", "/%").replace("_", "/_");
+                    String safeKeyword = keyword.replace("/", "//")
+                            .replace("%", "/%")
+                            .replace("_", "/_");
 
                     // 每一个关键词都生成一个独立的 AND LIKE 条件，确保“同时包含”
                     sql.append(" content LIKE ? ESCAPE '/'");
@@ -259,14 +262,17 @@ public class ParagraphService {
         }
 
         // 3. 动态拼接情绪标签过滤
-        boolean useEmotionFilter = emotionIds != null && !emotionIds.isEmpty();
+        boolean useEmotionFilter = emotionWhiteList != null && !emotionWhiteList.isEmpty();
         if (useEmotionFilter) {
-            sql.append(" AND paragraphId IN (SELECT paragraphId FROM emotionParagraphCrossRef WHERE emotionId IN (");
+            // 存在任意一个白名单情绪，且该段落中该情绪的 degree >= 阈值，即命中
+            sql.append(" AND EXISTS (SELECT 1 FROM emotionParagraphCrossRef ref WHERE ref.paragraphId = p.paragraphId AND (");
             int i = 0;
-            for (long emotionId : emotionIds) {
-                sql.append("?");
-                args.add(emotionId);
-                if (i < emotionIds.size() - 1) sql.append(",");
+            int size = emotionWhiteList.size();
+            for (Map.Entry<Long, Integer> entry : emotionWhiteList.entrySet()) {
+                sql.append("(ref.emotionId = ? AND ref.degree >= ?)");
+                args.add(entry.getKey());     // emotionId
+                args.add(entry.getValue());   // 最低等级阈值
+                if (i < size - 1) sql.append(" OR ");
                 i++;
             }
             sql.append("))");

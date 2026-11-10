@@ -17,11 +17,12 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -33,7 +34,8 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ReadViewModel extends ViewModel {
-    private final MutableLiveData<FilterConditions> filterUpdatedLiveData = new MutableLiveData<>();  //提醒宿主更新 UI 的 LiveData
+    private final MutableLiveData<FilterConditions> filterConditionsLiveData = new MutableLiveData<>();  //提醒宿主更新 UI 的 LiveData
+    private List<Long> filteredParagraphIdList; //过滤的段落的编号
     private final BehaviorProcessor<FilterConditions> filterConditionsProcessor =
             BehaviorProcessor.createDefault(new FilterConditions());
     public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
@@ -47,7 +49,7 @@ public class ReadViewModel extends ViewModel {
         public boolean filterMedia;                     //是否需要带有媒体
         public boolean filterLocation;                  //是否需要带有位置
         @NonNull
-        public final Set<Long> emotionWhiteListIdSet;   //情绪标签白名单编号集合
+        public final Map<Long, Integer> emotionWhiteList;    //情绪标签白名单（k:标签编号; v:情绪等级）
 
         /**
          * 不设置过滤条件的构造方法
@@ -58,7 +60,7 @@ public class ReadViewModel extends ViewModel {
             keyword = "";
             filterMedia = false;
             filterLocation = false;
-            emotionWhiteListIdSet = new HashSet<>();
+            emotionWhiteList = new HashMap<>();
         }
 
         /**
@@ -70,8 +72,12 @@ public class ReadViewModel extends ViewModel {
             return !keyword.isEmpty() ||
                     filterMedia ||
                     filterLocation ||
-                    !emotionWhiteListIdSet.isEmpty();
+                    !emotionWhiteList.isEmpty();
         }
+    }
+
+    public List<Long> getFilteredParagraphIdList() {
+        return filteredParagraphIdList;
     }
 
     /**
@@ -106,8 +112,8 @@ public class ReadViewModel extends ViewModel {
                 .collect(Collectors.toList());
     }
 
-    public MutableLiveData<FilterConditions> getFilterUpdatedLiveData() {
-        return filterUpdatedLiveData;
+    public MutableLiveData<FilterConditions> getFilterConditionsLiveData() {
+        return filterConditionsLiveData;
     }
 
     /**
@@ -127,10 +133,13 @@ public class ReadViewModel extends ViewModel {
                 itemPagingData, executor, (before, after) -> {
                     if (after == null) return null;
 
-                    if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
-                        return new ParagraphUiModel.Separator(
-                                after.model.getParagraph().getCreateTime().toLocalDate()
-                        );
+                    LocalDate afterDate = after.model.getParagraph().getCreateTime().toLocalDate();
+                    if (before == null) {
+                        return new ParagraphUiModel.Separator(afterDate);
+                    }
+                    LocalDate beforeDate = before.model.getParagraph().getCreateTime().toLocalDate();
+                    if (!beforeDate.isEqual(afterDate)) {
+                        return new ParagraphUiModel.Separator(afterDate);
                     }
                     return null;
                 });
@@ -145,6 +154,7 @@ public class ReadViewModel extends ViewModel {
      */
     public Flowable<PagingData<ParagraphUiModel>> getParagraphPagingDataFlow(int initPosition, DiaryDb db) {
         return filterConditionsProcessor.debounce(50, TimeUnit.MILLISECONDS)
+                .distinctUntilChanged(filterConditions -> filterConditions.isHiddenShown)
                 .switchMap(filterConditions -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
@@ -171,19 +181,6 @@ public class ReadViewModel extends ViewModel {
     }
 
     /**
-     * 判断两个时间是否在同一天
-     *
-     * @param t1 时间实例
-     * @param t2 时间实例
-     * @return 是否在同一天
-     */
-    private boolean isSameDay(@NonNull LocalDateTime t1, @NonNull LocalDateTime t2) {
-        LocalDate d1 = t1.toLocalDate();
-        LocalDate d2 = t2.toLocalDate();
-        return d1.isEqual(d2);
-    }
-
-    /**
      * 获取符合过滤条件的段落的编号
      *
      * @param db 数据库实例
@@ -192,23 +189,29 @@ public class ReadViewModel extends ViewModel {
     public Flowable<List<Long>> getFilteredParagraphIds(DiaryDb db) {
         return filterConditionsProcessor.debounce(50, TimeUnit.MILLISECONDS)
                 .switchMap(filterConditions -> {
-                    filterUpdatedLiveData.postValue(filterConditions);
+                    filterConditionsLiveData.postValue(filterConditions);
 
                     //判断是否没有过滤选项
                     if (!filterConditions.hasFilter()) {
-                        return Flowable.just(new ArrayList<>());
+                        List<Long> emptyResult = new ArrayList<>();
+                        filteredParagraphIdList = emptyResult;
+                        return Flowable.just(emptyResult);
                     }
 
                     // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
                     return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
-                            getValidKeywordList(filterConditions.keyword),
-                            filterConditions.emotionWhiteListIdSet,
-                            filterConditions.filterMedia,
-                            filterConditions.filterLocation,
-                            filterConditions.isHiddenShown,
-                            filterConditions.isAndMode,
-                            db
-                    );
+                                    getValidKeywordList(filterConditions.keyword),
+                                    filterConditions.emotionWhiteList,
+                                    filterConditions.filterMedia,
+                                    filterConditions.filterLocation,
+                                    filterConditions.isHiddenShown,
+                                    filterConditions.isAndMode,
+                                    db
+                            )
+                            .flatMap(idList -> {
+                                filteredParagraphIdList = idList;
+                                return Flowable.just(idList);
+                            });
                 });
     }
 

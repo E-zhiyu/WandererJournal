@@ -20,8 +20,6 @@ import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
 import com.wanderer.journal.ui.others.bottom.BaseBottomSheetDialogFragment;
 
-import java.util.Set;
-
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -76,15 +74,14 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         //设置适配器
         EmotionTagFilterAdapter adapter = new EmotionTagFilterAdapter(
-                conditions.emotionWhiteListIdSet,
+                conditions.emotionWhiteList.keySet(),
                 (emotionTag, isChecked) -> {
                     if (emotionTag != null) {
                         long emotionId = emotionTag.getEmotionId();
-                        Set<Long> checkedEmotionIdSet = conditions.emotionWhiteListIdSet;
                         if (isChecked) {
-                            checkedEmotionIdSet.add(emotionId);
+                            conditions.emotionWhiteList.put(emotionId, 2);
                         } else {
-                            checkedEmotionIdSet.remove(emotionId);
+                            conditions.emotionWhiteList.remove(emotionId);
                         }
                     }
                 }
