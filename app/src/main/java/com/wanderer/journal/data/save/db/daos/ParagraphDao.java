@@ -16,7 +16,7 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
-import com.wanderer.journal.auxiliary.classes.ParagraphStatistics;
+import com.wanderer.journal.auxiliary.classes.statistics.ParagraphStatistics;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;

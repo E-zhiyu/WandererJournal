@@ -20,7 +20,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.google.android.material.chip.Chip;
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
-import com.wanderer.journal.auxiliary.classes.ParagraphStatistics;
+import com.wanderer.journal.auxiliary.classes.statistics.EmotionTagStatistics;
+import com.wanderer.journal.auxiliary.classes.statistics.ParagraphStatistics;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 
 import io.noties.markwon.Markwon;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -410,66 +412,86 @@ public class StatisticsActivity extends AppCompatActivity {
      */
     private void initEmotionStatisticsCard() {
         DiaryDb db = DiaryDb.getInstance(this);
-        disposable.add(db.emotionTagDao().getUsedEmotionTagFlowable()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        usedModelList -> {
-                            if (usedModelList.isEmpty()) {
-                                binding.emotionStatisticsCard.setVisibility(View.GONE);
-                                return;
-                            }
+        disposable.add(Flowable.combineLatest(
+                                db.emotionTagDao().getUsedEmotionTagFlowable(),
+                                db.emotionTagDao().getMaxTagCountInOneParagraphFlowable(),
+                                db.emotionTagDao().getAvgTagCountInOneParagraphFlowable(),
+                                EmotionTagStatistics::new
+                        )
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(
+                                statistics -> {
+                                    List<EmotionTagUseCountUnionModel> usedModelList = statistics.getTagUseCountModelList();
+                                    if (usedModelList.isEmpty()) {
+                                        binding.emotionStatisticsCard.setVisibility(View.GONE);
+                                        return;
+                                    }
 
-                            //添加使用的标签到 ChipGroup
-                            List<EmotionTagUseCountUnionModel> commonEmotionTagList = usedModelList.stream()
-                                    .limit(5)
-                                    .sorted(Comparator.comparing(EmotionTagUseCountUnionModel::getUseCount).reversed())
-                                    .collect(Collectors.toList());
-                            binding.commonEmotionChipGroup.removeAllViews();
-                            for (EmotionTagUseCountUnionModel model : commonEmotionTagList) {
-                                Chip chip = new Chip(this);
-                                chip.setClickable(false);
-                                chip.setText(String.format(
-                                        Locale.getDefault(),
-                                        "%s ×%d",
-                                        model.getEmotionTag().getName(),
-                                        model.getUseCount()
-                                ));
+                                    //添加使用的标签到 ChipGroup
+                                    List<EmotionTagUseCountUnionModel> commonEmotionTagList = usedModelList.stream()
+                                            .limit(5)
+                                            .sorted(Comparator.comparing(EmotionTagUseCountUnionModel::getUseCount).reversed())
+                                            .collect(Collectors.toList());
+                                    binding.commonEmotionChipGroup.removeAllViews();
+                                    for (EmotionTagUseCountUnionModel model : commonEmotionTagList) {
+                                        Chip chip = new Chip(this);
+                                        chip.setClickable(false);
+                                        chip.setText(String.format(
+                                                Locale.getDefault(),
+                                                "%s ×%d",
+                                                model.getEmotionTag().getName(),
+                                                model.getUseCount()
+                                        ));
 
-                                binding.commonEmotionChipGroup.addView(chip);
-                            }
+                                        binding.commonEmotionChipGroup.addView(chip);
+                                    }
 
-                            //获取不同种类标签的数量
-                            Map<Integer, List<EmotionTagUseCountUnionModel>> typeMap = usedModelList.stream()
-                                    .collect(Collectors.groupingBy(
-                                            model -> model.getEmotionTag().getType(),
-                                            LinkedHashMap::new,
-                                            Collectors.toList()
-                                    ));
+                                    //获取不同种类标签的数量
+                                    Map<Integer, List<EmotionTagUseCountUnionModel>> typeMap = usedModelList.stream()
+                                            .collect(Collectors.groupingBy(
+                                                    model -> model.getEmotionTag().getType(),
+                                                    LinkedHashMap::new,
+                                                    Collectors.toList()
+                                            ));
 
-                            //将种类计数数据添加到 ChipGroup 中
-                            EmotionType[] types = EmotionType.values();
-                            binding.emotionTypeChipGroup.removeAllViews();
-                            for (Map.Entry<Integer, List<EmotionTagUseCountUnionModel>> entry : typeMap.entrySet()) {
-                                String typeTitle = types[entry.getKey()].getTitle();
-                                int typeCount = entry.getValue().stream()
-                                        .map(EmotionTagUseCountUnionModel::getUseCount)
-                                        .reduce(0, Integer::sum);
+                                    //将种类计数数据添加到 ChipGroup 中
+                                    EmotionType[] types = EmotionType.values();
+                                    binding.emotionTypeChipGroup.removeAllViews();
+                                    for (Map.Entry<Integer, List<EmotionTagUseCountUnionModel>> entry : typeMap.entrySet()) {
+                                        String typeTitle = types[entry.getKey()].getTitle();
+                                        int typeCount = entry.getValue().stream()
+                                                .map(EmotionTagUseCountUnionModel::getUseCount)
+                                                .reduce(0, Integer::sum);
 
-                                Chip chip = new Chip(this);
-                                chip.setClickable(false);
-                                chip.setText(String.format(
-                                        Locale.getDefault(),
-                                        "%s ×%d",
-                                        typeTitle,
-                                        typeCount
-                                ));
+                                        Chip chip = new Chip(this);
+                                        chip.setClickable(false);
+                                        chip.setText(String.format(
+                                                Locale.getDefault(),
+                                                "%s ×%d",
+                                                typeTitle,
+                                                typeCount
+                                        ));
 
-                                binding.emotionTypeChipGroup.addView(chip);
-                            }
-                        },
-                        e -> ExceptionHelper.showExceptionDialog(this, e)
-                )
+                                        binding.emotionTypeChipGroup.addView(chip);
+
+                                        //标签数量文本
+                                        if (statistics.getMaxTagCountInOneParagraph() > 0) {
+                                            String emotionStatistics = String.format(
+                                                    Locale.getDefault(),
+                                                    "情绪标签最多的段落一次性使用了`%d`个标签，在使用情绪标签标记的段落中，平均每个段落使用`%.1f`个标签.",
+                                                    statistics.getMaxTagCountInOneParagraph(),
+                                                    statistics.getAvgTagCountInOneParagraph()
+                                            );
+                                            Markwon markwon = Markwon.create(this);
+                                            markwon.setMarkdown(binding.emotionTagStatisticText,emotionStatistics);
+                                        } else {
+                                            binding.emotionTagStatisticText.setText("您还未使用情绪标签。");
+                                        }
+                                    }
+                                },
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
         );
     }
 

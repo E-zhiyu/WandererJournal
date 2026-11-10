@@ -108,14 +108,32 @@ public interface EmotionTagDao {
      *
      * @return 包含情绪标签和使用次数的复合实体列表
      */
-    @Query(
-            "SELECT e.*, " +
-                    "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
-                    "FROM emotionTags e " +
-                    "WHERE useCount > 0 " +
-                    "ORDER BY useCount DESC"
-    )
+    @Query("SELECT e.*, " +
+            "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
+            "FROM emotionTags e " +
+            "WHERE useCount > 0 " +
+            "ORDER BY useCount DESC")
     Flowable<List<EmotionTagUseCountUnionModel>> getUsedEmotionTagFlowable();
+
+    /**
+     * 获取一个段落中最多使用的情绪标签数量
+     *
+     * @return 一个段落中最多使用的情绪标签数量
+     */
+    @Query("SELECT MAX(tagCount) FROM (" +
+            "   SELECT COUNT(*) AS tagCount FROM emotionParagraphCrossRef GROUP BY paragraphId" +
+            ")")
+    Flowable<Integer> getMaxTagCountInOneParagraphFlowable();
+
+    /**
+     * 获取一个段落中平均使用的情绪标签数量
+     *
+     * @return 一个段落中平均使用的情绪标签数量
+     */
+    @Query("SELECT AVG(tagCount) FROM (" +
+            "   SELECT COUNT(*) AS tagCount FROM emotionParagraphCrossRef GROUP BY paragraphId" +
+            ")")
+    Flowable<Double> getAvgTagCountInOneParagraphFlowable();
 
     /**
      * 获取可以选择的情绪标签数据
