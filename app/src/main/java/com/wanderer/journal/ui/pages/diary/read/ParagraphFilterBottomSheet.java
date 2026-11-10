@@ -14,7 +14,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
-import com.wanderer.journal.databinding.BottomSheetEmotionTagFilterBinding;
+import com.wanderer.journal.databinding.BottomSheetParagraphFilterBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagFilterAdapter;
@@ -27,13 +27,13 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
-    private BottomSheetEmotionTagFilterBinding binding;                         //绑定的 XML 布局
+    private BottomSheetParagraphFilterBinding binding;                          //绑定的 XML 布局
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = BottomSheetEmotionTagFilterBinding.inflate(inflater, container, false);
+        binding = BottomSheetParagraphFilterBinding.inflate(inflater, container, false);
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
