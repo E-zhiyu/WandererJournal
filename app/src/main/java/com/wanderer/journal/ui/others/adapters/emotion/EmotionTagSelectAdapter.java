@@ -9,12 +9,14 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnChipCloseListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
 import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
 public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, EmotionTagSelectAdapter.ItemViewHolder> {
-    private final OnClickedListener onClickedListener;      //点击监听
-    private final OnCloseListener onCloseListener;          //关闭图标点击监听
+    private final AdapterOnClickListener<EmotionTagUiModel> onClickedListener;      //点击监听
+    private final AdapterOnChipCloseListener<EmotionTagUiModel> onCloseListener;    //关闭图标点击监听
     private final static DiffUtil.ItemCallback<EmotionTagUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
@@ -26,25 +28,6 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
             return oldItem.getEmotionTag().getName().equals(newItem.getEmotionTag().getName());
         }
     };
-
-    public interface OnClickedListener {
-        /**
-         * 标签点击回调
-         *
-         * @param model  情绪标签显示模型
-         * @param anchor 浮动滑块绑定的视图
-         */
-        void onClicked(EmotionTagUiModel model, View anchor);
-    }
-
-    public interface OnCloseListener {
-        /**
-         * Chip 的 closeIcon 点击回调
-         *
-         * @param model 数据原型
-         */
-        void onClosed(EmotionTagUiModel model);
-    }
 
     public interface ChipListener {
         void onClicked(int position, View view);
@@ -58,7 +41,7 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
      * @param onClickedListener 点击监听
      * @param onCloseListener   关闭按钮点击监听
      */
-    public EmotionTagSelectAdapter(OnClickedListener onClickedListener, OnCloseListener onCloseListener) {
+    public EmotionTagSelectAdapter(AdapterOnClickListener<EmotionTagUiModel> onClickedListener, AdapterOnChipCloseListener<EmotionTagUiModel> onCloseListener) {
         super(ITEM_CALLBACK);
         this.onClickedListener = onClickedListener;
         this.onCloseListener = onCloseListener;
@@ -98,14 +81,12 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
                 new ChipListener() {
                     @Override
                     public void onClicked(int position, View view) {
-                        EmotionTagUiModel model = getItem(position);
-                        onClickedListener.onClicked(model, view);
+                        onClickedListener.onClick(getItem(position), view);
                     }
 
                     @Override
                     public void onClosed(int position) {
-                        EmotionTagUiModel model = getItem(position);
-                        onCloseListener.onClosed(model);
+                        onCloseListener.onClose(getItem(position));
                     }
                 }
         );

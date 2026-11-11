@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.others.adapters.emotion;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -8,6 +9,8 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnChipCloseListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
@@ -28,47 +31,46 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
         }
     };
     private final List<Long> checkedEmotionIdSet = new ArrayList<>();   //被选择了的情绪标签的 ID 列表
-    private final OnCheckedChangedListener checkedChangedListener;      //选择状态变化监听器
+    private final AdapterOnClickListener<EmotionTagEntity> clickListener;      //点击监听
+    private final AdapterOnChipCloseListener<EmotionTagEntity> closeListener;    //关闭图标点击监听
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         ViewHolderClosableChipBinding binding;
-        private boolean isBlocked;
 
-        public ItemViewHolder(@NonNull ViewHolderClosableChipBinding binding, OnChipCheckChangedListener listener) {
+        public ItemViewHolder(@NonNull ViewHolderClosableChipBinding binding, ChipListener listener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.chip.setCheckable(true);            //设置为可点击
-            binding.chip.setCloseIconVisible(false);    //隐藏关闭图标
+            //设置点击监听
+            binding.chip.setOnClickListener(view -> {
+                listener.onClick(getBindingAdapterPosition(), binding.chip);
+                binding.chip.setChecked(true);
+            });
 
-            binding.chip.setOnCheckedChangeListener((compoundButton, b) -> {
-                if (isBlocked) {
-                    return;
-                }
-
-                listener.onCheckChanged(getBindingAdapterPosition(), b);
+            //设置关闭图标监听
+            binding.chip.setOnCloseIconClickListener(view -> {
+                listener.onClose(getBindingAdapterPosition());
+                binding.chip.setChecked(false);
             });
         }
     }
 
-    public interface OnCheckedChangedListener {
-        /**
-         * 标签选中状态变更回调
-         *
-         * @param emotionTag 改变选中状态的情绪标签
-         * @param isChecked  是否被选中
-         */
-        void onCheckChanged(EmotionTagEntity emotionTag, boolean isChecked);
+    public interface ChipListener {
+        void onClick(int position, View view);
+
+        void onClose(int position);
     }
 
-    public interface OnChipCheckChangedListener {
-        void onCheckChanged(int position, boolean isChecked);
-    }
-
-    public EmotionTagFilterAdapter(Set<Long> checkedEmotionIdSet, OnCheckedChangedListener checkedChangedListener) {
+    /**
+     * @param checkedEmotionIdSet 初始选中的情绪标签
+     * @param clickListener       情绪标签点击监听
+     * @param closeListener       情绪标签关闭图标点击监听
+     */
+    public EmotionTagFilterAdapter(Set<Long> checkedEmotionIdSet, AdapterOnClickListener<EmotionTagEntity> clickListener, AdapterOnChipCloseListener<EmotionTagEntity> closeListener) {
         super(ITEM_CALLBACK);
         this.checkedEmotionIdSet.addAll(checkedEmotionIdSet);
-        this.checkedChangedListener = checkedChangedListener;
+        this.clickListener = clickListener;
+        this.closeListener = closeListener;
     }
 
     @NonNull
@@ -81,9 +83,17 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
         );
         return new ItemViewHolder(
                 binding,
-                (position, isChecked) -> {
-                    EmotionTagEntity emotionTag = getItem(position);
-                    checkedChangedListener.onCheckChanged(emotionTag, isChecked);
+                new ChipListener() {
+                    @Override
+                    public void onClick(int position, View view) {
+                        EmotionTagEntity emotionTag = getItem(position);
+                        clickListener.onClick(emotionTag, view);
+                    }
+
+                    @Override
+                    public void onClose(int position) {
+                        closeListener.onClose(getItem(position));
+                    }
                 }
         );
     }
@@ -96,10 +106,8 @@ public class EmotionTagFilterAdapter extends ListAdapter<EmotionTagEntity, Emoti
         holder.binding.chip.setText(emotionTag.getName());
 
         //设置选择状态
-        holder.isBlocked = true;
         if (checkedEmotionIdSet.contains(emotionTag.getEmotionId())) {
             holder.binding.chip.setChecked(true);
         }
-        holder.isBlocked = false;
     }
 }
