@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.slider.Slider;
+import com.wanderer.journal.auxiliary.classes.FilterConditions;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
@@ -54,7 +55,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         //绑定消失监听器
         setOnDismissListener(() -> {
             ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
-            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            FilterConditions conditions = viewModel.getFilterConditions();
             viewModel.setFilterConditions(conditions);
             setOnDismissListener(null);
         });
@@ -75,7 +76,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
     private void initViews() {
         //读取已有的过滤条件
         ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
-        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        FilterConditions conditions = viewModel.getFilterConditions();
 
         //设置适配器
         EmotionTagFilterAdapter adapter = new EmotionTagFilterAdapter(
@@ -136,7 +137,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
 
         //初始化 Slider 的值
         ReadViewModel viewModel = new ViewModelProvider(requireActivity()).get(ReadViewModel.class);
-        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        FilterConditions conditions = viewModel.getFilterConditions();
         Integer initValue = conditions.emotionWhiteList.getOrDefault(emotionTag.getEmotionId(), 1);
         popupWindowBinding.popupSlider.setValue(initValue == null ? 1 : initValue);
 

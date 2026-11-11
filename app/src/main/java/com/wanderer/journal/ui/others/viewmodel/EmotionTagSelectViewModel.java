@@ -29,7 +29,6 @@ public class EmotionTagSelectViewModel extends ViewModel {
     @NonNull
     public Map<Long, Integer> getEmotionTagSelectMap() {
         Map<Long, Integer> value = emotionTagSelectLiveData.getValue();
-        //TODO:呼出选择菜单时填充LiveData，要注意处理填充时的观察者回调误触发BUG
         return value == null ? new HashMap<>() : value;
     }
 

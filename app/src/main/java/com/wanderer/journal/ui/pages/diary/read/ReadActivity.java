@@ -37,6 +37,7 @@ import androidx.transition.TransitionSet;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.classes.FilterConditions;
 import com.wanderer.journal.auxiliary.classes.InfoShower;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
@@ -262,7 +263,7 @@ public class ReadActivity extends AppCompatActivity {
         //多词搜索模式切换按钮
         binding.multiSearchModeSwitchBtn.setOnClickListener(view -> {
             ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            FilterConditions conditions = viewModel.getFilterConditions();
             conditions.isAndMode = !conditions.isAndMode;
             viewModel.setFilterConditions(conditions);
         });
@@ -277,7 +278,7 @@ public class ReadActivity extends AppCompatActivity {
                         filteredParagraphIdList -> {
                             //高亮段落
                             if (!filteredParagraphIdList.isEmpty()) {
-                                ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+                                FilterConditions conditions = viewModel.getFilterConditions();
                                 adapter.setHighlightTarget(
                                         viewModel.getValidKeywordList(conditions.keyword),
                                         conditions.emotionWhiteList,
@@ -376,7 +377,7 @@ public class ReadActivity extends AppCompatActivity {
                 SearchHistoryPreference.KEY_DIARY_CONTENT,
                 keyword -> {
                     ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-                    ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+                    FilterConditions conditions = viewModel.getFilterConditions();
                     conditions.keyword = keyword;
                     viewModel.setFilterConditions(conditions);
                 },
@@ -573,7 +574,7 @@ public class ReadActivity extends AppCompatActivity {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
             LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
-            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            FilterConditions conditions = viewModel.getFilterConditions();
             disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, conditions.isHiddenShown)
                     .flatMapPublisher(
                             initPosition -> {
@@ -807,7 +808,7 @@ public class ReadActivity extends AppCompatActivity {
             //缓存中找不到则从数据库中读取具体位置
             DiaryDb db = DiaryDb.getInstance(this);
             ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-            ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+            FilterConditions conditions = viewModel.getFilterConditions();
             disposable.add(db.paragraphDao().getParagraphPositionById(paragraphId, conditions.isHiddenShown)
                     .subscribeOn(Schedulers.io())
                     .subscribeOn(AndroidSchedulers.mainThread())
@@ -943,7 +944,7 @@ public class ReadActivity extends AppCompatActivity {
                             .flatMap(optional -> {
                                 LocalDate startDate = optional.orElseGet(LocalDate::now);
                                 ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-                                ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+                                FilterConditions conditions = viewModel.getFilterConditions();
                                 return ParagraphService.modifyCreateTime(
                                         paragraph.getParagraphId(),
                                         startDate,
@@ -1142,7 +1143,7 @@ public class ReadActivity extends AppCompatActivity {
         //跳转到对应位置
         DiaryDb db = DiaryDb.getInstance(this);
         ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        FilterConditions conditions = viewModel.getFilterConditions();
         disposable.add(db.paragraphDao().getDiaryStartPositionByDate(targetDate, conditions.isHiddenShown)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -1164,7 +1165,7 @@ public class ReadActivity extends AppCompatActivity {
      */
     private void changeHiddenParagraphVisibility() {
         ReadViewModel viewModel = new ViewModelProvider(this).get(ReadViewModel.class);
-        ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
+        FilterConditions conditions = viewModel.getFilterConditions();
         if (viewModel.isNotAuthed() && !conditions.isHiddenShown) {
             BiometricHelper.showBiometricPrompt("隐私保护", "您正试图查看受保护的段落", this, new BiometricHelper.AuthCallback() {
                 @Override
