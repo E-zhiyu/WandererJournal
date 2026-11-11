@@ -62,8 +62,8 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
                 ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
-                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
-                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionModelList();
+                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionModelList();
                 List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 LocationEntity oldLocation = ((ParagraphUiModel.Item) oldItem).model.getLocation();
@@ -252,7 +252,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             itemHolder.binding.contentText.setText(richText);
 
             //情绪标签
-            List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
+            List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionModelList();
             if (emotionList.isEmpty()) {
                 itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
             } else {

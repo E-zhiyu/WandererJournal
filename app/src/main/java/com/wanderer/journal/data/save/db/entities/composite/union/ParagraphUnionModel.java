@@ -19,7 +19,7 @@ public class ParagraphUnionModel {
             entityColumn = "paragraphId",
             entity = EmotionParagraphRefEntity.class
     )
-    private final List<EmotionTagRefUnionModel> emotionList;  //情绪标签（带情绪程度）列表
+    private final List<EmotionTagRefUnionModel> emotionModelList;  //情绪标签（带情绪程度）列表
     @Relation(
             parentColumn = "paragraphId",
             entityColumn = "parentParagraphId",
@@ -34,9 +34,9 @@ public class ParagraphUnionModel {
     )
     private final LocationEntity location;                    //段落位置信息
 
-    public ParagraphUnionModel(ParagraphEntity paragraph, List<EmotionTagRefUnionModel> emotionList, @Nullable LocationEntity location) {
+    public ParagraphUnionModel(ParagraphEntity paragraph, List<EmotionTagRefUnionModel> emotionModelList, @Nullable LocationEntity location) {
         this.paragraph = paragraph;
-        this.emotionList = emotionList;
+        this.emotionModelList = emotionModelList;
         this.location = location;
     }
 
@@ -44,8 +44,8 @@ public class ParagraphUnionModel {
         return paragraph;
     }
 
-    public List<EmotionTagRefUnionModel> getEmotionList() {
-        return emotionList;
+    public List<EmotionTagRefUnionModel> getEmotionModelList() {
+        return emotionModelList;
     }
 
     public List<MediaEntity> getMediaList() {

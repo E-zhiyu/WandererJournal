@@ -279,7 +279,7 @@ public class ReadActivity extends AppCompatActivity {
                                 ReadViewModel.FilterConditions conditions = viewModel.getFilterConditions();
                                 adapter.setHighlightTarget(
                                         viewModel.getValidKeywordList(conditions.keyword),
-                                        conditions.emotionWhiteList.keySet(),   //TODO:改为传递 Map，以便过滤等级
+                                        conditions.emotionWhiteList,
                                         filteredParagraphIdList
                                 );
                             } else {

@@ -12,7 +12,7 @@ import java.util.Objects;
 
 public class EmotionTagRefUnionModel {
     @Embedded
-    private final EmotionParagraphRefEntity crossRef;   // 包含 degree, paragraphId, emotionId等信息
+    private final EmotionParagraphRefEntity ref;        // 包含 degree, paragraphId, emotionId等信息
 
     @Relation(
             parentColumn = "emotionId",  // 中间表关联标签的 ID
@@ -20,13 +20,17 @@ public class EmotionTagRefUnionModel {
     )
     private final EmotionTagEntity emotionTag;          // 情绪标签的具体信息（名称等）
 
-    public EmotionTagRefUnionModel(EmotionParagraphRefEntity crossRef, EmotionTagEntity emotionTag) {
-        this.crossRef = crossRef;
+    public EmotionTagRefUnionModel(EmotionParagraphRefEntity ref, EmotionTagEntity emotionTag) {
+        this.ref = ref;
         this.emotionTag = emotionTag;
     }
 
     public EmotionTagEntity getEmotionTag() {
         return emotionTag;
+    }
+
+    public EmotionParagraphRefEntity getRef() {
+        return ref;
     }
 
     /**
@@ -36,7 +40,7 @@ public class EmotionTagRefUnionModel {
      */
     public String generateDisplayText() {
         String name = emotionTag.getName();
-        int degree = crossRef.getDegree();
+        int degree = ref.getDegree();
         return String.format(
                 Locale.getDefault(),
                 "%s %s",
