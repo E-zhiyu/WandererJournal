@@ -149,7 +149,7 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
         );
 
         //设置 Slider 滑动监听
-        popupWindowBinding.popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+        Slider.OnSliderTouchListener sliderTouchListener = new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {
             }
@@ -159,7 +159,11 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
                 int degree = (int) slider.getValue();
                 conditions.emotionWhiteList.put(emotionTag.getEmotionId(), degree);
             }
-        });
+        };
+        popupWindowBinding.popupSlider.addOnSliderTouchListener(sliderTouchListener);
+        popupWindow.setOnDismissListener(() ->
+                popupWindowBinding.popupSlider.removeOnSliderTouchListener(sliderTouchListener)
+        );
 
         //测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
         popupWindowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
