@@ -10,11 +10,13 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 
 public class AboutHelper {
-    private final static String CHANGELOG = "# v1.8.3\n" +
+    private final static String CHANGELOG = "# v1.8.4\n" +
             "\n" +
             "### 新增内容\n" +
             "\n" +
             "- 读日记界面能够筛选情绪标签的等级，只会跳转到包含等级不低于指定值的标签的段落\n" +
+            "\n" +
+            "# v1.8.3\n" +
             "\n" +
             "### BUG修复\n" +
             "\n" +
