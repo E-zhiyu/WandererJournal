@@ -363,7 +363,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                     }
 
                     //添加情绪字段
-                    List<EmotionTagRefUnionModel> emotionList = entityModel.getEmotionList();
+                    List<EmotionTagRefUnionModel> emotionList = entityModel.getEmotionModelList();
                     if (!emotionList.isEmpty() && enableEmotion) {
                         builder.append(",");
                         builder.append("\"emotionTags\":");

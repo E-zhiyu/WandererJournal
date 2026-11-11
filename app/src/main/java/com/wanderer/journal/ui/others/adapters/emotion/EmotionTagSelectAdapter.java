@@ -9,42 +9,29 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnChipCloseListener;
+import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.ViewHolderClosableChipBinding;
 
-public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, EmotionTagSelectAdapter.ItemViewHolder> {
-    private final OnClickedListener onClickedListener;      //点击监听
-    private final OnCloseListener onCloseListener;          //关闭图标点击监听
-    private final static DiffUtil.ItemCallback<EmotionTagUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
+import java.util.HashSet;
+import java.util.Set;
+
+public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagEntity, EmotionTagSelectAdapter.ItemViewHolder> {
+    private final AdapterOnClickListener<EmotionTagEntity> onClickedListener;     //点击监听
+    private final AdapterOnChipCloseListener<EmotionTagEntity> onCloseListener;   //关闭图标点击监听
+    private final Set<Long> initCheckedIdSet = new HashSet<>();                             //初始化选中的标签的编号集合
+    private final static DiffUtil.ItemCallback<EmotionTagEntity> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
-        public boolean areItemsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
-            return oldItem.getEmotionTag().getEmotionId() == newItem.getEmotionTag().getEmotionId();
+        public boolean areItemsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
+            return oldItem.getEmotionId() == newItem.getEmotionId();
         }
 
         @Override
-        public boolean areContentsTheSame(@NonNull EmotionTagUiModel oldItem, @NonNull EmotionTagUiModel newItem) {
-            return oldItem.getEmotionTag().getName().equals(newItem.getEmotionTag().getName());
+        public boolean areContentsTheSame(@NonNull EmotionTagEntity oldItem, @NonNull EmotionTagEntity newItem) {
+            return oldItem.getName().equals(newItem.getName());
         }
     };
-
-    public interface OnClickedListener {
-        /**
-         * 标签点击回调
-         *
-         * @param model  情绪标签显示模型
-         * @param anchor 浮动滑块绑定的视图
-         */
-        void onClicked(EmotionTagUiModel model, View anchor);
-    }
-
-    public interface OnCloseListener {
-        /**
-         * Chip 的 closeIcon 点击回调
-         *
-         * @param model 数据原型
-         */
-        void onClosed(EmotionTagUiModel model);
-    }
 
     public interface ChipListener {
         void onClicked(int position, View view);
@@ -55,11 +42,17 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
     /**
      * 情绪标签选择适配器构造方法
      *
+     * @param initCheckedSet    用于初始化选择的情绪标签编号集合
      * @param onClickedListener 点击监听
      * @param onCloseListener   关闭按钮点击监听
      */
-    public EmotionTagSelectAdapter(OnClickedListener onClickedListener, OnCloseListener onCloseListener) {
+    public EmotionTagSelectAdapter(
+            Set<Long> initCheckedSet,
+            AdapterOnClickListener<EmotionTagEntity> onClickedListener,
+            AdapterOnChipCloseListener<EmotionTagEntity> onCloseListener
+    ) {
         super(ITEM_CALLBACK);
+        this.initCheckedIdSet.addAll(initCheckedSet);
         this.onClickedListener = onClickedListener;
         this.onCloseListener = onCloseListener;
     }
@@ -98,14 +91,12 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
                 new ChipListener() {
                     @Override
                     public void onClicked(int position, View view) {
-                        EmotionTagUiModel model = getItem(position);
-                        onClickedListener.onClicked(model, view);
+                        onClickedListener.onClick(getItem(position), view);
                     }
 
                     @Override
                     public void onClosed(int position) {
-                        EmotionTagUiModel model = getItem(position);
-                        onCloseListener.onClosed(model);
+                        onCloseListener.onClose(getItem(position));
                     }
                 }
         );
@@ -113,11 +104,12 @@ public class EmotionTagSelectAdapter extends ListAdapter<EmotionTagUiModel, Emot
 
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        EmotionTagUiModel item = getItem(position);
+        EmotionTagEntity emotionTag = getItem(position);
+
         //设置选中状态
-        holder.binding.chip.setChecked(item.isChecked());
+        holder.binding.chip.setChecked(initCheckedIdSet.contains(emotionTag.getEmotionId()));
 
         //设置名称
-        holder.binding.chip.setText(item.getEmotionTag().getName());
+        holder.binding.chip.setText(emotionTag.getName());
     }
 }

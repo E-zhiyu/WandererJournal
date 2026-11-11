@@ -1,4 +1,4 @@
-package com.wanderer.journal.auxiliary.classes;
+package com.wanderer.journal.auxiliary.classes.statistics;
 
 public class ParagraphStatistics {
     private final int maxLength;    //最大长度

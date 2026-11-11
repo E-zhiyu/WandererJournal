@@ -16,7 +16,7 @@ import androidx.room.Transaction;
 import androidx.room.Update;
 import androidx.sqlite.db.SupportSQLiteQuery;
 
-import com.wanderer.journal.auxiliary.classes.ParagraphStatistics;
+import com.wanderer.journal.auxiliary.classes.statistics.ParagraphStatistics;
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -48,14 +48,14 @@ public interface ParagraphDao {
     /**
      * 读取所有段落并支持局部加载
      *
-     * @param isAuthed 是否通过身份验证，通过验证后能够显示被隐藏的日记段落
+     * @param show 是否显示被隐藏的日记段落
      * @return 可局部加载的日记段落列表
      */
     @Transaction
     @Query("SELECT * FROM paragraphs " +
-            "WHERE (:isAuthed OR privacyType != 2) " +
+            "WHERE (:show OR privacyType != 2) " +
             "ORDER BY createTime")
-    PagingSource<Integer, ParagraphUnionModel> getAllParagraphPagingSource(int isAuthed);
+    PagingSource<Integer, ParagraphUnionModel> getAllParagraphPagingSource(boolean show);
 
     /**
      * 查询某个日期范围内的段落

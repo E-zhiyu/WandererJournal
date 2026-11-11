@@ -59,7 +59,6 @@ import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
-import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -110,6 +109,8 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -701,41 +702,33 @@ public class WriteActivity extends AppCompatActivity {
 
         //情绪标签选择状态
         EmotionTagSelectViewModel emotionTagSelectViewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
-        emotionTagSelectViewModel.getCheckedEmotionTag().observe(this, emotionTagEntity -> {
-            long paragraphId = emotionTagSelectViewModel.getParagraphId();
-            long emotionId = emotionTagEntity.getEmotionId();
-            int degree = emotionTagSelectViewModel.getDegree();
-            boolean isChecked = emotionTagSelectViewModel.isChecked();
+        emotionTagSelectViewModel.getEmotionTagSelectLiveData().observe(this, emotionTagSelectMap -> {
+            Long paragraphId = emotionTagSelectViewModel.getParagraphId();
+            if (paragraphId == null) return;
 
-            EmotionParagraphRefEntity refEntity = new EmotionParagraphRefEntity(emotionId, paragraphId, degree);
             DiaryDb db = DiaryDb.getInstance(this);
-            if (isChecked) {
-                disposable.add(EmotionTagService.addOrUpdateEmotionTagRef(refEntity, db)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                () -> Log.i(
-                                        LogTags.DIARY_READ_ACTIVITY.n(),
-                                        "添加情绪标签引用，段落编号：" + paragraphId +
-                                                "，情绪标签：" + emotionId +
-                                                "，强烈程度：" + degree
-                                ),
-                                e -> ExceptionHelper.showExceptionDialog(this, e)
-                        )
-                );
-            } else {
-                disposable.add(db.emotionTagDao().deleteEmotionParagraphRefCompletable(refEntity)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                () -> Log.i(LogTags.DIARY_READ_ACTIVITY.n(),
-                                        "删除情绪标签引用，段落编号：" + paragraphId +
-                                                "，情绪标签：" + emotionId
-                                ),
-                                e -> ExceptionHelper.showExceptionDialog(this, e)
-                        )
-                );
-            }
+            disposable.add(EmotionTagService.updateEmotionTagRef(emotionTagSelectMap, paragraphId, db)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(
+                            () -> {
+                                String log = String.format(
+                                        Locale.getDefault(),
+                                        "段落：%d\n情绪标签更新成功",
+                                        paragraphId
+                                );
+                                Log.i(LogTags.WRITE_ACTIVITY.n(), log);
+                            },
+                            e -> {
+                                String log = String.format(
+                                        Locale.getDefault(),
+                                        "段落：%d\n情绪标签更新出错",
+                                        paragraphId
+                                );
+                                Log.e(LogTags.WRITE_ACTIVITY.n(), log);
+                            }
+                    )
+            );
         });
 
         //位置记录开关
@@ -1363,7 +1356,7 @@ public class WriteActivity extends AppCompatActivity {
                 modifyCreateTime(paragraph);
                 return true;
             } else if (id == R.id.action_modify_emotion) {
-                modifyEmotion(paragraph);
+                modifyEmotion(model);
                 return true;
             } else if (id == R.id.action_change_privacy_type) {
                 switchParagraphPrivacyType(paragraph);
@@ -1523,11 +1516,24 @@ public class WriteActivity extends AppCompatActivity {
     /**
      * 修改情绪标签
      *
-     * @param paragraph 需要修改情绪标签的段落
+     * @param model 需要修改情绪标签的段落数据模型
      */
-    private void modifyEmotion(@NonNull ParagraphEntity paragraph) {
+    private void modifyEmotion(@NonNull ParagraphUnionModel model) {
+        //获取已有的情绪标签编号与等级的对应关系
+        Map<Long, Integer> emotionMap = model.getEmotionModelList().stream()
+                .collect(Collectors.toMap(
+                        emotionModel -> emotionModel.getRef().getEmotionId(),
+                        emotionModel -> emotionModel.getRef().getDegree()
+                ));
+
+        //将数据填充到 ViewModel 中
+        EmotionTagSelectViewModel viewModel = new ViewModelProvider(this).get(EmotionTagSelectViewModel.class);
+        viewModel.setParagraphId(null);
+        viewModel.setEmotionTagSelectMap(emotionMap);
+        viewModel.setParagraphId(model.getParagraph().getParagraphId());
+
         //实例化底部对话框并显示
-        EmotionTagSelectBottomSheet bottomSheet = EmotionTagSelectBottomSheet.newInstance(paragraph.getParagraphId());
+        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet();
         bottomSheet.show(getSupportFragmentManager(), TagStrings.EMOTION_SELECT_BOTTOM_SHEET.t());
     }
 

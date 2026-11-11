@@ -2,8 +2,6 @@ package com.wanderer.journal.ui.others.bottom;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +19,7 @@ import com.google.android.material.slider.Slider;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
-import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.databinding.BottomSheetEmotionTagSelectBinding;
 import com.wanderer.journal.databinding.PopupWindowSliderBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
@@ -29,24 +27,17 @@ import com.wanderer.journal.ui.others.adapters.emotion.EmotionTagSelectAdapter;
 import com.wanderer.journal.ui.others.viewmodel.EmotionTagSelectViewModel;
 import com.wanderer.journal.ui.pages.emotion.EmotionTagInputActivity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     private BottomSheetEmotionTagSelectBinding binding;             //绑定的XML布局
-    private long paragraphId;                                       //正在选择情绪标签的段落编号
     private final CompositeDisposable disposable = new CompositeDisposable();   //任务订阅列表
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            paragraphId = getArguments().getLong(KeyStrings.PARAGRAPH_ID.v());
-            EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
-            viewModel.setParagraphId(paragraphId);
-        }
-    }
+    private final Map<Long, Integer> emotionTagSelectMap = new HashMap<>();     //情绪标签选择数据
 
     @Nullable
     @Override
@@ -58,7 +49,18 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
             return insets;
         });
 
+        //加载初始数据
+        EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
+        Map<Long, Integer> emotionTagSelectMap = viewModel.getEmotionTagSelectMap();
+        this.emotionTagSelectMap.putAll(emotionTagSelectMap);
+
         initViews();
+
+        //添加消失监听
+        setOnDismissListener(() -> {
+            viewModel.setEmotionTagSelectMap(this.emotionTagSelectMap);
+            setOnDismissListener(null);
+        });
 
         return binding.getRoot();
     }
@@ -71,59 +73,40 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     }
 
     /**
-     * 创建新实例的方法
-     *
-     * @param paragraphId 正在选择情绪标签的段落 ID
-     * @return 情绪标签选择对话框
-     */
-    @NonNull
-    public static EmotionTagSelectBottomSheet newInstance(long paragraphId) {
-        EmotionTagSelectBottomSheet bottomSheet = new EmotionTagSelectBottomSheet();
-        Bundle bundle = new Bundle();
-        bundle.putLong(KeyStrings.PARAGRAPH_ID.v(), paragraphId);
-        bottomSheet.setArguments(bundle);
-        return bottomSheet;
-    }
-
-    /**
      * 初始化视图
      */
     private void initViews() {
         //情绪标签列表
         EmotionTagSelectAdapter adapter = new EmotionTagSelectAdapter(
-                (model, view) -> {
-                    if (model == null) {
+                emotionTagSelectMap.keySet(),
+                (entity, view) -> {
+                    if (entity == null) {
                         return;
                     }
 
                     //仅当没有选中时才报告给 ViewModel
-                    if (!model.isChecked()) {
-                        EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
-                        viewModel.setCheckedEmotionTag(model.getEmotionTag(), true, 1);
+                    long emotionId = entity.getEmotionId();
+                    if (!emotionTagSelectMap.containsKey(emotionId)) {
+                        emotionTagSelectMap.put(emotionId, 1);
                     }
 
                     //显示悬浮滑块
-                    showSuspendedSlider(model, view);
+                    showSuspendedSlider(entity, view);
                 },
                 model -> {
                     if (model == null) {
                         return;
                     }
 
-                    //目标状态与当前状态相同则不触发监听
-                    if (!model.isChecked()) {
-                        return;
-                    }
-
-                    EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
-                    viewModel.setCheckedEmotionTag(model.getEmotionTag(), false, 1);
+                    //在 Map 中删除该情绪标签
+                    emotionTagSelectMap.remove(model.getEmotionId());
                 }
         );
         binding.recycler.setAdapter(adapter);
 
         //获取数据源
         EmotionTagDao dao = DiaryDb.getInstance(requireContext()).emotionTagDao();
-        disposable.add(dao.getSelectableEmotionTagFlowable(paragraphId)
+        disposable.add(dao.getEmotionTagFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(
@@ -140,12 +123,12 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
     }
 
     /**
-     * 显示悬浮滑块
+     * 显示悬浮滑块用于修改情绪标签的等级
      *
-     * @param model  数据模型
-     * @param anchor 浮动滑块绑定的视图
+     * @param emotionTag 情绪标签
+     * @param anchor     浮动滑块绑定的视图
      */
-    private void showSuspendedSlider(@NonNull EmotionTagUiModel model, @NonNull View anchor) {
+    private void showSuspendedSlider(@NonNull EmotionTagEntity emotionTag, @NonNull View anchor) {
         //加载悬浮窗布局
         Context context = anchor.getContext();
         PopupWindowSliderBinding popupWindowBinding = PopupWindowSliderBinding.inflate(
@@ -153,7 +136,8 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
         );
 
         //初始化 Slider 的值
-        popupWindowBinding.popupSlider.setValue(model.getDegree());
+        Integer savedDegree = emotionTagSelectMap.get(emotionTag.getEmotionId());
+        popupWindowBinding.popupSlider.setValue(savedDegree == null ? 1 : savedDegree);
 
         //创建 PopupWindow
         PopupWindow popupWindow = new PopupWindow(
@@ -163,12 +147,8 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
                 true // true 代表点击外部时自动消失
         );
 
-        //设置背景以允许点击外部消失（MDC 环境下可选）
-        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        popupWindow.setOutsideTouchable(true);
-
         //设置 Slider 滑动监听
-        popupWindowBinding.popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
+        Slider.OnSliderTouchListener sliderTouchListener = new Slider.OnSliderTouchListener() {
             @Override
             public void onStartTrackingTouch(@NonNull Slider slider) {
             }
@@ -176,10 +156,13 @@ public class EmotionTagSelectBottomSheet extends BaseBottomSheetDialogFragment {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 int degree = (int) slider.getValue();
-                EmotionTagSelectViewModel viewModel = new ViewModelProvider(requireActivity()).get(EmotionTagSelectViewModel.class);
-                viewModel.setCheckedEmotionTag(model.getEmotionTag(), true, degree);
+                emotionTagSelectMap.put(emotionTag.getEmotionId(), degree);
             }
-        });
+        };
+        popupWindowBinding.popupSlider.addOnSliderTouchListener(sliderTouchListener);
+        popupWindow.setOnDismissListener(() ->
+                popupWindowBinding.popupSlider.removeOnSliderTouchListener(sliderTouchListener)
+        );
 
         //测量并计算位置，将悬浮窗精确显示在 Chip 的正上方
         popupWindowBinding.getRoot().measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);

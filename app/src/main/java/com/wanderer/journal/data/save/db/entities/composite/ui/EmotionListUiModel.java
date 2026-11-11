@@ -1,12 +1,12 @@
 package com.wanderer.journal.data.save.db.entities.composite.ui;
 
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 
 public class EmotionListUiModel {
     public static class Item extends EmotionListUiModel {
-        public final EmotionTagUseCountUnionModel model;
+        public final UsedEmotionTagUnionModel model;
 
-        public Item(EmotionTagUseCountUnionModel model) {
+        public Item(UsedEmotionTagUnionModel model) {
             this.model = model;
         }
     }

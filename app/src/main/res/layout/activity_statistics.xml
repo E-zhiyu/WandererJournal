@@ -486,6 +486,14 @@
                         android:layout_height="wrap_content"
                         app:chipSpacingHorizontal="6dp"
                         app:chipSpacingVertical="0dp" />
+
+                    <!-- 情绪标签统计文本 -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/emotion_tag_statistic_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="15dp"
+                        android:textAppearance="?attr/textAppearanceBodyLarge" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

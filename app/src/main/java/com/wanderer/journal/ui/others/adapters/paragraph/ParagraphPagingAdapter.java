@@ -41,8 +41,10 @@ import com.wanderer.journal.ui.others.method.FallbackLinkMovementMethod;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -51,8 +53,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public final Set<Long> contentDisplayIdSet;                          //标记为显示内容的段落编号
     private SelectionTracker<Long> selectionTracker;                     // ViewHolder 选择追踪器
     private List<String> highlightedKeywordList = null;                  //当前高亮的搜索关键词
-    private final Set<Long> filterEmotionIdSet = new HashSet<>();        //搜索的情绪标签 ID 集合
-    private final Set<Long> hilightedParagraphIdSet = new HashSet<>();  //当前高亮的段落编号集合
+    private final Map<Long, Integer> emotionWhiteList = new HashMap<>();    //搜索的情绪标签（k:情绪标签编号; v:情绪标签等级)
+    private final Set<Long> hilightedParagraphIdSet = new HashSet<>();      //当前高亮的段落编号集合
     private boolean isSelectMode = false;                                //是否是选择模式
     private final static DiffUtil.ItemCallback<ParagraphUiModel> ITEM_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -75,8 +77,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             if (oldItem instanceof ParagraphUiModel.Item && newItem instanceof ParagraphUiModel.Item) {
                 ParagraphEntity oldParagraph = ((ParagraphUiModel.Item) oldItem).model.getParagraph();
                 ParagraphEntity newParagraph = ((ParagraphUiModel.Item) newItem).model.getParagraph();
-                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionList();
-                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionList();
+                List<EmotionTagRefUnionModel> oldEmotionList = ((ParagraphUiModel.Item) oldItem).model.getEmotionModelList();
+                List<EmotionTagRefUnionModel> newEmotionList = ((ParagraphUiModel.Item) newItem).model.getEmotionModelList();
                 List<MediaEntity> oldMediaList = ((ParagraphUiModel.Item) oldItem).model.getMediaList();
                 List<MediaEntity> newMediaList = ((ParagraphUiModel.Item) newItem).model.getMediaList();
                 LocationEntity oldLocation = ((ParagraphUiModel.Item) oldItem).model.getLocation();
@@ -417,17 +419,16 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                 itemHolder.binding.contentText.setText(richText);
 
                 //情绪标签
-                List<EmotionTagRefUnionModel> emotionList = dataModel.getEmotionList();
-                if (emotionList.isEmpty()) {
+                List<EmotionTagRefUnionModel> emotionModelList = dataModel.getEmotionModelList();
+                if (emotionModelList.isEmpty()) {
                     itemHolder.binding.emotionChipGroup.setVisibility(View.GONE);
                 } else {
                     itemHolder.binding.emotionChipGroup.removeAllViews();   //先清空所有情绪标签
-                    for (EmotionTagRefUnionModel emotion : emotionList) {
-                        long emotionId = emotion.getEmotionTag().getEmotionId();
-                        String title = emotion.generateDisplayText();
+                    for (EmotionTagRefUnionModel model : emotionModelList) {
+                        String title = model.generateDisplayText();
 
                         //添加 Chip 到视图中
-                        Chip emotionChip = getEmotionChip(context, emotionId, title);
+                        Chip emotionChip = getEmotionChip(context, model, title);
                         itemHolder.binding.emotionChipGroup.addView(emotionChip);
                     }
 
@@ -521,13 +522,13 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 获取情绪标签 Chip 视图
      *
-     * @param context   上下文
-     * @param emotionId 情绪标签 ID
-     * @param title     情绪标签名称
+     * @param context 上下文
+     * @param model   情绪标签和等级模型
+     * @param title   情绪标签名称
      * @return 显示情绪标签名称的{@link Chip}实例
      */
     @NonNull
-    private Chip getEmotionChip(Context context, long emotionId, String title) {
+    private Chip getEmotionChip(Context context, EmotionTagRefUnionModel model, String title) {
         Chip emotionChip = new Chip(
                 context,
                 null,
@@ -536,7 +537,11 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         emotionChip.setFocusable(false);
 
         //设置是否选中（即高亮）
-        boolean isHighLighted = filterEmotionIdSet.contains(emotionId);
+        long emotionId = model.getEmotionTag().getEmotionId();
+        int degree = model.getRef().getDegree();
+        boolean isHighLighted;
+        Integer whiteListDegree = emotionWhiteList.get(emotionId);
+        isHighLighted = whiteListDegree != null && degree >= whiteListDegree;
         emotionChip.setCheckable(isHighLighted);
         emotionChip.setChecked(isHighLighted);
 
@@ -585,19 +590,20 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     /**
      * 设置高亮
      *
-     * @param keywordList 高亮关键词列表
-     * @param idList      有符合关键词的视图的下标
+     * @param keywordList      高亮关键词列表
+     * @param emotionWhiteList 情绪标签白名单，只有白名单内的情绪标签会高亮
+     * @param paragraphIdList  有符合关键词的段落的编号
      */
-    public void setHighlightTarget(List<String> keywordList, Set<Long> filterEmotionIdList, @NonNull List<Long> idList) {
+    public void setHighlightTarget(List<String> keywordList, Map<Long, Integer> emotionWhiteList, @NonNull List<Long> paragraphIdList) {
         //修改搜索元素数据
         this.highlightedKeywordList = keywordList;
-        this.filterEmotionIdSet.clear();
-        this.filterEmotionIdSet.addAll(filterEmotionIdList);
+        this.emotionWhiteList.clear();
+        this.emotionWhiteList.putAll(emotionWhiteList);
 
         //更改位置列表中的内容
         Set<Long> oldPositionList = new HashSet<>(this.hilightedParagraphIdSet);
         this.hilightedParagraphIdSet.clear();
-        this.hilightedParagraphIdSet.addAll(idList);
+        this.hilightedParagraphIdSet.addAll(paragraphIdList);
 
         //获取需要刷新的位置
         Set<Integer> refreshPositionSet = new HashSet<>();
@@ -606,7 +612,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             if (uiModel instanceof ParagraphUiModel.Item) {
                 ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
                 long paragraphId = paragraph.getParagraphId();
-                if (oldPositionList.contains(paragraphId) || idList.contains(paragraphId)) {
+                if (oldPositionList.contains(paragraphId) || paragraphIdList.contains(paragraphId)) {
                     refreshPositionSet.add(i);
                 }
             }
@@ -626,7 +632,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         //获取需要刷新的位置
         Set<Integer> refreshPositionSet = new HashSet<>();
         int i = 0;
-        for (ParagraphUiModel uiModel : snapshot()) {
+        for (ParagraphUiModel uiModel : snapshot().getItems()) {
             if (uiModel instanceof ParagraphUiModel.Item) {
                 ParagraphEntity paragraph = ((ParagraphUiModel.Item) uiModel).model.getParagraph();
                 long paragraphId = paragraph.getParagraphId();
@@ -640,7 +646,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
         //清理
         hilightedParagraphIdSet.clear();
         this.highlightedKeywordList = null;
-        this.filterEmotionIdSet.clear();
+        this.emotionWhiteList.clear();
 
         //刷新 UI
         for (int pos : refreshPositionSet) {

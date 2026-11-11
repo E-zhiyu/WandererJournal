@@ -18,7 +18,7 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.databinding.ActivityEmotionTagListBinding;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
@@ -158,7 +158,7 @@ public class EmotionTagListActivity extends AppCompatActivity {
      * @param model 需要被操作的情绪标签
      * @param view  PopupMenu绑定的视图
      */
-    private void showEmotionTagPopupMenu(EmotionTagUseCountUnionModel model, View view) {
+    private void showEmotionTagPopupMenu(UsedEmotionTagUnionModel model, View view) {
         PopupMenu popupMenu = new PopupMenu(this, view, Gravity.END);
         popupMenu.getMenuInflater().inflate(R.menu.menu_emotion_tag_edit, popupMenu.getMenu());
 

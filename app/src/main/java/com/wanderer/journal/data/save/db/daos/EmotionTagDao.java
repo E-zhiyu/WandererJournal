@@ -5,14 +5,17 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.auxiliary.classes.statistics.ParagraphEmotionTagStatistics;
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.EmotionTagUseCountUnionModel;
-import com.wanderer.journal.data.save.db.entities.composite.ui.EmotionTagUiModel;
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -31,32 +34,38 @@ public interface EmotionTagDao {
     Completable insertEmotionTagCompletable(EmotionTagEntity emotionTag);
 
     /**
-     * 插入与段落的关系
+     * 根据段落编号删除段落与情绪标签的映射关系
      *
-     * @param ref 关系实体
-     * @return 是否完成
+     * @param paragraphId 段落编号
+     */
+    @Query("DELETE FROM emotionParagraphCrossRef WHERE paragraphId = :paragraphId")
+    void deleteEmotionTagRefByParagraphId(long paragraphId);
+
+    /**
+     * 插入段落与情绪标签的映射关系
+     *
+     * @param refList 待插入的映射关系
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    Completable insertEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
+    void insertEmotionTagRef(List<EmotionParagraphRefEntity> refList);
 
     /**
-     * 判断引用关系是否存在
+     * 更新段落与情绪标签的映射关系
      *
-     * @param emotionTagId 情绪标签 ID
-     * @param paragraphId  段落 ID
-     * @return 引用关系是否存在
+     * @param tagSelectMap 情绪标签的选择状况
+     * @param paragraphId  段落编号
      */
-    @Query("SELECT EXISTS(SELECT * FROM emotionParagraphCrossRef WHERE emotionId = :emotionTagId AND paragraphId = :paragraphId)")
-    boolean isRefExists(long emotionTagId, long paragraphId);
+    @Transaction
+    default void updateParagraphEmotionTagRef(Map<Long, Integer> tagSelectMap, long paragraphId) {
+        deleteEmotionTagRefByParagraphId(paragraphId);
+        if (tagSelectMap == null || tagSelectMap.isEmpty()) return;
 
-    /**
-     * 删除情绪标签与段落的关系
-     *
-     * @param ref 关系实体
-     * @return 是否完成
-     */
-    @Delete
-    Completable deleteEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
+        List<EmotionParagraphRefEntity> refList = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : tagSelectMap.entrySet()) {
+            refList.add(new EmotionParagraphRefEntity(entry.getKey(), paragraphId, entry.getValue()));
+        }
+        insertEmotionTagRef(refList);
+    }
 
     /**
      * 修改情绪标签
@@ -66,15 +75,6 @@ public interface EmotionTagDao {
      */
     @Update
     Completable updateEmotionTagCompletable(EmotionTagEntity emotionTag);
-
-    /**
-     * 更新情绪标签与段落的关系
-     *
-     * @param ref 更新后的关系
-     * @return 是否完成
-     */
-    @Update
-    Completable updateEmotionParagraphRefCompletable(EmotionParagraphRefEntity ref);
 
     /**
      * 获取情绪标签数量，支持响应式更新
@@ -101,39 +101,44 @@ public interface EmotionTagDao {
             "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
             "FROM emotionTags e " +
             "ORDER BY type")
-    Flowable<List<EmotionTagUseCountUnionModel>> getEmotionTagUseCountModelFlowable();
+    Flowable<List<UsedEmotionTagUnionModel>> getEmotionTagUseCountModelFlowable();
 
     /**
      * 获取使用过的情绪标签及其使用次数
      *
      * @return 包含情绪标签和使用次数的复合实体列表
      */
-    @Query(
-            "SELECT e.*, " +
-                    "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
-                    "FROM emotionTags e " +
-                    "WHERE useCount > 0 " +
-                    "ORDER BY useCount DESC"
-    )
-    Flowable<List<EmotionTagUseCountUnionModel>> getUsedEmotionTagFlowable();
+    @Query("SELECT e.*, " +
+            "(SELECT COUNT(*) FROM emotionParagraphCrossRef ref WHERE e.emotionId = ref.emotionId) AS useCount " +
+            "FROM emotionTags e " +
+            "WHERE useCount > 0 " +
+            "ORDER BY useCount DESC")
+    Flowable<List<UsedEmotionTagUnionModel>> getUsedEmotionTagFlowable();
 
     /**
-     * 获取可以选择的情绪标签数据
-     *
-     * @param paragraphId 正在编辑情绪标签的段落 ID
-     * @return 可供选择的情绪标签 Item 列表
+     * 获取一个段落与情绪标签映射表的统计数据
      */
-    @Query(
-            "SELECT " +
-                    "    e.*, " +
-                    "    (r.paragraphId IS NOT NULL) AS isChecked, " +
-                    "    COALESCE(r.degree, 1) AS degree " +
-                    "FROM emotionTags e " +
-                    "LEFT JOIN emotionParagraphCrossRef r " +
-                    "ON e.emotionId = r.emotionId AND r.paragraphId = :paragraphId " +
-                    "ORDER BY type"
-    )
-    Flowable<List<EmotionTagUiModel>> getSelectableEmotionTagFlowable(long paragraphId);
+    @Query("WITH perParagraph AS (" +
+            "    SELECT" +
+            "        paragraphId," +
+            "        COUNT(*)     AS tagCountInParagraph," +
+            "        SUM(degree)  AS degreeSumInParagraph" +
+            "    FROM emotionParagraphCrossRef" +
+            "    GROUP BY paragraphId" +
+            ")," +
+            "avgCalc AS (" +
+            "    SELECT AVG(degreeSumInParagraph) AS avgDegree FROM perParagraph" +
+            ")" +
+            "SELECT" +
+            "    MAX(tagCountInParagraph) AS maxTagCountInOneParagraph," +
+            "    AVG(tagCountInParagraph) AS avgTagCountInOneParagraph," +
+            "    MAX(degreeSumInParagraph) AS maxEmotionDegreeInOneParagraph," +
+            "    AVG(degreeSumInParagraph) AS avgEmotionDegreeInOneParagraph," +
+            "    (SELECT COUNT(*) FROM perParagraph, avgCalc" +
+            "     WHERE degreeSumInParagraph > avgCalc.avgDegree)" +
+            "        AS strongEmotionDegreeParagraphCount " +
+            "FROM perParagraph;")
+    Flowable<ParagraphEmotionTagStatistics> getParagraphEmotionTagStatisticsFlowable();
 
     /**
      * 通过 ID 获取情绪标签

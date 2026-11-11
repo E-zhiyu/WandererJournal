@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.diary.read;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelKt;
@@ -10,17 +11,18 @@ import androidx.paging.PagingData;
 import androidx.paging.PagingDataTransforms;
 import androidx.paging.rxjava3.PagingRx;
 
+import com.wanderer.journal.auxiliary.classes.FilterConditions;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -31,65 +33,15 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ReadViewModel extends ViewModel {
-    private final MutableLiveData<Void> filterUpdatedLiveData = new MutableLiveData<>();    //提醒宿主更新 UI 的 LiveData
-    private final BehaviorProcessor<String> searchKeywordProcessor =
-            BehaviorProcessor.createDefault("");        //搜索关键词处理器（包含空格）
-    private final BehaviorProcessor<Boolean> filterUpdateProcessor =
-            BehaviorProcessor.createDefault(true);
-    private final BehaviorProcessor<Boolean> keywordModeProcessor =
-            BehaviorProcessor.createDefault(true);      //多词搜索是否为“与”模式处理器
-    private final BehaviorProcessor<Boolean> showHiddenParagraphProcessor =
-            BehaviorProcessor.createDefault(false);     //是否显示隐藏的段落
+    private final MutableLiveData<FilterConditions> filterConditionsLiveData = new MutableLiveData<>();  //提醒宿主更新 UI 的 LiveData
+    private List<Long> filteredParagraphIdList; //过滤的段落的编号
+    private final BehaviorProcessor<FilterConditions> filterConditionsProcessor =
+            BehaviorProcessor.createDefault(new FilterConditions());
     public final Set<Long> contentDisplayIdSet = new HashSet<>();  //标记为显示内容的段落编号
     private long lastAuthTimeMillis = 0;
-    private boolean filterMedia = false;
-    private boolean filterLocation = false;
-    private final Set<Long> checkedEmotionIdSet = new HashSet<>();
 
-    private static class FilterQuery {
-        final boolean isHiddenShown;    //是否显示隐藏段落
-        final boolean isAndMode;        //多词搜索是否为“与”模式
-        final String keyword;           //搜索关键词（包含空格）
-
-        public FilterQuery(boolean isHiddenShown, boolean isAndMode, String keyword) {
-            this.isHiddenShown = isHiddenShown;
-            this.isAndMode = isAndMode;
-            this.keyword = keyword;
-        }
-    }
-
-    public boolean isFilterLocation() {
-        return filterLocation;
-    }
-
-    public void setFilterLocation(boolean filterLocation) {
-        this.filterLocation = filterLocation;
-    }
-
-    public boolean getFilterMedia() {
-        return filterMedia;
-    }
-
-    public Set<Long> getCheckedEmotionIdSet() {
-        return checkedEmotionIdSet;
-    }
-
-    /**
-     * 获取隐藏的段落是否显示
-     *
-     * @return 是否显示了隐藏的段落
-     */
-    public boolean isHiddenParagraphShown() {
-        return showHiddenParagraphProcessor.getValue() != null && showHiddenParagraphProcessor.getValue();
-    }
-
-    /**
-     * 设置隐藏的段落的可见性
-     *
-     * @param isVisible 是否可见
-     */
-    public void showHiddenParagraph(boolean isVisible) {
-        showHiddenParagraphProcessor.onNext(isVisible);
+    public List<Long> getFilteredParagraphIdList() {
+        return filteredParagraphIdList;
     }
 
     /**
@@ -111,24 +63,21 @@ public class ReadViewModel extends ViewModel {
         lastAuthTimeMillis = isAuthed ? System.currentTimeMillis() : 0;
     }
 
-    public void setFilterMedia(boolean filterMedia) {
-        this.filterMedia = filterMedia;
-    }
-
-    public boolean isAndMode() {
-        Boolean isAndMode = keywordModeProcessor.getValue();
-        return isAndMode == null || isAndMode;
-    }
-
-    public List<String> getValidKeywordList() {
-        String[] words = searchKeywordProcessor.getValue().split("\\s+"); // 按空格拆分
+    /**
+     * 获取有效的搜索关键词列表
+     *
+     * @param rawSearchStr 原始搜索字符串
+     * @return 分离的搜索关键词列表
+     */
+    public List<String> getValidKeywordList(@NonNull String rawSearchStr) {
+        String[] words = rawSearchStr.split("\\s+"); // 按空格拆分
         return Arrays.stream(words)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
     }
 
-    public MutableLiveData<Void> getFilterUpdatedLiveData() {
-        return filterUpdatedLiveData;
+    public MutableLiveData<FilterConditions> getFilterConditionsLiveData() {
+        return filterConditionsLiveData;
     }
 
     /**
@@ -148,25 +97,29 @@ public class ReadViewModel extends ViewModel {
                 itemPagingData, executor, (before, after) -> {
                     if (after == null) return null;
 
-                    if (before == null || !isSameDay(before.model.getParagraph().getCreateTime(), after.model.getParagraph().getCreateTime())) {
-                        return new ParagraphUiModel.Separator(
-                                after.model.getParagraph().getCreateTime().toLocalDate()
-                        );
+                    LocalDate afterDate = after.model.getParagraph().getCreateTime().toLocalDate();
+                    if (before == null) {
+                        return new ParagraphUiModel.Separator(afterDate);
+                    }
+                    LocalDate beforeDate = before.model.getParagraph().getCreateTime().toLocalDate();
+                    if (!beforeDate.isEqual(afterDate)) {
+                        return new ParagraphUiModel.Separator(afterDate);
                     }
                     return null;
                 });
     }
 
     /**
-     * 不指定起止日期的获取段落数据方法
+     * 获取段落数据
      *
      * @param initPosition 初始跳转到的位置
      * @param db           数据库实例
      * @return 段落分页数据，支持响应式更新
      */
-    public Flowable<PagingData<ParagraphUiModel>> getPagingDataFlow(int initPosition, DiaryDb db) {
-        return showHiddenParagraphProcessor
-                .switchMap(isAuthed -> {
+    public Flowable<PagingData<ParagraphUiModel>> getParagraphPagingDataFlow(int initPosition, DiaryDb db) {
+        return filterConditionsProcessor.debounce(50, TimeUnit.MILLISECONDS)
+                .distinctUntilChanged(filterConditions -> filterConditions.isHiddenShown)
+                .switchMap(filterConditions -> {
                     // 配置 PagingConfig
                     PagingConfig pagingConfig = new PagingConfig(
                             10,
@@ -179,7 +132,7 @@ public class ReadViewModel extends ViewModel {
                     Pager<Integer, ParagraphUnionModel> pager = new Pager<>(
                             pagingConfig,
                             initPosition,
-                            () -> db.paragraphDao().getAllParagraphPagingSource(isHiddenParagraphShown() ? 1 : 0)
+                            () -> db.paragraphDao().getAllParagraphPagingSource(filterConditions.isHiddenShown)
                     );
 
                     return PagingRx.getFlowable(pager).map(this::transformAndSeparator);
@@ -192,100 +145,56 @@ public class ReadViewModel extends ViewModel {
     }
 
     /**
-     * 判断两个时间是否在同一天
-     *
-     * @param t1 时间实例
-     * @param t2 时间实例
-     * @return 是否在同一天
-     */
-    private boolean isSameDay(@NonNull LocalDateTime t1, @NonNull LocalDateTime t2) {
-        LocalDate d1 = t1.toLocalDate();
-        LocalDate d2 = t2.toLocalDate();
-        return d1.isEqual(d2);
-    }
-
-    /**
      * 获取符合过滤条件的段落的编号
      *
      * @param db 数据库实例
      * @return 从数据库中获取符合过滤条件的段落编号
      */
     public Flowable<List<Long>> getFilteredParagraphIds(DiaryDb db) {
-        return Flowable.combineLatest(
-                        showHiddenParagraphProcessor,
-                        searchKeywordProcessor,
-                        filterUpdateProcessor,
-                        keywordModeProcessor.debounce(50, TimeUnit.MILLISECONDS),
-                        (isHiddenShown, keyword, b, isAndMode) ->
-                                new FilterQuery(isHiddenShown, isAndMode, keyword)
-                )
-                .switchMap(filterQuery -> {
+        return filterConditionsProcessor.debounce(50, TimeUnit.MILLISECONDS)
+                .switchMap(filterConditions -> {
+                    filterConditionsLiveData.postValue(filterConditions);
+
                     //判断是否没有过滤选项
-                    if (isNoFilter()) {
-                        return Flowable.just(new ArrayList<>());
+                    if (!filterConditions.hasFilter()) {
+                        List<Long> emptyResult = new ArrayList<>();
+                        filteredParagraphIdList = emptyResult;
+                        return Flowable.just(emptyResult);
                     }
 
                     // 直接返回数据库查询的 Flowable，数据变化时会自动发射新结果
                     return ParagraphService.getSearchMatchedParagraphPositionsFlowableInternal(
-                            getValidKeywordList(),
-                            checkedEmotionIdSet,
-                            filterMedia,
-                            filterLocation,
-                            filterQuery.isHiddenShown,
-                            db,
-                            filterQuery.isAndMode
-                    );
+                                    getValidKeywordList(filterConditions.keyword),
+                                    filterConditions.emotionWhiteList,
+                                    filterConditions.filterMedia,
+                                    filterConditions.filterLocation,
+                                    filterConditions.isHiddenShown,
+                                    filterConditions.isAndMode,
+                                    db
+                            )
+                            .flatMap(idList -> {
+                                filteredParagraphIdList = idList;
+                                return Flowable.just(idList);
+                            });
                 });
     }
 
     /**
-     * 执行一次搜索
+     * 更新过滤条件
      *
-     * @param keyword 搜索文本
+     * @param conditions 过滤条件实体
      */
-    public void executeSearch(String keyword) {
-        searchKeywordProcessor.onNext(keyword);
-        filterUpdatedLiveData.setValue(null);
+    public void setFilterConditions(@Nullable FilterConditions conditions) {
+        filterConditionsProcessor.onNext(conditions == null ? new FilterConditions() : conditions);
     }
 
     /**
-     * 提醒过滤条件已更新
-     */
-    public void notifyFilterUpdated() {
-        filterUpdateProcessor.onNext(true);
-        filterUpdatedLiveData.setValue(null);
-    }
-
-    /**
-     * 切换多词搜索模式
-     */
-    public void toggleKeywordMode() {
-        keywordModeProcessor.onNext(!isAndMode());
-        filterUpdatedLiveData.setValue(null);
-    }
-
-    /**
-     * 判断是否有过滤条件
+     * 获取当前的过滤条件
      *
-     * @return 是否有过滤条件
+     * @return 当前的过滤条件
      */
-    public boolean isNoFilter() {
-        String searchText = searchKeywordProcessor.getValue();
-        return checkedEmotionIdSet.isEmpty() &&
-                !filterMedia &&
-                !filterLocation &&
-                (searchText == null || searchText.isEmpty());
-    }
-
-    /**
-     * 清空过滤条件
-     */
-    public void clearFilter() {
-        filterMedia = false;
-        filterLocation = false;
-        checkedEmotionIdSet.clear();
-        searchKeywordProcessor.onNext("");
-
-        filterUpdatedLiveData.setValue(null);
+    public FilterConditions getFilterConditions() {
+        FilterConditions conditions = filterConditionsProcessor.getValue();
+        return Objects.requireNonNullElseGet(conditions, FilterConditions::new);
     }
 }
