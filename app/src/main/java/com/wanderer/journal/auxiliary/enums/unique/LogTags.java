@@ -9,7 +9,7 @@ public enum LogTags {
     DIARY_FRAGMENT("DiaryFragment"),
     WRITE_ACTIVITY("WriteActivity"),
     MAIN_ACTIVITY("MainActivity"),
-    DIARY_READ_ACTIVITY("DiaryReadActivity"),
+    READ_ACTIVITY("ReadActivity"),
     ROLE_SELECT_BOTTOM_SHEET("RoleSelectBottomSheet"),
     SAF_HELPER("SAFHelper"),
     AUTH_ACTIVITY("AuthActivity"),

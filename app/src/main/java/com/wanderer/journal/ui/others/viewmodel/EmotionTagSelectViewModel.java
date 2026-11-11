@@ -1,45 +1,39 @@
 package com.wanderer.journal.ui.others.viewmodel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
+import java.util.HashMap;
+import java.util.Map;
 
 public class EmotionTagSelectViewModel extends ViewModel {
-    private long paragraphId;   //正在选择情绪标签的段落编号
-    private int degree;         //情绪标签的强烈程度
-    private boolean isChecked;  //是否选中
-    private final MutableLiveData<EmotionTagEntity> checkedEmotionTag = new MutableLiveData<>();    //当前选中的情绪标签
+    @Nullable
+    private Long paragraphId;   //正在选择情绪标签的段落编号
+    private final MutableLiveData<Map<Long, Integer>> emotionTagSelectLiveData = new MutableLiveData<>();   //情绪标签选择状况
 
-    public long getParagraphId() {
+    @Nullable
+    public Long getParagraphId() {
         return paragraphId;
     }
 
-    public void setParagraphId(long paragraphId) {
+    public void setParagraphId(@Nullable Long paragraphId) {
         this.paragraphId = paragraphId;
     }
 
-    public MutableLiveData<EmotionTagEntity> getCheckedEmotionTag() {
-        return checkedEmotionTag;
+    public MutableLiveData<Map<Long, Integer>> getEmotionTagSelectLiveData() {
+        return emotionTagSelectLiveData;
     }
 
-    /**
-     * 设置当前的情绪标签
-     *
-     * @param checkedEmotionTag 情绪标签实体
-     * @param isChecked         是否选中
-     */
-    public void setCheckedEmotionTag(EmotionTagEntity checkedEmotionTag, boolean isChecked, int degree) {
-        this.degree = isChecked ? degree : 1;
-        this.isChecked = isChecked;
-        this.checkedEmotionTag.setValue(checkedEmotionTag);
+    @NonNull
+    public Map<Long, Integer> getEmotionTagSelectMap() {
+        Map<Long, Integer> value = emotionTagSelectLiveData.getValue();
+        //TODO:呼出选择菜单时填充LiveData，要注意处理填充时的观察者回调误触发BUG
+        return value == null ? new HashMap<>() : value;
     }
 
-    public int getDegree() {
-        return degree;
-    }
-
-    public boolean isChecked() {
-        return isChecked;
+    public void setEmotionTagSelectMap(Map<Long, Integer> map) {
+        emotionTagSelectLiveData.setValue(map);
     }
 }
