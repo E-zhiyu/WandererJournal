@@ -1,8 +1,6 @@
 package com.wanderer.journal.ui.pages.diary.read;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -149,10 +147,6 @@ public class ParagraphFilterBottomSheet extends BaseBottomSheetDialogFragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 true // true 代表点击外部时自动消失
         );
-
-        //设置背景以允许点击外部消失（MDC 环境下可选）
-        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        popupWindow.setOutsideTouchable(true);
 
         //设置 Slider 滑动监听
         popupWindowBinding.popupSlider.addOnSliderTouchListener(new Slider.OnSliderTouchListener() {
