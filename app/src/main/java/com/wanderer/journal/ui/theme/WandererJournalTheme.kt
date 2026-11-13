@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.core.view.WindowCompat
 import com.wanderer.journal.R
+import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
+import com.wanderer.journal.data.save.preference.AppSettingsPreference
 
 /**
  * 统一加载静态色彩方案
@@ -136,30 +138,30 @@ private fun rememberStaticColorScheme(darkTheme: Boolean): ColorScheme {
 }
 
 /**
- * WandererJournal 统一 Compose 主题
- * 合并了：
- * 1. Theme.WandererJournal.Static (Light & Dark)
- * 2. Theme.WandererJournal.Dynamic (Light & Dark)
- * 3. 状态栏与导航栏明暗图标自动切换 (windowLightStatusBar / windowLightNavigationBar)
+ * Material 3 主题
  *
- * @param darkTheme 是否开启深色模式（默认跟随系统）
- * @param dynamicColor 是否开启动态取色（对应你在设置中的“动态取色”开关）
  * @param edgeToEdge 是否开启边到边沉浸式（推荐开启，配合 Scaffold 自动处理安全区域）
  */
 @Composable
 fun WandererJournalTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     edgeToEdge: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
 
-    // 1. 决定最终的 ColorScheme
+    // 决定最终的 ColorScheme
+    val themeCode = AppSettingsPreference.getThemeMode(context)
+    val darkTheme = when (themeCode) {
+        ThemeMode.LIGHT_MODE.ordinal -> false
+        ThemeMode.DARK_MODE.ordinal -> true
+        else -> isSystemInDarkTheme()
+    }
+    val dynamicColor = AppSettingsPreference.getDynamicColorStat(context)
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+
         else -> rememberStaticColorScheme(darkTheme = darkTheme)
     }
 
