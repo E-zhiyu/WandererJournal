@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,13 +56,11 @@ class AboutActivity : ComponentActivity() {
     }
 }
 
-// 1. 浅色模式预览
 @Preview(
     name = "Light Mode",
     showBackground = true,
     uiMode = Configuration.UI_MODE_NIGHT_NO
 )
-// 2. 深色模式预览
 @Preview(
     name = "Dark Mode",
     showBackground = true,
@@ -134,7 +131,6 @@ fun AboutScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -148,6 +144,8 @@ fun AboutScreen(
                         .clip(RoundedCornerShape(16.dp))
                 )
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // App 名称
             Text(
@@ -166,13 +164,13 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 1. App 描述卡片
+            // App 描述卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        alpha = 0.5f
+                        alpha = 0.3f
                     )
                 )
             ) {
@@ -183,15 +181,17 @@ fun AboutScreen(
                 )
             }
 
-            // 2. 作者卡片 (模拟顶部圆角)
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // 作者卡片
             SettingItemCard(
                 title = stringResource(id = R.string.author_name),
                 subtitle = stringResource(id = R.string.author_of_app),
                 shape = RoundedCornerShape(
                     topStart = 16.dp,
                     topEnd = 16.dp,
-                    bottomStart = 4.dp,
-                    bottomEnd = 4.dp
+                    bottomStart = 16.dp,
+                    bottomEnd = 16.dp
                 ),
                 leadingContent = {
                     Image(
@@ -209,15 +209,24 @@ fun AboutScreen(
                 }
             )
 
-            // 3. 项目地址卡片 (中间方形圆角)
+            Spacer(modifier = Modifier.height(15.dp))
+
+            // 3. 项目地址卡片
             SettingItemCard(
                 title = stringResource(id = R.string.project_address),
                 subtitle = stringResource(id = R.string.click_skip_to_repository),
-                shape = RoundedCornerShape(4.dp),
+                shape = RoundedCornerShape(
+                    topStart = 16.dp,
+                    topEnd = 16.dp,
+                    bottomStart = 4.dp,
+                    bottomEnd = 4.dp
+                ),
                 onClick = { showRepoDialog = true }
             )
 
-            // 4. 疑难解答卡片 (模拟底部圆角)
+            Spacer(modifier = Modifier.height(1.dp))
+
+            // 4. 疑难解答卡片
             SettingItemCard(
                 title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
