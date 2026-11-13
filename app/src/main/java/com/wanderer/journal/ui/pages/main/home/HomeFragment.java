@@ -76,12 +76,18 @@ public class HomeFragment extends Fragment {
         AppearanceHelper.attachMorphAnimation(binding.randomTipCard);
         showNextRandomTipText();
 
+        initLoginCard();
         initDateCard();
         initDiaryCountCard();
         initParagraphCountCard();
         initEmotionTagCountCard();
         initRoleCountCard();
         initLifeNoteCountCard();
+    }
+
+    private void initLoginCard() {
+        AppearanceHelper.attachMorphAnimation(binding.loginCard);
+        
     }
 
     /**
