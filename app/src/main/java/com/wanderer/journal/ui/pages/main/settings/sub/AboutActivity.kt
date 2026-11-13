@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,14 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import androidx.core.net.toUri
+import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.theme.WandererJournalTheme
 
 class AboutActivity : ComponentActivity() {
@@ -51,30 +56,61 @@ class AboutActivity : ComponentActivity() {
     }
 }
 
+// 1. 浅色模式预览
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
+// 2. 深色模式预览
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun AboutScreenPreview() {
+    WandererJournalTheme {
+        AboutScreen(
+            onNavigateBack = {},
+            onNavigateToTroubleshooting = {}
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
     onNavigateBack: () -> Unit,
     onNavigateToTroubleshooting: () -> Unit
 ) {
+    //控制仓库地址弹窗的显示状态
+    var showRepoDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
-    val packageManager = context.packageManager
 
     //获取版本名称
     val versionName = remember {
         try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            "v${pInfo.versionName}"
+            "v${AboutHelper.getVersionName(context)}"
         } catch (_: Exception) {
             ""
         }
     }
 
-    //控制仓库地址弹窗的显示状态
-    var showRepoDialog by remember { mutableStateOf(false) }
-
     //获取应用图标
-    val drawable = packageManager.getApplicationIcon(context.packageName)
+    val errDrawable = ResourcesCompat.getDrawable(
+        LocalResources.current,
+        R.drawable.outline_error_24,
+        context.theme
+    )
+    val drawable = remember {
+        try {
+            context.packageManager.getApplicationIcon(context.packageName)
+        } catch (_: Exception) {
+            errDrawable
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -102,13 +138,15 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             // App 图标
-            Image(
-                bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888).asImageBitmap(),
-                contentDescription = "App Icon",
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(16.dp))
-            )
+            if (drawable != null) {
+                Image(
+                    bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888).asImageBitmap(),
+                    contentDescription = "App Icon",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                )
+            }
 
             // App 名称
             Text(
