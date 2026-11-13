@@ -72,7 +72,7 @@ fun AboutScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = com.wanderer.journal.R.string.about_software)) },
+                title = { Text(stringResource(id = R.string.about_software)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -105,7 +105,7 @@ fun AboutScreen(
 
             // App 名称
             Text(
-                text = stringResource(id = com.wanderer.journal.R.string.app_name),
+                text = stringResource(id = R.string.app_name),
                 style = MaterialTheme.typography.headlineMedium
             )
 
@@ -131,7 +131,7 @@ fun AboutScreen(
                 )
             ) {
                 Text(
-                    text = stringResource(id = com.wanderer.journal.R.string.app_description),
+                    text = stringResource(id = R.string.app_description),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -139,8 +139,8 @@ fun AboutScreen(
 
             // 2. 作者卡片 (模拟顶部圆角)
             SettingItemCard(
-                title = stringResource(id = com.wanderer.journal.R.string.author_name),
-                subtitle = stringResource(id = com.wanderer.journal.R.string.author_of_app),
+                title = stringResource(id = R.string.author_name),
+                subtitle = stringResource(id = R.string.author_of_app),
                 shape = RoundedCornerShape(
                     topStart = 16.dp,
                     topEnd = 16.dp,
@@ -149,7 +149,7 @@ fun AboutScreen(
                 ),
                 leadingContent = {
                     Image(
-                        painter = painterResource(id = com.wanderer.journal.R.drawable.author),
+                        painter = painterResource(id = R.drawable.author),
                         contentDescription = "Author Head",
                         modifier = Modifier
                             .size(40.dp)
@@ -165,15 +165,15 @@ fun AboutScreen(
 
             // 3. 项目地址卡片 (中间方形圆角)
             SettingItemCard(
-                title = stringResource(id = com.wanderer.journal.R.string.project_address),
-                subtitle = stringResource(id = com.wanderer.journal.R.string.click_skip_to_repository),
+                title = stringResource(id = R.string.project_address),
+                subtitle = stringResource(id = R.string.click_skip_to_repository),
                 shape = RoundedCornerShape(4.dp),
                 onClick = { showRepoDialog = true }
             )
 
             // 4. 疑难解答卡片 (模拟底部圆角)
             SettingItemCard(
-                title = stringResource(id = com.wanderer.journal.R.string.troubleshooting),
+                title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
                 shape = RoundedCornerShape(
                     topStart = 4.dp,
