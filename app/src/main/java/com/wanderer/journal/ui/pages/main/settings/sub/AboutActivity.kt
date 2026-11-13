@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
+import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -45,14 +46,7 @@ class AboutActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                AboutScreen(
-                    onNavigateBack = { finish() },
-                    onNavigateToTroubleshooting = {
-                        // 跳转到疑难解答页面
-                        val intent = Intent(this, TroubleshootingActivity::class.java)
-                        startActivity(intent)
-                    }
-                )
+                AboutScreen()
             }
         }
     }
@@ -71,19 +65,13 @@ class AboutActivity : ComponentActivity() {
 @Composable
 fun AboutScreenPreview() {
     MaterialTheme {
-        AboutScreen(
-            onNavigateBack = {},
-            onNavigateToTroubleshooting = {}
-        )
+        AboutScreen()
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(
-    onNavigateBack: () -> Unit,
-    onNavigateToTroubleshooting: () -> Unit
-) {
+fun AboutScreen() {
     // 控制仓库地址弹窗的显示状态
     var showRepoDialog by remember { mutableStateOf(false) }
 
@@ -117,7 +105,7 @@ fun AboutScreen(
             TopAppBar(
                 title = { Text(stringResource(id = R.string.about_software)) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { (context as? Activity)?.finish() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -223,7 +211,11 @@ fun AboutScreen(
                 title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
                 shape = Radius.Bottom,
-                onClick = onNavigateToTroubleshooting
+                onClick = {
+                    // 跳转到疑难解答页面
+                    val intent = Intent(context, TroubleshootingActivity::class.java)
+                    context.startActivity(intent)
+                }
             )
         }
     }
