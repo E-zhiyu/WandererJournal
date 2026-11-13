@@ -48,7 +48,7 @@ class AboutActivity : ComponentActivity() {
                 AboutScreen(
                     onNavigateBack = { finish() },
                     onNavigateToTroubleshooting = {
-                        // 跳转到疑难解答页面（如果 TroubleshootingActivity 也重构了，可以换成 Navigation 导航）
+                        // 跳转到疑难解答页面
                         val intent = Intent(this, TroubleshootingActivity::class.java)
                         startActivity(intent)
                     }
@@ -84,12 +84,12 @@ fun AboutScreen(
     onNavigateBack: () -> Unit,
     onNavigateToTroubleshooting: () -> Unit
 ) {
-    //控制仓库地址弹窗的显示状态
+    // 控制仓库地址弹窗的显示状态
     var showRepoDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    //获取版本名称
+    // 获取版本名称
     val versionName = remember {
         try {
             "v${AboutHelper.getVersionName(context)}"
@@ -98,7 +98,7 @@ fun AboutScreen(
         }
     }
 
-    //获取应用图标
+    // 获取应用图标
     val errDrawable = ResourcesCompat.getDrawable(
         LocalResources.current,
         R.drawable.outline_error_24,
