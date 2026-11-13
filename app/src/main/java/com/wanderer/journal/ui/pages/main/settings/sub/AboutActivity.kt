@@ -33,6 +33,8 @@ import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import androidx.core.net.toUri
+import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.theme.WandererJournalTheme
 
@@ -129,7 +131,7 @@ fun AboutScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = Interval.SidePadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(10.dp))
@@ -167,7 +169,7 @@ fun AboutScreen(
             // App 描述卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = Radius.Single,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
                         alpha = 0.3f
@@ -177,7 +179,7 @@ fun AboutScreen(
                 Text(
                     text = stringResource(id = R.string.app_description),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(Interval.DefaultPadding)
                 )
             }
 
@@ -187,12 +189,7 @@ fun AboutScreen(
             SettingItemCard(
                 title = stringResource(id = R.string.author_name),
                 subtitle = stringResource(id = R.string.author_of_app),
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
+                shape = Radius.Single,
                 leadingContent = {
                     Image(
                         painter = painterResource(id = R.drawable.author),
@@ -215,12 +212,7 @@ fun AboutScreen(
             SettingItemCard(
                 title = stringResource(id = R.string.project_address),
                 subtitle = stringResource(id = R.string.click_skip_to_repository),
-                shape = RoundedCornerShape(
-                    topStart = 16.dp,
-                    topEnd = 16.dp,
-                    bottomStart = 4.dp,
-                    bottomEnd = 4.dp
-                ),
+                shape = Radius.Top,
                 onClick = { showRepoDialog = true }
             )
 
@@ -230,12 +222,7 @@ fun AboutScreen(
             SettingItemCard(
                 title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
-                shape = RoundedCornerShape(
-                    topStart = 4.dp,
-                    topEnd = 4.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
+                shape = Radius.Bottom,
                 onClick = onNavigateToTroubleshooting
             )
         }
