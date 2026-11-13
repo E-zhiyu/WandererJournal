@@ -36,7 +36,7 @@ import androidx.core.net.toUri
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.helpers.AboutHelper
-import com.wanderer.journal.ui.theme.WandererJournalTheme
+import com.wanderer.journal.ui.theme.MaterialTheme
 
 class AboutActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +44,7 @@ class AboutActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            WandererJournalTheme {
+            MaterialTheme {
                 AboutScreen(
                     onNavigateBack = { finish() },
                     onNavigateToTroubleshooting = {
@@ -70,7 +70,7 @@ class AboutActivity : ComponentActivity() {
 )
 @Composable
 fun AboutScreenPreview() {
-    WandererJournalTheme {
+    MaterialTheme {
         AboutScreen(
             onNavigateBack = {},
             onNavigateToTroubleshooting = {}

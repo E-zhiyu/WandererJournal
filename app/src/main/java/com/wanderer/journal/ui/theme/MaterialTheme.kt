@@ -143,7 +143,7 @@ private fun rememberStaticColorScheme(darkTheme: Boolean): ColorScheme {
  * @param edgeToEdge 是否开启边到边沉浸式（推荐开启，配合 Scaffold 自动处理安全区域）
  */
 @Composable
-fun WandererJournalTheme(
+fun MaterialTheme(
     edgeToEdge: Boolean = true,
     content: @Composable () -> Unit
 ) {
