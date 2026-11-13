@@ -34,9 +34,11 @@ devicecompat = "2.6"
 xxpermissions = "28.3"
 navigation = "2.10.2"
 coil = "3.0.4"
+material-icons = "1.6.0"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose" }
+material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "material-icons" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
