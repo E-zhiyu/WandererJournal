@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,10 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toBitmap
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
@@ -39,8 +42,8 @@ class AboutActivity : ComponentActivity() {
                     onNavigateBack = { finish() },
                     onNavigateToTroubleshooting = {
                         // 跳转到疑难解答页面（如果 TroubleshootingActivity 也重构了，可以换成 Navigation 导航）
-                         val intent = Intent(this, TroubleshootingActivity::class.java)
-                         startActivity(intent)
+                        val intent = Intent(this, TroubleshootingActivity::class.java)
+                        startActivity(intent)
                     }
                 )
             }
@@ -55,8 +58,9 @@ fun AboutScreen(
     onNavigateToTroubleshooting: () -> Unit
 ) {
     val context = LocalContext.current
+    val packageManager = context.packageManager;
 
-    // 获取版本号逻辑
+    //获取版本名称
     val versionName = remember {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -66,8 +70,11 @@ fun AboutScreen(
         }
     }
 
-    // 控制仓库地址弹窗的显示状态
+    //控制仓库地址弹窗的显示状态
     var showRepoDialog by remember { mutableStateOf(false) }
+
+    //获取应用图标
+    val drawable = packageManager.getApplicationIcon(context.packageName)
 
     Scaffold(
         topBar = {
@@ -96,7 +103,7 @@ fun AboutScreen(
 
             // App 图标
             Image(
-                painter = painterResource(id = R.mipmap.ic_launcher),   //TODO:解决这行提示Only VectorDrawables and rasterized asset types are supported ex. PNG, JPG, WEBP的BUG
+                bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888).asImageBitmap(),
                 contentDescription = "App Icon",
                 modifier = Modifier
                     .size(72.dp)
