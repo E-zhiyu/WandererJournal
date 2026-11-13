@@ -58,7 +58,7 @@ fun AboutScreen(
     onNavigateToTroubleshooting: () -> Unit
 ) {
     val context = LocalContext.current
-    val packageManager = context.packageManager;
+    val packageManager = context.packageManager
 
     //获取版本名称
     val versionName = remember {
