@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
-import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -9,17 +8,39 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
@@ -32,14 +53,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
-import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
-import androidx.core.net.toUri
-import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Interval
+import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.components.PressableCard
+import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.theme.MaterialTheme
 
 class AboutActivity : ComponentActivity() {
@@ -49,7 +74,32 @@ class AboutActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                AboutScreen()
+                val navController = rememberNavController()
+
+                // NavHost 接收类型安全的起始路由实例
+                NavHost(
+                    navController = navController,
+                    startDestination = ScreenRoutes.About
+                ) {
+                    // 注册“关于”页面
+                    composable<ScreenRoutes.About> {
+                        AboutScreen(
+                            onNavigateBack = { finish() },
+                            onNavigateToTroubleshooting = {
+                                navController.navigate(ScreenRoutes.Troubleshooting)
+                            }
+                        )
+                    }
+
+                    // 注册“疑难解答”页面
+                    composable<ScreenRoutes.Troubleshooting> {
+                        TroubleshootingScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -74,7 +124,10 @@ fun AboutScreenPreview() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen() {
+fun AboutScreen(
+    onNavigateBack: () -> Unit = {},
+    onNavigateToTroubleshooting: () -> Unit = {}
+) {
     // 控制仓库地址弹窗的显示状态
     var showRepoDialog by remember { mutableStateOf(false) }
 
@@ -104,7 +157,7 @@ fun AboutScreen() {
             TopAppBar(
                 title = { Text(stringResource(id = R.string.about_software)) },
                 navigationIcon = {
-                    IconButton(onClick = { (context as? Activity)?.finish() }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
@@ -213,11 +266,7 @@ fun AboutScreen() {
                 title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
                 normalRadius = Radius.BottomArray,
-                onClick = {
-                    // 跳转到疑难解答页面
-                    val intent = Intent(context, TroubleshootingActivity::class.java)
-                    context.startActivity(intent)
-                }
+                onClick = onNavigateToTroubleshooting
             )
         }
     }
