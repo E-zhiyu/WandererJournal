@@ -189,7 +189,7 @@
     <string name="min_paragraph_length">最小长度：</string>
     <string name="max_paragraph_length">最大长度：</string>
     <string name="avg_paragraph_length">平均长度：</string>
-    <string name="troubleshooting">问题解答</string>
+    <string name="troubleshooting">疑难解答</string>
     <string name="help_solve_some_common_problems">帮助解决一些常见的问题</string>
     <string name="floating_notification_question">Q : 为什么授予通知权限后不会弹出悬浮通知？</string>
     <string name="floating_notification_answer">A : 部分定制安卓系统修改了通知发送逻辑，只允许部分经过厂商验证的应用发送悬浮通知。您可以尝试长按应用图标进入应用设置界面，在通知设置中手动为特定通知渠道允许发送悬浮通知。</string>
