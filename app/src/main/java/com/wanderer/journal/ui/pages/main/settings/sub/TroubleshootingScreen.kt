@@ -1,10 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
 import android.content.res.Configuration
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,20 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.ui.theme.MaterialTheme
-
-class TroubleshootingActivity : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        setContent {
-            MaterialTheme {
-                TroubleshootingScreen()
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
