@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.0.0"
+    id("com.google.protobuf")
 }
 
 android {
@@ -116,4 +117,5 @@ dependencies {
     implementation(libs.navigation.compose)     // Navigation 导航（用于页面跳转）
     implementation(libs.coil.compose)           // Compose 专用的图片加载库（替代 Glide）
     implementation(libs.datastore.preferences4) // 取代 SharedPreference 的简单数据存储API
+    implementation(libs.protobuf.javalite)      // proto 依赖(搭配 datastore)
 }
