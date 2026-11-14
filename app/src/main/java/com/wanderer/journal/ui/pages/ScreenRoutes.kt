@@ -4,8 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface ScreenRoutes {
+    // 关于软件
     @Serializable
-    data object About : ScreenRoutes            // 关于软件
+    data object About : ScreenRoutes
+
+    // 疑难解答
     @Serializable
-    data object Troubleshooting : ScreenRoutes  // 疑难解答
+    data object Troubleshooting : ScreenRoutes
 }
