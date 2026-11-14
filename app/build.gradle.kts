@@ -98,7 +98,6 @@ dependencies {
     //以下为 Compose 专用依赖
     // 引入 BOM
     implementation(platform(libs.compose.bom))
-    androidTestImplementation(platform(libs.compose.bom))
 
     // Compose 核心与 UI 库
     implementation(libs.ui)
@@ -111,9 +110,10 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
 
-    implementation(libs.material3)           // Material 3 设计系统
-    implementation(libs.material.icons.core) // Material 3 图标系统
-    implementation(libs.activity.compose)    // Activity 集成 Compose
-    implementation(libs.navigation.compose)  // Navigation 导航（用于页面跳转）
-    implementation(libs.coil.compose)        // Compose 专用的图片加载库（替代 Glide）
+    implementation(libs.material3)              // Material 3 设计系统
+    implementation(libs.material.icons.core)    // Material 3 图标系统
+    implementation(libs.activity.compose)       // Activity 集成 Compose
+    implementation(libs.navigation.compose)     // Navigation 导航（用于页面跳转）
+    implementation(libs.coil.compose)           // Compose 专用的图片加载库（替代 Glide）
+    implementation(libs.datastore.preferences4) // 取代 SharedPreference 的简单数据存储API
 }
