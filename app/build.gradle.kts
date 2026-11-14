@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
-    kotlin("plugin.serialization") version "2.0.0"
+    kotlin("plugin.serialization") version "2.4.21"
 }
 
 android {
@@ -98,7 +98,6 @@ dependencies {
     //以下为 Compose 专用依赖
     // 引入 BOM
     implementation(platform(libs.compose.bom))
-    androidTestImplementation(platform(libs.compose.bom))
 
     // Compose 核心与 UI 库
     implementation(libs.ui)
