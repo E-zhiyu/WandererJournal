@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -38,6 +39,7 @@ import androidx.core.net.toUri
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.helpers.AboutHelper
+import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.theme.MaterialTheme
 
 class AboutActivity : ComponentActivity() {
@@ -77,6 +79,7 @@ fun AboutScreen() {
     var showRepoDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val resource = LocalResources.current
 
     // 获取版本名称
     val versionName = remember {
@@ -88,16 +91,11 @@ fun AboutScreen() {
     }
 
     // 获取应用图标
-    val errDrawable = ResourcesCompat.getDrawable(
-        LocalResources.current,
-        R.drawable.outline_error_24,
-        context.theme
-    )
     val drawable = remember {
         try {
             context.packageManager.getApplicationIcon(context.packageName)
         } catch (_: Exception) {
-            errDrawable
+            ResourcesCompat.getDrawable(resource, R.mipmap.ic_launcher, context.theme)
         }
     }
 
@@ -181,7 +179,7 @@ fun AboutScreen() {
             SettingItemCard(
                 title = stringResource(id = R.string.author_name),
                 subtitle = stringResource(id = R.string.author_of_app),
-                shape = Radius.Single,
+                normalRadius = Radius.SingleArray,
                 leadingContent = {
                     Image(
                         painter = painterResource(id = R.drawable.author),
@@ -204,7 +202,7 @@ fun AboutScreen() {
             SettingItemCard(
                 title = stringResource(id = R.string.project_address),
                 subtitle = stringResource(id = R.string.click_skip_to_repository),
-                shape = Radius.Top,
+                normalRadius = Radius.TopArray,
                 onClick = { showRepoDialog = true }
             )
 
@@ -214,7 +212,7 @@ fun AboutScreen() {
             SettingItemCard(
                 title = stringResource(id = R.string.troubleshooting),
                 subtitle = stringResource(id = R.string.help_solve_some_common_problems),
-                shape = Radius.Bottom,
+                normalRadius = Radius.BottomArray,
                 onClick = {
                     // 跳转到疑难解答页面
                     val intent = Intent(context, TroubleshootingActivity::class.java)
@@ -245,19 +243,14 @@ fun AboutScreen() {
 fun SettingItemCard(
     title: String,
     subtitle: String,
-    shape: RoundedCornerShape,
+    normalRadius: Array<Dp> = Radius.SingleArray,
     leadingContent: (@Composable () -> Unit)? = null,
     onClick: () -> Unit
 ) {
-    Card(
+    PressableCard(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                alpha = 0.3f
-            )
-        ),
-        onClick = onClick
+        normalRadius = normalRadius
     ) {
         Row(
             modifier = Modifier
