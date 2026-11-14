@@ -1,0 +1,118 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.compose.compiler)
+}
+
+android {
+    namespace = "com.wanderer.journal"
+    compileSdk = 37
+
+    // 配置构建分包 (ABI Split)
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = false
+        }
+    }
+
+    defaultConfig {
+        applicationId = "com.wanderer.journal"
+        minSdk = 28
+        targetSdk = 37
+        versionCode = 57
+        versionName = "1.8.4"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                // 告诉 Room 将数据库架构导出到指定的 JSON 文件中
+                arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        getByName("debug") {
+            applicationIdSuffix = ".test"
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        viewBinding = true    //TODO:完全 Compose 重构后删除 viewBinding 支持
+        compose = true
+    }
+}
+
+dependencies {
+    //TODO:以下依赖需要在 Compose 重构完全后移除
+    implementation(libs.appcompat)
+    implementation(libs.constraintlayout)
+    implementation(libs.material)
+    implementation(libs.viewpager2)
+    implementation(libs.glide)                       //图片显示
+    implementation(libs.photoview)
+    implementation(libs.flexbox)                     // Web上的Flex布局
+    implementation(libs.recyclerview.selection)      // Recycler 多选支持
+
+    implementation(libs.activity.ktx)
+    implementation(libs.materialdatetimepicker)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    implementation(libs.rxjava)                      //多线程
+    implementation(libs.work.runtime)                //自动任务执行
+    implementation(libs.work.rxjava3)                // WorkManager 的 RxJava 支持
+    implementation(libs.rxandroid)                   //线程切换
+    implementation(libs.biometric)                   //生物验证依赖
+    implementation(libs.room.runtime)                // Room 核心库
+    implementation(libs.room.paging)                 // Room 的Paging 3支持
+    annotationProcessor(libs.room.compiler)          // Room 注解处理器
+    implementation(libs.room.rxjava3)                // Room的 RxJava 支持
+    implementation(libs.paging.rxjava3)              // Paging 3的 RxJava支持
+    implementation(libs.paging.runtime)              // RecyclerView 局部加载
+    implementation(libs.jackson.databind)            // JSON 解析
+    implementation(libs.mapstruct)                   // Pojo 与 Entity 转换
+    annotationProcessor(libs.mapstruct.processor)    // Mapstruct 注解处理器
+    implementation(libs.documentfile)                // 用于解析SAF 返回的指向本地文件的 Uri
+    implementation(libs.core)                        // Markdown支持
+    implementation(libs.lifecycle.process)           // 生命周期监听
+    implementation(libs.pinyin4j)                    //拼音首字母获取
+    implementation(libs.zibin.luban)                 //图片压缩
+    implementation(libs.devicecompat)                //系统判断
+    implementation(libs.xxpermissions)               //权限申请框架
+
+    //以下为 Compose 专用依赖
+    // 引入 BOM
+    implementation(platform(libs.compose.bom))
+    androidTestImplementation(platform(libs.compose.bom))
+
+    // Compose 核心与 UI 库
+    implementation(libs.ui)
+    implementation(libs.ui.graphics)
+    implementation(libs.ui.tooling.preview)
+    debugImplementation(libs.ui.tooling)
+    debugImplementation(libs.ui.test.manifest)
+
+    // ViewModel 与 Lifecycle 对接 Compose
+    implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.runtime.compose)
+
+    implementation(libs.material3)           // Material 3 设计系统
+    implementation(libs.material.icons.core) // Material 3 图标系统
+    implementation(libs.activity.compose)    // Activity 集成 Compose
+    implementation(libs.navigation.compose)  // Navigation 导航（用于页面跳转）
+    implementation(libs.coil.compose)        // Compose 专用的图片加载库（替代 Glide）
+}
