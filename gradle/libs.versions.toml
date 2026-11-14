@@ -1,4 +1,5 @@
 [versions]
+activity-compose = "1.13.0"
 composeBomVersion = "2026.09.00"
 kotlin = "2.0.0"
 agp = "9.5.1"
@@ -37,7 +38,7 @@ coil = "3.0.4"
 material-icons = "1.6.0"
 
 [libraries]
-activity-compose = { module = "androidx.activity:activity-compose" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "material-icons" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
