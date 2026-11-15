@@ -11,6 +11,7 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 gradle = "9.5.1"
 appcompat = "1.8.0"
+kotlinxSerializationJson = "1.13.0"
 lifecycleProcess = "2.11.0"
 lubanVersion = "2.0.3"
 mapstruct = "1.6.3"
@@ -38,10 +39,11 @@ devicecompat = "2.6"
 xxpermissions = "28.3"
 navigation = "2.10.2"
 coil = "3.0.4"
-material-icons = "1.7.0"
+material-icons = "1.7.8"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "googleProtobufKotlinLite" }
 datastore-preferences4 = { module = "androidx.datastore:datastore-preferences", version.ref = "androidxDatastoreDatastorePreferences2" }
 material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "material-icons" }
