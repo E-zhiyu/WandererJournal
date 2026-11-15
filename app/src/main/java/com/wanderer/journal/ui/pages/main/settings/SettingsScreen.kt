@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
+import com.wanderer.journal.auxiliary.classes.CHANGELOG
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity
@@ -43,7 +44,6 @@ import com.wanderer.journal.data.save.preference.AppSettingsPreference
 import com.wanderer.journal.data.save.preference.MediaPreference
 import com.wanderer.journal.data.save.preference.SecurityPreference
 import com.wanderer.journal.data.save.preference.VersionPreference
-import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
@@ -54,9 +54,8 @@ import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import com.wanderer.journal.auxiliary.classes.CHANGELOG
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
