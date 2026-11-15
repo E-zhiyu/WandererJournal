@@ -201,9 +201,9 @@ fun MaterialAppTheme(
         }
     }
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = Typography(), // 如后续有自定义字体，可在此替换
+        motionScheme = MotionScheme.expressive(),
         content = content
     )
 }

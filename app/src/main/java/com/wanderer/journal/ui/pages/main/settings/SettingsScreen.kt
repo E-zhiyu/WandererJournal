@@ -57,7 +57,6 @@ import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     disposable: CompositeDisposable

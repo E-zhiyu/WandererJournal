@@ -28,7 +28,6 @@ import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TroubleshootingScreen(
     onNavigateBack: () -> Unit = {}
