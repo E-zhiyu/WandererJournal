@@ -13,6 +13,7 @@ import com.wanderer.journal.DiaryShare
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
+import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
 
@@ -64,7 +65,8 @@ val Context.appSettingStore: DataStore<AppSettings> by dataStore(
                 }
 
                 builder.build()
-            })
+            }
+        )
     }
 )
 val Context.autoBackupStore: DataStore<AutoBackup> by dataStore(
@@ -80,9 +82,24 @@ val Context.autoBackupStore: DataStore<AutoBackup> by dataStore(
                 val builder = current.toBuilder()
 
                 // 自动备份开关
-//                if (!current.switchStat) {
-//                    current.setSwitchStat(prefs.getBoolean("switch_stat", false))
-//                }
+                if (!current.switchStat) {
+                    builder.setSwitchStat(prefs.getBoolean("switch_stat", false))
+                }
+
+                // 备份目录
+                if (current.backupDirectory.isEmpty()) {
+                    builder.setBackupDirectory(prefs.getString("backup_directory", ""))
+                }
+
+                // 备份频率
+                if (current.backupFrequency == 0) {
+                    builder.setBackupFrequency(
+                        prefs.getInt(
+                            "backup_frequency",
+                            BackupFrequency.DAY.ordinal
+                        )
+                    )
+                }
 
                 builder.build()
             }
