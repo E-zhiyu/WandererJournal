@@ -65,7 +65,7 @@ import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.pages.ScreenRoutes
-import com.wanderer.journal.ui.theme.MaterialTheme
+import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 class AboutActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +73,7 @@ class AboutActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MaterialTheme {
+            MaterialAppTheme {
                 val navController = rememberNavController()
 
                 // NavHost 接收类型安全的起始路由实例
@@ -117,7 +117,7 @@ class AboutActivity : ComponentActivity() {
 )
 @Composable
 fun AboutScreenPreview() {
-    MaterialTheme {
+    MaterialAppTheme {
         AboutScreen()
     }
 }

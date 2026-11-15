@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         //启动主界面时自动检测更新
         if (VersionPreference.getAutoUpdateCheck(this)) {
             Log.d(LogTags.MAIN_ACTIVITY.n(), "自动检测更新中……");
-            UpdateHelper.checkUpdate(this, disposable, false);
+            disposable.add(UpdateHelper.checkUpdate(this, false));
         }
     }
 

@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
-import com.wanderer.journal.ui.theme.MaterialTheme
+import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +132,7 @@ fun TroubleshootingItem(
 )
 @Composable
 fun TroubleshootingScreenPreview() {
-    MaterialTheme {
+    MaterialAppTheme {
         TroubleshootingScreen()
     }
 }

@@ -40,7 +40,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class UpdateHelper {
@@ -87,16 +87,14 @@ public class UpdateHelper {
      * 检查更新
      *
      * @param context    上下文
-     * @param disposable 多线程任务订阅列表
      * @param isManual   是否为手动检测更新
      */
-    public static void checkUpdate(
+    public static Disposable checkUpdate(
             Context context,
-            @NonNull CompositeDisposable disposable,
             boolean isManual
     ) {
         Scheduler scheduler = Schedulers.newThread();
-        disposable.add(readVersionInfoFromRemote()
+        return readVersionInfoFromRemote()
                 .flatMapMaybe(info -> {
                     String versionName = info.getSplitVersionName();
                     if (versionName != null && !versionName.isEmpty() && !versionName.startsWith("v")) {
@@ -166,8 +164,7 @@ public class UpdateHelper {
                                 ExceptionHelper.showExceptionDialog(context, e);
                             }
                         }
-                )
-        );
+                );
     }
 
     /**
