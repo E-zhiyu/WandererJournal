@@ -13,9 +13,11 @@ import com.wanderer.journal.DiaryShare
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
+import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
+import kotlinx.serialization.json.Json
 
 // 草稿
 val Context.diaryDraftStore: DataStore<DiaryDraft> by dataStore(
