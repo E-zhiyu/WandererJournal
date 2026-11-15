@@ -140,7 +140,39 @@ val Context.diaryAlarmStore: DataStore<DiaryAlarm> by dataStore(
 val Context.securityStore: DataStore<SecuritySettings> by dataStore(
     fileName = "security.pb",
     serializer = SecuritySerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { SecuritySettings.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { SecuritySettings.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "SecurityPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 身份验证开关
+                if (!current.authSwitch) {
+                    builder.setAuthSwitch(prefs.getBoolean("auth_switch", false))
+                }
+
+                // 身份验证时机
+                if (current.authOpportunity == 0) {
+                    builder.setAuthOpportunity(
+                        prefs.getInt(
+                            "auth_opportunity",
+                            AuthOpportunity.EVERY_TIME.ordinal
+                        )
+                    )
+                }
+
+                // 最近任务隐藏
+                if (!current.excludeRecentTask) {
+                    builder.setExcludeRecentTask(prefs.getBoolean("hide_recent_task", false))
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
 val Context.diaryShareStore: DataStore<DiaryShare> by dataStore(
     fileName = "diary_share.pb",
