@@ -177,7 +177,44 @@ val Context.securityStore: DataStore<SecuritySettings> by dataStore(
 val Context.diaryShareStore: DataStore<DiaryShare> by dataStore(
     fileName = "diary_share.pb",
     serializer = DiaryShareSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { DiaryShare.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { DiaryShare.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "ShareSettingsPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 媒体开关
+                if (!current.media) {
+                    builder.setMedia(prefs.getBoolean("media", true))
+                }
+
+                // 情绪标签开关
+                if (!current.emotion) {
+                    builder.setEmotion(prefs.getBoolean("emotion", true))
+                }
+
+                // 段落时间开关
+                if (!current.time) {
+                    builder.setTime(prefs.getBoolean("time", true))
+                }
+
+                // 地理位置开关
+                if (!current.location) {
+                    builder.setLocation(prefs.getBoolean("location", true))
+                }
+
+                // 分享图片底部文本
+                if (current.bottomText.isEmpty()) {
+                    builder.setBottomText(prefs.getString("picture_bottom_text", ""))
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
 val Context.updateStore: DataStore<Update> by dataStore(
     fileName = "update.pb",
