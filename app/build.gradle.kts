@@ -58,6 +58,24 @@ android {
     }
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.36.2"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+                create("kotlin") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
     //TODO:以下依赖需要在 Compose 重构完全后移除
     implementation(libs.appcompat)
@@ -118,4 +136,5 @@ dependencies {
     implementation(libs.coil.compose)           // Compose 专用的图片加载库（替代 Glide）
     implementation(libs.datastore.preferences4) // 取代 SharedPreference 的简单数据存储API
     implementation(libs.protobuf.javalite)      // proto 依赖(搭配 datastore)
+    implementation(libs.protobuf.kotlin.lite)
 }

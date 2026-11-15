@@ -2,6 +2,7 @@
 activity-compose = "1.13.0"
 androidxDatastoreDatastorePreferences2 = "1.3.0"
 composeBomVersion = "2026.09.00"
+googleProtobufKotlinLite = "4.36.2"
 kotlin = "2.0.0"
 agp = "9.5.1"
 documentfile = "1.1.0"
@@ -41,6 +42,7 @@ material-icons = "1.6.0"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
+protobuf-kotlin-lite = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "googleProtobufKotlinLite" }
 datastore-preferences4 = { module = "androidx.datastore:datastore-preferences", version.ref = "androidxDatastoreDatastorePreferences2" }
 material-icons-core = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "material-icons" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }

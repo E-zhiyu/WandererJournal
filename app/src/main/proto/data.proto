@@ -3,7 +3,7 @@ option java_package = "com.wanderer.journal";
 option java_multiple_files = true;
 
 // APP设置
-message AppSetting {
+message AppSettings {
     int32 theme_mode = 1;           // 主题模式
     bool dynamic_color = 2;         // 动态色彩
     int32 first_screen = 3;         // 启动时的第一屏
@@ -36,7 +36,7 @@ message SearchHistory {
 }
 
 // 隐私设置
-message Security {
+message SecuritySettings {
     bool auth_switch = 1;           // 是否开启进入时的身份验证
     int32 auth_opportunity = 2;     // 身份验证时机
     bool exclude_recent_task = 3;   // 是否在最近任务中排除
