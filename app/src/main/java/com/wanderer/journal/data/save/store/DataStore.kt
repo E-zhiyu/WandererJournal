@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStore
+import androidx.datastore.migrations.SharedPreferencesMigration
 import com.wanderer.journal.AppSettings
 import com.wanderer.journal.AutoBackup
 import com.wanderer.journal.DiaryAlarm
@@ -12,6 +13,8 @@ import com.wanderer.journal.DiaryShare
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
+import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
+import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
 
 // 草稿
 val Context.diaryDraftStore: DataStore<DiaryDraft> by dataStore(
@@ -31,12 +34,60 @@ val Context.searchHistoryStore: DataStore<SearchHistory> by dataStore(
 val Context.appSettingStore: DataStore<AppSettings> by dataStore(
     fileName = "app_setting.pb",
     serializer = AppSettingSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { AppSettings.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { AppSettings.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "ThemePreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 主题模式
+                if (current.themeMode == 0) {
+                    builder.setThemeMode(
+                        prefs.getInt(
+                            "theme_mode",
+                            ThemeMode.FOLLOW_SYSTEM.ordinal
+                        )
+                    )
+                }
+
+                // 动态色彩
+                if (!current.dynamicColor) {
+                    builder.setDynamicColor(prefs.getBoolean("dynamic_color", true))
+                }
+
+                // 开屏界面
+                if (current.firstScreen == 0) {
+                    builder.setFirstScreen(prefs.getInt("first_screen", FirstScreen.HOME.ordinal))
+                }
+
+                builder.build()
+            })
+    }
 )
 val Context.autoBackupStore: DataStore<AutoBackup> by dataStore(
     fileName = "auto_backup.pb",
     serializer = AutoBackupSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { AutoBackup.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { AutoBackup.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "AutoBackupPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 自动备份开关
+//                if (!current.switchStat) {
+//                    current.setSwitchStat(prefs.getBoolean("switch_stat", false))
+//                }
+
+                builder.build()
+            }
+        )
+    }
 )
 val Context.diaryAlarmStore: DataStore<DiaryAlarm> by dataStore(
     fileName = "diary_alarm.pb",
