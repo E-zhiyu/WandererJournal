@@ -109,7 +109,33 @@ val Context.autoBackupStore: DataStore<AutoBackup> by dataStore(
 val Context.diaryAlarmStore: DataStore<DiaryAlarm> by dataStore(
     fileName = "diary_alarm.pb",
     serializer = DiaryAlarmSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { DiaryAlarm.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { DiaryAlarm.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "DiaryAlarmPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 开关
+                if (!current.switch) {
+                    builder.setSwitch(prefs.getBoolean("switch", false))
+                }
+
+                // 提醒时间
+                if (current.alarmTimeList.isEmpty()) {
+                    val oldTimeJson = prefs.getString("alarm_time", "[]")
+                    oldTimeJson?.let {
+                        val timeList: List<String> = Json.decodeFromString(oldTimeJson)
+                        builder.addAllAlarmTime(timeList)
+                    }
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
 val Context.securityStore: DataStore<SecuritySettings> by dataStore(
     fileName = "security.pb",
