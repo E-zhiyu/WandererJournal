@@ -18,3 +18,11 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     id("com.google.protobuf") version "0.10.1" apply false
 }
+
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains.kotlin:kotlin-metadata-jvm:2.4.21")
+        }
+    }
+}
