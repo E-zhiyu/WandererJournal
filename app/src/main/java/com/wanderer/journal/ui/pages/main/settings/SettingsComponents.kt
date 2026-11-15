@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
+import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.ui.components.PressableCard
 
 /**
@@ -139,9 +140,7 @@ fun SettingSpinnerItem(
     dropDownContent: @Composable ColumnScope.() -> Unit
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth(),
-        contentAlignment = Alignment.CenterEnd
+        modifier = Modifier.fillMaxWidth()
     ) {
         PressableCard(
             onClick = { onExpandedChange(!expanded) },
@@ -193,6 +192,7 @@ fun SettingSpinnerItem(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
             content = dropDownContent,
+            shape = RoundedCornerShape(Radius.Large)
         )
     }
 }

@@ -16,7 +16,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.MenuItemShapes
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -150,14 +153,23 @@ fun SettingsScreen(
                     expanded = firstScreenExpanded,
                     onExpandedChange = { firstScreenExpanded = it }
                 ) {
-                    FirstScreen.entries.forEach { screen ->
-                        DropdownMenuItem(
+                    val firstScreens = FirstScreen.entries
+                    firstScreens.forEach { screen ->
+                        val checked =
+                            AppSettingsPreference.getFirstScreen(context) == screen.ordinal
+                        SelectableDropdownMenuItem(
+                            selected = checked,
                             text = { Text(screen.title) },
                             onClick = {
                                 firstScreenExpanded = false
+                                // TODO:使用副作用 API
                                 AppSettingsPreference.setFirstScreen(context, screen.ordinal)
                                 firstScreenText = screen.title
-                            }
+                            },
+                            shapes = MenuDefaults.itemShape(
+                                screen.ordinal,
+                                firstScreens.count()
+                            )
                         )
                     }
                 }
@@ -347,14 +359,20 @@ fun SettingsScreen(
                     expanded = authOpportunityExpanded,
                     onExpandedChange = { authOpportunityExpanded = it }
                 ) {
-                    AuthOpportunity.entries.forEach { opportunity ->
-                        DropdownMenuItem(
+                    val opportunities = AuthOpportunity.entries
+                    opportunities.forEach { opportunity ->
+                        SelectableDropdownMenuItem(
                             text = { Text(opportunity.title) },
                             onClick = {
                                 authOpportunityExpanded = false
                                 SecurityPreference.setAuthOpportunity(context, opportunity.ordinal)
                                 authOpportunityText = opportunity.title
-                            }
+                            },
+                            selected = SecurityPreference.getAuthOpportunity(context) == opportunity.ordinal,
+                            shapes = MenuDefaults.itemShape(
+                                opportunity.ordinal,
+                                opportunities.count()
+                            )
                         )
                     }
                 }
