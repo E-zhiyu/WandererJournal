@@ -219,5 +219,32 @@ val Context.diaryShareStore: DataStore<DiaryShare> by dataStore(
 val Context.updateStore: DataStore<Update> by dataStore(
     fileName = "update.pb",
     serializer = UpdateSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { Update.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { Update.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "VersionPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 跳过的版本代码
+                if (current.skipVersionCode == 0) {
+                    builder.setSkipVersionCode(prefs.getInt("skip_version_code", 0))
+                }
+
+                // 更新包路径
+                if (current.apkUri.isEmpty()) {
+                    builder.setApkUri(prefs.getString("apk_uri", ""))
+                }
+
+                // 自动检测更新
+                if (!current.autoUpdateCheck) {
+                    builder.setAutoUpdateCheck(prefs.getBoolean("auto_update_check", true))
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
