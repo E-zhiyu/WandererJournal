@@ -137,5 +137,6 @@ dependencies {
     implementation(libs.datastore.preferences4) // 取代 SharedPreference 的简单数据存储API
     implementation(libs.protobuf.javalite)      // proto 依赖(搭配 datastore)
     implementation(libs.protobuf.kotlin.lite)
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.serialization.json) // Kotlin Json 反序列化
+    implementation(libs.compose.markdown)       // Markdown 文本组件
 }

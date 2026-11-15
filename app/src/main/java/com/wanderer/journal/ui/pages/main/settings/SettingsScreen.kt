@@ -4,16 +4,22 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import androidx.biometric.BiometricManager
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,7 +32,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
@@ -50,6 +55,8 @@ import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import com.wanderer.journal.auxiliary.classes.CHANGELOG
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +76,10 @@ fun SettingsScreen(
     // 下拉菜单展开状态
     var firstScreenExpanded by remember { mutableStateOf(false) }
     var authOpportunityExpanded by remember { mutableStateOf(false) }
+
+    // 对话框显示状态
+    var themeModeDialogShown by remember { mutableStateOf(false) }
+    var changeLogDialogShown by remember { mutableStateOf(false) }
 
     // 当前选中的文字描述
     var firstScreenText by remember {
@@ -102,9 +113,7 @@ fun SettingsScreen(
                     subtitle = "切换深浅色模式",
                     icon = painterResource(id = R.drawable.outline_dark_mode_24),
                     normalRadius = Radius.TopArray,
-                    onClick = {
-                        activity?.let { showThemeModeDialog(it) }
-                    }
+                    onClick = { themeModeDialogShown = true }
                 )
             }
 
@@ -388,7 +397,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.changelog),
                     normalRadius = Radius.MiddleArray,
                     icon = painterResource(id = R.drawable.outline_lab_profile_24),
-                    onClick = { AboutHelper.showChangelog(context) }
+                    onClick = { changeLogDialogShown = true }
                 )
             }
             item {
@@ -409,24 +418,93 @@ fun SettingsScreen(
             }
         }
     }
+
+    // 主题模式选择对话框
+    if (themeModeDialogShown) {
+        ThemeModeDialog(
+            onDismiss = { themeModeDialogShown = false },
+            onSelected = { code ->
+                AppSettingsPreference.setThemeMode(context, code)
+                ThemeHelper.switchNightModeWithAnimation(code)
+            }
+        )
+    }
+
+    // 更新日志对话框
+    if (changeLogDialogShown) {
+        ChangeLogDialog(
+            onDismiss = { changeLogDialogShown = false }
+        )
+    }
 }
 
 /**
  * 主题模式选择对话框
  */
-private fun showThemeModeDialog(activity: androidx.fragment.app.FragmentActivity) {
-    val themeModeStr = ThemeMode.entries.map { it.title }.toTypedArray()
-    val currentMode = AppSettingsPreference.getThemeMode(activity)
+@Composable
+fun ThemeModeDialog(
+    onDismiss: () -> Unit,
+    onSelected: (Int) -> Unit
+) {
+    val themeModes = remember { ThemeMode.entries.toTypedArray() }
+    val scrollState = rememberScrollState()
 
-    MaterialAlertDialogBuilder(activity)
-        .setTitle("主题模式")
-        .setSingleChoiceItems(themeModeStr, currentMode) { dialog, which ->
-            AppSettingsPreference.setThemeMode(activity, which)
-            ThemeHelper.switchNightModeWithAnimation(activity, which)
-            dialog.dismiss()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("主题模式") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                themeModes.forEach { themeMode ->
+                    TextButton(
+                        onClick = { onSelected(themeMode.ordinal) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = themeMode.title,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
         }
-        .setNegativeButton("关闭", null)
-        .show()
+    )
+}
+
+/**
+ * 更新日志对话框
+ */
+@Composable
+fun ChangeLogDialog(
+    onDismiss: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    AlertDialog(
+        modifier = Modifier.padding(top = 40.dp, bottom = 40.dp),
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.changelog)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                MarkdownText(CHANGELOG)
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭")
+            }
+        }
+    )
 }
 
 @Preview(
