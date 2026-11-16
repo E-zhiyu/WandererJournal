@@ -191,7 +191,8 @@ fun SettingSpinnerItem(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
             content = dropDownContent,
-            shape = RoundedCornerShape(Radius.Large)
+            shape = RoundedCornerShape(Radius.Large),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     }
 }
