@@ -1,126 +1,178 @@
-package com.wanderer.journal.ui.pages.main;
+package com.wanderer.journal.ui.pages.main
 
-import android.os.Bundle;
-import android.util.Log;
+import android.content.res.Configuration
+import android.os.Bundle
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.wanderer.journal.auxiliary.enums.unique.LogTags
+import com.wanderer.journal.data.save.preference.AppSettingsPreference
+import com.wanderer.journal.data.save.preference.VersionPreference
+import com.wanderer.journal.helpers.UpdateHelper
+import com.wanderer.journal.ui.pages.ScreenRoutes
+import com.wanderer.journal.ui.pages.main.diary.DiaryFragment
+import com.wanderer.journal.ui.pages.main.home.HomeFragment
+import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
+import com.wanderer.journal.ui.theme.MaterialAppTheme
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.launch
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
+class MainActivity : ComponentActivity() {
 
-import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.enums.unique.LogTags;
-import com.wanderer.journal.data.save.preference.AppSettingsPreference;
-import com.wanderer.journal.data.save.preference.VersionPreference;
-import com.wanderer.journal.databinding.ActivityMainBinding;
-import com.wanderer.journal.helpers.UpdateHelper;
-import com.wanderer.journal.ui.others.adapters.FragmentPagerAdapter;
-import com.wanderer.journal.ui.pages.main.diary.DiaryFragment;
-import com.wanderer.journal.ui.pages.main.home.HomeFragment;
-import com.wanderer.journal.ui.pages.main.settings.SettingsFragment;
+    private val disposable = CompositeDisposable()
 
-import java.util.ArrayList;
-import java.util.List;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
-import io.reactivex.rxjava3.disposables.CompositeDisposable;
-
-public class MainActivity extends AppCompatActivity {
-    private ActivityMainBinding binding;    //绑定的XML布局
-    private final CompositeDisposable disposable = new CompositeDisposable();      //多线程任务列表
-    @Nullable
-    private ViewPager2.OnPageChangeCallback pageChangeCallback = null;  // ViewPager2 的翻页监听器
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-
-        initViews();
-
-        EdgeToEdge.enable(this);
-        setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(binding.viewPager2, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, 0, systemBars.right, 0);
-            return insets;
-        });
-
-        //启动主界面时自动检测更新
         if (VersionPreference.getAutoUpdateCheck(this)) {
-            Log.d(LogTags.MAIN_ACTIVITY.n(), "自动检测更新中……");
-            disposable.add(UpdateHelper.checkUpdate(this, false));
+            Log.d(LogTags.MAIN_ACTIVITY.n(), "自动检测更新中……")
+            disposable.add(UpdateHelper.checkUpdate(this, false))
+        }
+
+        val startIndex = AppSettingsPreference.getFirstScreen(this).coerceIn(
+            0, MainDestination.entries.lastIndex
+        )
+
+        setContent {
+            MaterialAppTheme {
+                MainScreen(startIndex = startIndex)
+            }
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.dispose()
+    }
+}
 
-        if (pageChangeCallback != null) {
-            binding.viewPager2.unregisterOnPageChangeCallback(pageChangeCallback);
-            pageChangeCallback = null;
+@Composable
+private fun MainScreen(startIndex: Int) {
+    // 外层导航：承载二级页面（About / Troubleshooting）
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = ScreenRoutes.MainTabs,
+    ) {
+        composable<ScreenRoutes.MainTabs> {
+            MainTabs(
+                startIndex = startIndex
+            )
         }
 
-        disposable.dispose();
+        composable<ScreenRoutes.About> {
+            AboutScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTroubleshooting = {
+                    navController.navigate(ScreenRoutes.Troubleshooting)
+                }
+            )
+        }
+
+        composable<ScreenRoutes.Troubleshooting> {
+            TroubleshootingScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
     }
+}
 
-    /**
-     * 初始化视图
-     */
-    private void initViews() {
-        //翻页视图
-        List<Fragment> fragmentList = new ArrayList<>();
-        fragmentList.add(new DiaryFragment());
-        fragmentList.add(new HomeFragment());
-        fragmentList.add(new SettingsFragment());
-        initViewPager2(fragmentList);
+@Composable
+private fun MainTabs(
+    startIndex: Int
+) {
+    val pagerState = rememberPagerState(
+        initialPage = startIndex,
+        pageCount = { MainDestination.entries.size }
+    )
+    val scope = rememberCoroutineScope()
 
-        //设置APP启动第一屏
-        int firstScreenCode = AppSettingsPreference.getFirstScreen(this);
-        binding.viewPager2.setCurrentItem(firstScreenCode, false);
-
-        //底部导航栏
-        binding.bottomNavi.setOnItemSelectedListener(menuItem -> {
-            int id = menuItem.getItemId();
-            if (id == R.id.nav_diary) {
-                binding.viewPager2.setCurrentItem(0);
-                return true;
-            } else if (id == R.id.nav_home) {
-                binding.viewPager2.setCurrentItem(1);
-                return true;
-            } else if (id == R.id.nav_settings) {
-                binding.viewPager2.setCurrentItem(2);
-                return true;
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            NavigationBar {
+                MainDestination.entries.forEachIndexed { index, destination ->
+                    val selected = pagerState.currentPage == index
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            if (!selected) {
+                                // 与 ViewPager2 setCurrentItem(index) 行为一致
+                                scope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(destination.iconRes),
+                                contentDescription = stringResource(destination.titleRes)
+                            )
+                        },
+                        label = { Text(stringResource(destination.titleRes)) }
+                    )
+                }
             }
-
-            return false;
-        });
+        }
+    ) { innerPadding ->
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = innerPadding.calculateTopPadding())
+                .systemBarsPadding(),
+            beyondViewportPageCount = 2,
+            userScrollEnabled = true
+        ) { page ->
+            when (MainDestination.entries[page]) {
+                MainDestination.DIARY -> FragmentHost { DiaryFragment() }
+                MainDestination.HOME -> FragmentHost { HomeFragment() }
+                MainDestination.SETTINGS -> SettingsScreen(
+                    disposable = CompositeDisposable()
+                )
+            }
+        }
     }
+}
 
-    /**
-     * 初始化翻页视图
-     *
-     * @param fragmentList 页面Fragment列表
-     */
-    private void initViewPager2(List<Fragment> fragmentList) {
-        ViewPager2 viewPager2 = binding.viewPager2;
-        FragmentPagerAdapter viewPagerAdapter = new FragmentPagerAdapter(this, fragmentList);
-        viewPager2.setAdapter(viewPagerAdapter);
-
-        //ViewPager 页面切换监听
-        pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                super.onPageSelected(position);
-                // 更新底部导航栏选中状态
-                binding.bottomNavi.getMenu().getItem(position).setChecked(true);
-            }
-        };
-        viewPager2.registerOnPageChangeCallback(pageChangeCallback);
-        viewPager2.setOffscreenPageLimit(2);    //设置保留邻近Fragment
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    showSystemUi = true
+)
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun Preview() {
+    MaterialAppTheme {
+        MainTabs(2)
     }
 }

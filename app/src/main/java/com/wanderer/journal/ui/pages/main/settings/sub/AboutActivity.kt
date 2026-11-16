@@ -53,9 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
@@ -63,7 +60,6 @@ import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.components.PressableCard
-import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 class AboutActivity : ComponentActivity() {
@@ -73,32 +69,7 @@ class AboutActivity : ComponentActivity() {
 
         setContent {
             MaterialAppTheme {
-                val navController = rememberNavController()
-
-                // NavHost 接收类型安全的起始路由实例
-                NavHost(
-                    navController = navController,
-                    startDestination = ScreenRoutes.About
-                ) {
-                    // 注册“关于”页面
-                    composable<ScreenRoutes.About> {
-                        AboutScreen(
-                            onNavigateBack = { finish() },
-                            onNavigateToTroubleshooting = {
-                                navController.navigate(ScreenRoutes.Troubleshooting)
-                            }
-                        )
-                    }
-
-                    // 注册“疑难解答”页面
-                    composable<ScreenRoutes.Troubleshooting> {
-                        TroubleshootingScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
-                        )
-                    }
-                }
+                AboutScreen()
             }
         }
     }

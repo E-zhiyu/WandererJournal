@@ -3,10 +3,6 @@ package com.wanderer.journal.ui.pages.main.settings
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,13 +26,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
@@ -62,31 +56,6 @@ import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-
-class SettingsFragment : Fragment() {
-    // 多线程任务列表
-    private val disposable = CompositeDisposable()
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // 使用 ComposeView 承载重构后的 Compose 设置界面
-        return ComposeView(requireContext()).apply {
-            setContent {
-                MaterialAppTheme {
-                    SettingsScreen(disposable)
-                }
-            }
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        disposable.dispose()
-    }
-}
 
 @Composable
 fun SettingsScreen(
@@ -114,20 +83,18 @@ fun SettingsScreen(
     var changeLogDialogShown by remember { mutableStateOf(false) }
 
     // 下拉框当前选中的文字描述
-    var firstScreenText by remember {
-        mutableStateOf(FirstScreen.entries[appSettings.firstScreen].title)
-    }
-    var authOpportunityText by remember {
-        mutableStateOf(AuthOpportunity.entries[securitySettings.authOpportunity].title)
-    }
-    var themeModeText by remember {
-        mutableStateOf(ThemeMode.entries[appSettings.themeMode].title)
-    }
-
-    //获取枚举对象
     val themeModes = ThemeMode.entries
     val firstScreens = FirstScreen.entries
     val opportunities = AuthOpportunity.entries
+    var firstScreenText by remember {
+        mutableStateOf(firstScreens[appSettings.firstScreen].title)
+    }
+    var authOpportunityText by remember {
+        mutableStateOf(opportunities[securitySettings.authOpportunity].title)
+    }
+    var themeModeText by remember {
+        mutableStateOf(themeModes[appSettings.themeMode].title)
+    }
 
     Scaffold(
         topBar = {

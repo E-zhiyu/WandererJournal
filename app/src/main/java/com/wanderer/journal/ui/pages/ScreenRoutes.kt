@@ -11,4 +11,17 @@ sealed interface ScreenRoutes {
     // 疑难解答
     @Serializable
     data object Troubleshooting : ScreenRoutes
+
+    // 日记列表
+    @Serializable
+    data object Diary : ScreenRoutes
+
+    // 主页
+    @Serializable
+    data object Home: ScreenRoutes
+
+    // 设置界面
+    @Serializable
+    data object Settings: ScreenRoutes
+    @Serializable data object MainTabs
 }

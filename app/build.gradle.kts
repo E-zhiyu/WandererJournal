@@ -145,4 +145,6 @@ dependencies {
     implementation(libs.protobuf.kotlin.lite)
     implementation(libs.kotlinx.serialization.json) // Kotlin Json 反序列化
     implementation(libs.compose.markdown)       // Markdown 文本组件
+
+    implementation(libs.fragment.ktx)
 }
