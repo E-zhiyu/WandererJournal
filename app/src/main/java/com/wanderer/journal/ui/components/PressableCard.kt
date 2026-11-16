@@ -57,13 +57,13 @@ fun PressableCard(
         if (isPressed) pressedCorner else normalRadius[1],
         label = "te"
     )
-    val animBottomEnd by animateDpAsState(
-        if (isPressed) pressedCorner else normalRadius[2],
-        label = "be"
-    )
     val animBottomStart by animateDpAsState(
-        if (isPressed) pressedCorner else normalRadius[3],
+        if (isPressed) pressedCorner else normalRadius[2],
         label = "bs"
+    )
+    val animBottomEnd by animateDpAsState(
+        if (isPressed) pressedCorner else normalRadius[3],
+        label = "be"
     )
 
     val animatedShape = RoundedCornerShape(

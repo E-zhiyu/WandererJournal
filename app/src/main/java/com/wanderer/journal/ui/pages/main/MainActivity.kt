@@ -6,9 +6,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
@@ -19,10 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -31,7 +32,6 @@ import com.wanderer.journal.data.save.preference.AppSettingsPreference
 import com.wanderer.journal.data.save.preference.VersionPreference
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.ui.pages.ScreenRoutes
-import com.wanderer.journal.ui.pages.main.diary.DiaryFragment
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
@@ -106,8 +106,6 @@ private fun MainScreen(startIndex: Int) {
 private fun MainTabs(
     startIndex: Int
 ) {
-    val context = LocalContext.current
-
     val pagerState = rememberPagerState(
         initialPage = startIndex,
         pageCount = { MainDestination.entries.size }
@@ -146,15 +144,16 @@ private fun MainTabs(
             state = pagerState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .systemBarsPadding(),
+                .padding(
+                    start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
+                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr)
+                ),
             beyondViewportPageCount = 2,
             userScrollEnabled = true
         ) { page ->
             when (MainDestination.entries[page]) {
-                MainDestination.DIARY -> FragmentHost { DiaryFragment() }
-                MainDestination.HOME -> HomeScreen(
-                )
+//                MainDestination.DIARY -> FragmentHost { DiaryFragment() }
+                MainDestination.HOME -> HomeScreen()
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable()
                 )

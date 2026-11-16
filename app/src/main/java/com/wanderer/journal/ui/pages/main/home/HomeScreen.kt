@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.home
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,12 +31,14 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wanderer.journal.R
+import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
@@ -43,6 +46,7 @@ import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
 import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity
 import com.wanderer.journal.ui.pages.role.RoleListActivity
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity
+import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 @Composable
 fun HomeScreen(
@@ -81,8 +85,7 @@ fun HomeScreen(
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.home_page)) },
-                scrollBehavior = scrollBehavior,
-                navigationIcon = { /* 原来 navigationIcon="@null"，保持空 */ },
+                scrollBehavior = scrollBehavior
             )
         },
     ) { inner ->
@@ -92,8 +95,10 @@ fun HomeScreen(
                 .padding(inner)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp, vertical = 5.dp),
+                .padding(horizontal = Interval.SidePadding, vertical = 5.dp),
         ) {
+            Spacer(Modifier.height(5.dp))
+
             // 随机提示卡片
             PressableCard(
                 onClick = { vm.nextTip(tipsArray + xiaomiTips) },
@@ -262,5 +267,23 @@ private fun StatCard(
                 color = MaterialTheme.colorScheme.outline,
             )
         }
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO,
+    showSystemUi = true
+)
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun Preview() {
+    MaterialAppTheme {
+        HomeScreen()
     }
 }
