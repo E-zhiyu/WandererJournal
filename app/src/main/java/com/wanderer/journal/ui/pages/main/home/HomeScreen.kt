@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages.main.home
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,7 +32,6 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,7 +47,6 @@ import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
 import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity
 import com.wanderer.journal.ui.pages.role.RoleListActivity
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity
-import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 @Composable
 fun HomeScreen(
@@ -280,23 +277,5 @@ private fun StatCard(
                 color = MaterialTheme.colorScheme.outline,
             )
         }
-    }
-}
-
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    showSystemUi = true
-)
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun Preview() {
-    MaterialAppTheme {
-        HomeScreen()
     }
 }
