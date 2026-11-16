@@ -15,9 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.MenuItemShapes
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.Text
@@ -100,7 +98,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
-                .padding(start = Interval.SidePadding, end = Interval.SidePadding),
+                .padding(horizontal = Interval.SidePadding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             // ==================== 1. App 设置 ====================
