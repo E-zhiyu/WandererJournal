@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.main
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -32,14 +31,11 @@ import com.wanderer.journal.data.save.preference.AppSettingsPreference
 import com.wanderer.journal.data.save.preference.VersionPreference
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.ui.pages.ScreenRoutes
-import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
-import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity
 import com.wanderer.journal.ui.pages.main.diary.DiaryFragment
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
-import com.wanderer.journal.ui.pages.role.RoleListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
@@ -158,9 +154,6 @@ private fun MainTabs(
             when (MainDestination.entries[page]) {
                 MainDestination.DIARY -> FragmentHost { DiaryFragment() }
                 MainDestination.HOME -> HomeScreen(
-                    onOpenEmotionTags = { context.startActivity(Intent(context, EmotionTagListActivity::class.java)) },
-                    onOpenRoles = { context.startActivity(Intent(context, RoleListActivity::class.java)) },
-                    onOpenLifeNotes = { context.startActivity(Intent(context, LifeNoteListActivity::class.java)) },
                 )
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable()
@@ -182,7 +175,7 @@ private fun MainTabs(
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun Preview() {
+private fun Preview() {
     MaterialAppTheme {
         MainTabs(2)
     }
