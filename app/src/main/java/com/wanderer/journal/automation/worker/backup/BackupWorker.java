@@ -15,10 +15,10 @@ import androidx.work.rxjava3.RxWorker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
+import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
-import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.data.backup.helpers.BackupHelperBase;
 import com.wanderer.journal.data.backup.maps.DataInfoMap;
 import com.wanderer.journal.data.save.preference.AutoBackupPreference;
@@ -123,7 +123,7 @@ public class BackupWorker extends RxWorker {
      * @param choice  备份数据类型的选择状况
      * @return 是否成功
      */
-    public Completable writeDataInfoToFile(Context context,@Nullable boolean[] choice) {
+    public Completable writeDataInfoToFile(Context context, @Nullable boolean[] choice) {
         return Completable.defer(() -> {
             try {
                 DataInfoMap infoMap = BackupHelperBase.generateDataInfo(context, choice);

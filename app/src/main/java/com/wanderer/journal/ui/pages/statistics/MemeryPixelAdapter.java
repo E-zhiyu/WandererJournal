@@ -91,7 +91,7 @@ public class MemeryPixelAdapter extends ListAdapter<DiaryLengthUnionModel, Memer
 
         //生成等级分隔符
         int lv1 = avgDiaryLength / 2;
-        int lv3 = avgDiaryLength + avgDiaryLength /2;
+        int lv3 = avgDiaryLength + avgDiaryLength / 2;
 
         //根据内容多少分配颜色
         int diaryLength = model.getDiaryLength();

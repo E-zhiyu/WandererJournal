@@ -61,6 +61,7 @@ public class RoleListViewModel extends ViewModel {
 
     /**
      * 判断是否没有过滤条件
+     *
      * @return 是否没有过滤条件
      */
     public boolean isNoFilter() {

@@ -4,58 +4,58 @@ option java_multiple_files = true;
 
 // APP设置
 message AppSettings {
-    int32 theme_mode = 1;           // 主题模式
-    bool dynamic_color = 2;         // 动态色彩
-    int32 first_screen = 3;         // 启动时的第一屏
-    bool show_hdr = 4;              // 是否显示 HDR 图片效果
+  int32 theme_mode = 1;           // 主题模式
+  bool dynamic_color = 2;         // 动态色彩
+  int32 first_screen = 3;         // 启动时的第一屏
+  bool show_hdr = 4;              // 是否显示 HDR 图片效果
 }
 
 // 自动备份设置
 message AutoBackup {
-    bool switch_stat = 1;           // 自动备份开关是否启用
-    string backup_directory = 2;    // 自动备份文件生成目录
-    int32 backup_frequency = 3;     // 自动备份频率
+  bool switch_stat = 1;           // 自动备份开关是否启用
+  string backup_directory = 2;    // 自动备份文件生成目录
+  int32 backup_frequency = 3;     // 自动备份频率
 }
 
 // 日记提醒设置
 message DiaryAlarm {
-    bool switch = 1;                // 开关状态
-    repeated string alarm_time = 2; // 日记提醒时间
+  bool switch = 1;                // 开关状态
+  repeated string alarm_time = 2; // 日记提醒时间
 }
 
 // 日记草稿
 message DiaryDraft {
-    string draft = 1;               // 日记草稿
+  string draft = 1;               // 日记草稿
 }
 
 // 搜索历史记录
 message SearchHistory {
-    repeated string diary_content = 1;  // 日记内容
-    repeated string role_info = 2;      // 角色信息搜索
-    repeated string life_note = 3;      // 人生笔记
+  repeated string diary_content = 1;  // 日记内容
+  repeated string role_info = 2;      // 角色信息搜索
+  repeated string life_note = 3;      // 人生笔记
 }
 
 // 隐私设置
 message SecuritySettings {
-    bool auth_switch = 1;           // 是否开启进入时的身份验证
-    int32 auth_opportunity = 2;     // 身份验证时机
-    bool exclude_recent_task = 3;   // 是否在最近任务中排除
+  bool auth_switch = 1;           // 是否开启进入时的身份验证
+  int32 auth_opportunity = 2;     // 身份验证时机
+  bool exclude_recent_task = 3;   // 是否在最近任务中排除
 }
 
 // 日记分享设置
 message DiaryShare {
-    bool media = 1;                 // 分享媒体预览图
-    bool emotion = 2;               // 分享情绪标签
-    bool time = 3;                  // 分享段落时间
-    bool location = 4;              // 分享段落的地理位置
-    string bottom_text = 5;         // 分享图片底部文本
+  bool media = 1;                 // 分享媒体预览图
+  bool emotion = 2;               // 分享情绪标签
+  bool time = 3;                  // 分享段落时间
+  bool location = 4;              // 分享段落的地理位置
+  string bottom_text = 5;         // 分享图片底部文本
 }
 
 //TODO:可能需要迁移 Tip 相关的数据
 
 // 版本检测相关
 message Update {
-    int32 skip_version_code = 1;    // 跳过更新检测的版本代码
-    string apk_uri = 2;             // 更新包的 Uri 路径
-    bool auto_update_check = 3;     // 是否自动进行更新检测
+  int32 skip_version_code = 1;    // 跳过更新检测的版本代码
+  string apk_uri = 2;             // 更新包的 Uri 路径
+  bool auto_update_check = 3;     // 是否自动进行更新检测
 }

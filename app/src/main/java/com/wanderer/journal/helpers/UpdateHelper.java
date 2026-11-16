@@ -86,8 +86,8 @@ public class UpdateHelper {
     /**
      * 检查更新
      *
-     * @param context    上下文
-     * @param isManual   是否为手动检测更新
+     * @param context  上下文
+     * @param isManual 是否为手动检测更新
      */
     public static Disposable checkUpdate(
             Context context,

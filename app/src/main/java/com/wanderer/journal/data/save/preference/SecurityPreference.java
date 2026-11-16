@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
+
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity;
 
 public class SecurityPreference {

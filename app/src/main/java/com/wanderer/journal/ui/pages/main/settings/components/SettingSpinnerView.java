@@ -16,8 +16,8 @@ import androidx.core.widget.TextViewCompat;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.textview.MaterialTextView;
 import com.wanderer.journal.R;
-import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
+import com.wanderer.journal.databinding.ViewSettingOptionBinding;
 
 public class SettingSpinnerView extends SettingOptionViewBase<MaterialTextView, View.OnClickListener> {
     /**

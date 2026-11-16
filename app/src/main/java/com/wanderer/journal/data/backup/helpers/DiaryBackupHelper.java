@@ -7,10 +7,10 @@ import androidx.annotation.NonNull;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanderer.journal.auxiliary.classes.ImportResult;
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
 import com.wanderer.journal.data.backup.maps.DiaryDataMap;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
 
 public class DiaryBackupHelper extends BackupHelperBase<DiaryDb, DiaryDataMap> {
     public DiaryBackupHelper(Context context) {

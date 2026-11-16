@@ -14,9 +14,9 @@ import androidx.core.app.TaskStackBuilder;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.auxiliary.enums.ChannelInfo;
-import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.intent.NotificationID;
 import com.wanderer.journal.auxiliary.enums.intent.PendingRequestCode;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.preference.DiaryAlarmPreference;

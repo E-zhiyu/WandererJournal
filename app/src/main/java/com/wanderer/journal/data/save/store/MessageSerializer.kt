@@ -49,11 +49,13 @@ object DiaryDraftSerializer : ProtoSerializer<DiaryDraft>(DiaryDraft.getDefaultI
     override fun parseFrom(input: InputStream): DiaryDraft = DiaryDraft.parseFrom(input)
 }
 
-object SearchHistorySerializer : ProtoSerializer<SearchHistory>(SearchHistory.getDefaultInstance()) {
+object SearchHistorySerializer :
+    ProtoSerializer<SearchHistory>(SearchHistory.getDefaultInstance()) {
     override fun parseFrom(input: InputStream): SearchHistory = SearchHistory.parseFrom(input)
 }
 
-object SecuritySerializer : ProtoSerializer<SecuritySettings>(SecuritySettings.getDefaultInstance()) {
+object SecuritySerializer :
+    ProtoSerializer<SecuritySettings>(SecuritySettings.getDefaultInstance()) {
     override fun parseFrom(input: InputStream): SecuritySettings = SecuritySettings.parseFrom(input)
 }
 

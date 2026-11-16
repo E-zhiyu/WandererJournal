@@ -6,8 +6,8 @@ import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

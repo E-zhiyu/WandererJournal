@@ -1,8 +1,8 @@
 package com.wanderer.journal.auxiliary.enums.settings;
 
 public enum FirstScreen {
-    DIARY(0,0,0,"日记"),
-    HOME(0,1,1,"主页");
+    DIARY(0, 0, 0, "日记"),
+    HOME(0, 1, 1, "主页");
     private final int groupId;  //分组编号
     private final int itemId;   //选项编号
     private final int order;    //顺序

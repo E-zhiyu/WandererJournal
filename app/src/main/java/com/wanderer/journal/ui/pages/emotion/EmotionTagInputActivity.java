@@ -12,11 +12,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.text.EmotionType;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.databinding.ActivityEmotionTagInputBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.ImmHelper;

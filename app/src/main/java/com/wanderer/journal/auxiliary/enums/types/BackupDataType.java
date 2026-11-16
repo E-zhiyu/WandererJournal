@@ -37,7 +37,7 @@ public enum BackupDataType {
     private final Function<Context, BackupHelperBase<?, ?>> helperFactory;
     private final String[] fileNames;
 
-    BackupDataType(String title, Function<Context, BackupHelperBase<?, ?>> helperFactory,String... fileNames) {
+    BackupDataType(String title, Function<Context, BackupHelperBase<?, ?>> helperFactory, String... fileNames) {
         this.title = title;
         this.helperFactory = helperFactory;
         this.fileNames = fileNames;

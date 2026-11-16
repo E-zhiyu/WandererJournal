@@ -49,10 +49,22 @@ fun PressableCard(
     )
 
     // 3. 四个角的平滑过渡动画
-    val animTopStart by animateDpAsState(if (isPressed) pressedCorner else normalRadius[0], label = "ts")
-    val animTopEnd by animateDpAsState(if (isPressed) pressedCorner else normalRadius[1], label = "te")
-    val animBottomEnd by animateDpAsState(if (isPressed) pressedCorner else normalRadius[2], label = "be")
-    val animBottomStart by animateDpAsState(if (isPressed) pressedCorner else normalRadius[3], label = "bs")
+    val animTopStart by animateDpAsState(
+        if (isPressed) pressedCorner else normalRadius[0],
+        label = "ts"
+    )
+    val animTopEnd by animateDpAsState(
+        if (isPressed) pressedCorner else normalRadius[1],
+        label = "te"
+    )
+    val animBottomEnd by animateDpAsState(
+        if (isPressed) pressedCorner else normalRadius[2],
+        label = "be"
+    )
+    val animBottomStart by animateDpAsState(
+        if (isPressed) pressedCorner else normalRadius[3],
+        label = "bs"
+    )
 
     val animatedShape = RoundedCornerShape(
         topStart = animTopStart,

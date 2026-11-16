@@ -213,7 +213,7 @@ public interface DataBackupDao {
         List<RoleAliaEntity> roleAliaEntityList = readRoleAliaData();
         List<RoleAliaPojo> roleAliaPojoList = mapper.toRoleAliaPojoList(roleAliaEntityList);
 
-        return new RoleDataMap(rolePojoList,roleAliaPojoList);
+        return new RoleDataMap(rolePojoList, roleAliaPojoList);
     }
 
     /**
@@ -280,7 +280,7 @@ public interface DataBackupDao {
         List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = readLifeNoteHistoryData();
         List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = mapper.toLifeNoteHistoryPojoList(lifeNoteHistoryEntityList);
 
-        return new LifeNoteDataMap(lifeNotePojoList,lifeNoteHistoryPojoList);
+        return new LifeNoteDataMap(lifeNotePojoList, lifeNoteHistoryPojoList);
     }
 
     /**

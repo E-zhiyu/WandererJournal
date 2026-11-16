@@ -2,6 +2,12 @@ package com.wanderer.journal.ui.pages.main.diary;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
@@ -10,15 +16,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
+import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
@@ -27,8 +28,6 @@ import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
 import com.wanderer.journal.data.save.db.services.DiaryService;
 import com.wanderer.journal.data.save.preference.TipPreference;
 import com.wanderer.journal.databinding.FragmentDiaryBinding;
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
-import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.ScrollHelper;

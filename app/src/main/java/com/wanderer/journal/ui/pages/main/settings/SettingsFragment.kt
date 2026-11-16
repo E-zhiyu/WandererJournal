@@ -14,9 +14,9 @@ class SettingsFragment : Fragment() {
     private val disposable = CompositeDisposable()
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         // 使用 ComposeView 承载重构后的 Compose 设置界面
         return ComposeView(requireContext()).apply {
