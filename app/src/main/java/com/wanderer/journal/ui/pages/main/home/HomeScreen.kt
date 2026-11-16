@@ -22,7 +22,9 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -40,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
@@ -67,10 +70,12 @@ fun HomeScreen(
         vm.nextTip(tipsArray + xiaomiTips)
     }
 
+    var exceptionMessage by remember { mutableStateOf("") }
+
     // 2) 统一弹错误对话框
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { msg ->
-//            ExceptionHelper.showExceptionDialog(context, msg)
+            exceptionMessage = msg
             vm.consumeError()
         }
     }
@@ -234,6 +239,14 @@ fun HomeScreen(
                 )
             }
         }
+    }
+
+    // 错误信息对话框
+    if (exceptionMessage.isNotEmpty()) {
+        ExceptionDialog(
+            { exceptionMessage = "" },
+            exceptionMessage
+        )
     }
 }
 
