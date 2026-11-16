@@ -83,6 +83,7 @@ protobuf {
 }
 
 dependencies {
+    implementation(libs.androidx.foundation.layout)
     //TODO:以下依赖需要在 Compose 重构完全后移除
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
@@ -107,6 +108,7 @@ dependencies {
     implementation(libs.room.paging)                 // Room 的Paging 3支持
     annotationProcessor(libs.room.compiler)          // Room 注解处理器
     implementation(libs.room.rxjava3)                // Room的 RxJava 支持
+    implementation(libs.androidx.room.room.ktx)     // Room 的 Kotlin 支持
     implementation(libs.paging.rxjava3)              // Paging 3的 RxJava支持
     implementation(libs.paging.runtime)              // RecyclerView 局部加载
     implementation(libs.jackson.databind)            // JSON 解析
@@ -145,6 +147,8 @@ dependencies {
     implementation(libs.protobuf.kotlin.lite)
     implementation(libs.kotlinx.serialization.json) // Kotlin Json 反序列化
     implementation(libs.compose.markdown)       // Markdown 文本组件
+    implementation(libs.constraintlayout.compose)
 
+    // TODO:临时 Fragment 过渡
     implementation(libs.fragment.ktx)
 }

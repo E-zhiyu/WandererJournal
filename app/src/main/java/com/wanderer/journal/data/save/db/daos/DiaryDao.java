@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface DiaryDao {
@@ -31,7 +32,7 @@ public interface DiaryDao {
      * @return 日记总数，支持响应式更新
      */
     @Query("SELECT COUNT(*) FROM diaries")
-    Flowable<Integer> getDiaryCountFlowable();
+    Flow<Integer> getDiaryCountFlow();
 
     /**
      * 获取最早的日记日期
@@ -39,7 +40,7 @@ public interface DiaryDao {
      * @return 最早的日记日期，支持响应式更新
      */
     @Query("SELECT diaryDate FROM diaries ORDER BY diaryDate LIMIT 1")
-    Flowable<Optional<LocalDate>> getEarliestDiaryDateFlowable();
+    Flow<LocalDate> getEarliestDiaryDateFlow();
 
     /**
      * 获取最早的日记日期

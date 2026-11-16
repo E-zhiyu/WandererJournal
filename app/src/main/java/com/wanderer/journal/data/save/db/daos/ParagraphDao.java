@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface ParagraphDao {
@@ -43,7 +44,7 @@ public interface ParagraphDao {
      * @return 段落总数
      */
     @Query("SELECT COUNT(*) FROM paragraphs")
-    Flowable<Integer> getParagraphCountFlowable();
+    Flow<Integer> getParagraphCountFlow();
 
     /**
      * 读取所有段落并支持局部加载

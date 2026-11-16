@@ -18,6 +18,7 @@ import java.util.Optional;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface LifeNoteDao {
@@ -27,7 +28,7 @@ public interface LifeNoteDao {
      * @return 人生笔记数量，支持响应式更新
      */
     @Query("SELECT COUNT(*) FROM lifeNotes")
-    Flowable<Integer> getLifeNoteCountFlowable();
+    Flow<Integer> getLifeNoteCountFlow();
 
     /**
      * 获取所有人生笔记

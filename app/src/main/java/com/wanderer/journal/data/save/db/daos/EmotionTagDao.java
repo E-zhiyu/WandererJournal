@@ -21,6 +21,7 @@ import java.util.Optional;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface EmotionTagDao {
@@ -82,7 +83,7 @@ public interface EmotionTagDao {
      * @return 情绪标签的数量
      */
     @Query("SELECT COUNT(*) FROM emotionTags")
-    Flowable<Integer> getEmotionTagCountFlowable();
+    Flow<Integer> getEmotionTagCountFlow();
 
     /**
      * 获取所有情绪标签并支持响应式更新

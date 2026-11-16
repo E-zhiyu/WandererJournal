@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import kotlinx.coroutines.flow.Flow;
 
 @Dao
 public interface RoleDao {
@@ -28,7 +29,7 @@ public interface RoleDao {
      * @return 角色数量，支持响应式更新
      */
     @Query("SELECT COUNT(*) FROM roles")
-    Flowable<Integer> getRoleCountFlowable();
+    Flow<Integer> getRoleCountFlow();
 
     /**
      * 获取符合搜索内容的角色数据并按照关系由近到远排序

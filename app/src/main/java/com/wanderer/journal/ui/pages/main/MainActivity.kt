@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
@@ -19,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,11 +32,14 @@ import com.wanderer.journal.data.save.preference.AppSettingsPreference
 import com.wanderer.journal.data.save.preference.VersionPreference
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.ui.pages.ScreenRoutes
+import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
+import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity
 import com.wanderer.journal.ui.pages.main.diary.DiaryFragment
-import com.wanderer.journal.ui.pages.main.home.HomeFragment
+import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
+import com.wanderer.journal.ui.pages.role.RoleListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
@@ -105,6 +110,8 @@ private fun MainScreen(startIndex: Int) {
 private fun MainTabs(
     startIndex: Int
 ) {
+    val context = LocalContext.current
+
     val pagerState = rememberPagerState(
         initialPage = startIndex,
         pageCount = { MainDestination.entries.size }
@@ -150,7 +157,11 @@ private fun MainTabs(
         ) { page ->
             when (MainDestination.entries[page]) {
                 MainDestination.DIARY -> FragmentHost { DiaryFragment() }
-                MainDestination.HOME -> FragmentHost { HomeFragment() }
+                MainDestination.HOME -> HomeScreen(
+                    onOpenEmotionTags = { context.startActivity(Intent(context, EmotionTagListActivity::class.java)) },
+                    onOpenRoles = { context.startActivity(Intent(context, RoleListActivity::class.java)) },
+                    onOpenLifeNotes = { context.startActivity(Intent(context, LifeNoteListActivity::class.java)) },
+                )
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable()
                 )
