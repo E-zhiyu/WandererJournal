@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,9 +19,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -128,7 +138,6 @@ fun SettingSwitchItem(
  */
 @Composable
 fun SettingSpinnerItem(
-    modifier: Modifier = Modifier,
     title: String,
     subtitle: String? = null,
     icon: Painter,
@@ -143,7 +152,6 @@ fun SettingSpinnerItem(
     ) {
         PressableCard(
             onClick = { onExpandedChange(!expanded) },
-            modifier = modifier,
             normalRadius = normalRadius,
         ) {
             Row(
@@ -183,17 +191,18 @@ fun SettingSpinnerItem(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
+
+                Box {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { onExpandedChange(false) },
+                        content = dropDownContent,
+                        shape = RoundedCornerShape(Radius.Large),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    )
+                }
             }
         }
-
-        // 下拉菜单
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandedChange(false) },
-            content = dropDownContent,
-            shape = RoundedCornerShape(Radius.Large),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
     }
 }
 
