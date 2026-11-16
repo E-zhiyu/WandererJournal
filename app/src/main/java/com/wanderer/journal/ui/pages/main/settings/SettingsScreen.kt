@@ -89,15 +89,9 @@ fun SettingsScreen(
     val themeModes = ThemeMode.entries
     val firstScreens = FirstScreen.entries
     val opportunities = AuthOpportunity.entries
-    var firstScreenText by remember {
-        mutableStateOf(firstScreens[appSettings.firstScreen].title)
-    }
-    var authOpportunityText by remember {
-        mutableStateOf(opportunities[securitySettings.authOpportunity].title)
-    }
-    var themeModeText by remember {
-        mutableStateOf(themeModes[appSettings.themeMode].title)
-    }
+    var firstScreenText = firstScreens[appSettings.firstScreen].title
+    var authOpportunityText = opportunities[securitySettings.authOpportunity].title
+    var themeModeText = themeModes[appSettings.themeMode].title
 
     // TopBar 折叠滚动行为
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
