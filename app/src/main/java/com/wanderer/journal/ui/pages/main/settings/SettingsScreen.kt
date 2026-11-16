@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -105,18 +104,26 @@ fun SettingsScreen(
     // 下拉菜单展开状态
     var firstScreenExpanded by remember { mutableStateOf(false) }
     var authOpportunityExpanded by remember { mutableStateOf(false) }
+    var themeModeExpanded by remember { mutableStateOf(false) }
 
     // 对话框显示状态
-    var themeModeDialogShown by remember { mutableStateOf(false) }
     var changeLogDialogShown by remember { mutableStateOf(false) }
 
-    // 当前选中的文字描述
+    // 下拉框当前选中的文字描述
     var firstScreenText by remember {
         mutableStateOf(FirstScreen.entries[AppSettingsPreference.getFirstScreen(context)].title)
     }
     var authOpportunityText by remember {
         mutableStateOf(AuthOpportunity.entries[SecurityPreference.getAuthOpportunity(context)].title)
     }
+    var themeModeText by remember {
+        mutableStateOf(ThemeMode.entries[AppSettingsPreference.getThemeMode(context)].title)
+    }
+
+    //获取枚举对象
+    val themeModes = ThemeMode.entries
+    val firstScreens = FirstScreen.entries
+    val opportunities = AuthOpportunity.entries
 
     Scaffold(
         topBar = {
@@ -137,13 +144,33 @@ fun SettingsScreen(
 
             // 主题模式
             item {
-                SettingClickableItem(
+                SettingSpinnerItem(
                     title = stringResource(id = R.string.theme_mode),
                     subtitle = "切换深浅色模式",
                     icon = painterResource(id = R.drawable.outline_dark_mode_24),
                     normalRadius = Radius.TopArray,
-                    onClick = { themeModeDialogShown = true }
-                )
+                    currentValueText = themeModeText,
+                    onExpandedChange = { themeModeExpanded = it },
+                    expanded = themeModeExpanded,
+                ) {
+                    themeModes.forEach { themeMode ->
+                        SelectableDropdownMenuItem(
+                            selected = AppSettingsPreference.getThemeMode(context) == themeMode.ordinal,
+                            text = { Text(themeMode.title) },
+                            onClick = {
+                                themeModeExpanded = false
+                                // TODO:使用副作用 API
+                                AppSettingsPreference.setThemeMode(context, themeMode.ordinal)
+                                themeModeText = themeMode.title
+                                ThemeHelper.switchNightModeWithAnimation(themeMode.ordinal)
+                            },
+                            shapes = MenuDefaults.itemShape(
+                                themeMode.ordinal,
+                                themeModes.count()
+                            )
+                        )
+                    }
+                }
             }
 
             // 动态配色 (仅 Android 12L+ 支持)
@@ -182,7 +209,6 @@ fun SettingsScreen(
                     expanded = firstScreenExpanded,
                     onExpandedChange = { firstScreenExpanded = it }
                 ) {
-                    val firstScreens = FirstScreen.entries
                     firstScreens.forEach { screen ->
                         val checked =
                             AppSettingsPreference.getFirstScreen(context) == screen.ordinal
@@ -388,7 +414,6 @@ fun SettingsScreen(
                     expanded = authOpportunityExpanded,
                     onExpandedChange = { authOpportunityExpanded = it }
                 ) {
-                    val opportunities = AuthOpportunity.entries
                     opportunities.forEach { opportunity ->
                         SelectableDropdownMenuItem(
                             text = { Text(opportunity.title) },
@@ -463,63 +488,12 @@ fun SettingsScreen(
         }
     }
 
-    // 主题模式选择对话框
-    if (themeModeDialogShown) {
-        ThemeModeDialog(
-            onDismiss = { themeModeDialogShown = false },
-            onSelected = { code ->
-                AppSettingsPreference.setThemeMode(context, code)
-                ThemeHelper.switchNightModeWithAnimation(code)
-            }
-        )
-    }
-
     // 更新日志对话框
     if (changeLogDialogShown) {
         ChangeLogDialog(
             onDismiss = { changeLogDialogShown = false }
         )
     }
-}
-
-/**
- * 主题模式选择对话框
- */
-@Composable
-fun ThemeModeDialog(
-    onDismiss: () -> Unit,
-    onSelected: (Int) -> Unit
-) {
-    val themeModes = remember { ThemeMode.entries.toTypedArray() }
-    val scrollState = rememberScrollState()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("主题模式") },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(scrollState)
-            ) {
-                themeModes.forEach { themeMode ->
-                    TextButton(
-                        onClick = { onSelected(themeMode.ordinal) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = themeMode.title,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        }
-    )
 }
 
 /**
