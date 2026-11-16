@@ -15,8 +15,8 @@ public class MarkdownDialogBuilder extends CustomDialogBuilderBase<DialogMarkdow
     /**
      * 显示 Markdown文本的对话框
      *
-     * @param context     上下文
-     * @param markdown    需要显示的 Markdown 文本
+     * @param context  上下文
+     * @param markdown 需要显示的 Markdown 文本
      */
     public MarkdownDialogBuilder(@NonNull Context context, @Nullable String markdown) {
         super(context);

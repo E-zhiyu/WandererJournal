@@ -4,6 +4,7 @@ import android.content.Context;
 
 /**
  * 粘性头部适配器
+ *
  * @param <T> 粘性头部显示的数据类型
  */
 public interface StickyHeaderAdapter<T> {

@@ -3,6 +3,9 @@ package com.wanderer.journal.ui.pages.main.home;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -10,10 +13,6 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.transition.ChangeBounds;
 import androidx.transition.TransitionManager;
 import androidx.transition.TransitionSet;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.wanderer.journal.R;
 import com.wanderer.journal.data.save.db.DiaryDb;
@@ -25,9 +24,9 @@ import com.wanderer.journal.data.save.db.daos.RoleDao;
 import com.wanderer.journal.databinding.FragmentHomeBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
-import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
-import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity;
+import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity;
+import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity;
 import com.wanderer.journal.ui.pages.role.RoleListActivity;
 import com.wanderer.journal.ui.pages.statistics.StatisticsActivity;
 

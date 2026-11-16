@@ -16,7 +16,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.slider.Slider;
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;

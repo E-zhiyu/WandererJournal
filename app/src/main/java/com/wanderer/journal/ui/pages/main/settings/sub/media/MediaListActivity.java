@@ -25,10 +25,10 @@ import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback;
 import com.wanderer.journal.databinding.ActivityMediaListBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
-import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 import com.wanderer.journal.helpers.appearance.VisibilityHelper;
 import com.wanderer.journal.helpers.file.MediaHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity;
 

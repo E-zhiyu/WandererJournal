@@ -15,13 +15,13 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
 import com.wanderer.journal.data.save.db.services.EmotionTagService;
 import com.wanderer.journal.databinding.ActivityEmotionTagListBinding;
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;

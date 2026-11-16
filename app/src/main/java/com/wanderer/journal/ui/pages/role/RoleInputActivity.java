@@ -14,9 +14,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.wanderer.journal.R;
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.auxiliary.enums.text.RichTextRegex;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;

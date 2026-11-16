@@ -20,8 +20,8 @@ import com.wanderer.journal.R;
 import com.wanderer.journal.WandererJournal;
 import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.databinding.ActivityPermissionManageBinding;
-import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
+import com.wanderer.journal.helpers.permission.PermissionHelper;
 import com.wanderer.journal.ui.others.dialogs.MarkdownDialogBuilder;
 import com.wanderer.journal.ui.pages.main.settings.components.SettingClickableTextView;
 

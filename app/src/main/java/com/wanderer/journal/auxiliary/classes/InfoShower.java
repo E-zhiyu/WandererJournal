@@ -80,18 +80,18 @@ public class InfoShower {
         String info =
                 //插入洞见
                 "**" + context.getString(R.string.life_note_insight) + ":** " +
-                insight +
-                "\n\n" +
+                        insight +
+                        "\n\n" +
 
-                //插入阐述
-                "**" + context.getString(R.string.life_note_elaboration) + ":** " +
-                (elaboration.isEmpty() ? "<无阐述>" : elaboration) +
-                "\n\n" +
+                        //插入阐述
+                        "**" + context.getString(R.string.life_note_elaboration) + ":** " +
+                        (elaboration.isEmpty() ? "<无阐述>" : elaboration) +
+                        "\n\n" +
 
-                //插入时间
-                "**" + context.getString(R.string.time) + ":** " +
-                updateDateTime.format(CustomDateTimeFormatter.DATE_TIME) +
-                "\n\n";
+                        //插入时间
+                        "**" + context.getString(R.string.time) + ":** " +
+                        updateDateTime.format(CustomDateTimeFormatter.DATE_TIME) +
+                        "\n\n";
 
         //显示对话框
         new MarkdownDialogBuilder(context, info)

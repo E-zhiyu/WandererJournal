@@ -13,8 +13,8 @@ import androidx.paging.rxjava3.PagingRx;
 
 import com.wanderer.journal.auxiliary.classes.FilterConditions;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.ParagraphUnionModel;
 import com.wanderer.journal.data.save.db.services.ParagraphService;
 
 import java.time.LocalDate;

@@ -18,8 +18,8 @@ import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnLongClickListe
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
-import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.ui.RoleUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.union.RoleEntityUnionModel;
 import com.wanderer.journal.databinding.ViewHolderRoleListBinding;
 import com.wanderer.journal.databinding.ViewHolderSeparatorTextChipBinding;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
