@@ -28,23 +28,47 @@ class SearchHistoryViewModel(
             SearchHistory.getDefaultInstance()
         )
 
-    fun addDiaryContentSearch(search: String) = viewModelScope.launch {
+    fun addDiaryContentHistory(search: String) = viewModelScope.launch {
         dataStore.updateData {
             val newList = addNewHistory(search, it.diaryContentList)
             it.toBuilder().clearDiaryContent().addAllDiaryContent(newList).build()
         }
     }
 
-    fun addRoleSearch(search: String) = viewModelScope.launch {
+    fun removeDiaryContentHistory(history: String) = viewModelScope.launch {
+        dataStore.updateData {
+            val newList = it.diaryContentList.toMutableList()
+            newList.remove(history)
+            it.toBuilder().clearDiaryContent().addAllDiaryContent(newList).build()
+        }
+    }
+
+    fun addRoleHistory(search: String) = viewModelScope.launch {
         dataStore.updateData {
             val newList = addNewHistory(search, it.roleInfoList)
             it.toBuilder().clearRoleInfo().addAllRoleInfo(newList).build()
         }
     }
 
-    fun addLifeNoteSearch(search: String) = viewModelScope.launch {
+    fun removeRoleHistory(history: String) = viewModelScope.launch {
+        dataStore.updateData {
+            val newList = it.roleInfoList.toMutableList()
+            newList.remove(history)
+            it.toBuilder().clearRoleInfo().addAllRoleInfo(newList).build()
+        }
+    }
+
+    fun addLifeNoteHistory(search: String) = viewModelScope.launch {
         dataStore.updateData {
             val newList = addNewHistory(search, it.lifeNoteList)
+            it.toBuilder().clearLifeNote().addAllLifeNote(newList).build()
+        }
+    }
+
+    fun removeLifeNoteHistory(history: String) = viewModelScope.launch {
+        dataStore.updateData {
+            val newList = it.lifeNoteList.toMutableList()
+            newList.remove(history)
             it.toBuilder().clearLifeNote().addAllLifeNote(newList).build()
         }
     }
