@@ -51,7 +51,10 @@ message DiaryShare {
   string bottom_text = 5;         // 分享图片底部文本
 }
 
-//TODO:可能需要迁移 Tip 相关的数据
+// 媒体设置
+message MediaSettings {
+  bool show_hdr = 1;              // 是否显示 HDR 图片效果
+}
 
 // 版本检测相关
 message Update {

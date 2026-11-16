@@ -9,6 +9,7 @@ import com.wanderer.journal.AutoBackup
 import com.wanderer.journal.DiaryAlarm
 import com.wanderer.journal.DiaryDraft
 import com.wanderer.journal.DiaryShare
+import com.wanderer.journal.MediaSettings
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
@@ -61,6 +62,10 @@ object SecuritySerializer :
 
 object DiaryShareSerializer : ProtoSerializer<DiaryShare>(DiaryShare.getDefaultInstance()) {
     override fun parseFrom(input: InputStream): DiaryShare = DiaryShare.parseFrom(input)
+}
+
+object MediaSerializer : ProtoSerializer<MediaSettings>(MediaSettings.getDefaultInstance()) {
+    override fun parseFrom(input: InputStream): MediaSettings = MediaSettings.parseFrom(input)
 }
 
 object UpdateSerializer : ProtoSerializer<Update>(Update.getDefaultInstance()) {

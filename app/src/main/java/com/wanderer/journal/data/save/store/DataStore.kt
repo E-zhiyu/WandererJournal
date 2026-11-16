@@ -10,6 +10,7 @@ import com.wanderer.journal.AutoBackup
 import com.wanderer.journal.DiaryAlarm
 import com.wanderer.journal.DiaryDraft
 import com.wanderer.journal.DiaryShare
+import com.wanderer.journal.MediaSettings
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
@@ -267,6 +268,28 @@ val Context.diaryShareStore: DataStore<DiaryShare> by dataStore(
                 // 分享图片底部文本
                 if (current.bottomText.isEmpty()) {
                     builder.setBottomText(prefs.getString("picture_bottom_text", ""))
+                }
+
+                builder.build()
+            }
+        )
+    }
+)
+val Context.mediaSettingsStore: DataStore<MediaSettings> by dataStore(
+    fileName = "media.pb",
+    serializer = MediaSerializer,
+    corruptionHandler = ReplaceFileCorruptionHandler { MediaSettings.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "MediaPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 显示 HDR 图片效果
+                if (!current.showHdr) {
+                    builder.setShowHdr(prefs.getBoolean("hdr_display", true))
                 }
 
                 builder.build()
