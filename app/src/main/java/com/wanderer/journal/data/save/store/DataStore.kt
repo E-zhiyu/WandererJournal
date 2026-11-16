@@ -23,14 +23,70 @@ import kotlinx.serialization.json.Json
 val Context.diaryDraftStore: DataStore<DiaryDraft> by dataStore(
     fileName = "diary_draft.pb",
     serializer = DiaryDraftSerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { DiaryDraft.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { DiaryDraft.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "DraftPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 草稿内容
+                if (current.draft.isEmpty()) {
+                    builder.setDraft(prefs.getString("draft", ""))
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
 
 // 搜索历史
 val Context.searchHistoryStore: DataStore<SearchHistory> by dataStore(
     fileName = "search_history.pb",
     serializer = SearchHistorySerializer,
-    corruptionHandler = ReplaceFileCorruptionHandler { SearchHistory.getDefaultInstance() }
+    corruptionHandler = ReplaceFileCorruptionHandler { SearchHistory.getDefaultInstance() },
+    produceMigrations = { context ->
+        listOf(
+            SharedPreferencesMigration(
+                context = context,
+                sharedPreferencesName = "SearchHistoryPreference"
+            ) { prefs, current ->
+                val builder = current.toBuilder()
+
+                // 日记内容
+                if (current.diaryContentList.isEmpty()) {
+                    val oldJson = prefs.getString("diary_content", "[]")
+                    oldJson?.let {
+                        val decodedList: List<String> = Json.decodeFromString(oldJson)
+                        builder.addAllDiaryContent(decodedList)
+                    }
+                }
+
+                // 角色信息
+                if (current.roleInfoList.isEmpty()) {
+                    val oldJson = prefs.getString("role_info", "[]")
+                    oldJson?.let {
+                        val decodedList: List<String> = Json.decodeFromString(oldJson)
+                        builder.addAllRoleInfo(decodedList)
+                    }
+                }
+
+                // 人生笔记
+                if (current.lifeNoteList.isEmpty()) {
+                    val oldJson = prefs.getString("life_note", "[]")
+                    oldJson?.let {
+                        val decodedList: List<String> = Json.decodeFromString(oldJson)
+                        builder.addAllLifeNote(decodedList)
+                    }
+                }
+
+                builder.build()
+            }
+        )
+    }
 )
 
 // 其余设置项
