@@ -37,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.CHANGELOG
@@ -45,10 +46,10 @@ import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
-import com.wanderer.journal.data.save.preference.AppSettingsPreference
-import com.wanderer.journal.data.save.preference.MediaPreference
-import com.wanderer.journal.data.save.preference.SecurityPreference
-import com.wanderer.journal.data.save.preference.VersionPreference
+import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
+import com.wanderer.journal.data.save.store.viewmodels.dsMediaSettingsViewModel
+import com.wanderer.journal.data.save.store.viewmodels.dsSecurityViewModel
+import com.wanderer.journal.data.save.store.viewmodels.dsUpdateViewModel
 import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
@@ -95,11 +96,14 @@ fun SettingsScreen(
     val activity = context as? androidx.fragment.app.FragmentActivity
 
     // 各项设置状态
-    var dynamicColor by remember { mutableStateOf(AppSettingsPreference.getDynamicColorStat(context)) }
-    var autoUpdate by remember { mutableStateOf(VersionPreference.getAutoUpdateCheck(context)) }
-    var hdrDisplay by remember { mutableStateOf(MediaPreference.getHdrDisplay(context)) }
-    var authSwitch by remember { mutableStateOf(SecurityPreference.getAuthSwitchStat(context)) }
-    var hideRecentTask by remember { mutableStateOf(SecurityPreference.getHideRecentTask(context)) }
+    val appSettingsViewModel = dsAppSettingsViewModel()
+    val appSettings by appSettingsViewModel.appSettings.collectAsStateWithLifecycle()
+    val updateSettingsViewModel = dsUpdateViewModel()
+    val updateSettings by updateSettingsViewModel.update.collectAsStateWithLifecycle()
+    val mediaSettingsViewModel = dsMediaSettingsViewModel()
+    val mediaSettings = mediaSettingsViewModel.mediaSettings.collectAsStateWithLifecycle()
+    val securitySettingsViewModel = dsSecurityViewModel()
+    val securitySettings by securitySettingsViewModel.securitySettings.collectAsStateWithLifecycle()
 
     // 下拉菜单展开状态
     var firstScreenExpanded by remember { mutableStateOf(false) }
@@ -111,13 +115,13 @@ fun SettingsScreen(
 
     // 下拉框当前选中的文字描述
     var firstScreenText by remember {
-        mutableStateOf(FirstScreen.entries[AppSettingsPreference.getFirstScreen(context)].title)
+        mutableStateOf(FirstScreen.entries[appSettings.firstScreen].title)
     }
     var authOpportunityText by remember {
-        mutableStateOf(AuthOpportunity.entries[SecurityPreference.getAuthOpportunity(context)].title)
+        mutableStateOf(AuthOpportunity.entries[securitySettings.authOpportunity].title)
     }
     var themeModeText by remember {
-        mutableStateOf(ThemeMode.entries[AppSettingsPreference.getThemeMode(context)].title)
+        mutableStateOf(ThemeMode.entries[appSettings.themeMode].title)
     }
 
     //获取枚举对象
@@ -155,12 +159,11 @@ fun SettingsScreen(
                 ) {
                     themeModes.forEach { themeMode ->
                         SelectableDropdownMenuItem(
-                            selected = AppSettingsPreference.getThemeMode(context) == themeMode.ordinal,
+                            selected = appSettings.themeMode == themeMode.ordinal,
                             text = { Text(themeMode.title) },
                             onClick = {
                                 themeModeExpanded = false
-                                // TODO:使用副作用 API
-                                AppSettingsPreference.setThemeMode(context, themeMode.ordinal)
+                                appSettingsViewModel.setThemeMode(themeMode.ordinal)
                                 themeModeText = themeMode.title
                                 ThemeHelper.switchNightModeWithAnimation(themeMode.ordinal)
                             },
@@ -182,10 +185,9 @@ fun SettingsScreen(
                         subtitle = "将壁纸颜色作为APP主题色",
                         icon = painterResource(id = R.drawable.outline_colorize_24),
                         normalRadius = Radius.MiddleArray,
-                        checked = dynamicColor,
+                        checked = appSettings.dynamicColor,
                         onCheckedChange = { checked ->
-                            dynamicColor = checked
-                            AppSettingsPreference.setDynamicColorStat(context, checked)
+                            appSettingsViewModel.setDynamicColor(checked)
                             activity?.let {
                                 ThemeHelper.switchDynamicColorWithAnimation(
                                     it,
@@ -210,15 +212,12 @@ fun SettingsScreen(
                     onExpandedChange = { firstScreenExpanded = it }
                 ) {
                     firstScreens.forEach { screen ->
-                        val checked =
-                            AppSettingsPreference.getFirstScreen(context) == screen.ordinal
                         SelectableDropdownMenuItem(
-                            selected = checked,
+                            selected = appSettings.firstScreen == screen.ordinal,
                             text = { Text(screen.title) },
                             onClick = {
                                 firstScreenExpanded = false
-                                // TODO:使用副作用 API
-                                AppSettingsPreference.setFirstScreen(context, screen.ordinal)
+                                appSettingsViewModel.setFirstScreen(screen.ordinal)
                                 firstScreenText = screen.title
                             },
                             shapes = MenuDefaults.itemShape(
@@ -237,11 +236,10 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.auto_update_check),
                     subtitle = "应用启动后自动检查更新",
                     icon = painterResource(id = R.drawable.outline_deployed_code_update_24),
-                    checked = autoUpdate,
+                    checked = updateSettings.autoUpdateCheck,
                     normalRadius = Radius.BottomArray,
                     onCheckedChange = { checked ->
-                        autoUpdate = checked
-                        VersionPreference.setAutoUpdateCheck(context, checked)
+                        updateSettingsViewModel.setAutoCheckUpdateOpen(checked)
                     }
                 )
             }
@@ -325,11 +323,10 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.hdr_display_effect),
                     subtitle = "全屏查看图片时支持HDR显示",
                     icon = painterResource(id = R.drawable.outline_hdr_on_24),
-                    checked = hdrDisplay,
+                    checked = mediaSettings.value.showHdr,
                     normalRadius = Radius.TopArray,
                     onCheckedChange = { checked ->
-                        hdrDisplay = checked
-                        MediaPreference.setHdrDisplay(context, checked)
+                        mediaSettingsViewModel.setHdrDisplay(checked)
                     }
                 )
             }
@@ -360,7 +357,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.authentication),
                     subtitle = "进入APP时需要进行身份验证",
                     icon = painterResource(id = R.drawable.outline_security_24),
-                    checked = authSwitch,
+                    checked = securitySettings.authSwitch,
                     normalRadius = Radius.TopArray,
                     onCheckedChange = { targetChecked ->
                         val title = if (targetChecked) "启用身份验证" else "关闭身份验证"
@@ -371,8 +368,7 @@ fun SettingsScreen(
                                 it,
                                 object : BiometricHelper.AuthCallback {
                                     override fun onSuccess() {
-                                        authSwitch = targetChecked
-                                        SecurityPreference.setAuthSwitchStat(context, targetChecked)
+                                        securitySettingsViewModel.setAuthSwitchOpen(targetChecked)
                                         android.widget.Toast.makeText(
                                             context,
                                             if (targetChecked) "已启用身份验证" else "已关闭身份验证",
@@ -387,10 +383,9 @@ fun SettingsScreen(
                                             android.widget.Toast.LENGTH_SHORT
                                         ).show()
                                         if (errCode == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE || errCode == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED) {
-                                            authSwitch = false
-                                            SecurityPreference.setAuthSwitchStat(context, false)
+                                            securitySettingsViewModel.setAuthSwitchOpen(false)
                                         } else {
-                                            authSwitch = !targetChecked
+                                            securitySettingsViewModel.setAuthSwitchOpen(!targetChecked)
                                         }
                                     }
 
@@ -419,10 +414,10 @@ fun SettingsScreen(
                             text = { Text(opportunity.title) },
                             onClick = {
                                 authOpportunityExpanded = false
-                                SecurityPreference.setAuthOpportunity(context, opportunity.ordinal)
+                                securitySettingsViewModel.setAuthOpportunity(opportunity.ordinal)
                                 authOpportunityText = opportunity.title
                             },
-                            selected = SecurityPreference.getAuthOpportunity(context) == opportunity.ordinal,
+                            selected = securitySettings.authOpportunity == opportunity.ordinal,
                             shapes = MenuDefaults.itemShape(
                                 opportunity.ordinal,
                                 opportunities.count()
@@ -439,11 +434,10 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.hide_recent_task),
                     subtitle = "在最近任务列表中隐藏",
                     icon = painterResource(id = R.drawable.outline_visibility_off_24),
-                    checked = hideRecentTask,
+                    checked = securitySettings.excludeRecentTask,
                     normalRadius = Radius.BottomArray,
                     onCheckedChange = { checked ->
-                        hideRecentTask = checked
-                        SecurityPreference.setHideRecentTask(checked, context)
+                        securitySettingsViewModel.setExcludeSwitchOpen(checked)
                         WandererJournal.hideTaskFromRecents(context, checked)
                     }
                 )
