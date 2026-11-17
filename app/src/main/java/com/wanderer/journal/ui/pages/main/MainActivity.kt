@@ -17,8 +17,12 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -75,7 +79,6 @@ private fun MainScreen() {
     // 读取 DataStore 数据
     val appSettingsViewModel = dsAppSettingsViewModel()
     val appSettings by appSettingsViewModel.appSettings.collectAsStateWithLifecycle()
-    Log.d("MainActivity", "开屏：" + appSettings.firstScreen)
 
     NavHost(
         navController = navController,
@@ -113,6 +116,15 @@ private fun MainTabs(
         pageCount = { MainDestination.entries.size }
     )
     val scope = rememberCoroutineScope()
+
+    // 当外部 startIndex 变化时，同步一次 Pager，去除无法跳转到初始界面的BUG（因为 DataStore 可能没有加载完全）
+    var pageInit by remember { mutableStateOf(false) }
+    LaunchedEffect(startIndex) {
+        if (pagerState.currentPage != startIndex && !pageInit) {
+            pagerState.scrollToPage(startIndex)
+            pageInit = true
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
