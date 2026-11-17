@@ -73,9 +73,9 @@ import java.time.LocalDate
 
 // 日期选择模式：跳转 or 改某篇日记的日期
 sealed interface DatePickerMode {
-    data object Skip : DatePickerMode                           // 日记列表跳转到指定日期
-    data class Modify(val diary: DiaryEntity) : DatePickerMode  // 修改这篇日记的日期
-    data class Complete(val date: LocalDate) : DatePickerMode   // 补写日记
+    data object Skip : DatePickerMode                               // 日记列表跳转到指定日期
+    data class DateChange(val diary: DiaryEntity) : DatePickerMode  // 修改这篇日记的日期
+    data object Complete : DatePickerMode                           // 补写日记
 }
 
 // 日期选择对话框显示请求
@@ -94,9 +94,6 @@ fun DiaryScreen(
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
     val snackHostState = remember { SnackbarHostState() }
-
-    // 长按 FAB 的日期选择：同样复用 DatePickerDialog
-    var showDatePickerForFab by remember { mutableStateOf(false) }
 
     // 一次性事件（Toast / 错误）
     var exceptionMessage by remember { mutableStateOf("") }
@@ -155,7 +152,10 @@ fun DiaryScreen(
                             )
                         },
                         onLongClick = {
-                            showDatePickerForFab = true
+                            datePickerRequest = DatePickerRequest(
+                                mode = DatePickerMode.Complete,
+                                initDate = LocalDate.now(),
+                            )
                         }
                     ),
             ) {
@@ -194,7 +194,17 @@ fun DiaryScreen(
                         DiaryListItem(
                             item = item,
                             isFirst = index == 0,
-                            isLast = index == state.diaries.lastIndex
+                            isLast = index == state.diaries.lastIndex,
+                            {
+                                datePickerRequest = DatePickerRequest(
+                                    mode = DatePickerMode.DateChange(item.diary),
+                                    initDate = item.diary.diaryDate,
+                                )
+                            },
+                            {
+                                // TODO:完成删除逻辑
+                                TODO()
+                            }
                         )
                     }
                 }
@@ -225,8 +235,13 @@ fun DiaryScreen(
                         listState = listState
                     )
 
-                    is DatePickerMode.Modify -> TODO()
-                    is DatePickerMode.Complete -> TODO()
+                    is DatePickerMode.DateChange -> {
+                        TODO()
+                    }
+
+                    is DatePickerMode.Complete -> {
+                        TODO()
+                    }
                 }
                 datePickerRequest = null
             },
@@ -238,7 +253,9 @@ fun DiaryScreen(
 fun DiaryListItem(
     item: DiaryContentUnionModel,
     isFirst: Boolean,
-    isLast: Boolean
+    isLast: Boolean,
+    onChangeDate: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -308,23 +325,23 @@ fun DiaryListItem(
             }
         }
 
-        // 长按菜单：DropdownMenu（等价于 PopupMenu，Gravity.END）
+        // 长按菜单：DropdownMenu
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.delete_diary)) },
-                onClick = {
-                    expanded = false
-                    // TODO:调用删除方法
-                },
-            )
-            DropdownMenuItem(
                 text = { Text(stringResource(R.string.modify_date)) },
                 onClick = {
                     expanded = false
-                    // TODO:调用日期修改方法
+                    onChangeDate()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.delete_diary)) },
+                onClick = {
+                    expanded = false
+                    onDelete()
                 },
             )
         }
