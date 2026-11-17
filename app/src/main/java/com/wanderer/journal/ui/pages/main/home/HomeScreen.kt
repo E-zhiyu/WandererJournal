@@ -56,7 +56,7 @@ fun HomeScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     val resource = LocalResources.current
 
-    // 1) 第一次组合时喂入提示文本资源并展示一条
+    // 第一次组合时喂入提示文本资源并展示一条
     val tipsArray = stringArrayResource(R.array.tips_array).toList()
     val xiaomiTips = remember {
         if (Build.MANUFACTURER.lowercase().contains("xiaomi"))
@@ -67,12 +67,12 @@ fun HomeScreen(
         vm.nextTip(tipsArray + xiaomiTips)
     }
 
-
     // 统一弹错误对话框
-    var exceptionMessage by remember { mutableStateOf("") }
-    LaunchedEffect(state.errorMessage) {
-        state.errorMessage?.let { msg ->
-            exceptionMessage = msg
+    var exceptionMessage: String? by remember { mutableStateOf(null) }
+    val error by vm.error.collectAsStateWithLifecycle()
+    LaunchedEffect(error) {
+        error?.let { err ->
+            exceptionMessage = err
             vm.consumeError()
         }
     }
@@ -178,7 +178,10 @@ fun HomeScreen(
             Spacer(Modifier.height(2.dp))
 
             // 日记 + 段落 两列卡片
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)
+            ) {
                 StatCard(
                     value = state.diaryCount,
                     title = stringResource(R.string.diary_count),
@@ -203,7 +206,10 @@ fun HomeScreen(
             Spacer(Modifier.height(2.dp))
 
             // 情绪 / 角色 / 认知 三列
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)
+            ) {
                 StatCard(
                     value = state.emotionTagCount,
                     title = stringResource(R.string.emotion_tag),
@@ -239,10 +245,10 @@ fun HomeScreen(
     }
 
     // 错误信息对话框
-    if (exceptionMessage.isNotEmpty()) {
+    exceptionMessage?.let {
         ExceptionDialog(
-            { exceptionMessage = "" },
-            exceptionMessage
+            { exceptionMessage = null },
+            exceptionMessage ?: ""
         )
     }
 }

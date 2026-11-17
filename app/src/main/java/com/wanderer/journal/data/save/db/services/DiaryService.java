@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
@@ -38,54 +37,36 @@ public class DiaryService {
     }
 
     /**
-     * 更新日记日期
-     *
-     * @param diaryId 需要更新日期的日记
-     * @param date    更新后的日期
-     * @param db      数据库实例
-     * @return 受影响的段落数量
-     */
-    public static Completable updateDiaryDate(long diaryId, LocalDate date, @NonNull DiaryDb db) {
-        ParagraphDao paragraphDao = db.paragraphDao();
-        DiaryDao diaryDao = db.diaryDao();
-        return Completable.defer(() -> {
-            diaryDao.modifyDiaryDate(diaryId, date, paragraphDao);
-            return Completable.complete();
-        });
-    }
-
-    /**
      * 删除日记并删除该日记中段落的媒体文件
      *
      * @param diary   待删除的日记对象
      * @param context 上下文
-     * @return {@link Completable}对象
      */
-    public static Completable deleteDiaryAndParagraphMedias(
+    public static void deleteDiaryAndParagraphMedias(
             DiaryEntity diary,
             Context context
     ) {
-        return Completable.fromAction(() -> {
-            DiaryDb db = DiaryDb.getInstance(context);
-            ParagraphDao paragraphDao = db.paragraphDao();
-            DiaryDao diaryDao = db.diaryDao();
-            MediaDao mediaDao = db.mediaDao();
+        if (diary == null) return;
 
-            //获取所有需要删除的媒体数据
-            List<MediaEntity> mediasToBeDeleted = new ArrayList<>();
-            List<ParagraphEntity> paragraphListInDiary = paragraphDao.getParagraphByDiaryId(diary.getDiaryId());
-            for (ParagraphEntity paragraph : paragraphListInDiary) {
-                mediasToBeDeleted.addAll(mediaDao.getMediaByParagraphId(paragraph.getParagraphId()));
-            }
+        DiaryDb db = DiaryDb.getInstance(context);
+        ParagraphDao paragraphDao = db.paragraphDao();
+        DiaryDao diaryDao = db.diaryDao();
+        MediaDao mediaDao = db.mediaDao();
 
-            //删除媒体文件
-            for (MediaEntity media : mediasToBeDeleted) {
-                FileHelper.deleteFile(media.getFileUri(), context);
-            }
+        //获取所有需要删除的媒体数据
+        List<MediaEntity> mediasToBeDeleted = new ArrayList<>();
+        List<ParagraphEntity> paragraphListInDiary = paragraphDao.getParagraphByDiaryId(diary.getDiaryId());
+        for (ParagraphEntity paragraph : paragraphListInDiary) {
+            mediasToBeDeleted.addAll(mediaDao.getMediaByParagraphId(paragraph.getParagraphId()));
+        }
 
-            //删除数据库中的记录
-            diaryDao.deleteDiary(diary);
-        });
+        //删除媒体文件
+        for (MediaEntity media : mediasToBeDeleted) {
+            FileHelper.deleteFile(media.getFileUri(), context);
+        }
+
+        //删除数据库中的记录
+        diaryDao.deleteDiary(diary);
     }
 
     /**

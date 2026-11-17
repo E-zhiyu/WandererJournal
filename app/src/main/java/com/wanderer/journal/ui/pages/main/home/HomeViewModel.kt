@@ -7,6 +7,7 @@ import com.wanderer.journal.data.save.db.DiaryDb
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
@@ -33,7 +34,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     // 唯一可变的状态源：只放"业务数据 + 提示文本 + 错误"
     private val _tips = MutableStateFlow("")
-    private val _error = MutableStateFlow<String?>(null)
 
     // 6 个 DAO 的 Flow，直接 combine
     private val startDateFlow = db.diaryDao().getEarliestDiaryDateFlow()
@@ -62,6 +62,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         // 这里返回一个自定义的计数数据类，或直接构造中间状态
         Counts(diary, paragraph, emotion, role, lifeNote)
     }
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     // 再组合剩余的部分
     private val _uiState: StateFlow<HomeUiState> = combine(
@@ -100,10 +103,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun nextTip(pool: List<String>) {
         if (pool.isEmpty()) return
         _tips.value = "tip : " + pool.random()
-    }
-
-    fun reportError(message: String?) {
-        _error.value = message
     }
 
     fun consumeError() {

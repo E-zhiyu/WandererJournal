@@ -45,19 +45,21 @@ fun ExceptionDialog(
             Column(
                 modifier = Modifier.verticalScroll(scrollState)
             ) {
-                Text(message)
+                Text(message.ifEmpty { "发生错误" })
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                scope.launch {
-                    val clipData = ClipData.newPlainText("[Wanderer]$errTitle", message)
-                    val clipEntry = ClipEntry(clipData)
-                    clipboard.setClipEntry(clipEntry)
-                    Toast.makeText(context, "错误信息已复制", Toast.LENGTH_SHORT).show()
+            if (message.isNotEmpty()) {
+                TextButton(onClick = {
+                    scope.launch {
+                        val clipData = ClipData.newPlainText("[Wanderer]$errTitle", message)
+                        val clipEntry = ClipEntry(clipData)
+                        clipboard.setClipEntry(clipEntry)
+                        Toast.makeText(context, "错误信息已复制", Toast.LENGTH_SHORT).show()
+                    }
+                }) {
+                    Text("复制内容")
                 }
-            }) {
-                Text("复制内容")
             }
         },
         dismissButton = {
@@ -66,4 +68,17 @@ fun ExceptionDialog(
             }
         }
     )
+}
+
+/**
+ * 显示错误对话框
+ * @param onDismiss 对话框消失回调
+ * @param throwable 需要显示的内容
+ */
+@Composable
+fun ExceptionDialog(
+    onDismiss: () -> Unit,
+    throwable: Throwable
+) {
+    ExceptionDialog(onDismiss, throwable.message ?: "")
 }

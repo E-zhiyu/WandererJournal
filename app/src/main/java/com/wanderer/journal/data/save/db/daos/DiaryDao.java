@@ -110,15 +110,6 @@ public interface DiaryDao {
     Long getDiaryIdByDate(LocalDate date);
 
     /**
-     * 通过多线程获取指定日期的日记
-     *
-     * @param date 待查询的日期
-     * @return 该日期的日记（无则通过{@link Optional}返回 null
-     */
-    @Query("SELECT * FROM diaries WHERE diaryDate == :date")
-    DiaryEntity getDiaryByDate(LocalDate date);
-
-    /**
      * 通过日期删除日记
      *
      * @param date 待删除日记的日期

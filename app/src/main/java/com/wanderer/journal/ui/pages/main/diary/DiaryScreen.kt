@@ -95,7 +95,7 @@ fun DiaryScreen(
     val snackHostState = remember { SnackbarHostState() }
 
     // 一次性事件（Toast / 错误）
-    var exceptionMessage by remember { mutableStateOf("") }
+    var exceptionMessage: String? by remember { mutableStateOf(null) }
     LaunchedEffect(events) {
         events?.let { evt ->
             when (evt) {
@@ -189,8 +189,7 @@ fun DiaryScreen(
                                 )
                             },
                             {
-                                // TODO:完成删除逻辑
-                                TODO()
+                                vm.deleteDiary(item.diary)
                             }
                         )
                     }
@@ -200,10 +199,10 @@ fun DiaryScreen(
     }
 
     // 错误信息对话框
-    if (exceptionMessage.isNotEmpty()) {
+    exceptionMessage?.let {
         ExceptionDialog(
-            { exceptionMessage = "" },
-            exceptionMessage
+            { exceptionMessage = null },
+            exceptionMessage ?: ""
         )
     }
 
@@ -223,7 +222,7 @@ fun DiaryScreen(
                     )
 
                     is DatePickerMode.DateChange -> {
-                        TODO()
+                        vm.updateDiaryDate(mode.diary, selected)
                     }
 
                     is DatePickerMode.Complete -> {

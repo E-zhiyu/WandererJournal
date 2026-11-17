@@ -7,6 +7,7 @@ import com.wanderer.journal.data.save.db.DiaryDb
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.data.save.db.services.DiaryService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -52,9 +53,12 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
         _events.value = null
     }
 
-    // 3) 删除日记
+    /**
+     * 删除日记
+     * @param diary 需要删除的日记
+     */
     fun deleteDiary(diary: DiaryEntity) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 DiaryService.deleteDiaryAndParagraphMedias(diary, getApplication())
                 _events.value = DiaryUiEvent.Toast("日记删除成功")
@@ -64,22 +68,15 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // 4) 修改日期（先查目标日期是否有日记，由 UI 层决定是否覆盖）
-    fun checkTargetDateExists(targetDate: LocalDate, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            try {
-                val exists = db.diaryDao().getDiaryByDate(targetDate) != null
-                onResult(exists)
-            } catch (e: Exception) {
-                _events.value = DiaryUiEvent.Error(e)
-            }
-        }
-    }
-
+    /**
+     * 更新日记日期
+     * @param diary 需要更新日期的日记
+     * @param targetDate 更新后的日期
+     */
     fun updateDiaryDate(diary: DiaryEntity, targetDate: LocalDate) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                DiaryService.updateDiaryDate(diary.diaryId, targetDate, db)
+                db.diaryDao().modifyDiaryDate(diary.diaryId, targetDate, db.paragraphDao())
                 _events.value = DiaryUiEvent.Toast("日期更新完毕")
             } catch (e: Exception) {
                 _events.value = DiaryUiEvent.Error(e)
