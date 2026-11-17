@@ -34,7 +34,6 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
 
     // 1) 日记列表：DB → Flow，自动刷新
     private val diariesFlow = db.diaryDao().getAllDiariesFlow()
-        .map { list -> list }
 
     val uiState: StateFlow<DiaryUiState> = diariesFlow
         .map { list -> DiaryUiState(list, list.isEmpty(), isLoading = false) }
@@ -91,12 +90,15 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
     // 5) 目标日期在列表中的位置（用于滚动）
     fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int) -> Unit) {
         viewModelScope.launch {
-            try {
-                val position = db.diaryDao().getDiaryCountBeforeDate(targetDate)
+            diariesFlow.collect { modelList ->
+                var position = 0
+                for (model in modelList) {
+                    if (!model.diary.diaryDate.isAfter(targetDate)) {
+                        break
+                    }
+                    position++
+                }
                 onResult(position)
-            } catch (e: Exception) {
-                _events.value = DiaryUiEvent.Error(e)
-                onResult(-1)
             }
         }
     }

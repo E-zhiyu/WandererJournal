@@ -188,7 +188,7 @@ fun DiaryScreen(
 
     // 日期跳转对日期选择话框
     if (showDatePickerForSkip) {
-        SkipDateDialog(
+        DatePickerDialog(
             initial = datePickerInitial,
             onDismiss = { showDatePickerForSkip = false },
             onConfirm = { targetDate ->
@@ -206,8 +206,11 @@ fun DiaryScreen(
                                 val exact = state.diaries.getOrNull(actualPos)?.diary?.diaryDate
                                 if (exact != null && !exact.isEqual(targetDate)) {
                                     snackHostState.showSnackbar("当天无日记，已跳转至相邻日期")
+                                } else {
+                                    snackHostState.showSnackbar("已跳转至目标日期")
                                 }
                             }
+
                             // 折叠 AppBar + 滚动
                             scrollBehavior.state.heightOffset =
                                 scrollBehavior.state.heightOffsetLimit
@@ -331,7 +334,7 @@ fun DiaryListItem(
 }
 
 @Composable
-private fun SkipDateDialog(
+private fun DatePickerDialog(
     initial: LocalDate?,
     onDismiss: () -> Unit,
     onConfirm: (LocalDate) -> Unit,

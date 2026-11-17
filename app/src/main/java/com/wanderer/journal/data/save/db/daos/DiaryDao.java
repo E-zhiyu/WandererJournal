@@ -92,15 +92,6 @@ public interface DiaryDao {
     Single<List<LocalDate>> getDiaryDateSingle(LocalDate end);
 
     /**
-     * 获取某个日期之后（不包括该日期）的日记数量
-     *
-     * @param start 起始日期（不包含该日期）
-     * @return 日记数量
-     */
-    @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start")
-    Integer getDiaryCountBeforeDate(LocalDate start);
-
-    /**
      * 插入一条日记
      *
      * @param diary 新日记内容
