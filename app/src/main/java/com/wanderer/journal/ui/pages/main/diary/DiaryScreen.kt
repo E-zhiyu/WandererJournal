@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
+import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
@@ -96,7 +98,9 @@ fun DiaryScreen(
         }
     }
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        rememberTopAppBarState()
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -124,8 +128,7 @@ fun DiaryScreen(
             FloatingActionButton(
                 onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) },
                 modifier = Modifier
-                    .padding(16.dp)
-                    // 长按处理：Compose 中用 combinedClickable 实现
+                    .padding(4.dp)
                     .combinedClickable(
                         onClick = {
                             context.startActivity(
@@ -148,7 +151,7 @@ fun DiaryScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(top = inner.calculateTopPadding())
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
             if (state.isEmpty && !state.isLoading) {
@@ -161,7 +164,12 @@ fun DiaryScreen(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 5.dp, bottom = 5.dp),
+                    contentPadding = PaddingValues(
+                        top = 5.dp,
+                        bottom = 5.dp,
+                        start = Interval.SidePadding,
+                        end = Interval.SidePadding
+                    ),
                 ) {
                     itemsIndexed(
                         items = state.diaries,
