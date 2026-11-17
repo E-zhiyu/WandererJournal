@@ -57,10 +57,10 @@ import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.ParagraphTextConverter
-import com.wanderer.journal.helpers.time.DateTimePickerHelper
 import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
@@ -226,7 +226,13 @@ fun DiaryScreen(
                     }
 
                     is DatePickerMode.Complete -> {
-                        TODO()
+                        val intent = Intent(context, WriteActivity::class.java).apply {
+                            putExtra(
+                                KeyStrings.INIT_DATE.v(),
+                                DateTimeConverter.fromLocalDate(selected)
+                            )
+                        }
+                        context.startActivity(intent)
                     }
                 }
                 datePickerRequest = null
@@ -266,7 +272,7 @@ fun DiaryListItem(
                 val intent = Intent(context, ReadActivity::class.java).apply {
                     putExtra(
                         KeyStrings.INIT_DATE.v(),
-                        DateTimePickerHelper.fromLocalDate(item.diary.diaryDate)
+                        DateTimeConverter.fromLocalDate(item.diary.diaryDate)
                     )
                 }
                 context.startActivity(intent)
@@ -342,7 +348,7 @@ private fun DiaryDatePickerDialog(
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDate?.let {
-            DateTimePickerHelper.fromLocalDate(it)
+            DateTimeConverter.fromLocalDate(it)
         }
     )
     DatePickerDialog(
@@ -351,7 +357,7 @@ private fun DiaryDatePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let {
-                    onConfirm(DateTimePickerHelper.getLocalDateFromTimeMilli(it))
+                    onConfirm(DateTimeConverter.toLocalDate(it))
                 }
                 onDismiss()
             }) { Text("确定") }
