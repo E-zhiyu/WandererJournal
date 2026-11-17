@@ -32,6 +32,7 @@ import com.wanderer.journal.data.save.preference.VersionPreference
 import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.ui.pages.ScreenRoutes
+import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
@@ -153,7 +154,7 @@ private fun MainTabs(
             userScrollEnabled = true
         ) { page ->
             when (MainDestination.entries[page]) {
-//                MainDestination.DIARY -> FragmentHost { DiaryFragment() }
+                MainDestination.DIARY -> DiaryScreen()
                 MainDestination.HOME -> HomeScreen()
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable()

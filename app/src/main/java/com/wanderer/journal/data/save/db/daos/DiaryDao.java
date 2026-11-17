@@ -10,7 +10,7 @@ import androidx.room.Update;
 
 import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryListUiModel;
+import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel;
 import com.wanderer.journal.data.save.db.entities.composite.union.DiaryLengthUnionModel;
 
 import java.time.LocalDate;
@@ -53,7 +53,7 @@ public interface DiaryDao {
     /**
      * 获取所有日记，并附带日记段落片段和日记长度数据
      *
-     * @return 由{@link DiaryListUiModel}组成的列表，支持响应式更新
+     * @return 由{@link DiaryContentUnionModel}组成的列表，支持响应式更新
      */
     @Query("SELECT d.*," +
             "CASE " +
@@ -67,7 +67,7 @@ public interface DiaryDao {
             " WHERE parentDiaryId = d.diaryId) as charCount " +
             "FROM diaries d " +
             "ORDER BY diaryDate DESC")
-    Flowable<List<DiaryListUiModel>> getAllDiariesFlowable();
+    Flow<List<DiaryContentUnionModel>> getAllDiariesFlow();
 
     /**
      * 获取日记段落的字符数量数据，支持响应式更新
@@ -98,7 +98,7 @@ public interface DiaryDao {
      * @return 日记数量
      */
     @Query("SELECT COUNT(*) FROM diaries WHERE diaryDate > :start")
-    Single<Integer> getDiaryCountBeforeDateSingle(LocalDate start);
+    Integer getDiaryCountBeforeDate(LocalDate start);
 
     /**
      * 插入一条日记
@@ -125,7 +125,7 @@ public interface DiaryDao {
      * @return 该日期的日记（无则通过{@link Optional}返回 null
      */
     @Query("SELECT * FROM diaries WHERE diaryDate == :date")
-    Single<Optional<DiaryEntity>> getDiarySingleByDate(LocalDate date);
+    DiaryEntity getDiaryByDate(LocalDate date);
 
     /**
      * 通过日期删除日记

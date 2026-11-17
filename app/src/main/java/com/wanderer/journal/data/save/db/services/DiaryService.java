@@ -42,11 +42,10 @@ public class DiaryService {
      *
      * @param diaryId 需要更新日期的日记
      * @param date    更新后的日期
-     * @param context 上下文
+     * @param db      数据库实例
      * @return 受影响的段落数量
      */
-    public static Completable updateDiaryDate(long diaryId, LocalDate date, Context context) {
-        DiaryDb db = DiaryDb.getInstance(context);
+    public static Completable updateDiaryDate(long diaryId, LocalDate date, @NonNull DiaryDb db) {
         ParagraphDao paragraphDao = db.paragraphDao();
         DiaryDao diaryDao = db.diaryDao();
         return Completable.defer(() -> {
