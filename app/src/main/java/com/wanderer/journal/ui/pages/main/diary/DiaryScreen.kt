@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -57,6 +59,7 @@ import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
+import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.ParagraphTextConverter
 import com.wanderer.journal.helpers.time.DateTimePickerHelper
@@ -64,8 +67,22 @@ import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+
+// 日期选择模式：跳转 or 改某篇日记的日期
+sealed interface DatePickerMode {
+    data object Skip : DatePickerMode                           // 日记列表跳转到指定日期
+    data class Modify(val diary: DiaryEntity) : DatePickerMode  // 修改这篇日记的日期
+    data class Complete(val date: LocalDate) : DatePickerMode   // 补写日记
+}
+
+// 日期选择对话框显示请求
+data class DatePickerRequest(
+    val mode: DatePickerMode,
+    val initDate: LocalDate?
+)
 
 @Composable
 fun DiaryScreen(
@@ -74,14 +91,9 @@ fun DiaryScreen(
     val context = LocalContext.current
     val state by vm.uiState.collectAsStateWithLifecycle()
     val events by vm.events.collectAsStateWithLifecycle()
-
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val snackHostState = remember { SnackbarHostState() }
-
-    // 日期选择器触发状态（Material3 的 DatePickerDialog 是弹窗形式）
-    var showDatePickerForSkip by remember { mutableStateOf(false) }
-    var datePickerInitial by remember { mutableStateOf<LocalDate?>(null) }
 
     // 长按 FAB 的日期选择：同样复用 DatePickerDialog
     var showDatePickerForFab by remember { mutableStateOf(false) }
@@ -98,6 +110,11 @@ fun DiaryScreen(
         }
     }
 
+    // 对话框状态：null = 不显示；非 null = 显示，且携带模式
+    var datePickerRequest by remember {
+        mutableStateOf<DatePickerRequest?>(null)
+    }
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -110,11 +127,10 @@ fun DiaryScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
-                        // 跳转日期：取当前首项作为初始值（近似原逻辑）
-                        datePickerInitial = state.diaries.getOrNull(
-                            listState.firstVisibleItemIndex
-                        )?.diary?.diaryDate
-                        showDatePickerForSkip = true
+                        datePickerRequest = DatePickerRequest(
+                            mode = DatePickerMode.Skip,
+                            initDate = state.diaries.getOrNull(listState.firstVisibleItemIndex)?.diary?.diaryDate,
+                        )
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.outline_date_range_24),
@@ -186,52 +202,34 @@ fun DiaryScreen(
         }
     }
 
-    // 日期跳转对日期选择话框
-    if (showDatePickerForSkip) {
-        DatePickerDialog(
-            initial = datePickerInitial,
-            onDismiss = { showDatePickerForSkip = false },
-            onConfirm = { targetDate ->
-                vm.findScrollTargetPosition(
-                    targetDate = targetDate,
-                    onResult = { count ->
-                        scope.launch {
-                            // 判断越界 / 是否为当天无日记
-                            val actualPos = if (count >= state.diaries.size) count - 1 else count
-                            if (count >= state.diaries.size) {
-                                snackHostState.showSnackbar("已跳转至最早的日期")
-                            } else if (count == 0) {
-                                snackHostState.showSnackbar("已跳转至最晚的日期")
-                            } else {
-                                val exact = state.diaries.getOrNull(actualPos)?.diary?.diaryDate
-                                if (exact != null && !exact.isEqual(targetDate)) {
-                                    snackHostState.showSnackbar("当天无日记，已跳转至相邻日期")
-                                } else {
-                                    snackHostState.showSnackbar("已跳转至目标日期")
-                                }
-                            }
-
-                            // 折叠 AppBar + 滚动
-                            scrollBehavior.state.heightOffset =
-                                scrollBehavior.state.heightOffsetLimit
-                            listState.animateScrollToItem(
-                                actualPos.coerceIn(
-                                    0,
-                                    state.diaries.lastIndex
-                                )
-                            )
-                        }
-                    }
-                )
-            }
-        )
-    }
-
     // 错误信息对话框
     if (exceptionMessage.isNotEmpty()) {
         ExceptionDialog(
             { exceptionMessage = "" },
             exceptionMessage
+        )
+    }
+
+    // 日期选择对话框
+    datePickerRequest?.let { req ->
+        DiaryDatePickerDialog(
+            initialDate = req.initDate,
+            onDismiss = { datePickerRequest = null },
+            onConfirm = { selected ->
+                when (val mode = req.mode) {
+                    is DatePickerMode.Skip -> handleSkipDate(
+                        vm = vm,
+                        scope = scope,
+                        targetDate = selected,
+                        scrollBehavior = scrollBehavior,
+                        listState = listState
+                    )
+
+                    is DatePickerMode.Modify -> TODO()
+                    is DatePickerMode.Complete -> TODO()
+                }
+                datePickerRequest = null
+            },
         )
     }
 }
@@ -334,16 +332,18 @@ fun DiaryListItem(
 }
 
 @Composable
-private fun DatePickerDialog(
-    initial: LocalDate?,
+private fun DiaryDatePickerDialog(
+    initialDate: LocalDate?,
     onDismiss: () -> Unit,
     onConfirm: (LocalDate) -> Unit,
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initial?.let { DateTimePickerHelper.fromLocalDate(it) }
+        initialSelectedDateMillis = initialDate?.let {
+            DateTimePickerHelper.fromLocalDate(it)
+        }
     )
-    //TODO:修复对话框充满屏幕宽度的BUG
     DatePickerDialog(
+        modifier = Modifier.padding(horizontal = 24.dp),
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
@@ -355,6 +355,32 @@ private fun DatePickerDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     ) {
+        // TODO:修复充满屏幕宽度的BUG
         DatePicker(state = datePickerState)
     }
+}
+
+/**
+ * 跳转到指定日期的日记
+ * @param targetDate 需要跳转到的日期
+ */
+private fun handleSkipDate(
+    vm: DiaryViewModel,
+    scope: CoroutineScope,
+    targetDate: LocalDate,
+    scrollBehavior: TopAppBarScrollBehavior,
+    listState: LazyListState
+) {
+    vm.findScrollTargetPosition(
+        targetDate = targetDate,
+        onResult = { position ->
+            scope.launch {
+                // 折叠 AppBar + 滚动
+                scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
+                listState.animateScrollToItem(position)
+                // TODO:滚动动画特别卡
+                // TODO:增加闪烁动画
+            }
+        }
+    )
 }

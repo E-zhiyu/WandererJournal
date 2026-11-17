@@ -87,7 +87,11 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // 5) 目标日期在列表中的位置（用于滚动）
+    /**
+     * 目标日期在列表中的位置
+     * @param targetDate 目标日期
+     * @param onResult 查询成功的回调，包含查询到的下标
+     */
     fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int) -> Unit) {
         viewModelScope.launch {
             diariesFlow.collect { modelList ->
@@ -98,7 +102,23 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     position++
                 }
-                onResult(position)
+
+                val message: String
+                if (position >= modelList.size) {
+                    message = "已跳转至最早的日期"
+                } else if (position == 0) {
+                    message = "已跳转至最晚的日期"
+                } else {
+                    val exact = modelList.getOrNull(position)?.diary?.diaryDate
+                    message = if (exact != null && !exact.isEqual(targetDate)) {
+                        "当天无日记，已跳转至相邻日期"
+                    } else {
+                        "已跳转至目标日期"
+                    }
+                }
+
+                _events.value = DiaryUiEvent.Toast(message)
+                onResult(position.coerceIn(0, modelList.lastIndex))
             }
         }
     }
