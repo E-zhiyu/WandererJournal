@@ -148,7 +148,4 @@ dependencies {
     implementation(libs.kotlinx.serialization.json) // Kotlin Json 反序列化
     implementation(libs.compose.markdown)       // Markdown 文本组件
     implementation(libs.constraintlayout.compose)
-
-    // TODO:临时 Fragment 过渡
-    implementation(libs.fragment.ktx)
 }
