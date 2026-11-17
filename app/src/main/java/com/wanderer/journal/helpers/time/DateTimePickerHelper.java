@@ -237,7 +237,7 @@ public class DateTimePickerHelper {
      * @param date 需要转换为时间戳{@link LocalDate}对象
      * @return 转换后的 UTC 时间戳
      */
-    private static Long fromLocalDate(LocalDate date) {
+    public static Long fromLocalDate(LocalDate date) {
         // 将 LocalDate 转为该日凌晨的时间戳
         return date == null ? null : date.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
     }

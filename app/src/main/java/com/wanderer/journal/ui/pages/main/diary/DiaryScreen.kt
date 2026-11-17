@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -58,11 +57,11 @@ import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.ParagraphTextConverter
 import com.wanderer.journal.helpers.time.DateTimePickerHelper
 import com.wanderer.journal.ui.components.ExceptionDialog
+import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import kotlinx.coroutines.launch
@@ -179,25 +178,7 @@ fun DiaryScreen(
                         DiaryListItem(
                             item = item,
                             isFirst = index == 0,
-                            isLast = index == state.diaries.lastIndex,
-                            onClick = {
-                                val intent = Intent(context, ReadActivity::class.java).apply {
-                                    putExtra(
-                                        KeyStrings.INIT_DATE.v(),
-                                        DateTimeConverter.fromLocalDate(item.diary.diaryDate)
-                                    )
-                                }
-                                context.startActivity(intent)
-                            },
-                            onLongClick = {
-                                //TODO 长按弹出菜单：Compose 中用 DropdownMenu 实现
-                                // 这里通过状态控制，见下方 DiaryListItem 内部
-                            },
-                            onDelete = { vm.deleteDiary(item.diary) },
-                            onModifyDate = {
-                                datePickerInitial = item.diary.diaryDate
-                                /* 进入改日期流程，见下方 */
-                            },
+                            isLast = index == state.diaries.lastIndex
                         )
                     }
                 }
@@ -256,35 +237,37 @@ fun DiaryScreen(
 fun DiaryListItem(
     item: DiaryContentUnionModel,
     isFirst: Boolean,
-    isLast: Boolean,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    onDelete: () -> Unit,
-    onModifyDate: () -> Unit,
+    isLast: Boolean
 ) {
     val context = LocalContext.current
 
-    // 首项/末项圆角：等价于原 setRecyclerItemRadius
-    val shape = when {
-        isFirst && isLast -> Radius.Single
-        isFirst -> Radius.Top
-        isLast -> Radius.Bottom
-        else -> Radius.Middle
+    // 首项/末项圆角
+    val normalRadius = when {
+        isFirst && isLast -> Radius.SingleArray
+        isFirst -> Radius.TopArray
+        isLast -> Radius.BottomArray
+        else -> Radius.MiddleArray
     }
 
     var expanded by remember { mutableStateOf(false) }
-    var anchorView by remember { mutableStateOf<android.view.View?>(null) }
 
-    Box {
-        Card(
-            shape = shape,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 2.dp)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = { expanded = true }
-                ),
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 1.dp)
+    ) {
+        PressableCard(
+            normalRadius = normalRadius,
+            onClick = {
+                val intent = Intent(context, ReadActivity::class.java).apply {
+                    putExtra(
+                        KeyStrings.INIT_DATE.v(),
+                        DateTimePickerHelper.fromLocalDate(item.diary.diaryDate)
+                    )
+                }
+                context.startActivity(intent)
+            },
+            onLongClick = { expanded = true }
         ) {
             Column(Modifier.padding(start = 15.dp, top = 10.dp, end = 15.dp, bottom = 10.dp)) {
                 Text(
@@ -333,14 +316,14 @@ fun DiaryListItem(
                 text = { Text(stringResource(R.string.delete_diary)) },
                 onClick = {
                     expanded = false
-                    onDelete()
+                    // TODO:调用删除方法
                 },
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.modify_date)) },
                 onClick = {
                     expanded = false
-                    onModifyDate()
+                    // TODO:调用日期修改方法
                 },
             )
         }
@@ -354,8 +337,9 @@ private fun SkipDateDialog(
     onConfirm: (LocalDate) -> Unit,
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initial?.let { DateTimeConverter.fromLocalDate(it) }
+        initialSelectedDateMillis = initial?.let { DateTimePickerHelper.fromLocalDate(it) }
     )
+    //TODO:修复对话框充满屏幕宽度的BUG
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
