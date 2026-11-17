@@ -232,7 +232,7 @@ fun AboutScreen(
                 onClick = { showRepoDialog = true }
             )
 
-            Spacer(modifier = Modifier.height(1.dp))
+            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
 
             // 4. 疑难解答卡片
             SettingItemCard(

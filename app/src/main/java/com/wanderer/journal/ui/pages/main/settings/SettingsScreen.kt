@@ -150,7 +150,7 @@ fun SettingsScreen(
             // 动态配色 (仅 Android 12L+ 支持)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
                 item {
-                    Spacer(modifier = Modifier.height(1.dp))
+                    Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                     SettingSwitchItem(
                         title = stringResource(id = R.string.dynamic_color),
                         subtitle = "将壁纸颜色作为APP主题色",
@@ -172,7 +172,7 @@ fun SettingsScreen(
 
             // 启动界面 (Spinner)
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingSpinnerItem(
                     title = stringResource(id = R.string.select_first_screen),
                     subtitle = "选择启动的第一屏",
@@ -202,7 +202,7 @@ fun SettingsScreen(
 
             // 自动检测更新
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingSwitchItem(
                     title = stringResource(id = R.string.auto_update_check),
                     subtitle = "应用启动后自动检查更新",
@@ -235,7 +235,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.data_manage),
                     subtitle = "跳转至数据管理界面",
@@ -252,7 +252,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.diary_alarm),
                     subtitle = "跳转至日记提醒设置界面",
@@ -269,7 +269,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.share_settings),
                     subtitle = "跳转至分享设置界面",
@@ -302,7 +302,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.media_list),
                     subtitle = "点击进入媒体文件列表",
@@ -370,7 +370,7 @@ fun SettingsScreen(
 
             // 身份验证时机
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingSpinnerItem(
                     title = stringResource(id = R.string.authentication_opportunity),
                     subtitle = "进行身份验证的时机",
@@ -400,7 +400,7 @@ fun SettingsScreen(
 
             // 最近任务隐藏
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingSwitchItem(
                     title = stringResource(id = R.string.hide_recent_task),
                     subtitle = "在最近任务列表中隐藏",
@@ -426,7 +426,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.changelog),
                     normalRadius = Radius.MiddleArray,
@@ -435,7 +435,7 @@ fun SettingsScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
                     title = stringResource(id = R.string.update_check),
                     icon = painterResource(id = R.drawable.outline_update_24),

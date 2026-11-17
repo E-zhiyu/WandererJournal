@@ -178,7 +178,7 @@ fun HomeScreen(
             Spacer(Modifier.height(2.dp))
 
             // 日记 + 段落 两列卡片
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)) {
                 StatCard(
                     value = state.diaryCount,
                     title = stringResource(R.string.diary_count),
@@ -203,7 +203,7 @@ fun HomeScreen(
             Spacer(Modifier.height(2.dp))
 
             // 情绪 / 角色 / 认知 三列
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Interval.AdjacentPadding)) {
                 StatCard(
                     value = state.emotionTagCount,
                     title = stringResource(R.string.emotion_tag),
