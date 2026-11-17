@@ -6,34 +6,26 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity;
 
 public class DiaryContentUnionModel {
     @Embedded
-    private DiaryEntity diary;          //日记实体
-    private String paragraphFragment;   //首段摘要
-    private int charCount;              //日记字数
+    private final DiaryEntity diary;        //日记实体
+    private final String paragraphFragment; //首段摘要
+    private final int charCount;            //日记字数
 
-    public DiaryContentUnionModel() {
+
+    public DiaryContentUnionModel(DiaryEntity diary, String paragraphFragment, int charCount) {
+        this.diary = diary;
+        this.paragraphFragment = paragraphFragment;
+        this.charCount = charCount;
     }
 
     public DiaryEntity getDiary() {
         return diary;
     }
 
-    public void setDiary(DiaryEntity diary) {
-        this.diary = diary;
-    }
-
     public String getParagraphFragment() {
         return paragraphFragment;
     }
 
-    public void setParagraphFragment(String paragraphFragment) {
-        this.paragraphFragment = paragraphFragment;
-    }
-
     public int getCharCount() {
         return charCount;
-    }
-
-    public void setCharCount(int charCount) {
-        this.charCount = charCount;
     }
 }
