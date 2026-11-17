@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages.main.diary
 
 import android.content.Intent
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,7 +21,6 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -65,6 +63,7 @@ import com.wanderer.journal.helpers.text.ParagraphTextConverter
 import com.wanderer.journal.helpers.time.DateTimePickerHelper
 import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
+import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import kotlinx.coroutines.CoroutineScope
@@ -80,8 +79,8 @@ sealed interface DatePickerMode {
 
 // 日期选择对话框显示请求
 data class DatePickerRequest(
-    val mode: DatePickerMode,
-    val initDate: LocalDate?
+    val mode: DatePickerMode,   // 日期选择的请求种类
+    val initDate: LocalDate?    // 日期选择对话框的初始日期
 )
 
 @Composable
@@ -138,26 +137,14 @@ fun DiaryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            PressableFAB(
                 onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) },
-                modifier = Modifier
-                    .padding(4.dp)
-                    .combinedClickable(
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    context,
-                                    WriteActivity::class.java
-                                )
-                            )
-                        },
-                        onLongClick = {
-                            datePickerRequest = DatePickerRequest(
-                                mode = DatePickerMode.Complete,
-                                initDate = LocalDate.now(),
-                            )
-                        }
-                    ),
+                onLongClick = {
+                    datePickerRequest = DatePickerRequest(
+                        mode = DatePickerMode.Complete,
+                        initDate = LocalDate.now(),
+                    )
+                }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.btn_add))
             }
@@ -272,7 +259,7 @@ fun DiaryListItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 1.dp)
+            .padding(top = Interval.AdjacentPadding)
     ) {
         PressableCard(
             normalRadius = normalRadius,

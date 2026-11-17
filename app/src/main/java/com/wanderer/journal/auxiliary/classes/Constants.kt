@@ -6,10 +6,12 @@ import androidx.compose.ui.unit.dp
 // 圆角相关静态值
 object Radius {
     // 圆角大小值
+    val XLarge = 32.dp
     val Large = 20.dp
+    val Medium = 16.dp
     val Small = 4.dp
 
-    // 圆角样式
+    // 列表项圆角样式
     val Top =
         RoundedCornerShape(topStart = Large, topEnd = Large, bottomStart = Small, bottomEnd = Small)
     val Middle =
@@ -19,11 +21,14 @@ object Radius {
     val Single =
         RoundedCornerShape(topStart = Large, topEnd = Large, bottomStart = Large, bottomEnd = Large)
 
-    // 不同样式的圆角数组
+    // 列表项圆角数组
     val TopArray = arrayOf(Large, Large, Small, Small)
     val MiddleArray = arrayOf(Small, Small, Small, Small)
     val BottomArray = arrayOf(Small, Small, Large, Large)
     val SingleArray = arrayOf(Large, Large, Large, Large)
+
+    // FAB 圆角数组
+    val FabArray = arrayOf(Medium, Medium, Medium, Medium)
 }
 
 // 边距相关静态值
