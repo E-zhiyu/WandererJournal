@@ -60,9 +60,9 @@ import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
-import com.wanderer.journal.helpers.ExceptionHelper
 import com.wanderer.journal.helpers.text.ParagraphTextConverter
 import com.wanderer.journal.helpers.time.DateTimePickerHelper
+import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import kotlinx.coroutines.launch
@@ -88,11 +88,12 @@ fun DiaryScreen(
     var showDatePickerForFab by remember { mutableStateOf(false) }
 
     // 一次性事件（Toast / 错误）
+    var exceptionMessage by remember { mutableStateOf("") }
     LaunchedEffect(events) {
         events?.let { evt ->
             when (evt) {
                 is DiaryUiEvent.Toast -> snackHostState.showSnackbar(evt.message)
-                is DiaryUiEvent.Error -> ExceptionHelper.showExceptionDialog(context, evt.throwable)
+                is DiaryUiEvent.Error -> exceptionMessage = evt.throwable.message ?: ""
             }
             vm.consumeEvent()
         }
@@ -239,6 +240,14 @@ fun DiaryScreen(
                     }
                 )
             }
+        )
+    }
+
+    // 错误信息对话框
+    if (exceptionMessage.isNotEmpty()) {
+        ExceptionDialog(
+            { exceptionMessage = "" },
+            exceptionMessage
         )
     }
 }

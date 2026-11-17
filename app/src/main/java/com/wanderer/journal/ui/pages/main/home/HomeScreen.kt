@@ -67,9 +67,9 @@ fun HomeScreen(
         vm.nextTip(tipsArray + xiaomiTips)
     }
 
-    var exceptionMessage by remember { mutableStateOf("") }
 
-    // 2) 统一弹错误对话框
+    // 统一弹错误对话框
+    var exceptionMessage by remember { mutableStateOf("") }
     LaunchedEffect(state.errorMessage) {
         state.errorMessage?.let { msg ->
             exceptionMessage = msg
