@@ -73,7 +73,7 @@ fun SettingsScreen(
     val updateSettingsViewModel = dsUpdateViewModel()
     val updateSettings by updateSettingsViewModel.update.collectAsStateWithLifecycle()
     val mediaSettingsViewModel = dsMediaSettingsViewModel()
-    val mediaSettings = mediaSettingsViewModel.mediaSettings.collectAsStateWithLifecycle()
+    val mediaSettings by mediaSettingsViewModel.mediaSettings.collectAsStateWithLifecycle()
     val securitySettingsViewModel = dsSecurityViewModel()
     val securitySettings by securitySettingsViewModel.securitySettings.collectAsStateWithLifecycle()
 
@@ -109,7 +109,7 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(horizontal = Interval.SidePadding),
             contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
@@ -294,7 +294,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.hdr_display_effect),
                     subtitle = "全屏查看图片时支持HDR显示",
                     icon = painterResource(id = R.drawable.outline_hdr_on_24),
-                    checked = mediaSettings.value.showHdr,
+                    checked = mediaSettings.showHdr,
                     normalRadius = Radius.TopArray,
                     onCheckedChange = { checked ->
                         mediaSettingsViewModel.setHdrDisplay(checked)

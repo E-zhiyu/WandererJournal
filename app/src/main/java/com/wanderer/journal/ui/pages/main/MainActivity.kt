@@ -18,18 +18,20 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.wanderer.journal.auxiliary.enums.unique.LogTags
-import com.wanderer.journal.data.save.preference.AppSettingsPreference
 import com.wanderer.journal.data.save.preference.VersionPreference
+import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
@@ -53,13 +55,9 @@ class MainActivity : ComponentActivity() {
             disposable.add(UpdateHelper.checkUpdate(this, false))
         }
 
-        val startIndex = AppSettingsPreference.getFirstScreen(this).coerceIn(
-            0, MainDestination.entries.lastIndex
-        )
-
         setContent {
             MaterialAppTheme {
-                MainScreen(startIndex = startIndex)
+                MainScreen()
             }
         }
     }
@@ -71,9 +69,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen(startIndex: Int) {
+private fun MainScreen() {
     // 外层导航：承载二级页面（About / Troubleshooting）
     val navController = rememberNavController()
+
+    // 读取 DataStore 数据
+    val appSettingsViewModel = dsAppSettingsViewModel()
+    val appSettings by appSettingsViewModel.appSettings.collectAsStateWithLifecycle()
+    Log.d("MainActivity", "开屏：" + appSettings.firstScreen)
 
     NavHost(
         navController = navController,
@@ -81,7 +84,7 @@ private fun MainScreen(startIndex: Int) {
     ) {
         composable<ScreenRoutes.MainTabs> {
             MainTabs(
-                startIndex = startIndex
+                startIndex = appSettings.firstScreen
             )
         }
 
@@ -122,7 +125,6 @@ private fun MainTabs(
                         selected = selected,
                         onClick = {
                             if (!selected) {
-                                // 与 ViewPager2 setCurrentItem(index) 行为一致
                                 scope.launch {
                                     pagerState.animateScrollToPage(index)
                                 }
@@ -146,7 +148,8 @@ private fun MainTabs(
                 .fillMaxSize()
                 .padding(
                     start = innerPadding.calculateStartPadding(LayoutDirection.Ltr),
-                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr)
+                    end = innerPadding.calculateEndPadding(LayoutDirection.Ltr),
+                    bottom = innerPadding.calculateBottomPadding()
                 ),
             beyondViewportPageCount = 2,
             userScrollEnabled = true

@@ -90,11 +90,11 @@ fun HomeScreen(
                 scrollBehavior = scrollBehavior
             )
         },
-    ) { inner ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(top = innerPadding.calculateTopPadding())
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Interval.SidePadding, vertical = 5.dp),
