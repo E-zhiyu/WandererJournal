@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DatePicker
@@ -352,6 +353,8 @@ fun DiaryListItem(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            shape = RoundedCornerShape(Radius.Large),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             offset = with(density) {
                 DpOffset(
                     x = menuOffset.x.toDp(),

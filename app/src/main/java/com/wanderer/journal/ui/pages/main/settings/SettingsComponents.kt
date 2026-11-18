@@ -17,11 +17,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Radius
@@ -137,11 +144,20 @@ fun SettingSpinnerItem(
     expanded: Boolean,
     dropDownContent: @Composable ColumnScope.() -> Unit
 ) {
+    val density = LocalDensity.current
+    var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
+
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
         PressableCard(
-            onClick = { _, _ -> onExpandedChange(!expanded) },
+            onClick = { offset, cardSize ->
+                menuOffset = Offset(
+                    x = offset.x,
+                    y = offset.y - cardSize.height
+                )
+                onExpandedChange(!expanded)
+            },
             normalRadius = normalRadius,
         ) {
             Row(
@@ -181,18 +197,22 @@ fun SettingSpinnerItem(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
-
-                Box {
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { onExpandedChange(false) },
-                        content = dropDownContent,
-                        shape = RoundedCornerShape(Radius.Large),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    )
-                }
             }
         }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+            content = dropDownContent,
+            shape = RoundedCornerShape(Radius.Large),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            offset = with(density) {
+                DpOffset(
+                    x = menuOffset.x.toDp(),
+                    y = menuOffset.y.toDp()
+                )
+            }
+        )
     }
 }
 
