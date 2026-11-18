@@ -5,38 +5,26 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Radius
 
 @Composable
 fun PressableFAB(
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
     pressedCorner: Dp = Radius.XLarge,
     content: @Composable () -> Unit
 ) {
@@ -86,46 +74,18 @@ fun PressableFAB(
         bottomStart = animBottomStart
     )
 
-    if (onLongClick != null) {
-        Surface(
-            modifier = Modifier
-                .padding(4.dp)
-                .size(56.dp)
-                .clip(animatedShape)
-                .combinedClickable(
-                    onClick = {
-                        onClick()
-                    },
-                    onLongClick = {
-                        onLongClick()
-                    }
-                ),
-            shape = animatedShape,
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            shadowElevation = 6.dp
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                content()
-                Icon(
-                    Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.btn_add),
-                )
+    FloatingActionButton(
+        onClick = onClick,
+        interactionSource = interactionSource,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
             }
-        }
-    } else {
-        FloatingActionButton(
-            onClick = onClick,
-            interactionSource = interactionSource,
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            modifier = Modifier
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-                .padding(4.dp),
-            shape = animatedShape
-        ) {
-            content()
-        }
+            .padding(4.dp),
+        shape = animatedShape
+    ) {
+        content()
     }
 }

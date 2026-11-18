@@ -142,13 +142,7 @@ fun DiaryScreen(
         },
         floatingActionButton = {
             PressableFAB(
-                onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) },
-                onLongClick = {
-                    datePickerRequest = DatePickerRequest(
-                        mode = DatePickerMode.Complete,
-                        initDate = LocalDate.now(),
-                    )
-                }
+                onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.btn_add))
             }
