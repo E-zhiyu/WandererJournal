@@ -37,7 +37,7 @@ import com.wanderer.journal.auxiliary.classes.Radius
 fun PressableCard(
     modifier: Modifier = Modifier,
     onClick: (Offset, IntSize) -> Unit,
-    onLongClick: (Offset, IntSize) -> Unit = { _, _ -> },
+    onLongClick: ((Offset, IntSize) -> Unit)? = null,
     normalRadius: Array<Dp> = Radius.SingleArray,
     pressedCorner: Dp = Radius.Large, // 按下时统一变成的大圆角大小
     colors: CardColors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHighest),
@@ -115,8 +115,10 @@ fun PressableCard(
                     },
                     onTap = { offset -> onClick(offset, cardSize) },
                     onLongPress = { offset ->
-                        onLongClick(offset, cardSize)
-                        view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                        if (onLongClick != null) {
+                            onLongClick(offset, cardSize)
+                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        }
                     }
                 )
             },
