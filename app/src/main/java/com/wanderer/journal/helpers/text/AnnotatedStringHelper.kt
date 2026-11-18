@@ -80,7 +80,7 @@ fun hierarchicToAnnotatedString(
             // 用 LinkAnnotation 绑定点击，同时加 SpanStyle 做视觉样式
             withLink(
                 LinkAnnotation.Clickable(
-                    tag = "rich_$tagKey",
+                    tag = tagKey,
                     styles = TextLinkStyles(
                         style = SpanStyle(
                             color = highlightColor,

@@ -68,6 +68,7 @@ import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
+import com.wanderer.journal.ui.pages.role.RoleInputActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -268,7 +269,7 @@ fun DiaryListItem(
     val annotated = remember(item.paragraphFragment) {
         val rules = listOf(object : RoleRefTextRule() {
             override fun onClick(clickData: String) {
-                // 点击角色引用时的跳转逻辑
+                // TODO:将富文本逻辑完全迁移至 Kotlin 后可以删除该方法，而是使用 onLinkClick 统一监听
             }
         })
         hierarchicToAnnotatedString(
@@ -276,7 +277,14 @@ fun DiaryListItem(
             highlightedKeywords = null,
             highlightColor = highlightColor,
             rules = rules,
-            onLinkClick = { key, data -> /* 可选：统一拦截 */ },
+            onLinkClick = { key, data ->
+                if (key == KeyStrings.ROLE_ID.v()) {
+                    val intent = Intent(context, RoleInputActivity::class.java).apply {
+                        putExtra(key, data.toLong())
+                    }
+                    context.startActivity(intent)
+                }
+            },
         )
     }
 
