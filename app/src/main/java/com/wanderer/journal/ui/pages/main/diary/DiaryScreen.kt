@@ -33,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -75,6 +76,7 @@ import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import com.wanderer.journal.ui.pages.role.RoleInputActivity
+import com.wanderer.journal.ui.components.rememberFabVisible
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -120,6 +122,8 @@ fun DiaryScreen(
     }
 
     var flashDiaryId by remember { mutableStateOf<Long?>(null) }    // 需要闪烁的日记 id；null 表示没有
+
+    val fabVisible by rememberFabVisible(listState)
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -145,9 +149,12 @@ fun DiaryScreen(
                 },
             )
         },
-        // TODO:FAB要在向下滚动时隐藏
         floatingActionButton = {
             PressableFAB(
+                modifier = Modifier.animateFloatingActionButton(
+                    visible = fabVisible,
+                    alignment = Alignment.Center,
+                ),
                 onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.btn_add))

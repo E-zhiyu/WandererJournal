@@ -24,6 +24,7 @@ import com.wanderer.journal.auxiliary.classes.Radius
 
 @Composable
 fun PressableFAB(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     pressedCorner: Dp = Radius.XLarge,
     content: @Composable () -> Unit
@@ -78,7 +79,7 @@ fun PressableFAB(
         onClick = onClick,
         interactionSource = interactionSource,
         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-        modifier = Modifier
+        modifier = modifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
