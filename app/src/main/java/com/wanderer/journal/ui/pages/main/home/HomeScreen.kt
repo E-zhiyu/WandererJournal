@@ -175,7 +175,7 @@ fun HomeScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(1.dp))
 
             // 日记 + 段落 两列卡片
             Row(
@@ -203,7 +203,7 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
-            Spacer(Modifier.height(2.dp))
+            Spacer(Modifier.height(1.dp))
 
             // 情绪 / 角色 / 认知 三列
             Row(
