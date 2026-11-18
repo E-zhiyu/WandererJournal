@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.components
 
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,9 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import com.wanderer.journal.auxiliary.classes.Radius
@@ -45,12 +45,12 @@ fun PressableCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
 
     // 马达震动
     LaunchedEffect(isPressed) {
         if (isPressed) {
-            view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
         }
     }
 
@@ -117,7 +117,7 @@ fun PressableCard(
                     onLongPress = { offset ->
                         if (onLongClick != null) {
                             onLongClick(offset, cardSize)
-                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
                     }
                 )
