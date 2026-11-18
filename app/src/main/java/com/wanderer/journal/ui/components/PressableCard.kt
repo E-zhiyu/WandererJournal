@@ -47,14 +47,14 @@ fun PressableCard(
     val isPressed by interactionSource.collectIsPressedAsState()
     val view = LocalView.current
 
-    // 1. 马达震动
+    // 马达震动
     LaunchedEffect(isPressed) {
         if (isPressed) {
             view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
         }
     }
 
-    // 2. 缩放动画
+    // 缩放动画
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.97f else 1.0f,
         animationSpec = spring(
@@ -64,7 +64,7 @@ fun PressableCard(
         label = "scale"
     )
 
-    // 3. 四个角的平滑过渡动画
+    // 四个角的平滑过渡动画
     val animTopStart by animateDpAsState(
         if (isPressed) pressedCorner else normalRadius[0],
         label = "ts"
@@ -114,7 +114,10 @@ fun PressableCard(
                         interactionSource.emit(PressInteraction.Release(press))
                     },
                     onTap = { offset -> onClick(offset, cardSize) },
-                    onLongPress = { offset -> onLongClick(offset, cardSize) }
+                    onLongPress = { offset ->
+                        onLongClick(offset, cardSize)
+                        view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                    }
                 )
             },
         shape = animatedShape,

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 
 /**
@@ -142,7 +143,7 @@ fun SettingSpinnerItem(
     onExpandedChange: (Boolean) -> Unit,
     currentValueText: String,
     expanded: Boolean,
-    dropDownContent: @Composable ColumnScope.() -> Unit
+    dropDownContent: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
     var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
@@ -200,7 +201,7 @@ fun SettingSpinnerItem(
             }
         }
 
-        DropdownMenu(
+        LargeRadiusDropdownMenu(
             expanded = expanded,
             onDismissRequest = { onExpandedChange(false) },
             content = dropDownContent,

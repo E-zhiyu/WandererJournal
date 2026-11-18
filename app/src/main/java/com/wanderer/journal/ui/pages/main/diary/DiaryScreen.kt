@@ -69,6 +69,7 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
 import com.wanderer.journal.ui.components.ExceptionDialog
+import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
@@ -386,7 +387,7 @@ fun DiaryListItem(
         }
 
         // 长按菜单：DropdownMenu
-        DropdownMenu(
+        LargeRadiusDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             shape = RoundedCornerShape(Radius.Large),
