@@ -21,12 +21,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -405,6 +405,7 @@ fun DiaryListItem(
                     expanded = false
                     onChangeDate()
                 },
+                shape = MenuDefaults.leadingItemShape
             )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.delete_diary)) },
@@ -412,6 +413,7 @@ fun DiaryListItem(
                     expanded = false
                     onDelete()
                 },
+                shape = MenuDefaults.trailingItemShape
             )
         }
     }
