@@ -14,6 +14,7 @@ import com.wanderer.journal.data.save.store.appSettingStore
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -27,6 +28,14 @@ class AppSettingsViewModel(
             SharingStarted.WhileSubscribed(5_000),
             AppSettings.getDefaultInstance()
         )
+
+    /**
+     * 读取一次 AppSettings
+     */
+    suspend fun loadAppSettingsOnce(): AppSettings =
+        dataStore.data
+            .catch { if (it is IOException) emit(AppSettings.getDefaultInstance()) else throw it }
+            .first()
 
     fun setThemeMode(themeMode: Int) = viewModelScope.launch {
         dataStore.updateData { it.toBuilder().setThemeMode(themeMode).build() }

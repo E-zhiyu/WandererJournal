@@ -145,6 +145,7 @@ fun DiaryScreen(
                 },
             )
         },
+        // TODO:FAB要在向下滚动时隐藏
         floatingActionButton = {
             PressableFAB(
                 onClick = { context.startActivity(Intent(context, WriteActivity::class.java)) }

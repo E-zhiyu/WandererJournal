@@ -5,6 +5,11 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -27,15 +33,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.wanderer.journal.AppSettings
+import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.unique.LogTags
 import com.wanderer.journal.data.save.preference.VersionPreference
 import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
 import com.wanderer.journal.helpers.UpdateHelper
+import com.wanderer.journal.ui.ExpandingMask
 import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
@@ -44,10 +53,11 @@ import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
-
     private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,37 +83,83 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen() {
+private fun MainScreen(
+    onSettingsLoaded: (AppSettings) -> Unit = {}
+) {
     // 外层导航：承载二级页面（About / Troubleshooting）
     val navController = rememberNavController()
 
     // 读取 DataStore 数据
     val appSettingsViewModel = dsAppSettingsViewModel()
-    val appSettings by appSettingsViewModel.appSettings.collectAsStateWithLifecycle()
+    var appSettings by remember { mutableStateOf<AppSettings?>(null) }
+    LaunchedEffect(Unit) {
+        appSettings = appSettingsViewModel.loadAppSettingsOnce()
+        onSettingsLoaded(appSettings!!)
+    }
 
-    NavHost(
-        navController = navController,
-        startDestination = ScreenRoutes.MainTabs,
-    ) {
-        composable<ScreenRoutes.MainTabs> {
-            MainTabs(
-                startIndex = appSettings.firstScreen,
-                navController = navController
+    // ---- 开屏动画进度 ----
+    // 只有在 settings 到达后才启动扩张动画
+    val animatable = remember { Animatable(0f) }
+    val iconAlpha = remember { Animatable(1f) }
+    var splashVisible by remember { mutableStateOf(true) }
+
+    LaunchedEffect(appSettings) {
+        if (appSettings == null) return@LaunchedEffect
+        // 可选：让开屏停留一小会儿，避免一闪而过
+        delay(350.milliseconds)
+        // 扩张 + 淡出并行
+        launch {
+            animatable.animateTo(
+                1f,
+                animationSpec = tween(durationMillis = 750, easing = FastOutSlowInEasing)
             )
         }
+        iconAlpha.animateTo(
+            0f,
+            animationSpec = tween(durationMillis = 350, easing = LinearEasing)
+        )
+        splashVisible = false   // 动画结束，移除遮罩
+    }
 
-        composable<ScreenRoutes.About> {
-            AboutScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToTroubleshooting = {
-                    navController.navigate(ScreenRoutes.Troubleshooting)
+    Box(Modifier.fillMaxSize()) {
+        // 真实界面（此时 settings 已就绪）
+        if (appSettings != null) {
+            NavHost(
+                navController = navController,
+                startDestination = ScreenRoutes.MainTabs,
+            ) {
+                composable<ScreenRoutes.MainTabs> {
+                    MainTabs(
+                        startIndex = appSettings!!.firstScreen,
+                        navController = navController
+                    )
                 }
-            )
+
+                composable<ScreenRoutes.About> {
+                    AboutScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onNavigateToTroubleshooting = {
+                            navController.navigate(ScreenRoutes.Troubleshooting)
+                        }
+                    )
+                }
+
+                composable<ScreenRoutes.Troubleshooting> {
+                    TroubleshootingScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+            }
         }
 
-        composable<ScreenRoutes.Troubleshooting> {
-            TroubleshootingScreen(
-                onNavigateBack = { navController.popBackStack() }
+        // 开屏遮罩
+        if (splashVisible) {
+            ExpandingMask(
+                progress = animatable.value,
+                iconAlpha = iconAlpha.value,
+                maskColor = MaterialTheme.colorScheme.background, // 与系统闪屏背景一致
+                iconSize = 120.dp,
+                iconCornerRadius = Radius.XLarge,
             )
         }
     }
