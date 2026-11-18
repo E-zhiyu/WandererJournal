@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -43,12 +40,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -261,11 +261,13 @@ fun DiaryListItem(
         isLast -> Radius.BottomArray
         else -> Radius.MiddleArray
     }
+    val density = LocalDensity.current
 
-    var expanded by remember { mutableStateOf(false) }
+    var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
+    var expanded by remember { mutableStateOf(false) }                  // 下拉框是否展开
 
+    // 富文本渲染
     val highlightColor = MaterialTheme.colorScheme.primary
-
     val annotated = remember(item.paragraphFragment) {
         val rules = listOf(object : RoleRefTextRule() {
             override fun onClick(clickData: String) {
@@ -304,31 +306,42 @@ fun DiaryListItem(
                 }
                 context.startActivity(intent)
             },
-            onLongClick = { expanded = true }
+            onLongClick = { offset ->
+                menuOffset = offset
+                expanded = true
+            }
         ) {
-            Column(Modifier.padding(start = 15.dp, top = 10.dp, end = 15.dp, bottom = 10.dp)) {
-                Text(
-                    text = item.diary.diaryDate.format(CustomDateTimeFormatter.DATE_WITH_WEEK),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // 富文本摘要：用 AndroidView 包裹 TextView 承接 ParagraphTextConverter 的 CharSequence
+            Row(
+                modifier = Modifier.padding(
+                    start = 15.dp,
+                    top = 10.dp,
+                    end = 15.dp,
+                    bottom = 10.dp
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = item.diary.diaryDate.format(CustomDateTimeFormatter.DATE_WITH_WEEK),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    // 富文本摘要
                     Text(
                         text = annotated,
-                        modifier = Modifier.weight(1f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = Color(0xFF888888),
                         fontSize = 14.sp,
                     )
-                    Spacer(Modifier.width(20.dp))
-                    Text(
-                        text = "${item.charCount}字",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                    )
                 }
+
+                Text(
+                    text = "${item.charCount}字",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                )
             }
         }
 
@@ -336,6 +349,12 @@ fun DiaryListItem(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
+            offset = with(density) {
+                DpOffset(
+                    x = menuOffset.x.toDp(),
+                    y = 0.dp
+                )
+            }
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.modify_date)) },
