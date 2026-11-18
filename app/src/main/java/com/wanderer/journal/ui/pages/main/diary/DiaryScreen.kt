@@ -43,12 +43,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wanderer.journal.R
@@ -60,7 +62,7 @@ import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
-import com.wanderer.journal.helpers.text.ParagraphTextConverter
+import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
 import com.wanderer.journal.ui.components.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
@@ -261,6 +263,23 @@ fun DiaryListItem(
 
     var expanded by remember { mutableStateOf(false) }
 
+    val highlightColor = MaterialTheme.colorScheme.primary
+
+    val annotated = remember(item.paragraphFragment) {
+        val rules = listOf(object : RoleRefTextRule() {
+            override fun onClick(clickData: String) {
+                // 点击角色引用时的跳转逻辑
+            }
+        })
+        hierarchicToAnnotatedString(
+            raw = item.paragraphFragment,
+            highlightedKeywords = null,
+            highlightColor = highlightColor,
+            rules = rules,
+            onLinkClick = { key, data -> /* 可选：统一拦截 */ },
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -287,25 +306,13 @@ fun DiaryListItem(
                 Spacer(Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // 富文本摘要：用 AndroidView 包裹 TextView 承接 ParagraphTextConverter 的 CharSequence
-                    //TODO:将其迁移至 Compose 的 AnnotatedString
-                    AndroidView(
+                    Text(
+                        text = annotated,
                         modifier = Modifier.weight(1f),
-                        factory = { ctx ->
-                            android.widget.TextView(ctx).apply {
-                                maxLines = 1
-                                ellipsize = android.text.TextUtils.TruncateAt.END
-                                setTextColor(0xFF888888.toInt())
-                                textSize = 14f
-                            }
-                        },
-                        update = { tv ->
-                            tv.text = ParagraphTextConverter.hierarchic(
-                                context, null, item.paragraphFragment,
-                                object : RoleRefTextRule() {
-                                    override fun onClick(clickData: String) {}
-                                }
-                            )
-                        }
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = Color(0xFF888888),
+                        fontSize = 14.sp,
                     )
                     Spacer(Modifier.width(20.dp))
                     Text(
