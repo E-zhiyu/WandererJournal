@@ -103,7 +103,7 @@ fun HomeScreen(
 
             // 随机提示卡片
             PressableCard(
-                onClick = { vm.nextTip(tipsArray + xiaomiTips) },
+                onClick = { _, _ -> vm.nextTip(tipsArray + xiaomiTips) },
                 normalRadius = Radius.SingleArray,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -117,7 +117,7 @@ fun HomeScreen(
 
             // 日期卡片
             PressableCard(
-                onClick = {
+                onClick = { _, _ ->
                     val intent = Intent(context, ReadActivity::class.java)
                     context.startActivity(intent)
                 },
@@ -262,7 +262,7 @@ private fun StatCard(
     onClick: () -> Unit,
 ) {
     PressableCard(
-        onClick = onClick,
+        onClick = { _, _ -> onClick() },
         modifier = modifier,
         normalRadius = normalRadius
     ) {

@@ -5,29 +5,36 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import com.wanderer.journal.auxiliary.classes.Radius
 
 @Composable
 fun PressableCard(
     modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
+    onClick: (Offset, IntSize) -> Unit,
+    onLongClick: (Offset, IntSize) -> Unit = { _, _ -> },
     normalRadius: Array<Dp> = Radius.SingleArray,
     pressedCorner: Dp = Radius.Large, // 按下时统一变成的大圆角大小
     content: @Composable () -> Unit
@@ -71,6 +78,7 @@ fun PressableCard(
         label = "be"
     )
 
+    // 计算缩放后的形状
     val animatedShape = RoundedCornerShape(
         topStart = animTopStart,
         topEnd = animTopEnd,
@@ -78,35 +86,35 @@ fun PressableCard(
         bottomStart = animBottomStart
     )
 
-    if (onLongClick != null) {
-        Card(shape = animatedShape) {
-            Box(
-                modifier = modifier
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    }
-                    .fillMaxSize()
-                    .clip(animatedShape)
-                    .combinedClickable(
-                        onClick = onClick,
-                        onLongClick = onLongClick
-                    )
-            ) {
-                content()
-            }
-        }
-    } else {
-        Card(
-            onClick = onClick,
-            interactionSource = interactionSource,
-            modifier = modifier.graphicsLayer {
+    // 卡片大小
+    var cardSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Card(
+        modifier = modifier
+            .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+            }
+            .onGloballyPositioned { coords ->
+                cardSize = coords.size
+            }
+            .clip(animatedShape)
+            .indication(interactionSource, ripple())    // 绘制按压涟漪
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        // 手动发送按压/释放事件，触发涟漪绘制
+                        val press = PressInteraction.Press(offset)
+                        interactionSource.emit(press)
+                        tryAwaitRelease()
+                        interactionSource.emit(PressInteraction.Release(press))
+                    },
+                    onTap = { offset -> onClick(offset, cardSize) },
+                    onLongPress = { offset -> onLongClick(offset, cardSize) }
+                )
             },
-            shape = animatedShape
-        ) {
-            content()
-        }
+        shape = animatedShape,
+    ) {
+        content()
     }
 }

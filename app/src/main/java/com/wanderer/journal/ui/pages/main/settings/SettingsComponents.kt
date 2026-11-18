@@ -40,7 +40,7 @@ fun SettingClickableItem(
     normalRadius: Array<Dp>
 ) {
     PressableCard(
-        onClick = onClick,
+        onClick = { _, _ -> onClick() },
         modifier = modifier,
         normalRadius = normalRadius,
     ) {
@@ -86,7 +86,7 @@ fun SettingSwitchItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
     PressableCard(
-        onClick = { onCheckedChange(!checked) },
+        onClick = { _, _ -> onCheckedChange(!checked) },
         modifier = modifier,
         normalRadius = normalRadius,
     ) {
@@ -141,7 +141,7 @@ fun SettingSpinnerItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         PressableCard(
-            onClick = { onExpandedChange(!expanded) },
+            onClick = { _, _ -> onExpandedChange(!expanded) },
             normalRadius = normalRadius,
         ) {
             Row(

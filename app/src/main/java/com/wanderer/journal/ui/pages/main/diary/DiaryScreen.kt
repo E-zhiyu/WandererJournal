@@ -297,7 +297,7 @@ fun DiaryListItem(
     ) {
         PressableCard(
             normalRadius = normalRadius,
-            onClick = {
+            onClick = { _, _ ->
                 val intent = Intent(context, ReadActivity::class.java).apply {
                     putExtra(
                         KeyStrings.INIT_DATE.v(),
@@ -306,8 +306,11 @@ fun DiaryListItem(
                 }
                 context.startActivity(intent)
             },
-            onLongClick = { offset ->
-                menuOffset = offset
+            onLongClick = { offset, cardSize ->
+                menuOffset = Offset(
+                    x = offset.x,
+                    y = offset.y - cardSize.height
+                )
                 expanded = true
             }
         ) {
@@ -352,7 +355,7 @@ fun DiaryListItem(
             offset = with(density) {
                 DpOffset(
                     x = menuOffset.x.toDp(),
-                    y = 0.dp
+                    y = menuOffset.y.toDp()
                 )
             }
         ) {
