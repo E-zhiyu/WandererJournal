@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -86,7 +87,8 @@ private fun MainScreen() {
     ) {
         composable<ScreenRoutes.MainTabs> {
             MainTabs(
-                startIndex = appSettings.firstScreen
+                startIndex = appSettings.firstScreen,
+                navController = navController
             )
         }
 
@@ -109,7 +111,8 @@ private fun MainScreen() {
 
 @Composable
 private fun MainTabs(
-    startIndex: Int
+    startIndex: Int,
+    navController: NavController
 ) {
     val pagerState = rememberPagerState(
         initialPage = startIndex,
@@ -169,7 +172,8 @@ private fun MainTabs(
                 MainDestination.DIARY -> DiaryScreen()
                 MainDestination.HOME -> HomeScreen()
                 MainDestination.SETTINGS -> SettingsScreen(
-                    disposable = CompositeDisposable()
+                    disposable = CompositeDisposable(),
+                    onSkipToAbout = { navController.navigate(ScreenRoutes.About) }
                 )
             }
         }

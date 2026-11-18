@@ -50,7 +50,6 @@ import com.wanderer.journal.data.save.store.viewmodels.dsUpdateViewModel
 import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
-import com.wanderer.journal.ui.pages.main.settings.sub.AboutActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity
@@ -62,7 +61,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 @Composable
 fun SettingsScreen(
-    disposable: CompositeDisposable
+    disposable: CompositeDisposable,
+    onSkipToAbout: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.fragment.app.FragmentActivity
@@ -422,7 +422,9 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.about_software),
                     icon = painterResource(id = R.drawable.outline_info_24),
                     normalRadius = Radius.TopArray,
-                    onClick = { context.startActivity(Intent(context, AboutActivity::class.java)) }
+                    onClick = {
+                        onSkipToAbout()
+                    }
                 )
             }
             item {
@@ -504,6 +506,6 @@ fun ChangeLogDialog(
 @Composable
 fun Preview() {
     MaterialAppTheme {
-        SettingsScreen(CompositeDisposable())
+        SettingsScreen(CompositeDisposable(), {})
     }
 }

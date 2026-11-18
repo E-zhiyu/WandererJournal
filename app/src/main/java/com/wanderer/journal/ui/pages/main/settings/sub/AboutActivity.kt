@@ -63,19 +63,6 @@ import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 
-class AboutActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        setContent {
-            MaterialAppTheme {
-                AboutScreen()
-            }
-        }
-    }
-}
-
 @Preview(
     name = "Light Mode",
     showBackground = true,
@@ -185,12 +172,7 @@ fun AboutScreen(
             // App 描述卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = Radius.Single,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                        alpha = 0.3f
-                    )
-                )
+                shape = Radius.Single
             ) {
                 Text(
                     text = stringResource(id = R.string.app_description),
