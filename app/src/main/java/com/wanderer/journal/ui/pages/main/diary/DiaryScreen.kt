@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,7 +28,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -70,7 +68,6 @@ import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import com.wanderer.journal.ui.pages.role.RoleInputActivity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -211,12 +208,18 @@ fun DiaryScreen(
             onDismiss = { datePickerRequest = null },
             onConfirm = { selected ->
                 when (val mode = req.mode) {
-                    is DatePickerMode.Skip -> handleSkipDate(
-                        vm = vm,
-                        scope = scope,
+                    is DatePickerMode.Skip -> vm.findScrollTargetPosition(
                         targetDate = selected,
-                        scrollBehavior = scrollBehavior,
-                        listState = listState
+                        onResult = { position ->
+                            scope.launch {
+                                // 折叠 AppBar + 滚动
+                                scrollBehavior.state.heightOffset =
+                                    scrollBehavior.state.heightOffsetLimit
+                                listState.animateScrollToItem(position)
+                                // TODO:滚动动画特别卡
+                                // TODO:增加闪烁动画
+                            }
+                        }
                     )
 
                     is DatePickerMode.DateChange -> {
@@ -401,29 +404,4 @@ private fun DiaryDatePickerDialog(
         // TODO:修复充满屏幕宽度的BUG
         DatePicker(state = datePickerState)
     }
-}
-
-/**
- * 跳转到指定日期的日记
- * @param targetDate 需要跳转到的日期
- */
-private fun handleSkipDate(
-    vm: DiaryViewModel,
-    scope: CoroutineScope,
-    targetDate: LocalDate,
-    scrollBehavior: TopAppBarScrollBehavior,
-    listState: LazyListState
-) {
-    vm.findScrollTargetPosition(
-        targetDate = targetDate,
-        onResult = { position ->
-            scope.launch {
-                // 折叠 AppBar + 滚动
-                scrollBehavior.state.heightOffset = scrollBehavior.state.heightOffsetLimit
-                listState.animateScrollToItem(position)
-                // TODO:滚动动画特别卡
-                // TODO:增加闪烁动画
-            }
-        }
-    )
 }
