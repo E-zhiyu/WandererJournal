@@ -87,9 +87,9 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * 目标日期在列表中的位置
      * @param targetDate 目标日期
-     * @param onResult 查询成功的回调，包含查询到的下标
+     * @param onResult 查询成功的回调，包含查询到的下标、总个数和目标日记的编号
      */
-    fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int) -> Unit) {
+    fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int,Int, Long) -> Unit) {
         viewModelScope.launch {
             diariesFlow.collect { modelList ->
                 var position = 0
@@ -115,7 +115,11 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
                 }
 
                 _events.value = DiaryUiEvent.Toast(message)
-                onResult(position.coerceIn(0, modelList.lastIndex))
+                onResult(
+                    position.coerceIn(0, modelList.lastIndex),
+                    modelList.size,
+                    modelList[position].diary.diaryId
+                )
             }
         }
     }

@@ -12,6 +12,9 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +40,7 @@ fun PressableCard(
     onLongClick: (Offset, IntSize) -> Unit = { _, _ -> },
     normalRadius: Array<Dp> = Radius.SingleArray,
     pressedCorner: Dp = Radius.Large, // 按下时统一变成的大圆角大小
+    colors: CardColors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHighest),
     content: @Composable () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -114,6 +118,7 @@ fun PressableCard(
                 )
             },
         shape = animatedShape,
+        colors = colors
     ) {
         content()
     }

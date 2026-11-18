@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.pages.main.diary
 
 import android.content.Intent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -41,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -107,11 +111,12 @@ fun DiaryScreen(
         }
     }
 
-    // 对话框状态：null = 不显示；非 null = 显示，且携带模式
+    // 日期选择对话框状态：null = 不显示；非 null = 显示，且携带模式
     var datePickerRequest by remember {
         mutableStateOf<DatePickerRequest?>(null)
     }
 
+    var flashDiaryId by remember { mutableStateOf<Long?>(null) }    // 需要闪烁的日记 id；null 表示没有
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
@@ -177,6 +182,8 @@ fun DiaryScreen(
                             item = item,
                             isFirst = index == 0,
                             isLast = index == state.diaries.lastIndex,
+                            highlighted = flashDiaryId == item.diary.diaryId,
+                            onHighlightFinished = { flashDiaryId = null },
                             {
                                 datePickerRequest = DatePickerRequest(
                                     mode = DatePickerMode.DateChange(item.diary),
@@ -210,14 +217,24 @@ fun DiaryScreen(
                 when (val mode = req.mode) {
                     is DatePickerMode.Skip -> vm.findScrollTargetPosition(
                         targetDate = selected,
-                        onResult = { position ->
+                        onResult = { position, itemCount, targetId ->
                             scope.launch {
                                 // 折叠 AppBar + 滚动
                                 scrollBehavior.state.heightOffset =
                                     scrollBehavior.state.heightOffsetLimit
+
+                                // 先瞬间跳到目标附近，再动画走最后一段
+                                val firstItemIndex = listState.firstVisibleItemIndex
+                                if (position > firstItemIndex + 10 || position < firstItemIndex - 10) {
+                                    val jumpTarget = if (firstItemIndex > position)
+                                        (position - 10).coerceAtLeast(0) else
+                                        (position + 10).coerceAtMost(itemCount - 1)
+                                    listState.scrollToItem(jumpTarget)
+                                }
                                 listState.animateScrollToItem(position)
-                                // TODO:滚动动画特别卡
-                                // TODO:增加闪烁动画
+
+                                // 修改闪烁的日记的编号
+                                flashDiaryId = targetId
                             }
                         }
                     )
@@ -247,10 +264,28 @@ fun DiaryListItem(
     item: DiaryContentUnionModel,
     isFirst: Boolean,
     isLast: Boolean,
+    highlighted: Boolean,                 // 新增
+    onHighlightFinished: () -> Unit,      // 新增
     onChangeDate: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // 闪烁强度：0f = 正常，0.8f = 高亮峰值
+    val flash = remember { Animatable(0f) }
+    LaunchedEffect(highlighted, item.diary.diaryId) {
+        if (highlighted) {
+            // 闪烁动画
+            flash.animateTo(1f, tween(280))
+            flash.animateTo(0f, tween(280))
+            onHighlightFinished()
+        }
+    }
+
+    // 闪烁颜色
+    val baseColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val flashColor = MaterialTheme.colorScheme.secondaryContainer
+    val animatedColor = lerp(baseColor, flashColor, flash.value)
 
     // 首项/末项圆角
     val normalRadius = when {
@@ -295,6 +330,7 @@ fun DiaryListItem(
     ) {
         PressableCard(
             normalRadius = normalRadius,
+            colors = CardDefaults.cardColors(containerColor = animatedColor),
             onClick = { _, _ ->
                 val intent = Intent(context, ReadActivity::class.java).apply {
                     putExtra(
