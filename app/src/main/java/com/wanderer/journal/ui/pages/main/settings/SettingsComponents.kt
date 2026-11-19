@@ -2,7 +2,6 @@ package com.wanderer.journal.ui.pages.main.settings
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -36,13 +36,19 @@ import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 
 /**
- * 1. 普通可点击设置项
+ * 可点击设置项
+ * @param title 设置项标题
+ * @param subtitle 设置项副标题，用于描述设置项功能
+ * @param arrowText 右侧箭头旁边的文本
+ * @param icon 设置项图标
+ * @param normalRadius 未按下时的圆角值数组
  */
 @Composable
 fun SettingClickableItem(
     modifier: Modifier = Modifier,
     title: String,
     subtitle: String? = null,
+    arrowText: String? = null,
     onClick: () -> Unit,
     icon: Painter,
     normalRadius: Array<Dp>
@@ -67,7 +73,7 @@ fun SettingClickableItem(
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                if (!subtitle.isNullOrEmpty()) {
+                subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = subtitle,
@@ -76,12 +82,30 @@ fun SettingClickableItem(
                     )
                 }
             }
+            arrowText?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
 
 /**
- * 2. 带开关的设置项
+ * 带开关的设置项
+ * @param title 设置项标题
+ * @param subtitle 设置项副标题，用于描述设置项功能
+ * @param normalRadius 未按下时的圆角值数组
+ * @param icon 设置项图标
+ * @param checked 开关是否打开
+ * @param onCheckedChange 开关状态变更回调
  */
 @Composable
 fun SettingSwitchItem(
@@ -132,7 +156,14 @@ fun SettingSwitchItem(
 }
 
 /**
- * 3. 下拉选择型设置项（点击弹出下拉菜单）
+ * 下拉选择型设置项（点击弹出下拉菜单）
+ * @param title 设置项标题
+ * @param subtitle 设置项副标题，用于描述设置项功能
+ * @param normalRadius 未按下时的圆角值数组
+ * @param currentValueText 当前所选的选项的文本值
+ * @param icon 设置项图标
+ * @param expanded 下拉框是否展开
+ * @param dropDownContent 下拉框的内容
  */
 @Composable
 fun SettingSpinnerItem(
