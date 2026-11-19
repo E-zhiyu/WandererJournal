@@ -44,7 +44,6 @@ import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
 import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
-import com.wanderer.journal.data.save.store.viewmodels.dsMediaSettingsViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsSecurityViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsUpdateViewModel
 import com.wanderer.journal.helpers.BiometricHelper
@@ -72,8 +71,6 @@ fun SettingsScreen(
     val appSettings by appSettingsViewModel.appSettings.collectAsStateWithLifecycle()
     val updateSettingsViewModel = dsUpdateViewModel()
     val updateSettings by updateSettingsViewModel.update.collectAsStateWithLifecycle()
-    val mediaSettingsViewModel = dsMediaSettingsViewModel()
-    val mediaSettings by mediaSettingsViewModel.mediaSettings.collectAsStateWithLifecycle()
     val securitySettingsViewModel = dsSecurityViewModel()
     val securitySettings by securitySettingsViewModel.securitySettings.collectAsStateWithLifecycle()
 
@@ -294,10 +291,10 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.hdr_display_effect),
                     subtitle = "全屏查看图片时支持HDR显示",
                     icon = painterResource(id = R.drawable.outline_hdr_on_24),
-                    checked = mediaSettings.showHdr,
+                    checked = appSettings.showHdr,
                     normalRadius = Radius.TopArray,
                     onCheckedChange = { checked ->
-                        mediaSettingsViewModel.setHdrDisplay(checked)
+                        appSettingsViewModel.setHdrDisplay(checked)
                     }
                 )
             }

@@ -48,6 +48,10 @@ class AppSettingsViewModel(
     fun setFirstScreen(firstScreen: Int) = viewModelScope.launch {
         dataStore.updateData { it.toBuilder().setFirstScreen(firstScreen).build() }
     }
+
+    fun setHdrDisplay(showHdr: Boolean) = viewModelScope.launch {
+        dataStore.updateData { it.toBuilder().setShowHdr(showHdr).build() }
+    }
 }
 
 /**

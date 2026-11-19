@@ -51,11 +51,6 @@ message DiaryShare {
   string bottom_text = 5;         // 分享图片底部文本
 }
 
-// 媒体设置
-message MediaSettings {
-  bool show_hdr = 1;              // 是否显示 HDR 图片效果
-}
-
 // 版本检测相关
 message Update {
   int32 skip_version_code = 1;    // 跳过更新检测的版本代码
