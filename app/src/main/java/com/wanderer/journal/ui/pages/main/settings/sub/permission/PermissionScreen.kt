@@ -44,6 +44,7 @@ import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
@@ -174,23 +175,25 @@ fun PermissionScreen(
             }
 
             // 自启动权限
-            item {
-                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
-                SettingClickableItem(
-                    title = stringResource(R.string.auto_start_permission),
-                    subtitle = stringResource(R.string.auto_start_permission_subtitle),
-                    onClick = {
-                        permissionEvent = PermissionEvent(
-                            message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
-                                    "- 日记提醒是否准时触发。\n",
-                            onConfirm = {
-                                requestAutoStartPermission(context)
-                            }
-                        )
-                    },
-                    icon = painterResource(R.drawable.outline_autorenew_24),
-                    normalRadius = Radius.MiddleArray
-                )
+            if (isAutoStartDefined()) {
+                item {
+                    Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+                    SettingClickableItem(
+                        title = stringResource(R.string.auto_start_permission),
+                        subtitle = stringResource(R.string.auto_start_permission_subtitle),
+                        onClick = {
+                            permissionEvent = PermissionEvent(
+                                message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
+                                        "- 日记提醒是否准时触发。\n",
+                                onConfirm = {
+                                    requestAutoStartPermission(context)
+                                }
+                            )
+                        },
+                        icon = painterResource(R.drawable.outline_autorenew_24),
+                        normalRadius = Radius.MiddleArray
+                    )
+                }
             }
 
             // 电池优化策略
