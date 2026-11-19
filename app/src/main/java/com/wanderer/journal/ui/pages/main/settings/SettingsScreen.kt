@@ -51,7 +51,6 @@ import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity
-import com.wanderer.journal.ui.pages.main.settings.sub.PermissionManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
@@ -61,6 +60,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 @Composable
 fun SettingsScreen(
     disposable: CompositeDisposable,
+    onSkipToPermission: () -> Unit,
     onSkipToAbout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -217,18 +217,11 @@ fun SettingsScreen(
 
             item {
                 SettingClickableItem(
-                    title = stringResource(id = R.string.permissions_setting),
+                    title = stringResource(id = R.string.permissions_settings),
                     subtitle = "跳转至权限管理界面",
                     icon = painterResource(id = R.drawable.outline_admin_panel_settings_24),
                     normalRadius = Radius.TopArray,
-                    onClick = {
-                        context.startActivity(
-                            Intent(
-                                context,
-                                PermissionManageActivity::class.java
-                            )
-                        )
-                    }
+                    onClick = onSkipToPermission
                 )
             }
             item {
@@ -419,9 +412,7 @@ fun SettingsScreen(
                     title = stringResource(id = R.string.about_software),
                     icon = painterResource(id = R.drawable.outline_info_24),
                     normalRadius = Radius.TopArray,
-                    onClick = {
-                        onSkipToAbout()
-                    }
+                    onClick = onSkipToAbout
                 )
             }
             item {
@@ -503,6 +494,6 @@ fun ChangeLogDialog(
 @Composable
 fun Preview() {
     MaterialAppTheme {
-        SettingsScreen(CompositeDisposable(), {})
+        SettingsScreen(CompositeDisposable(), {}, {})
     }
 }

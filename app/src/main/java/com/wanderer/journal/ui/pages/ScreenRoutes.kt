@@ -23,5 +23,9 @@ sealed interface ScreenRoutes {
     // 设置界面
     @Serializable
     data object Settings: ScreenRoutes
+
+    // 权限设置界面
+    @Serializable
+    data object PermissionSettings: ScreenRoutes
     @Serializable data object MainTabs
 }

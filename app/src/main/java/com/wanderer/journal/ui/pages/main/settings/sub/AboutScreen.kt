@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,26 +59,6 @@ import com.wanderer.journal.auxiliary.enums.settings.RepositoryAddress
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.theme.MaterialAppTheme
-
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-private fun Preview() {
-    MaterialAppTheme {
-        AboutScreen(
-            onNavigateBack = {},
-            onNavigateToTroubleshooting = {}
-        )
-    }
-}
 
 @Composable
 fun AboutScreen(
@@ -127,100 +109,111 @@ fun AboutScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
                 .nestedScroll(scrollState.nestedScrollConnection)
-                .padding(Interval.SidePadding),
+                .padding(horizontal = Interval.SidePadding),
             horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
         ) {
-            Spacer(modifier = Modifier.height(10.dp))
-
             // App 图标
-            if (drawable != null) {
-                Image(
-                    bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888).asImageBitmap(),
-                    contentDescription = "App Icon",
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                )
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+                if (drawable != null) {
+                    Image(
+                        bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888)
+                            .asImageBitmap(),
+                        contentDescription = "App Icon",
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
             // App 名称
-            Text(
-                text = stringResource(id = R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium
-            )
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
 
             // 版本名称
             if (versionName.isNotEmpty()) {
-                Text(
-                    text = versionName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline
-                )
+                item {
+                    Text(
+                        text = versionName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             // App 描述卡片
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = Radius.Single
-            ) {
-                Text(
-                    text = stringResource(id = R.string.app_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(Interval.DefaultPadding)
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = Radius.Single
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.app_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(Interval.DefaultPadding)
+                    )
+                }
+            }
+
+            // 作者卡片
+            item {
+                Spacer(modifier = Modifier.height(15.dp))
+                SettingItemCard(
+                    title = stringResource(id = R.string.author_name),
+                    subtitle = stringResource(id = R.string.author_of_app),
+                    normalRadius = Radius.SingleArray,
+                    leadingContent = {
+                        Image(
+                            painter = painterResource(id = R.drawable.author),
+                            contentDescription = "Author Head",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+                    },
+                    onClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        val intent =
+                            Intent(Intent.ACTION_VIEW, "https://github.com/E-zhiyu".toUri())
+                        context.startActivity(intent)
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(15.dp))
-
-            // 作者卡片
-            SettingItemCard(
-                title = stringResource(id = R.string.author_name),
-                subtitle = stringResource(id = R.string.author_of_app),
-                normalRadius = Radius.SingleArray,
-                leadingContent = {
-                    Image(
-                        painter = painterResource(id = R.drawable.author),
-                        contentDescription = "Author Head",
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
-                },
-                onClick = {
-                    WandererJournal.lockLifecycleObserver(true)
-                    val intent = Intent(Intent.ACTION_VIEW, "https://github.com/E-zhiyu".toUri())
-                    context.startActivity(intent)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(15.dp))
-
             // 3. 项目地址卡片
-            SettingItemCard(
-                title = stringResource(id = R.string.project_address),
-                subtitle = stringResource(id = R.string.click_skip_to_repository),
-                normalRadius = Radius.TopArray,
-                onClick = { showRepoDialog = true }
-            )
-
-            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+            item {
+                Spacer(modifier = Modifier.height(15.dp))
+                SettingItemCard(
+                    title = stringResource(id = R.string.project_address),
+                    subtitle = stringResource(id = R.string.click_skip_to_repository),
+                    normalRadius = Radius.TopArray,
+                    onClick = { showRepoDialog = true }
+                )
+            }
 
             // 4. 疑难解答卡片
-            SettingItemCard(
-                title = stringResource(id = R.string.troubleshooting),
-                subtitle = stringResource(id = R.string.help_solve_some_common_problems),
-                normalRadius = Radius.BottomArray,
-                onClick = onNavigateToTroubleshooting
-            )
+            item {
+                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+                SettingItemCard(
+                    title = stringResource(id = R.string.troubleshooting),
+                    subtitle = stringResource(id = R.string.help_solve_some_common_problems),
+                    normalRadius = Radius.BottomArray,
+                    onClick = onNavigateToTroubleshooting
+                )
+            }
         }
     }
 
@@ -322,4 +315,25 @@ fun RepositoryDialog(
             }
         }
     )
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun Preview() {
+    MaterialAppTheme {
+        AboutScreen(
+            onNavigateBack = {},
+            onNavigateToTroubleshooting = {}
+        )
+    }
 }

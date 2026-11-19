@@ -50,6 +50,7 @@ import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -124,6 +125,7 @@ private fun MainScreen(
                 navController = navController,
                 startDestination = ScreenRoutes.MainTabs,
             ) {
+                // 主界面
                 composable<ScreenRoutes.MainTabs> {
                     MainTabs(
                         startIndex = appSettings!!.firstScreen,
@@ -131,6 +133,14 @@ private fun MainScreen(
                     )
                 }
 
+                // 权限设置
+                composable<ScreenRoutes.PermissionSettings> {
+                    PermissionScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+
+                // 关于软件
                 composable<ScreenRoutes.About> {
                     AboutScreen(
                         onNavigateBack = { navController.popBackStack() },
@@ -140,6 +150,7 @@ private fun MainScreen(
                     )
                 }
 
+                // 疑难解答
                 composable<ScreenRoutes.Troubleshooting> {
                     TroubleshootingScreen(
                         onNavigateBack = { navController.popBackStack() }
@@ -216,6 +227,7 @@ private fun MainTabs(
                 MainDestination.HOME -> HomeScreen()
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable(),
+                    onSkipToPermission = { navController.navigate(ScreenRoutes.PermissionSettings) },
                     onSkipToAbout = { navController.navigate(ScreenRoutes.About) }
                 )
             }
