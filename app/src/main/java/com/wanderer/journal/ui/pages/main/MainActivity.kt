@@ -53,9 +53,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
     private val disposable = CompositeDisposable()
