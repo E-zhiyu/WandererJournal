@@ -154,54 +154,6 @@ public class PermissionHelper {
     }
 
     /**
-     * 申请忽略电池优化
-     *
-     * @param context        上下文
-     * @param descriptionFun 根据权限列表动态生成权限描述的方法
-     */
-    public static void requestBatteryIgnoration(Context context, @Nullable Function<List<IPermission>, String> descriptionFun) {
-        IPermission batteryPermission = PermissionLists.getRequestIgnoreBatteryOptimizationsPermission();
-        if (XXPermissions.isGrantedPermission(context, batteryPermission)) {
-            Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
-        } else {
-            WandererJournal.lockLifecycleObserver(true);
-            if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
-                OnPermissionDescription description;
-                if (descriptionFun == null) {
-                    description = null;
-                } else {
-                    description = new PermissionDialogDescription(descriptionFun);
-                }
-                XXPermissions.with(context)
-                        .description(description)
-                        .permission(batteryPermission)
-                        .request((grantedList, deniedList) -> {
-                            WandererJournal.lockLifecycleObserver(false);
-
-                            boolean noDenied = deniedList.isEmpty();
-                            boolean noGranted = grantedList.isEmpty();
-                            if (noDenied && !noGranted) {
-                                Toast.makeText(context, "已忽略电池优化", Toast.LENGTH_SHORT).show();
-                            } else {
-                                new MaterialAlertDialogBuilder(context)
-                                        .setTitle("请求被拒绝")
-                                        .setMessage("请求被拒绝，是否跳转至电池优化界面授予权限？")
-                                        .setPositiveButton("前往设置", (dialog, which) -> {
-                                            Toast.makeText(context, "请点击开关左侧文本并选择“无限制”", Toast.LENGTH_SHORT).show();
-                                            XXPermissions.startPermissionActivity(context, deniedList);
-                                        })
-                                        .setNegativeButton("取消", null)
-                                        .show();
-                            }
-                        });
-            } else {
-                Toast.makeText(context, "请点击开关左侧文本并选择“无限制”", Toast.LENGTH_SHORT).show();
-                XXPermissions.startPermissionActivity(context, batteryPermission);
-            }
-        }
-    }
-
-    /**
      * 申请定位权限
      *
      * @param context        上下文

@@ -69,10 +69,6 @@
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
-            android:name=".ui.pages.main.settings.sub.AboutActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.pages.main.MainActivity" />
-        <activity
             android:name=".ui.pages.diary.write.WriteActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
@@ -82,10 +78,6 @@
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
             android:name=".ui.pages.main.settings.sub.DataManageActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.pages.main.MainActivity" />
-        <activity
-            android:name=".ui.pages.main.settings.sub.PermissionManageActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
@@ -163,10 +155,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver> <!-- 开机广播接收器 -->
-        <activity
-            android:name=".ui.pages.main.settings.sub.TroubleshootingActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
