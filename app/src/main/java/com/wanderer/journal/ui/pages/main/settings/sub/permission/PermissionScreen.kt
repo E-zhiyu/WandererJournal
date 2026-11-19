@@ -44,14 +44,17 @@ import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
+import dev.jeziellago.compose.markdowntext.MarkdownText
 
-class DeniedEvent(
+class PermissionEvent(
     val message: String,
-    val permissionList: List<IPermission>
+    val permissionList: List<IPermission>? = null,
+    val onConfirm: (() -> Unit)? = null
 )
 
 @Composable
@@ -77,7 +80,7 @@ fun PermissionScreen(
     }
 
     // 权限申请被拒绝的对话框
-    var deniedEvent: DeniedEvent? by remember { mutableStateOf(null) }
+    var permissionEvent: PermissionEvent? by remember { mutableStateOf(null) }
 
     // 权限申请通用回调
     val allGrantedCallback: (List<IPermission>) -> Unit = { vm.sendSnackMessage("权限已授予") }
@@ -127,7 +130,7 @@ fun PermissionScreen(
                             descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
                             onAllGranted = allGrantedCallback,
                             onDoNotAskAgain = { permissionList ->
-                                deniedEvent = DeniedEvent(
+                                permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
@@ -156,7 +159,7 @@ fun PermissionScreen(
                             },
                             onAllGranted = allGrantedCallback,
                             onDoNotAskAgain = { permissionList ->
-                                deniedEvent = DeniedEvent(
+                                permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
@@ -177,7 +180,13 @@ fun PermissionScreen(
                     title = stringResource(R.string.auto_start_permission),
                     subtitle = stringResource(R.string.auto_start_permission_subtitle),
                     onClick = {
-                        //TODO:显示对话框
+                        permissionEvent = PermissionEvent(
+                            message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
+                                    "- 日记提醒是否准时触发。\n",
+                            onConfirm = {
+                                requestAutoStartPermission(context)
+                            }
+                        )
                     },
                     icon = painterResource(R.drawable.outline_autorenew_24),
                     normalRadius = Radius.MiddleArray
@@ -202,7 +211,7 @@ fun PermissionScreen(
                             },
                             onAllGranted = allGrantedCallback,
                             onDoNotAskAgain = { permissionList ->
-                                deniedEvent = DeniedEvent(
+                                permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
@@ -232,7 +241,7 @@ fun PermissionScreen(
                             },
                             onAllGranted = allGrantedCallback,
                             onDoNotAskAgain = { permissionList ->
-                                deniedEvent = DeniedEvent(
+                                permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
@@ -262,7 +271,7 @@ fun PermissionScreen(
                             },
                             hasFineLocation = { vm.sendSnackMessage("已授予精确位置权限") },
                             onDoNotAskAgain = { permissionList ->
-                                deniedEvent = DeniedEvent(
+                                permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
@@ -288,13 +297,22 @@ fun PermissionScreen(
     }
 
     // 权限申请信息对话框
-    deniedEvent?.let {
+    permissionEvent?.let {
         PermissionRequestDialog(
             message = it.message,
-            onDismissRequest = { deniedEvent = null },
+            onDismissRequest = { permissionEvent = null },
             onConfirm = {
-                XXPermissions.startPermissionActivity(context, it.permissionList)
-                deniedEvent = null
+                if (it.onConfirm == null) {
+                    it.permissionList?.let { permissions ->
+                        XXPermissions.startPermissionActivity(
+                            context,
+                            permissions
+                        )
+                    }
+                } else {
+                    it.onConfirm()
+                }
+                permissionEvent = null
             }
         )
     }
@@ -316,7 +334,7 @@ private fun PermissionRequestDialog(
         },
         text = {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
-                Text(message)
+                MarkdownText(message)
             }
         },
         confirmButton = {
