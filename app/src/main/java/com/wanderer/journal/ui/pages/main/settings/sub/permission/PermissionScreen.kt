@@ -1,6 +1,8 @@
 package com.wanderer.journal.ui.pages.main.settings.sub.permission
 
+import android.content.Intent
 import android.content.res.Configuration
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +44,7 @@ import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.R
+import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.helpers.permission.isAutoStartDefined
@@ -140,6 +143,13 @@ fun PermissionScreen(
                             PermissionLists.getCameraPermission()
                         )
                     },
+                    onLongClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        XXPermissions.startPermissionActivity(
+                            context,
+                            PermissionLists.getCameraPermission()
+                        )
+                    },
                     icon = painterResource(R.drawable.outline_photo_camera_24),
                     normalRadius = Radius.TopArray
                 )
@@ -169,6 +179,13 @@ fun PermissionScreen(
                             PermissionLists.getPostNotificationsPermission()
                         )
                     },
+                    onLongClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        XXPermissions.startPermissionActivity(
+                            context,
+                            PermissionLists.getCameraPermission()
+                        )
+                    },
                     icon = painterResource(R.drawable.outline_notification_settings_24),
                     normalRadius = Radius.MiddleArray
                 )
@@ -189,6 +206,10 @@ fun PermissionScreen(
                                     requestAutoStartPermission(context)
                                 }
                             )
+                        },
+                        onLongClick = {
+                            WandererJournal.lockLifecycleObserver(true)
+                            requestAutoStartPermission(context)
                         },
                         icon = painterResource(R.drawable.outline_autorenew_24),
                         normalRadius = Radius.MiddleArray
@@ -223,6 +244,11 @@ fun PermissionScreen(
                             PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
                         )
                     },
+                    onLongClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                        context.startActivity(intent)
+                    },
                     icon = painterResource(R.drawable.outline_battery_android_frame_3_24),
                     normalRadius = Radius.MiddleArray
                 )
@@ -250,6 +276,13 @@ fun PermissionScreen(
                                 )
                             },
                             onRequested = requestedCallback,
+                            PermissionLists.getScheduleExactAlarmPermission()
+                        )
+                    },
+                    onLongClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        XXPermissions.startPermissionActivity(
+                            context,
                             PermissionLists.getScheduleExactAlarmPermission()
                         )
                     },
@@ -290,6 +323,13 @@ fun PermissionScreen(
                                     vm.sendSnackMessage("已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节")
                                 }
                             }
+                        )
+                    },
+                    onLongClick = {
+                        WandererJournal.lockLifecycleObserver(true)
+                        XXPermissions.startPermissionActivity(
+                            context,
+                            PermissionLists.getAccessFineLocationPermission()
                         )
                     },
                     icon = painterResource(R.drawable.outline_location_on_24),

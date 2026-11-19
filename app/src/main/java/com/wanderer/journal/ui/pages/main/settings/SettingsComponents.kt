@@ -50,11 +50,13 @@ fun SettingClickableItem(
     subtitle: String? = null,
     arrowText: String? = null,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     icon: Painter,
     normalRadius: Array<Dp>
 ) {
     PressableCard(
         onClick = { _, _ -> onClick() },
+        onLongClick = if (onLongClick == null) null else { _, _ -> onLongClick() },
         modifier = modifier,
         normalRadius = normalRadius,
     ) {
