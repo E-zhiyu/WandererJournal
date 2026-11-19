@@ -213,6 +213,9 @@
     <string name="ignore_battery_optimization_subtitle">调整原生的电池优化策略</string>
     <string name="alarm_permission_subtitle">允许APP设置精确的定时任务</string>
     <string name="location_permission_subtitle">允许APP获取地理位置</string>
+    <string name="to_settings">去设置</string>
+    <string name="cancel">取消</string>
+    <string name="request_permission">申请权限</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

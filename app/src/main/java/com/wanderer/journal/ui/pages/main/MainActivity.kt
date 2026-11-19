@@ -50,7 +50,7 @@ import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
-import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.permission.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable

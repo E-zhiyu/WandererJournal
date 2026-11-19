@@ -1,0 +1,104 @@
+package com.wanderer.journal.helpers.permission
+
+import android.app.Activity
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import android.widget.Toast
+import com.hjq.device.compat.DeviceOs
+import com.hjq.permissions.OnPermissionDescription
+import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.base.IPermission
+import com.wanderer.journal.WandererJournal
+
+/**
+ * 判断是否定义了自启动权限
+ *
+ * @return 是否定义了自启动权限
+ */
+fun isAutoStartDefined(): Boolean {
+    //如果能识别到系统名称但是没有自启动权限，返回false
+    if (DeviceOs.isOneUi() || DeviceOs.isMyOs() || DeviceOs.isZuxOs() || DeviceOs.isZui()) {
+        return false
+    }
+
+    //判断系统名称是否为空，为空说明为类原生系统，否则为拥有自启动设置的定制安卓
+    return DeviceOs.getOsName().isNotEmpty()
+}
+
+/**
+ * 申请自启动权限
+ *
+ * @param context 上下文
+ */
+fun requestAutoStartPermission(context: Context) {
+    if (!isAutoStartDefined()) {
+        Toast.makeText(context, "当前系统无需申请自启动权限", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val intent: Intent?
+    if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
+        Toast.makeText(context, "请手动前往自启动设置界面授权", Toast.LENGTH_SHORT).show()
+        intent = Intent(Settings.ACTION_SETTINGS)
+    } else {
+        intent = Intent()
+        intent.setComponent(
+            ComponentName(
+                "com.miui.securitycenter",
+                "com.miui.permcenter.autostart.AutoStartManagementActivity"
+            )
+        )
+    }
+
+    WandererJournal.lockLifecycleObserver(true)
+    context.startActivity(intent)
+}
+
+/**
+ * 申请权限
+ *
+ * @param context 上下文
+ * @param descriptionFun 根据权限列表动态生成权限描述的方法
+ * @param onAllGranted 没有权限需要再申请的回调
+ * @param onDoNotAskAgain 用户选择不再询问后再申请权限的回调
+ * @param onRequested 权限申请情况回调
+ * @param permissions 需要申请的权限
+ */
+fun requestPermission(
+    context: Context,
+    activity: Activity?,
+    descriptionFun: ((List<IPermission>) -> String)? = null,
+    onAllGranted: (List<IPermission>) -> Unit,
+    onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
+    onRequested: (List<IPermission>, List<IPermission>) -> Unit,
+    vararg permissions: IPermission
+) {
+    if (permissions.isEmpty()) return
+
+    if (XXPermissions.isGrantedPermissions(context, permissions)) {
+        onAllGranted(permissions.asList())
+    } else if (
+        onDoNotAskAgain != null &&
+        activity != null &&
+        XXPermissions.isDoNotAskAgainPermissions(activity, permissions)
+    ) {
+        onDoNotAskAgain(permissions.asList())
+    } else {
+        WandererJournal.lockLifecycleObserver(true)
+        val description: OnPermissionDescription? = if (descriptionFun == null) {
+            null
+        } else {
+            PermissionDialogDescription(descriptionFun)
+        }
+
+        XXPermissions.with(context)
+            .permissions(permissions)
+            .description(description)
+            .request { grantedList, deniedList ->
+                WandererJournal.lockLifecycleObserver(false)
+                onRequested(grantedList, deniedList)
+            }
+    }
+}
