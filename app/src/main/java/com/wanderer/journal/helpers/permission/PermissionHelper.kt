@@ -9,6 +9,7 @@ import android.widget.Toast
 import com.hjq.device.compat.DeviceOs
 import com.hjq.permissions.OnPermissionDescription
 import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.WandererJournal
 
@@ -38,7 +39,7 @@ fun requestAutoStartPermission(context: Context) {
         return
     }
 
-    val intent: Intent?
+    val intent: Intent
     if (!DeviceOs.isHyperOs() && !DeviceOs.isMiui()) {
         Toast.makeText(context, "请手动前往自启动设置界面授权", Toast.LENGTH_SHORT).show()
         intent = Intent(Settings.ACTION_SETTINGS)
@@ -87,14 +88,60 @@ fun requestPermission(
         onDoNotAskAgain(permissions.asList())
     } else {
         WandererJournal.lockLifecycleObserver(true)
-        val description: OnPermissionDescription? = if (descriptionFun == null) {
-            null
-        } else {
-            PermissionDialogDescription(descriptionFun)
-        }
+        val description: OnPermissionDescription? =
+            if (descriptionFun == null) null else PermissionDialogDescription(descriptionFun)
 
         XXPermissions.with(context)
             .permissions(permissions)
+            .description(description)
+            .request { grantedList, deniedList ->
+                WandererJournal.lockLifecycleObserver(false)
+                onRequested(grantedList, deniedList)
+            }
+    }
+}
+
+/**
+ * 申请位置权限
+ *
+ * @param context 上下文
+ * @param descriptionFun 根据权限列表动态生成权限描述的方法
+ * @param hasFineLocation 已经拥有精确位置权限的回调
+ * @param onlyCoarseLocation 仅有粗略位置的回调，若不为 null 会拦截接下来的精确位置申请逻辑
+ * @param onDoNotAskAgain 用户选择不再询问后再申请权限的回调
+ * @param onRequested 权限申请情况回调
+ */
+fun requestLocationPermission(
+    context: Context,
+    activity: Activity?,
+    descriptionFun: ((List<IPermission>) -> String)? = null,
+    hasFineLocation: () -> Unit,
+    onlyCoarseLocation: (() -> Unit)? = null,
+    onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
+    onRequested: (List<IPermission>, List<IPermission>) -> Unit
+) {
+    val fineLocation = PermissionLists.getAccessFineLocationPermission()
+    val coarseLocation = PermissionLists.getAccessCoarseLocationPermission()
+    val isFineGranted = XXPermissions.isGrantedPermission(context, fineLocation)
+    val isCoarseGranted = XXPermissions.isGrantedPermission(context, coarseLocation)
+    val permissionArray = arrayOf(fineLocation, coarseLocation)
+    if (isFineGranted && isCoarseGranted) {
+        hasFineLocation()
+    } else if (isCoarseGranted && onlyCoarseLocation != null) {
+        onlyCoarseLocation()
+    } else if (
+        (activity != null) &&
+        (onDoNotAskAgain != null) &&
+        XXPermissions.isDoNotAskAgainPermissions(activity, permissionArray)
+    ) {
+        onDoNotAskAgain(permissionArray.asList())
+    } else {
+        WandererJournal.lockLifecycleObserver(true)
+        val description: OnPermissionDescription? =
+            if (descriptionFun == null) null else PermissionDialogDescription(descriptionFun)
+
+        XXPermissions.with(context)
+            .permissions(permissionArray)
             .description(description)
             .request { grantedList, deniedList ->
                 WandererJournal.lockLifecycleObserver(false)

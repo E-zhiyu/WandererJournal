@@ -44,6 +44,7 @@ import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
@@ -78,6 +79,16 @@ fun PermissionScreen(
     // 权限申请被拒绝的对话框
     var deniedEvent: DeniedEvent? by remember { mutableStateOf(null) }
 
+    // 权限申请通用回调
+    val allGrantedCallback: (List<IPermission>) -> Unit = { vm.sendSnackMessage("权限已授予") }
+    val requestedCallback: (List<IPermission>, List<IPermission>) -> Unit = { grantedList, _ ->
+        if (grantedList.isNotEmpty()) {
+            vm.sendSnackMessage("权限已授予")
+        } else {
+            vm.sendSnackMessage("权限申请被拒绝")
+        }
+    }
+
     Scaffold(
         topBar = {
             LargeTopAppBar(
@@ -105,6 +116,7 @@ fun PermissionScreen(
         ) {
             // 相机权限
             item {
+                Spacer(modifier = Modifier.height(Interval.DefaultPadding))
                 SettingClickableItem(
                     title = stringResource(R.string.camera_permission),
                     subtitle = stringResource(R.string.camera_permission_subtitle),
@@ -113,22 +125,14 @@ fun PermissionScreen(
                             context,
                             activity,
                             descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
-                            onAllGranted = {
-                                vm.sendSnackMessage("权限已授予")
-                            },
+                            onAllGranted = allGrantedCallback,
                             onDoNotAskAgain = { permissionList ->
                                 deniedEvent = DeniedEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
                                     permissionList = permissionList
                                 )
                             },
-                            onRequested = { grantedList, _ ->
-                                if (grantedList.isNotEmpty()) {
-                                    vm.sendSnackMessage("权限已授予")
-                                } else {
-                                    vm.sendSnackMessage("权限未授予")
-                                }
-                            },
+                            onRequested = requestedCallback,
                             PermissionLists.getCameraPermission()
                         )
                     },
@@ -144,12 +148,22 @@ fun PermissionScreen(
                     title = stringResource(R.string.notification_permission),
                     subtitle = stringResource(R.string.notification_permission_subtitle),
                     onClick = {
-//                        PermissionHelper.requestPermission(
-//                            context,
-//                            { "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知。\n" },
-//                            requestCallback,
-//                            PermissionLists.getPostNotificationsPermission()
-//                        )
+                        requestPermission(
+                            context,
+                            activity,
+                            descriptionFun = {
+                                "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知；\n- 进行数据备份时发送反馈通知。\n"
+                            },
+                            onAllGranted = allGrantedCallback,
+                            onDoNotAskAgain = { permissionList ->
+                                deniedEvent = DeniedEvent(
+                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                    permissionList = permissionList
+                                )
+                            },
+                            onRequested = requestedCallback,
+                            PermissionLists.getPostNotificationsPermission()
+                        )
                     },
                     icon = painterResource(R.drawable.outline_notification_settings_24),
                     normalRadius = Radius.MiddleArray
@@ -177,12 +191,25 @@ fun PermissionScreen(
                     title = stringResource(R.string.ignore_battery_optimization),
                     subtitle = stringResource(R.string.ignore_battery_optimization_subtitle),
                     onClick = {
-//                        PermissionHelper.requestBatteryIgnoration(context) {
-//                            "该设置项是原生安卓的一个重要设置项，可以更加底层地调整应用的省电策略。" +
-//                                    "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
-//                                    "影响范围如下：\n" +
-//                                    "- 日记提醒是否能够准点发送通知。\n"
-//                        }
+                        requestPermission(
+                            context,
+                            activity,
+                            descriptionFun = {
+                                "该设置项可以调整应用的省电策略。" +
+                                        "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
+                                        "影响范围如下：\n" +
+                                        "- 日记提醒是否能够准点发送通知。\n"
+                            },
+                            onAllGranted = allGrantedCallback,
+                            onDoNotAskAgain = { permissionList ->
+                                deniedEvent = DeniedEvent(
+                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                    permissionList = permissionList
+                                )
+                            },
+                            onRequested = requestedCallback,
+                            PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
+                        )
                     },
                     icon = painterResource(R.drawable.outline_battery_android_frame_3_24),
                     normalRadius = Radius.MiddleArray
@@ -196,15 +223,23 @@ fun PermissionScreen(
                     title = stringResource(R.string.alarm_permission),
                     subtitle = stringResource(R.string.alarm_permission_subtitle),
                     onClick = {
-//                        PermissionHelper.requestPermission(
-//                            context,
-//                            {
-//                                "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-//                                        "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
-//                            },
-//                            requestCallback,
-//                            PermissionLists.getScheduleExactAlarmPermission()
-//                        )
+                        requestPermission(
+                            context,
+                            activity,
+                            descriptionFun = {
+                                "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
+                                        "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
+                            },
+                            onAllGranted = allGrantedCallback,
+                            onDoNotAskAgain = { permissionList ->
+                                deniedEvent = DeniedEvent(
+                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                    permissionList = permissionList
+                                )
+                            },
+                            onRequested = requestedCallback,
+                            PermissionLists.getScheduleExactAlarmPermission()
+                        )
                     },
                     icon = painterResource(R.drawable.outline_alarm_24),
                     normalRadius = Radius.MiddleArray
@@ -218,14 +253,32 @@ fun PermissionScreen(
                     title = stringResource(R.string.location_permission),
                     subtitle = stringResource(R.string.location_permission_subtitle),
                     onClick = {
-//                        PermissionHelper.requestLocationPermission(
-//                            context,
-//                            {
-//                                "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
-//                                        "- 写日记时将位置信息保存至日记段落中。\n"
-//                            },
-//                            null
-//                        )
+                        requestLocationPermission(
+                            context,
+                            activity,
+                            descriptionFun = {
+                                "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
+                                        "- 写日记时将位置信息保存至日记段落中。\n"
+                            },
+                            hasFineLocation = { vm.sendSnackMessage("已授予精确位置权限") },
+                            onDoNotAskAgain = { permissionList ->
+                                deniedEvent = DeniedEvent(
+                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                    permissionList = permissionList
+                                )
+                            },
+                            onRequested = { grantedList, deniedList ->
+                                val noDenied = deniedList.isEmpty()
+                                val noGranted = grantedList.isEmpty()
+                                if (noGranted && !noDenied) {
+                                    vm.sendSnackMessage("权限申请被拒绝")
+                                } else if (noDenied && !noGranted) {
+                                    vm.sendSnackMessage("已授予精确位置权限")
+                                } else {
+                                    vm.sendSnackMessage("已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节")
+                                }
+                            }
+                        )
                     },
                     icon = painterResource(R.drawable.outline_location_on_24),
                     normalRadius = Radius.BottomArray
