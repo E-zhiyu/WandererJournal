@@ -3,10 +3,6 @@ package com.wanderer.journal.ui.pages.main.settings.sub
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
@@ -74,16 +69,19 @@ import com.wanderer.journal.ui.theme.MaterialAppTheme
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun AboutScreenPreview() {
+private fun Preview() {
     MaterialAppTheme {
-        AboutScreen()
+        AboutScreen(
+            onNavigateBack = {},
+            onNavigateToTroubleshooting = {}
+        )
     }
 }
 
 @Composable
 fun AboutScreen(
-    onNavigateBack: () -> Unit = {},
-    onNavigateToTroubleshooting: () -> Unit = {}
+    onNavigateBack: () -> Unit,
+    onNavigateToTroubleshooting: () -> Unit
 ) {
     // 控制仓库地址弹窗的显示状态
     var showRepoDialog by remember { mutableStateOf(false) }
