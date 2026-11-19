@@ -105,18 +105,16 @@ private fun MainScreen(
 
     LaunchedEffect(appSettings) {
         if (appSettings == null) return@LaunchedEffect
-        // 可选：让开屏停留一小会儿，避免一闪而过
-        delay(350.milliseconds)
         // 扩张 + 淡出并行
         launch {
             animatable.animateTo(
                 1f,
-                animationSpec = tween(durationMillis = 750, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
             )
         }
         iconAlpha.animateTo(
             0f,
-            animationSpec = tween(durationMillis = 350, easing = LinearEasing)
+            animationSpec = tween(durationMillis = 450, easing = LinearEasing)
         )
         splashVisible = false   // 动画结束，移除遮罩
     }
@@ -175,15 +173,6 @@ private fun MainTabs(
         pageCount = { MainDestination.entries.size }
     )
     val scope = rememberCoroutineScope()
-
-    // 当外部 startIndex 变化时，同步一次 Pager，去除无法跳转到初始界面的BUG（因为 DataStore 可能没有加载完全）
-    var pageInit by remember { mutableStateOf(false) }
-    LaunchedEffect(startIndex) {
-        if (pagerState.currentPage != startIndex && !pageInit) {
-            pagerState.scrollToPage(startIndex)
-            pageInit = true
-        }
-    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
