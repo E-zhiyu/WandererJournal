@@ -28,6 +28,7 @@ import com.wanderer.journal.R
 import kotlin.math.hypot
 
 /**
+ * 应用启动界面遮罩
  * @param progress 0f = 洞口最小(包住图标)，1f = 洞口覆盖全屏
  * @param iconAlpha 图标透明度
  */
