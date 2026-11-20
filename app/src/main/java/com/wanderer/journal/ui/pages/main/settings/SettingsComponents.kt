@@ -120,8 +120,14 @@ fun SettingSwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    var switchState = checked   // 保存开关状态
+
     PressableCard(
-        onClick = { _, _ -> onCheckedChange(!checked) },
+        onClick = { _, _ ->
+            val newState = !switchState
+            onCheckedChange(newState)
+            switchState = newState
+        },
         modifier = modifier,
         normalRadius = normalRadius,
     ) {
@@ -152,7 +158,10 @@ fun SettingSwitchItem(
             Spacer(modifier = Modifier.width(16.dp))
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = { checked ->
+                    onCheckedChange(checked)
+                    switchState = checked
+                }
             )
         }
     }
