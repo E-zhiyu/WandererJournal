@@ -156,7 +156,9 @@ private fun MainScreen(
 
                 // 分享设置
                 composable<ScreenRoutes.ShareSettings> {
-                    ShareSettingsScreen { navController.popBackStack() }
+                    ShareSettingsScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
                 }
             }
         }

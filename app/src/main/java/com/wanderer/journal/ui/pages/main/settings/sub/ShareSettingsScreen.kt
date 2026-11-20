@@ -9,15 +9,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
@@ -27,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.data.save.store.viewmodels.DiaryShareViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsDiaryShareViewModel
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
@@ -35,14 +42,18 @@ import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 @Composable
 fun ShareSettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    vm: DiaryShareViewModel = dsDiaryShareViewModel()
 ) {
     val scrollState = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
 
-    val vm = dsDiaryShareViewModel()
+    // 设置项
     val shareSettings by vm.diaryShare.collectAsStateWithLifecycle()
+
+    // 文本输入对话框
+    var dialogVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -134,12 +145,45 @@ fun ShareSettingsScreen(
                     subtitle = stringResource(R.string.share_bottom_text_subtitle),
                     icon = painterResource(R.drawable.outline_text_ad_24),
                     normalRadius = Radius.SingleArray,
-                    onClick = {
-                        // TODO:弹出对话框
-                    }
+                    onClick = { dialogVisible = true }
                 )
             }
         }
+    }
+
+    // 显示文本输入对话框
+    if (dialogVisible) {
+        var text by remember { mutableStateOf(shareSettings.bottomText) }
+        AlertDialog(
+            title = {
+                Text(stringResource(R.string.input_text))
+            },
+            text = {
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { newText -> text = newText },
+                    label = { Text(stringResource(R.string.share_picture_bottom_text)) }
+                )
+            },
+            onDismissRequest = { dialogVisible = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        dialogVisible = false
+                        vm.setBottomText(text)
+                    }
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { dialogVisible = false }
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
     }
 }
 
@@ -157,6 +201,6 @@ fun ShareSettingsScreen(
 @Composable
 private fun SharePreview() {
     MaterialAppTheme {
-        ShareSettingsScreen {}
+        ShareSettingsScreen({})
     }
 }

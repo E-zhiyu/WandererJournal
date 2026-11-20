@@ -221,6 +221,8 @@
     <string name="share_paragraph_time_subtitle">分享日记时包含段落编写时间</string>
     <string name="share_paragraph_location_subtitle">分享日记时包含地理位置信息</string>
     <string name="share_bottom_text_subtitle">设置分享图片的底部文本</string>
+    <string name="confirm">确认</string>
+    <string name="input_text">输入文本</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>
