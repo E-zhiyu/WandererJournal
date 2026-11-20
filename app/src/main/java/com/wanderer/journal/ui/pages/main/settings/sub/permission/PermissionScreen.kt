@@ -4,12 +4,16 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,6 +23,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -39,6 +45,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
@@ -47,6 +56,7 @@ import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
@@ -55,7 +65,7 @@ import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
-class PermissionEvent(
+private class PermissionEvent(
     val message: String,
     val permissionList: List<IPermission>? = null,
     val onConfirm: (() -> Unit)? = null
@@ -96,6 +106,14 @@ fun PermissionScreen(
         }
     }
 
+    // 界面可见时刷新权限授予情况
+    val grantedText = "已授予"
+    val notGrantedText = "未授予"
+    val permissionStates by vm.permissionStates.collectAsStateWithLifecycle()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        vm.refreshPermissionStates()
+    }
+
     Scaffold(
         topBar = {
             LargeTopAppBar(
@@ -127,6 +145,7 @@ fun PermissionScreen(
                 SettingClickableItem(
                     title = stringResource(R.string.camera_permission),
                     subtitle = stringResource(R.string.camera_permission_subtitle),
+                    arrowText = permissionStates?.let { if (permissionStates!!.camera) grantedText else notGrantedText },
                     onClick = {
                         requestPermission(
                             context,
@@ -161,6 +180,7 @@ fun PermissionScreen(
                 SettingClickableItem(
                     title = stringResource(R.string.notification_permission),
                     subtitle = stringResource(R.string.notification_permission_subtitle),
+                    arrowText = permissionStates?.let { if (permissionStates!!.notification) grantedText else notGrantedText },
                     onClick = {
                         requestPermission(
                             context,
@@ -223,6 +243,7 @@ fun PermissionScreen(
                 SettingClickableItem(
                     title = stringResource(R.string.ignore_battery_optimization),
                     subtitle = stringResource(R.string.ignore_battery_optimization_subtitle),
+                    arrowText = permissionStates?.let { if (permissionStates!!.battery) "已忽略" else "未忽略" },
                     onClick = {
                         requestPermission(
                             context,
@@ -260,6 +281,7 @@ fun PermissionScreen(
                 SettingClickableItem(
                     title = stringResource(R.string.alarm_permission),
                     subtitle = stringResource(R.string.alarm_permission_subtitle),
+                    arrowText = permissionStates?.let { if (permissionStates!!.alarm) grantedText else notGrantedText },
                     onClick = {
                         requestPermission(
                             context,
@@ -297,6 +319,15 @@ fun PermissionScreen(
                 SettingClickableItem(
                     title = stringResource(R.string.location_permission),
                     subtitle = stringResource(R.string.location_permission_subtitle),
+                    arrowText = permissionStates?.let {
+                        if (permissionStates!!.fineLocation) {
+                            "精确位置"
+                        } else if (permissionStates!!.coarseLocation) {
+                            "粗略位置"
+                        } else {
+                            notGrantedText
+                        }
+                    },
                     onClick = {
                         requestLocationPermission(
                             context,
@@ -335,6 +366,27 @@ fun PermissionScreen(
                     icon = painterResource(R.drawable.outline_location_on_24),
                     normalRadius = Radius.BottomArray
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        modifier = Modifier.size(Size.bodySmallIcon),
+                        painter = painterResource(R.drawable.outline_info_24),
+                        tint = MaterialTheme.colorScheme.outline,
+                        contentDescription = null
+                    )
+                    Text(
+                        text = "可长按进入权限设置界面",
+                        color = MaterialTheme.colorScheme.outline,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }

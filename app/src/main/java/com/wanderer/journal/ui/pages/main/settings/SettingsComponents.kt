@@ -84,6 +84,7 @@ fun SettingClickableItem(
                     )
                 }
             }
+            Spacer(modifier = Modifier.width(8.dp))
             arrowText?.let {
                 Text(
                     text = it,

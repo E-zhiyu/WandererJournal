@@ -38,6 +38,11 @@ object Interval {
     val SidePadding = 16.dp     // 默认的横向屏幕安全边距
 }
 
+object Size {
+    // 图标大小
+    val bodySmallIcon = 16.dp   // 对应 bodySmall 字号的图标大小
+}
+
 // 更新日志
 const val CHANGELOG = "# v1.8.4\n" +
         "\n" +
