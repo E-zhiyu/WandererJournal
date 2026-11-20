@@ -1,5 +1,6 @@
-package com.wanderer.journal.ui.pages.main.settings.sub.permission
+package com.wanderer.journal.ui.pages.main.settings.sub
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.provider.Settings
@@ -36,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
@@ -64,20 +65,42 @@ import com.wanderer.journal.helpers.permission.requestPermission
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
+// 权限授予事件
 private class PermissionEvent(
     val message: String,
     val permissionList: List<IPermission>? = null,
     val onConfirm: (() -> Unit)? = null
 )
 
+// 权限授予状态
+class PermissionState(
+    val camera: Boolean,
+    val notification: Boolean,
+    val battery: Boolean,
+    val alarm: Boolean,
+    val fineLocation: Boolean,
+    val coarseLocation: Boolean
+)
+
+private val mutablePermissionStatesFlow = MutableStateFlow<PermissionState?>(null)
+private val permissionStates: StateFlow<PermissionState?> =
+    mutablePermissionStatesFlow.asStateFlow()
+private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
+
 @Composable
 fun PermissionScreen(
     onNavigateBack: () -> Unit,
-    vm: PermissionScreenViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
+    val scope = rememberCoroutineScope()
 
     val scrollState = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
@@ -86,7 +109,7 @@ fun PermissionScreen(
     // Snackbar
     val snackHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
-        for (message in vm.getMessageChannel()) {
+        for (message in snackMessageChannel) {
             if (message.isNotEmpty()) {
                 snackHostState.showSnackbar(message)
             }
@@ -97,21 +120,21 @@ fun PermissionScreen(
     var permissionEvent: PermissionEvent? by remember { mutableStateOf(null) }
 
     // 权限申请通用回调
-    val allGrantedCallback: (List<IPermission>) -> Unit = { vm.sendSnackMessage("权限已授予") }
+    val allGrantedCallback: (List<IPermission>) -> Unit = { sendSnackMessage(scope, "权限已授予") }
     val requestedCallback: (List<IPermission>, List<IPermission>) -> Unit = { grantedList, _ ->
         if (grantedList.isNotEmpty()) {
-            vm.sendSnackMessage("权限已授予")
+            sendSnackMessage(scope, "权限已授予")
         } else {
-            vm.sendSnackMessage("权限申请被拒绝")
+            sendSnackMessage(scope, "权限申请被拒绝")
         }
     }
 
     // 界面可见时刷新权限授予情况
     val grantedText = "已授予"
     val notGrantedText = "未授予"
-    val permissionStates by vm.permissionStates.collectAsStateWithLifecycle()
+    val permissionStates by permissionStates.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        vm.refreshPermissionStates()
+        refreshPermissionStates(context)
     }
 
     Scaffold(
@@ -336,7 +359,7 @@ fun PermissionScreen(
                                 "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
                                         "- 写日记时将位置信息保存至日记段落中。\n"
                             },
-                            hasFineLocation = { vm.sendSnackMessage("已授予精确位置权限") },
+                            hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
                             onDoNotAskAgain = { permissionList ->
                                 permissionEvent = PermissionEvent(
                                     message = "权限申请被拒绝，请前往权限设置界面授权。",
@@ -347,11 +370,14 @@ fun PermissionScreen(
                                 val noDenied = deniedList.isEmpty()
                                 val noGranted = grantedList.isEmpty()
                                 if (noGranted && !noDenied) {
-                                    vm.sendSnackMessage("权限申请被拒绝")
+                                    sendSnackMessage(scope, "权限申请被拒绝")
                                 } else if (noDenied && !noGranted) {
-                                    vm.sendSnackMessage("已授予精确位置权限")
+                                    sendSnackMessage(scope, "已授予精确位置权限")
                                 } else {
-                                    vm.sendSnackMessage("已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节")
+                                    sendSnackMessage(
+                                        scope,
+                                        "已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节"
+                                    )
                                 }
                             }
                         )
@@ -449,6 +475,45 @@ private fun PermissionRequestDialog(
     )
 }
 
+private fun sendSnackMessage(scope: CoroutineScope, message: String) {
+    scope.launch {
+        snackMessageChannel.send(message)
+    }
+}
+
+/**
+ * 刷新权限授予状态
+ */
+private fun refreshPermissionStates(context: Context) {
+    val states = PermissionState(
+        camera = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getCameraPermission()
+        ),
+        notification = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getPostNotificationsPermission()
+        ),
+        battery = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
+        ),
+        alarm = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getScheduleExactAlarmPermission()
+        ),
+        fineLocation = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getAccessFineLocationPermission()
+        ),
+        coarseLocation = XXPermissions.isGrantedPermission(
+            context,
+            PermissionLists.getAccessCoarseLocationPermission()
+        )
+    )
+    mutablePermissionStatesFlow.value = states
+}
+
 @Preview(
     name = "Light Mode",
     showBackground = true,
@@ -461,7 +526,7 @@ private fun PermissionRequestDialog(
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-private fun Preview() {
+private fun PermissionPreview() {
     MaterialAppTheme {
         PermissionScreen(
             onNavigateBack = {}
