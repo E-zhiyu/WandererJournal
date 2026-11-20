@@ -97,7 +97,7 @@
     <string name="save_to_album">保存到相册</string>
     <string name="auto_start_permission">自启动权限</string>
     <string name="others">其他</string>
-    <string name="include_media">包含媒体</string>
+    <string name="media">媒体</string>
     <string name="include_location">包含位置</string>
     <string name="skip_date">日期跳转</string>
     <string name="role">角色</string>
@@ -216,6 +216,11 @@
     <string name="to_settings">去设置</string>
     <string name="cancel">取消</string>
     <string name="request_permission">申请权限</string>
+    <string name="share_media_subtitle">分享日记时包含媒体预览图</string>
+    <string name="share_emotion_tag_subtitle">分享日记时包含情绪标签</string>
+    <string name="share_paragraph_time_subtitle">分享日记时包含段落编写时间</string>
+    <string name="share_paragraph_location_subtitle">分享日记时包含地理位置信息</string>
+    <string name="share_bottom_text_subtitle">设置分享图片的底部文本</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

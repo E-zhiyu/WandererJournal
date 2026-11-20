@@ -83,7 +83,7 @@ public class ShareSettingsActivity extends AppCompatActivity {
         SettingSwitchView mediaSwitch = new SettingSwitchView(
                 this,
                 binding.mediaSwitch,
-                R.string.include_media,
+                R.string.media,
                 "分享日记内容包括段落的媒体预览图",
                 R.drawable.outline_perm_media_24,
                 RadiusStyle.TOP
