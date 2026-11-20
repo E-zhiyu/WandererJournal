@@ -157,6 +157,6 @@ fun ShareSettingsScreen(
 @Composable
 private fun SharePreview() {
     MaterialAppTheme {
-        ShareSettingsScreen({})
+        ShareSettingsScreen {}
     }
 }

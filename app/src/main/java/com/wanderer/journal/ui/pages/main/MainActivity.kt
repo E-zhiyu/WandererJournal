@@ -136,9 +136,7 @@ private fun MainScreen(
 
                 // 权限设置
                 composable<ScreenRoutes.PermissionSettings> {
-                    PermissionScreen(
-                        onNavigateBack = { navController.popBackStack() }
-                    )
+                    PermissionScreen { navController.popBackStack() }
                 }
 
                 // 关于软件
@@ -153,16 +151,12 @@ private fun MainScreen(
 
                 // 疑难解答
                 composable<ScreenRoutes.Troubleshooting> {
-                    TroubleshootingScreen(
-                        onNavigateBack = { navController.popBackStack() }
-                    )
+                    TroubleshootingScreen { navController.popBackStack() }
                 }
 
                 // 分享设置
                 composable<ScreenRoutes.ShareSettings> {
-                    ShareSettingsScreen(
-                        onNavigateBack = { navController.popBackStack() }
-                    )
+                    ShareSettingsScreen { navController.popBackStack() }
                 }
             }
         }
