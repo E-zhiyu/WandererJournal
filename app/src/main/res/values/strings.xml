@@ -223,6 +223,7 @@
     <string name="share_bottom_text_subtitle">设置分享图片的底部文本</string>
     <string name="confirm">确认</string>
     <string name="input_text">输入文本</string>
+    <string name="share_bottom_text_supporting">可在分享日记为图片时看到，留空以使用默认文本</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

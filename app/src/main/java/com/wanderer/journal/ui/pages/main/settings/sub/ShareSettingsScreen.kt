@@ -20,14 +20,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
@@ -153,24 +158,44 @@ fun ShareSettingsScreen(
 
     // 显示文本输入对话框
     if (dialogVisible) {
-        var text by remember { mutableStateOf(shareSettings.bottomText) }
+        var textFieldValue by remember {
+            mutableStateOf(
+                TextFieldValue(
+                    text = shareSettings.bottomText,
+                    selection = TextRange(shareSettings.bottomText.length)
+                )
+            )
+        }
         AlertDialog(
             title = {
                 Text(stringResource(R.string.input_text))
             },
             text = {
+                val focusRequester = remember { FocusRequester() }
+
                 OutlinedTextField(
-                    value = text,
-                    onValueChange = { newText -> text = newText },
-                    label = { Text(stringResource(R.string.share_picture_bottom_text)) }
+                    modifier = Modifier.focusRequester(focusRequester),
+                    value = textFieldValue,
+                    onValueChange = { newText ->
+                        textFieldValue = TextFieldValue(
+                            text = newText.text.trim(),
+                            selection = newText.selection
+                        )
+                    },
+                    label = { Text(stringResource(R.string.share_picture_bottom_text)) },
+                    supportingText = { Text(stringResource(R.string.share_bottom_text_supporting)) }
                 )
+
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
             },
             onDismissRequest = { dialogVisible = false },
             confirmButton = {
                 TextButton(
                     onClick = {
                         dialogVisible = false
-                        vm.setBottomText(text)
+                        vm.setBottomText(textFieldValue.text.trim())
                     }
                 ) {
                     Text(stringResource(R.string.confirm))
