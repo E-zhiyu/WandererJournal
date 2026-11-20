@@ -51,7 +51,6 @@ import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity
-import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -61,7 +60,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 fun SettingsScreen(
     disposable: CompositeDisposable,
     onSkipToPermission: () -> Unit,
-    onSkipToAbout: () -> Unit
+    onSkipToAbout: () -> Unit,
+    onSkipToShare: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.fragment.app.FragmentActivity
@@ -265,14 +265,7 @@ fun SettingsScreen(
                     subtitle = "跳转至分享设置界面",
                     icon = painterResource(id = R.drawable.outline_share_24),
                     normalRadius = Radius.BottomArray,
-                    onClick = {
-                        context.startActivity(
-                            Intent(
-                                context,
-                                ShareSettingsActivity::class.java
-                            )
-                        )
-                    }
+                    onClick = onSkipToShare
                 )
             }
 
@@ -494,6 +487,6 @@ fun ChangeLogDialog(
 @Composable
 fun Preview() {
     MaterialAppTheme {
-        SettingsScreen(CompositeDisposable(), {}, {})
+        SettingsScreen(CompositeDisposable(), {}, {}, {})
     }
 }

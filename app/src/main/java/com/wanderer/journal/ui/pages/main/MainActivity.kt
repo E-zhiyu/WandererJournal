@@ -51,6 +51,7 @@ import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -156,6 +157,13 @@ private fun MainScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                // 分享设置
+                composable<ScreenRoutes.ShareSettings> {
+                    ShareSettingsScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
 
@@ -228,7 +236,8 @@ private fun MainTabs(
                 MainDestination.SETTINGS -> SettingsScreen(
                     disposable = CompositeDisposable(),
                     onSkipToPermission = { navController.navigate(ScreenRoutes.PermissionSettings) },
-                    onSkipToAbout = { navController.navigate(ScreenRoutes.About) }
+                    onSkipToAbout = { navController.navigate(ScreenRoutes.About) },
+                    onSkipToShare = { navController.navigate(ScreenRoutes.ShareSettings) }
                 )
             }
         }

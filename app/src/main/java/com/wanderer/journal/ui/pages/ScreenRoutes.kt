@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface ScreenRoutes {
+    // 主界面三个子界面
+    @Serializable data object MainTabs
+
     // 关于软件
     @Serializable
     data object About : ScreenRoutes
@@ -12,20 +15,11 @@ sealed interface ScreenRoutes {
     @Serializable
     data object Troubleshooting : ScreenRoutes
 
-    // 日记列表
-    @Serializable
-    data object Diary : ScreenRoutes
-
-    // 主页
-    @Serializable
-    data object Home: ScreenRoutes
-
-    // 设置界面
-    @Serializable
-    data object Settings: ScreenRoutes
-
     // 权限设置界面
     @Serializable
     data object PermissionSettings: ScreenRoutes
-    @Serializable data object MainTabs
+
+    // 分享设置界面
+    @Serializable
+    data object ShareSettings: ScreenRoutes
 }
