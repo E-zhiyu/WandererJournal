@@ -50,6 +50,7 @@ import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
@@ -160,6 +161,13 @@ private fun MainScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                // 日记提醒设置
+                composable<ScreenRoutes.DiaryAlarmSettings> {
+                    DiaryAlarmScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
 
@@ -233,7 +241,8 @@ private fun MainTabs(
                     disposable = CompositeDisposable(),
                     onSkipToPermission = { navController.navigate(ScreenRoutes.PermissionSettings) },
                     onSkipToAbout = { navController.navigate(ScreenRoutes.About) },
-                    onSkipToShare = { navController.navigate(ScreenRoutes.ShareSettings) }
+                    onSkipToShare = { navController.navigate(ScreenRoutes.ShareSettings) },
+                    onSkipToDiaryAlarm = { navController.navigate(ScreenRoutes.DiaryAlarmSettings) }
                 )
             }
         }

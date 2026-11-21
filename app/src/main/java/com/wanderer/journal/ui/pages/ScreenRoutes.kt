@@ -22,4 +22,8 @@ sealed interface ScreenRoutes {
     // 分享设置界面
     @Serializable
     data object ShareSettings: ScreenRoutes
+
+    // 日记提醒设置界面
+    @Serializable
+    data object DiaryAlarmSettings: ScreenRoutes
 }

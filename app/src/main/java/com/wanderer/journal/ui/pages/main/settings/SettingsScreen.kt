@@ -50,7 +50,6 @@ import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
-import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -61,7 +60,8 @@ fun SettingsScreen(
     disposable: CompositeDisposable,
     onSkipToPermission: () -> Unit,
     onSkipToAbout: () -> Unit,
-    onSkipToShare: () -> Unit
+    onSkipToShare: () -> Unit,
+    onSkipToDiaryAlarm: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.fragment.app.FragmentActivity
@@ -248,14 +248,7 @@ fun SettingsScreen(
                     subtitle = "跳转至日记提醒设置界面",
                     normalRadius = Radius.MiddleArray,
                     icon = painterResource(id = R.drawable.outline_alarm_24),
-                    onClick = {
-                        context.startActivity(
-                            Intent(
-                                context,
-                                DiaryAlarmActivity::class.java
-                            )
-                        )
-                    }
+                    onClick = onSkipToDiaryAlarm
                 )
             }
             item {
@@ -487,6 +480,12 @@ fun ChangeLogDialog(
 @Composable
 fun Preview() {
     MaterialAppTheme {
-        SettingsScreen(CompositeDisposable(), {}, {}, {})
+        SettingsScreen(
+            CompositeDisposable(),
+            {},
+            {},
+            {},
+            {}
+        )
     }
 }
