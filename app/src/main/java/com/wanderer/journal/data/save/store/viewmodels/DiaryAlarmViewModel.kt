@@ -32,11 +32,11 @@ class DiaryAlarmViewModel(
         dataStore.updateData { it.toBuilder().setSwitch(isOpen).build() }
     }
 
-    fun addAlarmTime(time: String) = viewModelScope.launch {
+    fun addAlarmTime(time: Int) = viewModelScope.launch {
         dataStore.updateData { it.toBuilder().addAlarmTime(time).build() }
     }
 
-    fun removeAlarmTime(time: String) = viewModelScope.launch {
+    fun removeAlarmTime(time: Int) = viewModelScope.launch {
         dataStore.updateData {
             val newList = it.alarmTimeList.toMutableList()
             newList.remove(time)

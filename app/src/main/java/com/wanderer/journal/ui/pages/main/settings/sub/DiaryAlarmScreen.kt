@@ -29,12 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
-import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.data.save.store.viewmodels.DiaryAlarmViewModel
@@ -113,7 +113,7 @@ fun DiaryAlarmScreen(
                 item {
                     SettingCategoryTitle(stringResource(R.string.alarm_time))
                     FlowRow {
-                        alarmSettings.alarmTimeList.forEach { timeStr ->
+                        alarmSettings.alarmTimeList.forEach { timeMillis ->
                             InputChip(
                                 modifier = Modifier.padding(PaddingValues(Interval.ChipPadding)),
                                 selected = false,
@@ -121,7 +121,16 @@ fun DiaryAlarmScreen(
                                     //TODO:完成点击监听
                                 },
                                 label = {
-                                    Text(timeStr)
+                                    val hour = timeMillis / 3600
+                                    val minute = (timeMillis / 60) % 60
+                                    Text(
+                                        String.format(
+                                            LocalLocale.current.platformLocale,
+                                            "%02d:%02d",
+                                            hour,
+                                            minute
+                                        )
+                                    )
                                 }
                             )
                         }
@@ -143,11 +152,8 @@ fun DiaryAlarmScreen(
             onDismissRequest = { timePickerVisible = false },
             confirmButton = {
                 TextButton(onClick = {
-                    val selectedTime = LocalTime.of(
-                        timePickerState.hour,
-                        timePickerState.minute
-                    )
-                    vm.addAlarmTime(selectedTime.format(CustomDateTimeFormatter.TIME))
+                    val seconds = timePickerState.hour * 3600 + timePickerState.minute * 60
+                    vm.addAlarmTime(seconds)
                     timePickerVisible = false
                 }) { Text("确定") }
             },
@@ -157,6 +163,7 @@ fun DiaryAlarmScreen(
                 }) { Text("取消") }
             },
             title = {
+                // TODO:保存时间戳
                 Text(stringResource(R.string.select_alarm_time))
             },
         ) {

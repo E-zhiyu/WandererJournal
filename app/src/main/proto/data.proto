@@ -20,7 +20,7 @@ message AutoBackup {
 // 日记提醒设置
 message DiaryAlarm {
   bool switch = 1;                // 开关状态
-  repeated string alarm_time = 2; // 日记提醒时间
+  repeated int32 alarm_time = 2;  // 日记提醒时间（从当天0点经过的秒数）
 }
 
 // 日记草稿
