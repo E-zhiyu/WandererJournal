@@ -28,80 +28,52 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
+import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 
 @Composable
 fun TroubleshootingScreen(
     onNavigateBack: () -> Unit = {}
 ) {
-    val scrollState = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        rememberTopAppBarState()
-    )
-
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(id = R.string.troubleshooting)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                scrollBehavior = scrollState
+    LazyLargeTopAppBarScaffold(
+        onNavigateBack = onNavigateBack,
+        title = stringResource(R.string.troubleshooting)
+    ) {
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.floating_notification_question,
+                answerResId = R.string.floating_notification_answer
             )
         }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .nestedScroll(scrollState.nestedScrollConnection)
-                .padding(horizontal = Interval.SidePadding),
-            contentPadding = PaddingValues(
-                bottom = innerPadding.calculateBottomPadding(),
-                top = Interval.DefaultPadding
-            ),
-            verticalArrangement = Arrangement.spacedBy(30.dp)
-        ) {
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.floating_notification_question,
-                    answerResId = R.string.floating_notification_answer
-                )
-            }
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.power_consumption_question,
-                    answerResId = R.string.power_consumption_answer
-                )
-            }
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.privacy_data_question,
-                    answerResId = R.string.privacy_data_answer
-                )
-            }
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.data_save_question,
-                    answerResId = R.string.data_save_answer
-                )
-            }
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.ad_integration_question,
-                    answerResId = R.string.ad_integration_answer
-                )
-            }
-            item {
-                TroubleshootingItem(
-                    questionResId = R.string.update_question,
-                    answerResId = R.string.update_answer
-                )
-            }
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.power_consumption_question,
+                answerResId = R.string.power_consumption_answer
+            )
+        }
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.privacy_data_question,
+                answerResId = R.string.privacy_data_answer
+            )
+        }
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.data_save_question,
+                answerResId = R.string.data_save_answer
+            )
+        }
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.ad_integration_question,
+                answerResId = R.string.ad_integration_answer
+            )
+        }
+        item {
+            TroubleshootingItem(
+                questionResId = R.string.update_question,
+                answerResId = R.string.update_answer
+            )
         }
     }
 }

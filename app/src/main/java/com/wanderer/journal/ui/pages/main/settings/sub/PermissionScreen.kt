@@ -55,6 +55,7 @@ import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
+import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
@@ -96,10 +97,6 @@ fun PermissionScreen(
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
 
-    val scrollState = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        rememberTopAppBarState()
-    )
-
     // Snackbar
     val snackHostState = remember { SnackbarHostState() }
     LaunchedEffect(Unit) {
@@ -131,269 +128,245 @@ fun PermissionScreen(
         refreshPermissionStates(context)
     }
 
-    Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(id = R.string.permissions_settings)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                scrollBehavior = scrollState
-            )
-        },
-        snackbarHost = { SnackbarHost(snackHostState) }
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .nestedScroll(scrollState.nestedScrollConnection)
-                .padding(horizontal = Interval.SidePadding),
-            contentPadding = PaddingValues(
-                bottom = innerPadding.calculateBottomPadding(),
-                top = Interval.DefaultPadding
-            )
-        ) {
-            // 相机权限
-            item {
-                SettingClickableItem(
-                    title = stringResource(R.string.camera_permission),
-                    subtitle = stringResource(R.string.camera_permission_subtitle),
-                    arrowText = permissionStates?.let { if (permissionStates!!.camera) grantedText else notGrantedText },
-                    onClick = {
-                        requestPermission(
-                            context,
-                            activity,
-                            descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
-                            onAllGranted = allGrantedCallback,
-                            onDoNotAskAgain = { permissionList ->
-                                permissionEvent = PermissionEvent(
-                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                    permissionList = permissionList
-                                )
-                            },
-                            onRequested = requestedCallback,
-                            PermissionLists.getCameraPermission()
-                        )
-                    },
-                    onLongClick = {
-                        WandererJournal.lockLifecycleObserver(true)
-                        XXPermissions.startPermissionActivity(
-                            context,
-                            PermissionLists.getCameraPermission()
-                        )
-                    },
-                    icon = painterResource(R.drawable.outline_photo_camera_24),
-                    normalRadius = Radius.TopArray
-                )
-            }
-
-            // 通知权限
-            item {
-                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
-                SettingClickableItem(
-                    title = stringResource(R.string.notification_permission),
-                    subtitle = stringResource(R.string.notification_permission_subtitle),
-                    arrowText = permissionStates?.let { if (permissionStates!!.notification) grantedText else notGrantedText },
-                    onClick = {
-                        requestPermission(
-                            context,
-                            activity,
-                            descriptionFun = {
-                                "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知；\n- 进行数据备份时发送反馈通知。\n"
-                            },
-                            onAllGranted = allGrantedCallback,
-                            onDoNotAskAgain = { permissionList ->
-                                permissionEvent = PermissionEvent(
-                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                    permissionList = permissionList
-                                )
-                            },
-                            onRequested = requestedCallback,
-                            PermissionLists.getPostNotificationsPermission()
-                        )
-                    },
-                    onLongClick = {
-                        WandererJournal.lockLifecycleObserver(true)
-                        XXPermissions.startPermissionActivity(
-                            context,
-                            PermissionLists.getCameraPermission()
-                        )
-                    },
-                    icon = painterResource(R.drawable.outline_notification_settings_24),
-                    normalRadius = Radius.MiddleArray
-                )
-            }
-
-            // 自启动权限
-            if (isAutoStartDefined()) {
-                item {
-                    Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
-                    SettingClickableItem(
-                        title = stringResource(R.string.auto_start_permission),
-                        subtitle = stringResource(R.string.auto_start_permission_subtitle),
-                        onClick = {
+    LazyLargeTopAppBarScaffold(
+        onNavigateBack = onNavigateBack,
+        title = stringResource(R.string.permissions_settings),
+        snackHostState = snackHostState
+    ) {
+        // 相机权限
+        item {
+            SettingClickableItem(
+                title = stringResource(R.string.camera_permission),
+                subtitle = stringResource(R.string.camera_permission_subtitle),
+                arrowText = permissionStates?.let { if (permissionStates!!.camera) grantedText else notGrantedText },
+                onClick = {
+                    requestPermission(
+                        context,
+                        activity,
+                        descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
+                        onAllGranted = allGrantedCallback,
+                        onDoNotAskAgain = { permissionList ->
                             permissionEvent = PermissionEvent(
-                                message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
-                                        "- 日记提醒是否准时触发。\n",
-                                onConfirm = {
-                                    requestAutoStartPermission(context)
-                                }
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
                             )
                         },
-                        onLongClick = {
-                            WandererJournal.lockLifecycleObserver(true)
-                            requestAutoStartPermission(context)
-                        },
-                        icon = painterResource(R.drawable.outline_autorenew_24),
-                        normalRadius = Radius.MiddleArray
+                        onRequested = requestedCallback,
+                        PermissionLists.getCameraPermission()
                     )
-                }
-            }
+                },
+                onLongClick = {
+                    WandererJournal.lockLifecycleObserver(true)
+                    XXPermissions.startPermissionActivity(
+                        context,
+                        PermissionLists.getCameraPermission()
+                    )
+                },
+                icon = painterResource(R.drawable.outline_photo_camera_24),
+                normalRadius = Radius.TopArray
+            )
+        }
 
-            // 电池优化策略
+        // 通知权限
+        item {
+            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+            SettingClickableItem(
+                title = stringResource(R.string.notification_permission),
+                subtitle = stringResource(R.string.notification_permission_subtitle),
+                arrowText = permissionStates?.let { if (permissionStates!!.notification) grantedText else notGrantedText },
+                onClick = {
+                    requestPermission(
+                        context,
+                        activity,
+                        descriptionFun = {
+                            "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知；\n- 进行数据备份时发送反馈通知。\n"
+                        },
+                        onAllGranted = allGrantedCallback,
+                        onDoNotAskAgain = { permissionList ->
+                            permissionEvent = PermissionEvent(
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
+                            )
+                        },
+                        onRequested = requestedCallback,
+                        PermissionLists.getPostNotificationsPermission()
+                    )
+                },
+                onLongClick = {
+                    WandererJournal.lockLifecycleObserver(true)
+                    XXPermissions.startPermissionActivity(
+                        context,
+                        PermissionLists.getCameraPermission()
+                    )
+                },
+                icon = painterResource(R.drawable.outline_notification_settings_24),
+                normalRadius = Radius.MiddleArray
+            )
+        }
+
+        // 自启动权限
+        if (isAutoStartDefined()) {
             item {
                 Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
                 SettingClickableItem(
-                    title = stringResource(R.string.ignore_battery_optimization),
-                    subtitle = stringResource(R.string.ignore_battery_optimization_subtitle),
-                    arrowText = permissionStates?.let { if (permissionStates!!.battery) "已忽略" else "未忽略" },
+                    title = stringResource(R.string.auto_start_permission),
+                    subtitle = stringResource(R.string.auto_start_permission_subtitle),
                     onClick = {
-                        requestPermission(
-                            context,
-                            activity,
-                            descriptionFun = {
-                                "该设置项可以调整应用的省电策略。" +
-                                        "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
-                                        "影响范围如下：\n" +
-                                        "- 日记提醒是否能够准点发送通知。\n"
-                            },
-                            onAllGranted = allGrantedCallback,
-                            onDoNotAskAgain = { permissionList ->
-                                permissionEvent = PermissionEvent(
-                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                    permissionList = permissionList
-                                )
-                            },
-                            onRequested = requestedCallback,
-                            PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
-                        )
-                    },
-                    onLongClick = {
-                        WandererJournal.lockLifecycleObserver(true)
-                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                        context.startActivity(intent)
-                    },
-                    icon = painterResource(R.drawable.outline_battery_android_frame_3_24),
-                    normalRadius = Radius.MiddleArray
-                )
-            }
-
-            // 精确闹钟权限
-            item {
-                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
-                SettingClickableItem(
-                    title = stringResource(R.string.alarm_permission),
-                    subtitle = stringResource(R.string.alarm_permission_subtitle),
-                    arrowText = permissionStates?.let { if (permissionStates!!.alarm) grantedText else notGrantedText },
-                    onClick = {
-                        requestPermission(
-                            context,
-                            activity,
-                            descriptionFun = {
-                                "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
-                                        "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
-                            },
-                            onAllGranted = allGrantedCallback,
-                            onDoNotAskAgain = { permissionList ->
-                                permissionEvent = PermissionEvent(
-                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                    permissionList = permissionList
-                                )
-                            },
-                            onRequested = requestedCallback,
-                            PermissionLists.getScheduleExactAlarmPermission()
-                        )
-                    },
-                    onLongClick = {
-                        WandererJournal.lockLifecycleObserver(true)
-                        XXPermissions.startPermissionActivity(
-                            context,
-                            PermissionLists.getScheduleExactAlarmPermission()
-                        )
-                    },
-                    icon = painterResource(R.drawable.outline_alarm_24),
-                    normalRadius = Radius.MiddleArray
-                )
-            }
-
-            // 定位权限
-            item {
-                Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
-                SettingClickableItem(
-                    title = stringResource(R.string.location_permission),
-                    subtitle = stringResource(R.string.location_permission_subtitle),
-                    arrowText = permissionStates?.let {
-                        if (permissionStates!!.fineLocation) {
-                            "精确位置"
-                        } else if (permissionStates!!.coarseLocation) {
-                            "粗略位置"
-                        } else {
-                            notGrantedText
-                        }
-                    },
-                    onClick = {
-                        requestLocationPermission(
-                            context,
-                            activity,
-                            descriptionFun = {
-                                "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
-                                        "- 写日记时将位置信息保存至日记段落中。\n"
-                            },
-                            hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
-                            onDoNotAskAgain = { permissionList ->
-                                permissionEvent = PermissionEvent(
-                                    message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                    permissionList = permissionList
-                                )
-                            },
-                            onRequested = { grantedList, deniedList ->
-                                val noDenied = deniedList.isEmpty()
-                                val noGranted = grantedList.isEmpty()
-                                if (noGranted && !noDenied) {
-                                    sendSnackMessage(scope, "权限申请被拒绝")
-                                } else if (noDenied && !noGranted) {
-                                    sendSnackMessage(scope, "已授予精确位置权限")
-                                } else {
-                                    sendSnackMessage(
-                                        scope,
-                                        "已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节"
-                                    )
-                                }
+                        permissionEvent = PermissionEvent(
+                            message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
+                                    "- 日记提醒是否准时触发。\n",
+                            onConfirm = {
+                                requestAutoStartPermission(context)
                             }
                         )
                     },
                     onLongClick = {
                         WandererJournal.lockLifecycleObserver(true)
-                        XXPermissions.startPermissionActivity(
-                            context,
-                            PermissionLists.getAccessFineLocationPermission()
-                        )
+                        requestAutoStartPermission(context)
                     },
-                    icon = painterResource(R.drawable.outline_location_on_24),
-                    normalRadius = Radius.BottomArray
+                    icon = painterResource(R.drawable.outline_autorenew_24),
+                    normalRadius = Radius.MiddleArray
                 )
             }
+        }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                TipTitle(title = stringResource(R.string.tip_long_click_skip_to_permission_settings))
-            }
+        // 电池优化策略
+        item {
+            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+            SettingClickableItem(
+                title = stringResource(R.string.ignore_battery_optimization),
+                subtitle = stringResource(R.string.ignore_battery_optimization_subtitle),
+                arrowText = permissionStates?.let { if (permissionStates!!.battery) "已忽略" else "未忽略" },
+                onClick = {
+                    requestPermission(
+                        context,
+                        activity,
+                        descriptionFun = {
+                            "该设置项可以调整应用的省电策略。" +
+                                    "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
+                                    "影响范围如下：\n" +
+                                    "- 日记提醒是否能够准点发送通知。\n"
+                        },
+                        onAllGranted = allGrantedCallback,
+                        onDoNotAskAgain = { permissionList ->
+                            permissionEvent = PermissionEvent(
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
+                            )
+                        },
+                        onRequested = requestedCallback,
+                        PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
+                    )
+                },
+                onLongClick = {
+                    WandererJournal.lockLifecycleObserver(true)
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    context.startActivity(intent)
+                },
+                icon = painterResource(R.drawable.outline_battery_android_frame_3_24),
+                normalRadius = Radius.MiddleArray
+            )
+        }
+
+        // 精确闹钟权限
+        item {
+            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+            SettingClickableItem(
+                title = stringResource(R.string.alarm_permission),
+                subtitle = stringResource(R.string.alarm_permission_subtitle),
+                arrowText = permissionStates?.let { if (permissionStates!!.alarm) grantedText else notGrantedText },
+                onClick = {
+                    requestPermission(
+                        context,
+                        activity,
+                        descriptionFun = {
+                            "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
+                                    "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
+                        },
+                        onAllGranted = allGrantedCallback,
+                        onDoNotAskAgain = { permissionList ->
+                            permissionEvent = PermissionEvent(
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
+                            )
+                        },
+                        onRequested = requestedCallback,
+                        PermissionLists.getScheduleExactAlarmPermission()
+                    )
+                },
+                onLongClick = {
+                    WandererJournal.lockLifecycleObserver(true)
+                    XXPermissions.startPermissionActivity(
+                        context,
+                        PermissionLists.getScheduleExactAlarmPermission()
+                    )
+                },
+                icon = painterResource(R.drawable.outline_alarm_24),
+                normalRadius = Radius.MiddleArray
+            )
+        }
+
+        // 定位权限
+        item {
+            Spacer(modifier = Modifier.height(Interval.AdjacentPadding))
+            SettingClickableItem(
+                title = stringResource(R.string.location_permission),
+                subtitle = stringResource(R.string.location_permission_subtitle),
+                arrowText = permissionStates?.let {
+                    if (permissionStates!!.fineLocation) {
+                        "精确位置"
+                    } else if (permissionStates!!.coarseLocation) {
+                        "粗略位置"
+                    } else {
+                        notGrantedText
+                    }
+                },
+                onClick = {
+                    requestLocationPermission(
+                        context,
+                        activity,
+                        descriptionFun = {
+                            "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
+                                    "- 写日记时将位置信息保存至日记段落中。\n"
+                        },
+                        hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
+                        onDoNotAskAgain = { permissionList ->
+                            permissionEvent = PermissionEvent(
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
+                            )
+                        },
+                        onRequested = { grantedList, deniedList ->
+                            val noDenied = deniedList.isEmpty()
+                            val noGranted = grantedList.isEmpty()
+                            if (noGranted && !noDenied) {
+                                sendSnackMessage(scope, "权限申请被拒绝")
+                            } else if (noDenied && !noGranted) {
+                                sendSnackMessage(scope, "已授予精确位置权限")
+                            } else {
+                                sendSnackMessage(
+                                    scope,
+                                    "已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节"
+                                )
+                            }
+                        }
+                    )
+                },
+                onLongClick = {
+                    WandererJournal.lockLifecycleObserver(true)
+                    XXPermissions.startPermissionActivity(
+                        context,
+                        PermissionLists.getAccessFineLocationPermission()
+                    )
+                },
+                icon = painterResource(R.drawable.outline_location_on_24),
+                normalRadius = Radius.BottomArray
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            TipTitle(title = stringResource(R.string.tip_long_click_skip_to_permission_settings))
         }
     }
 
