@@ -50,6 +50,7 @@ import com.wanderer.journal.ui.pages.main.diary.DiaryScreen
 import com.wanderer.journal.ui.pages.main.home.HomeScreen
 import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.DataManageScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
@@ -168,6 +169,13 @@ private fun MainScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                // 数据管理界面
+                composable<ScreenRoutes.DataManage> {
+                    DataManageScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
 
@@ -242,7 +250,8 @@ private fun MainTabs(
                     onSkipToPermission = { navController.navigate(ScreenRoutes.PermissionSettings) },
                     onSkipToAbout = { navController.navigate(ScreenRoutes.About) },
                     onSkipToShare = { navController.navigate(ScreenRoutes.ShareSettings) },
-                    onSkipToDiaryAlarm = { navController.navigate(ScreenRoutes.DiaryAlarmSettings) }
+                    onSkipToDiaryAlarm = { navController.navigate(ScreenRoutes.DiaryAlarmSettings) },
+                    onSkipToDataManage = { navController.navigate(ScreenRoutes.DataManage) }
                 )
             }
         }

@@ -26,4 +26,8 @@ sealed interface ScreenRoutes {
     // 日记提醒设置界面
     @Serializable
     data object DiaryAlarmSettings: ScreenRoutes
+
+    // 数据管理界面
+    @Serializable
+    data object DataManage: ScreenRoutes
 }

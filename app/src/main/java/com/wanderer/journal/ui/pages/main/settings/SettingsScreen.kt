@@ -61,7 +61,8 @@ fun SettingsScreen(
     onSkipToPermission: () -> Unit,
     onSkipToAbout: () -> Unit,
     onSkipToShare: () -> Unit,
-    onSkipToDiaryAlarm: () -> Unit
+    onSkipToDiaryAlarm: () -> Unit,
+    onSkipToDataManage: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.fragment.app.FragmentActivity
@@ -231,14 +232,7 @@ fun SettingsScreen(
                     subtitle = "跳转至数据管理界面",
                     normalRadius = Radius.MiddleArray,
                     icon = painterResource(id = R.drawable.outline_database_24),
-                    onClick = {
-                        context.startActivity(
-                            Intent(
-                                context,
-                                DataManageActivity::class.java
-                            )
-                        )
-                    }
+                    onClick = onSkipToDataManage
                 )
             }
             item {
@@ -482,6 +476,7 @@ fun Preview() {
     MaterialAppTheme {
         SettingsScreen(
             CompositeDisposable(),
+            {},
             {},
             {},
             {},
