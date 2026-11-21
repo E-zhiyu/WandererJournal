@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
@@ -37,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.data.save.store.viewmodels.DiaryAlarmViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsDiaryAlarmViewModel
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
@@ -113,13 +116,13 @@ fun DiaryAlarmScreen(
                 item {
                     SettingCategoryTitle(stringResource(R.string.alarm_time))
                     FlowRow {
-                        alarmSettings.alarmTimeList.forEach { timeMillis ->
+                        val sortedTime = alarmSettings.alarmTimeList.toMutableList()
+                        sortedTime.sort()
+                        sortedTime.forEach { timeMillis ->
                             InputChip(
                                 modifier = Modifier.padding(PaddingValues(Interval.ChipPadding)),
                                 selected = false,
-                                onClick = {
-                                    //TODO:完成点击监听
-                                },
+                                onClick = {},
                                 label = {
                                     val hour = timeMillis / 3600
                                     val minute = (timeMillis / 60) % 60
@@ -131,6 +134,18 @@ fun DiaryAlarmScreen(
                                             minute
                                         )
                                     )
+                                },
+                                trailingIcon = {
+                                    IconButton(
+                                        modifier = Modifier.size(Size.bodySmallIcon),
+                                        onClick = { vm.removeAlarmTime(timeMillis) }
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.size(Size.bodySmallIcon),
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.delete_alarm_time)
+                                        )
+                                    }
                                 }
                             )
                         }
