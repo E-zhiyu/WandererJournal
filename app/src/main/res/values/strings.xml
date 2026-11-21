@@ -183,7 +183,6 @@
     <string name="btn_of_date_select">日期选择按钮</string>
     <string name="btn_of_show_or_hide_private_paragraph">隐私段落显示或隐藏按钮</string>
     <string name="permission_long_click_tip">可长按进入对应权限的设置界面</string>
-    <string name="alarm_auto_start_tip">此功能需要允许应用自启动，点击进入设置界面</string>
     <string name="location_permission">定位权限</string>
     <string name="paragraph_statistics">段落统计</string>
     <string name="min_paragraph_length">最小长度：</string>

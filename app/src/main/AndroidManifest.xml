@@ -49,10 +49,6 @@
         android:theme="@style/Theme.WandererJournal.Static"
         tools:targetApi="33">
         <activity
-            android:name=".ui.pages.main.settings.sub.DiaryAlarmActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.pages.main.MainActivity" />
-        <activity
             android:name=".ui.pages.media.FullScreenMediaActivity"
             android:exported="false" />
         <activity
