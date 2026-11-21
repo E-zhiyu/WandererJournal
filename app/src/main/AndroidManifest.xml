@@ -99,10 +99,6 @@
             android:exported="false"
             android:launchMode="singleTop" />
         <activity
-            android:name=".ui.pages.main.settings.sub.ShareSettingsActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.pages.main.MainActivity" />
-        <activity
             android:name=".ui.pages.life_note.LifeNoteListActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity"
