@@ -69,16 +69,3 @@ fun ExceptionDialog(
         }
     )
 }
-
-/**
- * 显示错误对话框
- * @param onDismiss 对话框消失回调
- * @param throwable 需要显示的内容
- */
-@Composable
-fun ExceptionDialog(
-    onDismiss: () -> Unit,
-    throwable: Throwable
-) {
-    ExceptionDialog(onDismiss, throwable.message ?: "")
-}
