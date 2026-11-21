@@ -87,7 +87,7 @@
     <string name="alarm_permission">精确闹钟权限</string>
     <string name="diary_alarm">日记提醒</string>
     <string name="alarm_time">提醒时间</string>
-    <string name="total_switch">总开关</string>
+    <string name="alarm_total_switch">日记提醒总开关</string>
     <string name="add_alarm_time">添加提醒时间</string>
     <string name="share_preview">分享预览</string>
     <string name="share_diary">分享日记</string>
@@ -224,6 +224,8 @@
     <string name="confirm">确认</string>
     <string name="input_text">输入文本</string>
     <string name="share_bottom_text_supporting">可在分享日记为图片时看到，留空以使用默认文本</string>
+    <string name="alarm_total_switch_subtitle">开启会在指定时间提醒写日记</string>
+    <string name="add_alarm_time_subtitle">添加日记提醒时间</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

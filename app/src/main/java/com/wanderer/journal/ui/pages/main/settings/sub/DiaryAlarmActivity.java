@@ -200,7 +200,7 @@ public class DiaryAlarmActivity extends AppCompatActivity {
         SettingSwitchView diaryAlarmSwitch = new SettingSwitchView(
                 this,
                 binding.diaryAlarmSwitch,
-                R.string.total_switch,
+                R.string.alarm_total_switch,
                 "忘记写日记时发送通知提醒",
                 R.drawable.outline_alarm_24,
                 RadiusStyle.TOP
