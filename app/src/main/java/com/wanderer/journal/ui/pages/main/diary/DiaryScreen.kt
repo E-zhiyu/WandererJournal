@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,10 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,10 +66,11 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
-import com.wanderer.journal.ui.components.ExceptionDialog
+import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
+import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
 import com.wanderer.journal.ui.components.rememberFabVisible
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
@@ -86,13 +83,14 @@ import java.time.LocalDate
 sealed interface DatePickerMode {
     data object Skip : DatePickerMode                               // 日记列表跳转到指定日期
     data class DateChange(val diary: DiaryEntity) : DatePickerMode  // 修改这篇日记的日期
-    data object Complete : DatePickerMode                           // 补写日记
 }
 
 // 日期选择对话框显示请求
 data class DatePickerRequest(
-    val mode: DatePickerMode,   // 日期选择的请求种类
-    val initDate: LocalDate?    // 日期选择对话框的初始日期
+    val mode: DatePickerMode,                       // 日期选择的请求种类
+    val initDate: LocalDate?,                       // 日期选择对话框的初始日期
+    val dateFilter: ((Long) -> Boolean)? = null,    // 判断日期是否可以选择的函数
+    val yearRange: IntRange? = null                 // 可选年份的范围
 )
 
 @Composable
@@ -138,9 +136,17 @@ fun DiaryScreen(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
+                        val diaryYears = state.diaries.map { it.diary.diaryDate.year }.toSet()
                         datePickerRequest = DatePickerRequest(
                             mode = DatePickerMode.Skip,
                             initDate = state.diaries.getOrNull(listState.firstVisibleItemIndex)?.diary?.diaryDate,
+                            dateFilter = { pickerMillis ->
+                                val diaryDateMillis =
+                                    state.diaries.map { DateTimeConverter.fromLocalDate(it.diary.diaryDate) }
+                                        .toSet()
+                                diaryDateMillis.contains(pickerMillis)
+                            },
+                            yearRange = IntRange(diaryYears.min(), diaryYears.max())
                         )
                     }) {
                         Icon(
@@ -198,9 +204,15 @@ fun DiaryScreen(
                             highlighted = flashDiaryId == item.diary.diaryId,
                             onHighlightFinished = { flashDiaryId = null },
                             {
+                                val today = LocalDate.now()
                                 datePickerRequest = DatePickerRequest(
                                     mode = DatePickerMode.DateChange(item.diary),
                                     initDate = item.diary.diaryDate,
+                                    dateFilter = { pickerMillis ->
+                                        val todayMillis = DateTimeConverter.fromLocalDate(today)
+                                        pickerMillis <= todayMillis
+                                    },
+                                    yearRange = IntRange(today.year - 150, today.year)
                                 )
                             },
                             {
@@ -223,8 +235,10 @@ fun DiaryScreen(
 
     // 日期选择对话框
     datePickerRequest?.let { req ->
-        DiaryDatePickerDialog(
+        DatePickerDialogWithFilter(
             initialDate = req.initDate,
+            selectableDates = req.dateFilter,
+            yearRange = req.yearRange,
             onDismiss = { datePickerRequest = null },
             onConfirm = { selected ->
                 when (val mode = req.mode) {
@@ -254,16 +268,6 @@ fun DiaryScreen(
 
                     is DatePickerMode.DateChange -> {
                         vm.updateDiaryDate(mode.diary, selected)
-                    }
-
-                    is DatePickerMode.Complete -> {
-                        val intent = Intent(context, WriteActivity::class.java).apply {
-                            putExtra(
-                                KeyStrings.INIT_DATE.v(),
-                                DateTimeConverter.fromLocalDate(selected)
-                            )
-                        }
-                        context.startActivity(intent)
                     }
                 }
                 datePickerRequest = null
@@ -426,35 +430,6 @@ fun DiaryListItem(
                 shape = MenuDefaults.trailingItemShape
             )
         }
-    }
-}
-
-@Composable
-private fun DiaryDatePickerDialog(
-    initialDate: LocalDate?,
-    onDismiss: () -> Unit,
-    onConfirm: (LocalDate) -> Unit,
-) {
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate?.let {
-            DateTimeConverter.fromLocalDate(it)
-        }
-    )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                datePickerState.selectedDateMillis?.let {
-                    onConfirm(DateTimeConverter.toLocalDate(it))
-                }
-                onDismiss()
-            }) { Text("确定") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
-    ) {
-        // TODO:修复充满屏幕宽度的BUG
-        // TODO:限制可选的日期
-        DatePicker(state = datePickerState)
     }
 }
 

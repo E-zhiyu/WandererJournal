@@ -1,4 +1,4 @@
-package com.wanderer.journal.ui.components
+package com.wanderer.journal.ui.components.dialogs
 
 import android.content.ClipData
 import android.widget.Toast
