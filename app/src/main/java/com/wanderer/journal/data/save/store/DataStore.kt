@@ -13,13 +13,13 @@ import com.wanderer.journal.DiaryShare
 import com.wanderer.journal.SearchHistory
 import com.wanderer.journal.SecuritySettings
 import com.wanderer.journal.Update
-import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
 import com.wanderer.journal.auxiliary.enums.settings.AuthOpportunity
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
 import com.wanderer.journal.auxiliary.enums.settings.FirstScreen
 import com.wanderer.journal.auxiliary.enums.settings.ThemeMode
 import kotlinx.serialization.json.Json
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 // 草稿
 val Context.diaryDraftStore: DataStore<DiaryDraft> by dataStore(
@@ -189,7 +189,8 @@ val Context.diaryAlarmStore: DataStore<DiaryAlarm> by dataStore(
                     oldTimeJson?.let {
                         val timeList: List<String> = Json.decodeFromString(oldTimeJson)
                         timeList.forEach { timeStr ->
-                            val time = LocalTime.parse(timeStr, CustomDateTimeFormatter.TIME)
+                            val time =
+                                LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"))
                             val seconds =
                                 time.hour * 3600 + time.minute * 60
                             builder.addAlarmTime(seconds)
