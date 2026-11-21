@@ -1,8 +1,13 @@
 package com.wanderer.journal.ui.pages.main.diary
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.wanderer.journal.data.save.db.DiaryDb
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
@@ -29,9 +34,9 @@ data class DiaryUiState(
     val isLoading: Boolean = true,
 )
 
-class DiaryViewModel(app: Application) : AndroidViewModel(app) {
+class DiaryViewModel(context: Context) : ViewModel() {
 
-    private val db = DiaryDb.getInstance(app)
+    private val db = DiaryDb.getInstance(context)
 
     // 1) 日记列表：DB → Flow，自动刷新
     private val diariesFlow = db.diaryDao().getAllDiariesFlow()
@@ -57,10 +62,10 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
      * 删除日记
      * @param diary 需要删除的日记
      */
-    fun deleteDiary(diary: DiaryEntity) {
+    fun deleteDiary(diary: DiaryEntity, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                DiaryService.deleteDiaryAndParagraphMedias(diary, getApplication())
+                DiaryService.deleteDiaryAndParagraphMedias(diary, context)
                 _events.value = DiaryUiEvent.Toast("日记删除成功")
             } catch (e: Exception) {
                 _events.value = DiaryUiEvent.Error(e)
@@ -89,7 +94,7 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
      * @param targetDate 目标日期
      * @param onResult 查询成功的回调，包含查询到的下标、总个数和目标日记的编号
      */
-    fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int,Int, Long) -> Unit) {
+    fun findScrollTargetPosition(targetDate: LocalDate, onResult: (Int, Int, Long) -> Unit) {
         viewModelScope.launch {
             diariesFlow.collect { modelList ->
                 var position = 0
@@ -123,4 +128,14 @@ class DiaryViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
+}
+
+@Composable
+fun diaryViewModel(): DiaryViewModel {
+    val context = LocalContext.current.applicationContext
+    return viewModel(
+        factory = viewModelFactory {
+            initializer { DiaryViewModel(context) }
+        }
+    )
 }

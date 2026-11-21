@@ -1,8 +1,13 @@
 package com.wanderer.journal.ui.pages.main.home
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.wanderer.journal.data.save.db.DiaryDb
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,9 +33,9 @@ data class HomeUiState(
     val errorMessage: String? = null,
 )
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
+class HomeViewModel(context: Context) : ViewModel() {
 
-    private val db = DiaryDb.getInstance(application)
+    private val db = DiaryDb.getInstance(context)
 
     // 唯一可变的状态源：只放"业务数据 + 提示文本 + 错误"
     private val _tips = MutableStateFlow("")
@@ -112,4 +117,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val NOT_APPLICABLE = "—"
     }
+}
+
+@Composable
+fun homeViewModel(): HomeViewModel {
+    val context = LocalContext.current
+    return viewModel(
+        factory = viewModelFactory {
+            initializer { HomeViewModel(context) }
+        }
+    )
 }

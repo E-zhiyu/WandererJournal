@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.pages.main.diary
 
 import android.content.Intent
+import android.content.res.Configuration
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
@@ -54,11 +55,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
 import com.wanderer.journal.auxiliary.classes.Interval
@@ -77,6 +78,7 @@ import com.wanderer.journal.ui.components.rememberFabVisible
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
 import com.wanderer.journal.ui.pages.role.RoleInputActivity
+import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -95,7 +97,7 @@ data class DatePickerRequest(
 
 @Composable
 fun DiaryScreen(
-    vm: DiaryViewModel = viewModel(),
+    vm: DiaryViewModel = diaryViewModel(),
 ) {
     val context = LocalContext.current
     val state by vm.uiState.collectAsStateWithLifecycle()
@@ -202,7 +204,7 @@ fun DiaryScreen(
                                 )
                             },
                             {
-                                vm.deleteDiary(item.diary)
+                                vm.deleteDiary(item.diary, context)
                             }
                         )
                     }
@@ -452,6 +454,25 @@ private fun DiaryDatePickerDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     ) {
         // TODO:修复充满屏幕宽度的BUG
+        // TODO:限制可选的日期
         DatePicker(state = datePickerState)
+    }
+}
+
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    showSystemUi = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun DiaryScreenPreview() {
+    MaterialAppTheme {
+        DiaryScreen()
     }
 }
