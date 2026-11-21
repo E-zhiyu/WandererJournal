@@ -58,8 +58,12 @@ fun TroubleshootingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
-                .nestedScroll(scrollState.nestedScrollConnection),
-            contentPadding = PaddingValues(Interval.SidePadding),
+                .nestedScroll(scrollState.nestedScrollConnection)
+                .padding(horizontal = Interval.SidePadding),
+            contentPadding = PaddingValues(
+                bottom = innerPadding.calculateBottomPadding(),
+                top = Interval.DefaultPadding
+            ),
             verticalArrangement = Arrangement.spacedBy(30.dp)
         ) {
             item {

@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
@@ -42,9 +43,11 @@ import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.data.save.store.viewmodels.DiaryAlarmViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsDiaryAlarmViewModel
+import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSwitchItem
+import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import java.time.LocalTime
 
@@ -85,7 +88,10 @@ fun DiaryAlarmScreen(
                 .padding(top = innerPadding.calculateTopPadding())
                 .nestedScroll(scrollState.nestedScrollConnection)
                 .padding(horizontal = Interval.SidePadding),
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            contentPadding = PaddingValues(
+                bottom = innerPadding.calculateBottomPadding(),
+                top = Interval.DefaultPadding
+            )
         ) {
             // 总开关
             item {
@@ -114,13 +120,14 @@ fun DiaryAlarmScreen(
             // 提醒时间
             if (alarmSettings.alarmTimeList.isNotEmpty()) {
                 item {
+                    Spacer(modifier = Modifier.height(Interval.DefaultPadding))
                     SettingCategoryTitle(stringResource(R.string.alarm_time))
                     FlowRow {
                         val sortedTime = alarmSettings.alarmTimeList.toMutableList()
                         sortedTime.sort()
                         sortedTime.forEach { timeMillis ->
                             InputChip(
-                                modifier = Modifier.padding(PaddingValues(Interval.ChipPadding)),
+                                modifier = Modifier.padding(horizontal = Interval.ChipPadding),
                                 selected = false,
                                 onClick = {},
                                 label = {
@@ -152,6 +159,14 @@ fun DiaryAlarmScreen(
                     }
                 }
             }
+
+            // 底部权限提醒
+            if (isAutoStartDefined()) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TipTitle(title = stringResource(R.string.tip_alarm_need_autostart))
+                }
+            }
         }
     }
 
@@ -178,7 +193,6 @@ fun DiaryAlarmScreen(
                 }) { Text("取消") }
             },
             title = {
-                // TODO:保存时间戳
                 Text(stringResource(R.string.select_alarm_time))
             },
         ) {

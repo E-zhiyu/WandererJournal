@@ -116,11 +116,13 @@ fun AboutScreen(
                 .nestedScroll(scrollState.nestedScrollConnection)
                 .padding(horizontal = Interval.SidePadding),
             horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            contentPadding = PaddingValues(
+                bottom = innerPadding.calculateBottomPadding(),
+                top = Interval.DefaultPadding
+            )
         ) {
             // App 图标
             item {
-                Spacer(modifier = Modifier.height(10.dp))
                 if (drawable != null) {
                     Image(
                         bitmap = drawable.toBitmap(config = Bitmap.Config.ARGB_8888)

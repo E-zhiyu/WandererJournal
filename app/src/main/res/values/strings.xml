@@ -227,6 +227,8 @@
     <string name="add_alarm_time_subtitle">添加日记提醒时间</string>
     <string name="select_alarm_time">选择提醒时间</string>
     <string name="delete_alarm_time">删除提醒时间</string>
+    <string name="tip_long_click_skip_to_permission_settings">可长按进入权限设置界面</string>
+    <string name="tip_alarm_need_autostart">日记提醒功能需要自启动权限</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

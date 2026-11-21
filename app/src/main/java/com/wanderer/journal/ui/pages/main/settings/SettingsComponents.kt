@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,11 +28,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 
@@ -273,4 +276,28 @@ fun SettingCategoryTitle(title: String) {
             .fillMaxWidth()
             .padding(start = 8.dp, top = 8.dp, bottom = 8.dp)
     )
+}
+
+/**
+ * 提示文本
+ */
+@Composable
+fun TipTitle(title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            modifier = Modifier.size(Size.bodySmallIcon),
+            painter = painterResource(R.drawable.outline_info_24),
+            tint = MaterialTheme.colorScheme.outline,
+            contentDescription = null
+        )
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.outline,
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
 }

@@ -63,6 +63,7 @@ import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
+import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
@@ -160,11 +161,13 @@ fun PermissionScreen(
                 .padding(top = innerPadding.calculateTopPadding())
                 .nestedScroll(scrollState.nestedScrollConnection)
                 .padding(horizontal = Interval.SidePadding),
-            contentPadding = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            contentPadding = PaddingValues(
+                bottom = innerPadding.calculateBottomPadding(),
+                top = Interval.DefaultPadding
+            )
         ) {
             // 相机权限
             item {
-                Spacer(modifier = Modifier.height(Interval.DefaultPadding))
                 SettingClickableItem(
                     title = stringResource(R.string.camera_permission),
                     subtitle = stringResource(R.string.camera_permission_subtitle),
@@ -396,23 +399,7 @@ fun PermissionScreen(
 
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        modifier = Modifier.size(Size.bodySmallIcon),
-                        painter = painterResource(R.drawable.outline_info_24),
-                        tint = MaterialTheme.colorScheme.outline,
-                        contentDescription = null
-                    )
-                    Text(
-                        text = "可长按进入权限设置界面",
-                        color = MaterialTheme.colorScheme.outline,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                TipTitle(title = stringResource(R.string.tip_long_click_skip_to_permission_settings))
             }
         }
     }
