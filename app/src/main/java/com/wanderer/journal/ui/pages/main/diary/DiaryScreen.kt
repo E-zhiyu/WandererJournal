@@ -441,7 +441,6 @@ private fun DiaryDatePickerDialog(
         }
     )
     DatePickerDialog(
-        modifier = Modifier.padding(horizontal = 24.dp),
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {

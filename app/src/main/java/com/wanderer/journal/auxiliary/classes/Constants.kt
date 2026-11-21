@@ -33,6 +33,7 @@ object Radius {
 
 // 边距相关静态值
 object Interval {
+    val ChipPadding = 2.dp      // Chip 的外边距
     val AdjacentPadding = 1.dp  // 相邻卡片的间距
     val DefaultPadding = 16.dp  // 默认的组件间距
     val SidePadding = 16.dp     // 默认的横向屏幕安全边距
