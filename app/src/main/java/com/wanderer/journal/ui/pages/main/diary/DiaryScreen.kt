@@ -118,17 +118,21 @@ fun DiaryScreen(
         mutableStateOf<DatePickerRequest?>(null)
     }
 
-    var flashDiaryId by remember { mutableStateOf<Long?>(null) }    // 需要闪烁的日记 id；null 表示没有
+    // 需要闪烁的日记 id；null 表示没有
+    var flashDiaryId by remember { mutableStateOf<Long?>(null) }
 
+    // FAB 可见性
     val fabVisible by rememberFabVisible(listState)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+
+    // 列表滚动状态
+    val listScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
     )
 
     LargeTopAppBarListScaffold(
         title = stringResource(R.string.diary),
         snackHostState = { SnackbarHost(snackHostState) },
-        topbarScrollBehavior = scrollBehavior,
+        topbarScrollBehavior = listScrollBehavior,
         listState = listState,
         actions = {
             IconButton(onClick = {
@@ -232,8 +236,8 @@ fun DiaryScreen(
                         onResult = { position, itemCount, targetId ->
                             scope.launch {
                                 // 折叠 AppBar + 滚动
-                                scrollBehavior.state.heightOffset =
-                                    scrollBehavior.state.heightOffsetLimit
+                                listScrollBehavior.state.heightOffset =
+                                    listScrollBehavior.state.heightOffsetLimit
 
                                 // 先瞬间跳到目标附近，再动画走最后一段
                                 val firstItemIndex = listState.firstVisibleItemIndex
