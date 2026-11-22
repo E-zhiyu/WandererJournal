@@ -192,12 +192,11 @@ fun SettingSpinnerItem(
     val density = LocalDensity.current
     var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
 
-    // TODO:修复向下延伸空间不够时，锚点不是手指点击位置的BUG
     PressableCard(
-        onClick = { offset, cardSize ->
+        onClick = { offset, _ ->
             menuOffset = Offset(
                 x = offset.x,
-                y = offset.y - cardSize.height
+                y = offset.y
             )
             onExpandedChange(true)
         },
@@ -251,7 +250,7 @@ fun SettingSpinnerItem(
             offset = with(density) {
                 DpOffset(
                     x = menuOffset.x.toDp(),
-                    y = menuOffset.y.toDp()
+                    y = 0.dp
                 )
             }
         )
