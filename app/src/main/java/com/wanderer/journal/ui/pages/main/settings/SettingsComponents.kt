@@ -202,7 +202,7 @@ fun SettingSpinnerItem(
                     x = offset.x,
                     y = offset.y - cardSize.height
                 )
-                onExpandedChange(!expanded)
+                onExpandedChange(true)
             },
             normalRadius = normalRadius,
         ) {
