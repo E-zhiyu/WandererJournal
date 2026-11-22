@@ -20,13 +20,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.dp
 import com.wanderer.journal.auxiliary.classes.Interval
 
 @Composable
 fun LazyLargeTopAppBarScaffold(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     title: String,
     snackHostState: SnackbarHostState? = null,
+    useDefaultTopPadding: Boolean = true,
     content: LazyListScope.() -> Unit
 ) {
     val scrollState = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -38,11 +40,13 @@ fun LazyLargeTopAppBarScaffold(
             LargeTopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    onNavigateBack?.let {
+                        IconButton(onClick = it) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
                     }
                 },
                 scrollBehavior = scrollState
@@ -59,7 +63,7 @@ fun LazyLargeTopAppBarScaffold(
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(
                 bottom = innerPadding.calculateBottomPadding(),
-                top = Interval.DefaultPadding
+                top = if (useDefaultTopPadding) Interval.DefaultPadding else 0.dp
             )
         ) {
             content()
