@@ -352,7 +352,7 @@ fun DiaryListItem(
         PressableCard(
             normalRadius = normalRadius,
             colors = CardDefaults.cardColors(containerColor = animatedColor),
-            onClick = { _, _ ->
+            onClick = { _ ->
                 val intent = Intent(context, ReadActivity::class.java).apply {
                     putExtra(
                         KeyStrings.INIT_DATE.v(),
@@ -361,7 +361,7 @@ fun DiaryListItem(
                 }
                 context.startActivity(intent)
             },
-            onLongClick = { offset, _ ->
+            onLongClick = { offset ->
                 pointOffset = offset
                 expanded = true
             }

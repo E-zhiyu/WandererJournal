@@ -36,8 +36,8 @@ import com.wanderer.journal.auxiliary.classes.Radius
 @Composable
 fun PressableCard(
     modifier: Modifier = Modifier,
-    onClick: (Offset, IntSize) -> Unit,
-    onLongClick: ((Offset, IntSize) -> Unit)? = null,
+    onClick: (Offset) -> Unit,
+    onLongClick: ((Offset) -> Unit)? = null,
     normalRadius: Array<Dp> = Radius.SingleArray,
     pressedCorner: Dp = Radius.Large, // 按下时统一变成的大圆角大小
     colors: CardColors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainerHighest),
@@ -90,17 +90,11 @@ fun PressableCard(
         bottomStart = animBottomStart
     )
 
-    // 卡片大小
-    var cardSize by remember { mutableStateOf(IntSize.Zero) }
-
     Card(
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
-            }
-            .onGloballyPositioned { coords ->
-                cardSize = coords.size
             }
             .clip(animatedShape)
             .indication(interactionSource, ripple())    // 绘制按压涟漪
@@ -113,10 +107,10 @@ fun PressableCard(
                         tryAwaitRelease()
                         interactionSource.emit(PressInteraction.Release(press))
                     },
-                    onTap = { offset -> onClick(offset, cardSize) },
+                    onTap = { offset -> onClick(offset) },
                     onLongPress = { offset ->
                         if (onLongClick != null) {
-                            onLongClick(offset, cardSize)
+                            onLongClick(offset)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
                     }

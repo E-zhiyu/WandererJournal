@@ -41,8 +41,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
-import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.PressableCard
+import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.emotion.EmotionTagListActivity
 import com.wanderer.journal.ui.pages.life_note.LifeNoteListActivity
@@ -105,7 +105,7 @@ fun HomeScreen(
 
             // 随机提示卡片
             PressableCard(
-                onClick = { _, _ -> vm.nextTip(tipsArray + xiaomiTips) },
+                onClick = { _ -> vm.nextTip(tipsArray + xiaomiTips) },
                 normalRadius = Radius.SingleArray,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -119,7 +119,7 @@ fun HomeScreen(
 
             // 日期卡片
             PressableCard(
-                onClick = { _, _ ->
+                onClick = { _ ->
                     val intent = Intent(context, ReadActivity::class.java)
                     context.startActivity(intent)
                 },
@@ -264,7 +264,7 @@ private fun StatCard(
     onClick: () -> Unit,
 ) {
     PressableCard(
-        onClick = { _, _ -> onClick() },
+        onClick = { _ -> onClick() },
         modifier = modifier,
         normalRadius = normalRadius
     ) {

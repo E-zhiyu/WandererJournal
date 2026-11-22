@@ -207,7 +207,7 @@ fun SettingItemCard(
     onClick: () -> Unit
 ) {
     PressableCard(
-        onClick = { _, _ -> onClick() },
+        onClick = { _ -> onClick() },
         modifier = Modifier.fillMaxWidth(),
         normalRadius = normalRadius
     ) {

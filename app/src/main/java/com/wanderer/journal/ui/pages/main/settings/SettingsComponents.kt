@@ -56,8 +56,8 @@ fun SettingClickableItem(
     normalRadius: Array<Dp>
 ) {
     PressableCard(
-        onClick = { _, _ -> onClick() },
-        onLongClick = if (onLongClick == null) null else { _, _ -> onLongClick() },
+        onClick = { _ -> onClick() },
+        onLongClick = if (onLongClick == null) null else { _ -> onLongClick() },
         modifier = modifier,
         normalRadius = normalRadius,
     ) {
@@ -124,7 +124,7 @@ fun SettingSwitchItem(
     var switchState = checked   // 保存开关状态
 
     PressableCard(
-        onClick = { _, _ ->
+        onClick = { _ ->
             val newState = !switchState
             onCheckedChange(newState)
             switchState = newState
@@ -195,7 +195,7 @@ fun SettingSpinnerItem(
     }
 
     PressableCard(
-        onClick = { offset, _ ->
+        onClick = { offset ->
             pointOffset = offset
             onExpandedChange(true)
         },
