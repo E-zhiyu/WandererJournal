@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -51,6 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -76,6 +79,7 @@ import com.wanderer.journal.ui.pages.role.RoleInputActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 // 日期选择模式：跳转 or 改某篇日记的日期
 sealed interface DatePickerMode {
@@ -310,7 +314,10 @@ fun DiaryListItem(
         else -> Radius.MiddleArray
     }
 
-    var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
+    // 手指点击卡片的偏移量
+    var pointOffset by remember {
+        mutableStateOf(Offset.Zero)
+    }
     var expanded by remember { mutableStateOf(false) }                  // 下拉框是否展开
 
     // 富文本渲染
@@ -354,11 +361,8 @@ fun DiaryListItem(
                 }
                 context.startActivity(intent)
             },
-            onLongClick = { offset, cardSize ->
-                menuOffset = Offset(
-                    x = offset.x,
-                    y = offset.y - cardSize.height
-                )
+            onLongClick = { offset, _ ->
+                pointOffset = offset
                 expanded = true
             }
         ) {
@@ -398,28 +402,39 @@ fun DiaryListItem(
         }
 
         // 长按菜单：DropdownMenu
-        LargeRadiusDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            shape = RoundedCornerShape(Radius.Large),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        Box(
+            modifier = Modifier
+                .offset {
+                    IntOffset(
+                        pointOffset.x.roundToInt(),
+                        pointOffset.y.roundToInt()
+                    )
+                }
+                .size(0.dp)
         ) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.modify_date)) },
-                onClick = {
-                    expanded = false
-                    onChangeDate()
-                },
-                shape = MenuDefaults.leadingItemShape
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.delete_diary)) },
-                onClick = {
-                    expanded = false
-                    onDelete()
-                },
-                shape = MenuDefaults.trailingItemShape
-            )
+            LargeRadiusDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                shape = RoundedCornerShape(Radius.Large),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.modify_date)) },
+                    onClick = {
+                        expanded = false
+                        onChangeDate()
+                    },
+                    shape = MenuDefaults.leadingItemShape
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete_diary)) },
+                    onClick = {
+                        expanded = false
+                        onDelete()
+                    },
+                    shape = MenuDefaults.trailingItemShape
+                )
+            }
         }
     }
 }
