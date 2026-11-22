@@ -6,16 +6,13 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -132,6 +129,7 @@ fun DiaryScreen(
         title = stringResource(R.string.diary),
         snackHostState = { SnackbarHost(snackHostState) },
         topbarScrollBehavior = scrollBehavior,
+        listState = listState,
         actions = {
             IconButton(onClick = {
                 val diaryYears = state.diaries.map { it.diary.diaryDate.year }.toSet()
@@ -173,53 +171,42 @@ fun DiaryScreen(
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.btn_add))
             }
-        }
-    ) {
-        if (state.isEmpty && !state.isLoading) {
+        },
+        isEmpty = state.isEmpty && !state.isLoading,
+        emptyContent = {
             Text(
                 text = stringResource(R.string.no_diary),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.Center),
             )
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    top = 5.dp,
-                    bottom = 5.dp,
-                    start = Interval.SidePadding,
-                    end = Interval.SidePadding
-                ),
-            ) {
-                itemsIndexed(
-                    items = state.diaries,
-                    key = { _, item -> item.diary.diaryId }
-                ) { index, item ->
-                    DiaryListItem(
-                        item = item,
-                        isFirst = index == 0,
-                        isLast = index == state.diaries.lastIndex,
-                        highlighted = flashDiaryId == item.diary.diaryId,
-                        onHighlightFinished = { flashDiaryId = null },
-                        {
-                            val today = LocalDate.now()
-                            datePickerRequest = DatePickerRequest(
-                                mode = DatePickerMode.DateChange(item.diary),
-                                initDate = item.diary.diaryDate,
-                                dateFilter = { pickerMillis ->
-                                    val todayMillis = DateTimeConverter.fromLocalDate(today)
-                                    pickerMillis <= todayMillis
-                                },
-                                yearRange = IntRange(today.year - 150, today.year)
-                            )
+        }
+    ) {
+        itemsIndexed(
+            items = state.diaries,
+            key = { _, item -> item.diary.diaryId }
+        ) { index, item ->
+            DiaryListItem(
+                item = item,
+                isFirst = index == 0,
+                isLast = index == state.diaries.lastIndex,
+                highlighted = flashDiaryId == item.diary.diaryId,
+                onHighlightFinished = { flashDiaryId = null },
+                {
+                    val today = LocalDate.now()
+                    datePickerRequest = DatePickerRequest(
+                        mode = DatePickerMode.DateChange(item.diary),
+                        initDate = item.diary.diaryDate,
+                        dateFilter = { pickerMillis ->
+                            val todayMillis = DateTimeConverter.fromLocalDate(today)
+                            pickerMillis <= todayMillis
                         },
-                        {
-                            vm.deleteDiary(item.diary, context)
-                        }
+                        yearRange = IntRange(today.year - 150, today.year)
                     )
+                },
+                {
+                    vm.deleteDiary(item.diary, context)
                 }
-            }
+            )
         }
     }
 

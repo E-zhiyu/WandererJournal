@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -96,6 +98,10 @@ fun LazyLargeTopAppBarScaffold(
  * @param actions 标题栏的操作图标布局
  * @param floatingActionButton FAB 按钮
  * @param topbarScrollBehavior 自定义标题栏的滚动行为
+ * @param listState 自定义 LazyColumn 的列表状态
+ * @param isEmpty 列表元素是否为空
+ * @param emptyContent 列表为空时的内容
+ * @param content 列表不为空时的内容
  */
 @Composable
 fun LargeTopAppBarListScaffold(
@@ -104,13 +110,14 @@ fun LargeTopAppBarListScaffold(
     snackHostState: @Composable (() -> Unit) = {},
     actions: @Composable (RowScope.() -> Unit) = {},
     floatingActionButton: @Composable (() -> Unit) = {},
-    topbarScrollBehavior: TopAppBarScrollBehavior? = null,
-    content: @Composable BoxScope.() -> Unit
-) {
-    val scrollState = topbarScrollBehavior ?: TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+    topbarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
         rememberTopAppBarState()
-    )
-
+    ),
+    listState: LazyListState = rememberLazyListState(),
+    isEmpty: Boolean,
+    emptyContent: @Composable BoxScope.() -> Unit,
+    content: LazyListScope.() -> Unit
+) {
     Scaffold(
         topBar = {
             LargeTopAppBar(
@@ -126,19 +133,34 @@ fun LargeTopAppBarListScaffold(
                     }
                 },
                 actions = actions,
-                scrollBehavior = scrollState
+                scrollBehavior = topbarScrollBehavior
             )
         },
         floatingActionButton = floatingActionButton,
         snackbarHost = snackHostState
     ) { innerPadding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-                .nestedScroll(scrollState.nestedScrollConnection)
+            modifier = Modifier.fillMaxSize()
         ) {
-            content()
+            if (isEmpty) {
+                emptyContent()
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .nestedScroll(topbarScrollBehavior.nestedScrollConnection)
+                        .padding(horizontal = Interval.SidePadding),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(
+                        top = Interval.DefaultPadding,
+                        bottom = innerPadding.calculateBottomPadding()
+                    )
+                ) {
+                    content()
+                }
+            }
         }
     }
 }
