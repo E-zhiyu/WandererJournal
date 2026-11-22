@@ -61,7 +61,7 @@ fun DiaryAlarmScreen(
         // 总开关
         item {
             SettingSwitchItem(
-                title = stringResource(R.string.alarm_total_switch),
+                title = stringResource(R.string.total_switch),
                 subtitle = stringResource(R.string.alarm_total_switch_subtitle),
                 icon = painterResource(R.drawable.outline_alarm_24),
                 normalRadius = Radius.TopArray,

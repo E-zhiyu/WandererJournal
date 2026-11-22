@@ -87,7 +87,7 @@
     <string name="alarm_permission">精确闹钟权限</string>
     <string name="diary_alarm">日记提醒</string>
     <string name="alarm_time">提醒时间</string>
-    <string name="alarm_total_switch">日记提醒总开关</string>
+    <string name="total_switch">总开关</string>
     <string name="add_alarm_time">添加提醒时间</string>
     <string name="share_preview">分享预览</string>
     <string name="share_diary">分享日记</string>
@@ -229,6 +229,14 @@
     <string name="delete_alarm_time">删除提醒时间</string>
     <string name="tip_long_click_skip_to_permission_settings">可长按进入权限设置界面</string>
     <string name="tip_alarm_need_autostart">日记提醒功能需要自启动权限</string>
+    <string name="backup_and_restore">备份与恢复</string>
+    <string name="export_data_subtitle">将应用数据导出为外部文件</string>
+    <string name="import_data_subtitle">从备份文件导入应用数据</string>
+    <string name="auto_backup_switch_subtitle">自动生成备份文件</string>
+    <string name="backup_frequency_subtitle">生成备份文件的时间间隔</string>
+    <string name="backup_directory_subtitle">自动生成备份文件的位置</string>
+    <string name="append_paragraph_subtitle">导入并追加文本文件中的段落</string>
+    <string name="import_diary_subtitle">从特定格式的文本文件中导入日记</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>
