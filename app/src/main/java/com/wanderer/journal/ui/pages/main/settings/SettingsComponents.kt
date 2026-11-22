@@ -1,15 +1,16 @@
 package com.wanderer.journal.ui.pages.main.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
@@ -25,16 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
-import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
+import kotlin.math.roundToInt
 
 /**
  * 可点击设置项
@@ -189,71 +189,91 @@ fun SettingSpinnerItem(
     expanded: Boolean,
     dropDownContent: @Composable () -> Unit
 ) {
-    val density = LocalDensity.current
-    var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
+    // 手指点击卡片的偏移量
+    var pointOffset by remember {
+        mutableStateOf(Offset.Zero)
+    }
 
     PressableCard(
         onClick = { offset, _ ->
-            menuOffset = Offset(
-                x = offset.x,
-                y = offset.y
-            )
+            pointOffset = offset
             onExpandedChange(true)
         },
-        normalRadius = normalRadius,
+        normalRadius = normalRadius
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                if (!subtitle.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            // 显示当前选中的值文本
-            Text(
-                text = currentValueText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Icon(
-                painter = painterResource(R.drawable.outline_unfold_more_24),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        Box {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 16.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
 
-        LargeRadiusDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandedChange(false) },
-            content = dropDownContent,
-            shape = RoundedCornerShape(Radius.Large),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            offset = with(density) {
-                DpOffset(
-                    x = menuOffset.x.toDp(),
-                    y = 0.dp
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    if (!subtitle.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Text(
+                    text = currentValueText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Icon(
+                    painter = painterResource(
+                        R.drawable.outline_unfold_more_24
+                    ),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
-        )
+
+            // 将菜单锚点移动到触摸位置
+            Box(
+                modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            pointOffset.x.roundToInt(),
+                            pointOffset.y.roundToInt()
+                        )
+                    }
+                    .size(0.dp)
+            ) {
+                LargeRadiusDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = {
+                        onExpandedChange(false)
+                    },
+                    content = dropDownContent
+                )
+            }
+        }
     }
 }
 

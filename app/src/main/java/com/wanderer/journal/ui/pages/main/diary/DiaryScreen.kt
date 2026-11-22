@@ -47,12 +47,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,11 +64,11 @@ import com.wanderer.journal.data.save.db.converters.DateTimeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
-import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
+import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.rememberFabVisible
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
@@ -311,7 +309,6 @@ fun DiaryListItem(
         isLast -> Radius.BottomArray
         else -> Radius.MiddleArray
     }
-    val density = LocalDensity.current
 
     var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
     var expanded by remember { mutableStateOf(false) }                  // 下拉框是否展开
@@ -405,13 +402,7 @@ fun DiaryListItem(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             shape = RoundedCornerShape(Radius.Large),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            offset = with(density) {
-                DpOffset(
-                    x = menuOffset.x.toDp(),
-                    y = menuOffset.y.toDp()
-                )
-            }
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.modify_date)) },
