@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -193,57 +192,54 @@ fun SettingSpinnerItem(
     val density = LocalDensity.current
     var menuOffset by remember { mutableStateOf(Offset.Zero) }          // 长按点相对父容器的偏移
 
-    Box(
-        modifier = Modifier.fillMaxWidth()
+    // TODO:修复向下延伸空间不够时，锚点不是手指点击位置的BUG
+    PressableCard(
+        onClick = { offset, cardSize ->
+            menuOffset = Offset(
+                x = offset.x,
+                y = offset.y - cardSize.height
+            )
+            onExpandedChange(true)
+        },
+        normalRadius = normalRadius,
     ) {
-        PressableCard(
-            onClick = { offset, cardSize ->
-                menuOffset = Offset(
-                    x = offset.x,
-                    y = offset.y - cardSize.height
-                )
-                onExpandedChange(true)
-            },
-            normalRadius = normalRadius,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                    if (!subtitle.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                if (!subtitle.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                // 显示当前选中的值文本
-                Text(
-                    text = currentValueText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Icon(
-                    painter = painterResource(R.drawable.outline_unfold_more_24),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
             }
+            Spacer(modifier = Modifier.width(16.dp))
+            // 显示当前选中的值文本
+            Text(
+                text = currentValueText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Icon(
+                painter = painterResource(R.drawable.outline_unfold_more_24),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
         }
 
         LargeRadiusDropdownMenu(

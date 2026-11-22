@@ -112,7 +112,6 @@ fun DataManageScreen(
                 onExpandedChange = { frequencyExpanded = it },
                 expanded = frequencyExpanded,
             ) {
-                // TODO:为什么这里会多减少一个卡片高度？
                 backupFrequencies.forEach { frequency ->
                     SelectableDropdownMenuItem(
                         selected = frequency.ordinal == backupSettings.backupFrequency,
