@@ -1,6 +1,7 @@
 package com.wanderer.journal.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,8 +12,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
@@ -27,7 +26,9 @@ import com.wanderer.journal.auxiliary.classes.Interval
 fun LazyLargeTopAppBarScaffold(
     onNavigateBack: (() -> Unit)? = null,
     title: String,
-    snackHostState: SnackbarHostState? = null,
+    snackHostState: @Composable (() -> Unit) = {},
+    actions: @Composable (RowScope.() -> Unit) = {},
+    floatingActionButton: @Composable (() -> Unit) = {},
     useDefaultTopPadding: Boolean = true,
     content: LazyListScope.() -> Unit
 ) {
@@ -49,10 +50,12 @@ fun LazyLargeTopAppBarScaffold(
                         }
                     }
                 },
+                actions = actions,
                 scrollBehavior = scrollState
             )
         },
-        snackbarHost = { snackHostState?.let { SnackbarHost(it) } }
+        floatingActionButton = floatingActionButton,
+        snackbarHost = snackHostState
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
