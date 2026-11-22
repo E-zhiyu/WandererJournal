@@ -45,6 +45,7 @@ import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
+import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import dev.jeziellago.compose.markdowntext.MarkdownText

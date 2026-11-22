@@ -25,10 +25,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -47,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,6 +65,7 @@ import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
+import com.wanderer.journal.ui.components.LargeTopAppBarListScaffold
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
 import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
@@ -130,34 +128,40 @@ fun DiaryScreen(
         rememberTopAppBarState()
     )
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.diary)) },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    IconButton(onClick = {
-                        val diaryYears = state.diaries.map { it.diary.diaryDate.year }.toSet()
-                        datePickerRequest = DatePickerRequest(
-                            mode = DatePickerMode.Skip,
-                            initDate = state.diaries.getOrNull(listState.firstVisibleItemIndex)?.diary?.diaryDate,
-                            dateFilter = { pickerMillis ->
-                                val diaryDateMillis =
-                                    state.diaries.map { DateTimeConverter.fromLocalDate(it.diary.diaryDate) }
-                                        .toSet()
-                                diaryDateMillis.contains(pickerMillis)
-                            },
-                            yearRange = IntRange(diaryYears.min(), diaryYears.max())
-                        )
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.outline_date_range_24),
-                            contentDescription = stringResource(R.string.date_skip_btn)
-                        )
-                    }
-                },
-            )
+    LargeTopAppBarListScaffold(
+        title = stringResource(R.string.diary),
+        snackHostState = { SnackbarHost(snackHostState) },
+        topbarScrollBehavior = scrollBehavior,
+        actions = {
+            IconButton(onClick = {
+                val diaryYears = state.diaries.map { it.diary.diaryDate.year }.toSet()
+                val minYear: Int
+                val maxYear: Int
+                if (diaryYears.isNotEmpty()) {
+                    minYear = diaryYears.min()
+                    maxYear = diaryYears.max()
+                } else {
+                    val today = LocalDate.now()
+                    minYear = today.year
+                    maxYear = today.year
+                }
+                datePickerRequest = DatePickerRequest(
+                    mode = DatePickerMode.Skip,
+                    initDate = state.diaries.getOrNull(listState.firstVisibleItemIndex)?.diary?.diaryDate,
+                    dateFilter = { pickerMillis ->
+                        val diaryDateMillis =
+                            state.diaries.map { DateTimeConverter.fromLocalDate(it.diary.diaryDate) }
+                                .toSet()
+                        diaryDateMillis.contains(pickerMillis)
+                    },
+                    yearRange = IntRange(minYear, maxYear)
+                )
+            }) {
+                Icon(
+                    painter = painterResource(R.drawable.outline_date_range_24),
+                    contentDescription = stringResource(R.string.date_skip_btn)
+                )
+            }
         },
         floatingActionButton = {
             PressableFAB(
@@ -169,59 +173,51 @@ fun DiaryScreen(
             ) {
                 Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.btn_add))
             }
-        },
-        snackbarHost = { SnackbarHost(snackHostState) },
-    ) { inner ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = inner.calculateTopPadding())
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ) {
-            if (state.isEmpty && !state.isLoading) {
-                Text(
-                    text = stringResource(R.string.no_diary),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = 5.dp,
-                        bottom = 5.dp,
-                        start = Interval.SidePadding,
-                        end = Interval.SidePadding
-                    ),
-                ) {
-                    itemsIndexed(
-                        items = state.diaries,
-                        key = { _, item -> item.diary.diaryId }
-                    ) { index, item ->
-                        DiaryListItem(
-                            item = item,
-                            isFirst = index == 0,
-                            isLast = index == state.diaries.lastIndex,
-                            highlighted = flashDiaryId == item.diary.diaryId,
-                            onHighlightFinished = { flashDiaryId = null },
-                            {
-                                val today = LocalDate.now()
-                                datePickerRequest = DatePickerRequest(
-                                    mode = DatePickerMode.DateChange(item.diary),
-                                    initDate = item.diary.diaryDate,
-                                    dateFilter = { pickerMillis ->
-                                        val todayMillis = DateTimeConverter.fromLocalDate(today)
-                                        pickerMillis <= todayMillis
-                                    },
-                                    yearRange = IntRange(today.year - 150, today.year)
-                                )
-                            },
-                            {
-                                vm.deleteDiary(item.diary, context)
-                            }
-                        )
-                    }
+        }
+    ) {
+        if (state.isEmpty && !state.isLoading) {
+            Text(
+                text = stringResource(R.string.no_diary),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    top = 5.dp,
+                    bottom = 5.dp,
+                    start = Interval.SidePadding,
+                    end = Interval.SidePadding
+                ),
+            ) {
+                itemsIndexed(
+                    items = state.diaries,
+                    key = { _, item -> item.diary.diaryId }
+                ) { index, item ->
+                    DiaryListItem(
+                        item = item,
+                        isFirst = index == 0,
+                        isLast = index == state.diaries.lastIndex,
+                        highlighted = flashDiaryId == item.diary.diaryId,
+                        onHighlightFinished = { flashDiaryId = null },
+                        {
+                            val today = LocalDate.now()
+                            datePickerRequest = DatePickerRequest(
+                                mode = DatePickerMode.DateChange(item.diary),
+                                initDate = item.diary.diaryDate,
+                                dateFilter = { pickerMillis ->
+                                    val todayMillis = DateTimeConverter.fromLocalDate(today)
+                                    pickerMillis <= todayMillis
+                                },
+                                yearRange = IntRange(today.year - 150, today.year)
+                            )
+                        },
+                        {
+                            vm.deleteDiary(item.diary, context)
+                        }
+                    )
                 }
             }
         }
