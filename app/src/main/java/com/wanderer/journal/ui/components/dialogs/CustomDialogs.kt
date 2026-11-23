@@ -18,10 +18,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.wanderer.journal.R
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 
 /**
  * 显示错误对话框
+ *
  * @param onDismiss 对话框消失回调
  * @param message 需要显示的内容
  */
@@ -65,6 +67,70 @@ fun ExceptionDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("关闭")
+            }
+        }
+    )
+}
+
+/**
+ * 带有操作的文本提示对话框
+ *
+ * @param onDismiss 对话框消失回调，用于设置对话框状态
+ * @param confirmTitle 确认按钮的文本
+ * @param onConfirm 确认按钮点击回调，传递 null 则不包含确认按钮
+ * @param cancelTitle 取消按钮的文本
+ * @param onCancel 取消按钮点击回调
+ * @param title 对话框标题
+ * @param message 对话框显示的文本内容
+ * @param useMarkdown 是否使用 Markdown 显示消息
+ */
+@Composable
+fun ActionDialog(
+    onDismiss: () -> Unit,
+    confirmTitle: String = stringResource(R.string.confirm),
+    onConfirm: (() -> Unit)? = {onDismiss()},
+    cancelTitle: String = stringResource(R.string.cancel),
+    onCancel: (() -> Unit)? = {onDismiss()},
+    title: String,
+    message: String,
+    useMarkdown: Boolean = false
+) {
+    val scrollState = rememberScrollState()
+
+    AlertDialog(
+        modifier = Modifier.padding(top = 40.dp, bottom = 40.dp),
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                if (useMarkdown) {
+                    // 更换一个 Markdown 方案，该方案的代码语句背景色不对
+                    MarkdownText(message)
+                } else {
+                    Text(message)
+                }
+            }
+        },
+        confirmButton = {
+            onConfirm?.let {
+                TextButton(onClick = {
+                    it()
+                    onDismiss()
+                }) {
+                    Text(confirmTitle)
+                }
+            }
+        },
+        dismissButton = {
+            onCancel?.let {
+                TextButton(onClick = {
+                    it()
+                    onDismiss()
+                }) {
+                    Text(cancelTitle)
+                }
             }
         }
     )

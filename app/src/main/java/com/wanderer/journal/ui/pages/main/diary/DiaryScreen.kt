@@ -65,6 +65,7 @@ import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.LargeTopAppBarListScaffold
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
+import com.wanderer.journal.ui.components.dialogs.ActionDialog
 import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.rememberFabVisible
@@ -83,11 +84,17 @@ sealed interface DatePickerMode {
 }
 
 // 日期选择对话框显示请求
-data class DatePickerRequest(
+private data class DatePickerRequest(
     val mode: DatePickerMode,                       // 日期选择的请求种类
     val initDate: LocalDate?,                       // 日期选择对话框的初始日期
     val dateFilter: ((Long) -> Boolean)? = null,    // 判断日期是否可以选择的函数
     val yearRange: IntRange? = null                 // 可选年份的范围
+)
+
+// 日记删除请求
+private data class DiaryDeleteRequest(
+    val message: String,
+    val onConfirm: () -> Unit
 )
 
 @Composable
@@ -114,9 +121,10 @@ fun DiaryScreen(
     }
 
     // 日期选择对话框状态：null = 不显示；非 null = 显示，且携带模式
-    var datePickerRequest by remember {
-        mutableStateOf<DatePickerRequest?>(null)
-    }
+    var datePickerRequest by remember { mutableStateOf<DatePickerRequest?>(null) }
+
+    // 日记删除请求，不为 null 时显示对话框
+    var diaryDeleteRequest by remember { mutableStateOf<DiaryDeleteRequest?>(null) }
 
     // 需要闪烁的日记 id；null 表示没有
     var flashDiaryId by remember { mutableStateOf<Long?>(null) }
@@ -208,7 +216,14 @@ fun DiaryScreen(
                     )
                 },
                 {
-                    vm.deleteDiary(item.diary, context)
+                    val message =
+                        "确认要删除`${CustomDateTimeFormatter.LOCAL_DATE.format(item.diary.diaryDate)}`的日记吗？"
+                    diaryDeleteRequest = DiaryDeleteRequest(
+                        message = message,
+                        onConfirm = {
+                            vm.deleteDiary(item.diary, context)
+                        }
+                    )
                 }
             )
         }
@@ -219,6 +234,17 @@ fun DiaryScreen(
         ExceptionDialog(
             { exceptionMessage = null },
             exceptionMessage ?: ""
+        )
+    }
+
+    // 删除日记对话框
+    diaryDeleteRequest?.let {
+        ActionDialog(
+            onDismiss = { diaryDeleteRequest = null },
+            onConfirm = it.onConfirm,
+            title = stringResource(R.string.delete_diary),
+            message = it.message,
+            useMarkdown = true
         )
     }
 
