@@ -17,8 +17,8 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.mikepenz.markdown.m3.Markdown
 import com.wanderer.journal.R
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 
 /**
@@ -107,7 +107,7 @@ fun ActionDialog(
             ) {
                 if (useMarkdown) {
                     // 更换一个 Markdown 方案，该方案的代码语句背景色不对
-                    MarkdownText(message)
+                    Markdown(message)
                 } else {
                     Text(message)
                 }

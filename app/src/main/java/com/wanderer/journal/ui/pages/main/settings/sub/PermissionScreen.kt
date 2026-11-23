@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
+import com.mikepenz.markdown.m3.Markdown
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
@@ -47,7 +48,6 @@ import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -396,7 +396,7 @@ private fun PermissionRequestDialog(
         },
         text = {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
-                MarkdownText(message)
+                Markdown(message)
             }
         },
         confirmButton = {

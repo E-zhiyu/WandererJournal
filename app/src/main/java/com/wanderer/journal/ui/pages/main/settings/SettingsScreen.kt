@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mikepenz.markdown.m3.Markdown
 import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.CHANGELOG
@@ -45,10 +46,8 @@ import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
-import com.wanderer.journal.ui.pages.main.settings.sub.DataManageActivity
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
-import dev.jeziellago.compose.markdowntext.MarkdownText
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
 @Composable
@@ -420,7 +419,7 @@ fun ChangeLogDialog(
             Column(
                 modifier = Modifier.verticalScroll(scrollState)
             ) {
-                MarkdownText(CHANGELOG)
+                Markdown(CHANGELOG)
             }
         },
         confirmButton = {},
