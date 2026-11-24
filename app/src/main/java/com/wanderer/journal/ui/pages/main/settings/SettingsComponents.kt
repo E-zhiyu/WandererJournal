@@ -110,6 +110,7 @@ fun SettingClickableItem(
  * @param icon 设置项图标
  * @param checked 开关是否打开
  * @param onCheckedChange 开关状态变更回调
+ * @param shouldCheckedChange 是否允许开关状态变更，传入开关的新状态，若返回 true 则正常更改开关状态，若返回 false 则触发 onCheckedChangeIntercepted() 回调
  */
 @Composable
 fun SettingSwitchItem(
@@ -119,15 +120,26 @@ fun SettingSwitchItem(
     icon: Painter,
     normalRadius: Array<Dp>,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    shouldCheckedChange: (Boolean) -> Boolean = { true },
+    onCheckedChangeIntercepted: () -> Unit = {}
 ) {
     var switchState = checked   // 保存开关状态
+
+    // 有拦截功能的回调
+    val callbackWithInterceptor: (Boolean) -> Unit = { checked ->
+        if (shouldCheckedChange(checked)) {
+            onCheckedChange(checked)
+            switchState = checked
+        } else {
+            onCheckedChangeIntercepted()
+        }
+    }
 
     PressableCard(
         onClick = { _ ->
             val newState = !switchState
-            onCheckedChange(newState)
-            switchState = newState
+            callbackWithInterceptor(newState)
         },
         modifier = modifier,
         normalRadius = normalRadius,
@@ -159,10 +171,7 @@ fun SettingSwitchItem(
             Spacer(modifier = Modifier.width(16.dp))
             Switch(
                 checked = checked,
-                onCheckedChange = { checked ->
-                    onCheckedChange(checked)
-                    switchState = checked
-                }
+                onCheckedChange = callbackWithInterceptor
             )
         }
     }

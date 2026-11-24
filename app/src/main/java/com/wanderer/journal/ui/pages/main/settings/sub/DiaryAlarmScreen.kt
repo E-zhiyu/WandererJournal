@@ -11,52 +11,82 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.Size
 import com.wanderer.journal.data.save.store.viewmodels.DiaryAlarmViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsDiaryAlarmViewModel
+import com.wanderer.journal.helpers.permission.PermissionRequest
 import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
+import com.wanderer.journal.ui.components.dialogs.PermissionExplanationDialog
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSwitchItem
 import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import java.time.LocalTime
+
+private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
 
 @Composable
 fun DiaryAlarmScreen(
     onNavigateBack: () -> Unit,
     vm: DiaryAlarmViewModel = dsDiaryAlarmViewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     // 设置项
     val alarmSettings by vm.diaryAlarm.collectAsStateWithLifecycle()
+
+    // Snackbar
+    val snackHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        for (message in snackMessageChannel) {
+            if (message.isNotEmpty()) {
+                snackHostState.showSnackbar(message)
+            }
+        }
+    }
+
+    // 权限解释对话框
+    var permissionRequest by remember { mutableStateOf<PermissionRequest?>(null) }
 
     // 时间选择对话框
     var timePickerVisible by remember { mutableStateOf(false) }
 
     LazyLargeTopAppBarScaffold(
         onNavigateBack = onNavigateBack,
-        title = stringResource(R.string.diary_alarm)
+        title = stringResource(R.string.diary_alarm),
+        snackHostState = { SnackbarHost(snackHostState) }
     ) {
         // 总开关
         item {
@@ -66,7 +96,28 @@ fun DiaryAlarmScreen(
                 icon = painterResource(R.drawable.outline_alarm_24),
                 normalRadius = Radius.TopArray,
                 checked = alarmSettings.switch,
-                onCheckedChange = { checked -> vm.setSwitchOpen(checked) }
+                onCheckedChange = { checked -> vm.setSwitchOpen(checked) },
+                shouldCheckedChange = { checked ->
+                    !checked || XXPermissions.isGrantedPermission(
+                        context,
+                        PermissionLists.getScheduleExactAlarmPermission()
+                    )
+                },
+                onCheckedChangeIntercepted = {
+                    permissionRequest = PermissionRequest.Common(
+                        descriptionFun = { "该功能需要精确闹钟权限，是否前往授权？" },
+                        onAllGranted = {
+                            vm.setSwitchOpen(true)
+                        },
+                        onRequested = { grantedList, _ ->
+                            if (grantedList.isNotEmpty()) {
+                                vm.setSwitchOpen(true)
+                                scope.launch { snackMessageChannel.send("权限已授予，已开启日记提醒功能。") }
+                            }
+                        },
+                        permissions = listOf(PermissionLists.getScheduleExactAlarmPermission())
+                    )
+                }
             )
         }
 
@@ -132,6 +183,14 @@ fun DiaryAlarmScreen(
                 TipTitle(title = stringResource(R.string.tip_alarm_need_autostart))
             }
         }
+    }
+
+    // 权限请求解释对话框
+    permissionRequest?.let {
+        PermissionExplanationDialog(
+            permissionRequest = it,
+            onDismiss = { permissionRequest = null }
+        )
     }
 
     // 时间选择对话框

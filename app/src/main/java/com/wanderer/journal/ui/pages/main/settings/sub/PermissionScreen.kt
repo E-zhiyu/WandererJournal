@@ -346,14 +346,14 @@ fun PermissionScreen(
             TipTitle(title = stringResource(R.string.tip_long_click_skip_to_permission_settings))
         }
     }
-
-    // 权限请求解释对话框
+// 权限请求解释对话框
     permissionRequest?.let {
         PermissionExplanationDialog(
             permissionRequest = it,
             onDismiss = { permissionRequest = null }
         )
     }
+
 
     // 权限申请被拒绝信息对话框
     permissionDoNotShowAgainEvent?.let {
