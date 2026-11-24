@@ -42,6 +42,14 @@ sealed class PermissionRequest(
         onDoNotAskAgain = onDoNotAskAgain,
         onRequested = onRequested,
     )
+
+    // 自启动权限
+    class AutoStart(
+        descriptionFun: () -> String = { "" },
+    ) : PermissionRequest(
+        descriptionFun = { descriptionFun() },
+        onRequested = { _, _ -> },
+    )
 }
 
 /**

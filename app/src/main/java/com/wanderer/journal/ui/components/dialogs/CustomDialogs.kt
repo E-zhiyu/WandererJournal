@@ -2,6 +2,7 @@ package com.wanderer.journal.ui.components.dialogs
 
 import android.content.ClipData
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,8 +18,14 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hjq.permissions.XXPermissions
+import com.hjq.permissions.permission.PermissionLists
 import com.mikepenz.markdown.m3.Markdown
 import com.wanderer.journal.R
+import com.wanderer.journal.helpers.permission.PermissionRequest
+import com.wanderer.journal.helpers.permission.requestAutoStartPermission
+import com.wanderer.journal.helpers.permission.requestLocationPermission
+import com.wanderer.journal.helpers.permission.requestPermission
 import kotlinx.coroutines.launch
 
 /**
@@ -88,9 +95,9 @@ fun ExceptionDialog(
 fun ActionDialog(
     onDismiss: () -> Unit,
     confirmTitle: String = stringResource(R.string.confirm),
-    onConfirm: (() -> Unit)? = {onDismiss()},
+    onConfirm: (() -> Unit)? = { onDismiss() },
     cancelTitle: String = stringResource(R.string.cancel),
-    onCancel: (() -> Unit)? = {onDismiss()},
+    onCancel: (() -> Unit)? = { onDismiss() },
     title: String,
     message: String,
     useMarkdown: Boolean = false
@@ -134,4 +141,91 @@ fun ActionDialog(
             }
         }
     )
+}
+
+@Composable
+fun PermissionExplanationDialog(
+    permissionRequest: PermissionRequest,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+
+    when (permissionRequest) {
+        // 其他普通权限
+        is PermissionRequest.Common -> {
+            if (XXPermissions.isGrantedPermissions(context, permissionRequest.permissions)) {
+                permissionRequest.onAllGranted(permissionRequest.permissions)
+                return
+            }
+
+            val message = permissionRequest.descriptionFun(permissionRequest.permissions)
+            ActionDialog(
+                onDismiss = onDismiss,
+                onConfirm = {
+                    onDismiss()
+                    requestPermission(
+                        context,
+                        activity,
+                        permissionRequest.onAllGranted,
+                        permissionRequest.onDoNotAskAgain,
+                        permissionRequest.onRequested,
+                        permissions = permissionRequest.permissions
+                    )
+                },
+                confirmTitle = stringResource(R.string.go_to_request),
+                title = stringResource(R.string.request_permission),
+                message = message,
+                useMarkdown = true
+            )
+        }
+
+        // 定位权限
+        is PermissionRequest.Location -> {
+            val fineLocation = PermissionLists.getAccessFineLocationPermission()
+            val coarseLocation = PermissionLists.getAccessCoarseLocationPermission()
+            val isFineGranted = XXPermissions.isGrantedPermission(context, fineLocation)
+            val isCoarseGranted = XXPermissions.isGrantedPermission(context, coarseLocation)
+            if (isFineGranted && isCoarseGranted) {
+                permissionRequest.hasFineLocation()
+                return
+            }
+
+            val message = permissionRequest.descriptionFun(listOf(fineLocation, coarseLocation))
+            ActionDialog(
+                onDismiss = onDismiss,
+                onConfirm = {
+                    onDismiss()
+                    requestLocationPermission(
+                        context,
+                        activity,
+                        hasFineLocation = permissionRequest.hasFineLocation,
+                        onlyCoarseLocation = permissionRequest.onlyCoarseLocation,
+                        onDoNotAskAgain = permissionRequest.onDoNotAskAgain,
+                        onRequested = permissionRequest.onRequested
+                    )
+                },
+                confirmTitle = stringResource(R.string.go_to_request),
+                title = stringResource(R.string.request_permission),
+                message = message,
+                useMarkdown = true
+            )
+        }
+
+        // 自启动权限
+        is PermissionRequest.AutoStart -> {
+            val message = permissionRequest.descriptionFun(listOf())
+            ActionDialog(
+                onDismiss = onDismiss,
+                onConfirm = {
+                    onDismiss()
+                    requestAutoStartPermission(context)
+                },
+                confirmTitle = stringResource(R.string.go_to_request),
+                title = stringResource(R.string.request_permission),
+                message = message,
+                useMarkdown = true
+            )
+        }
+    }
 }
