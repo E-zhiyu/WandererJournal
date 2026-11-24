@@ -215,6 +215,7 @@
     <string name="to_settings">去设置</string>
     <string name="cancel">取消</string>
     <string name="request_permission">申请权限</string>
+    <string name="go_to_request">去申请</string>
     <string name="share_media_subtitle">分享日记时包含媒体预览图</string>
     <string name="share_emotion_tag_subtitle">分享日记时包含情绪标签</string>
     <string name="share_paragraph_time_subtitle">分享日记时包含段落编写时间</string>

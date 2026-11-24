@@ -40,11 +40,13 @@ import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.helpers.permission.PermissionRequest
 import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.helpers.permission.requestAutoStartPermission
 import com.wanderer.journal.helpers.permission.requestLocationPermission
 import com.wanderer.journal.helpers.permission.requestPermission
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
+import com.wanderer.journal.ui.components.dialogs.ActionDialog
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.TipTitle
 import com.wanderer.journal.ui.theme.MaterialAppTheme
@@ -56,7 +58,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 // 权限授予事件
-private class PermissionEvent(
+private class DeniedEvent(
     val message: String,
     val permissionList: List<IPermission>? = null,
     val onConfirm: (() -> Unit)? = null
@@ -95,8 +97,11 @@ fun PermissionScreen(
         }
     }
 
+    // 权限解释对话框
+    var permissionRequest by remember { mutableStateOf<PermissionRequest?>(null) }
+
     // 权限申请被拒绝的对话框
-    var permissionEvent: PermissionEvent? by remember { mutableStateOf(null) }
+    var deniedEvent: DeniedEvent? by remember { mutableStateOf(null) }
 
     // 权限申请通用回调
     val allGrantedCallback: (List<IPermission>) -> Unit = { sendSnackMessage(scope, "权限已授予") }
@@ -128,20 +133,32 @@ fun PermissionScreen(
                 subtitle = stringResource(R.string.camera_permission_subtitle),
                 arrowText = permissionStates?.let { if (permissionStates!!.camera) grantedText else notGrantedText },
                 onClick = {
-                    requestPermission(
-                        context,
-                        activity,
+                    permissionRequest = PermissionRequest.Common(
                         descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            permissionEvent = PermissionEvent(
+                            deniedEvent = DeniedEvent(
                                 message = "权限申请被拒绝，请前往权限设置界面授权。",
                                 permissionList = permissionList
                             )
                         },
                         onRequested = requestedCallback,
-                        PermissionLists.getCameraPermission()
+                        permissions = listOf(PermissionLists.getCameraPermission())
                     )
+//                    requestPermission(
+//                        context,
+//                        activity,
+//                        descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
+//                        onAllGranted = allGrantedCallback,
+//                        onDoNotAskAgain = { permissionList ->
+//                            deniedEvent = DeniedEvent(
+//                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+//                                permissionList = permissionList
+//                            )
+//                        },
+//                        onRequested = requestedCallback,
+//                        PermissionLists.getCameraPermission()
+//                    )
                 },
                 onLongClick = {
                     WandererJournal.lockLifecycleObserver(true)
@@ -163,22 +180,36 @@ fun PermissionScreen(
                 subtitle = stringResource(R.string.notification_permission_subtitle),
                 arrowText = permissionStates?.let { if (permissionStates!!.notification) grantedText else notGrantedText },
                 onClick = {
-                    requestPermission(
-                        context,
-                        activity,
+                    permissionRequest = PermissionRequest.Common(
                         descriptionFun = {
                             "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知；\n- 进行数据备份时发送反馈通知。\n"
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            permissionEvent = PermissionEvent(
+                            deniedEvent = DeniedEvent(
                                 message = "权限申请被拒绝，请前往权限设置界面授权。",
                                 permissionList = permissionList
                             )
                         },
                         onRequested = requestedCallback,
-                        PermissionLists.getPostNotificationsPermission()
+                        permissions = listOf(PermissionLists.getPostNotificationsPermission())
                     )
+//                    requestPermission(
+//                        context,
+//                        activity,
+//                        descriptionFun = {
+//                            "该权限允许应用发送通知，应用范围如下：\n- 没写日记时发送提醒通知；\n- 进行数据备份时发送反馈通知。\n"
+//                        },
+//                        onAllGranted = allGrantedCallback,
+//                        onDoNotAskAgain = { permissionList ->
+//                            deniedEvent = DeniedEvent(
+//                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+//                                permissionList = permissionList
+//                            )
+//                        },
+//                        onRequested = requestedCallback,
+//                        PermissionLists.getPostNotificationsPermission()
+//                    )
                 },
                 onLongClick = {
                     WandererJournal.lockLifecycleObserver(true)
@@ -200,7 +231,7 @@ fun PermissionScreen(
                     title = stringResource(R.string.auto_start_permission),
                     subtitle = stringResource(R.string.auto_start_permission_subtitle),
                     onClick = {
-                        permissionEvent = PermissionEvent(
+                        deniedEvent = DeniedEvent(
                             message = "该权限允许应用在后台退出后自动启动，若关闭该权限会导致某些自动化任务无法正常运行，影响范围如下：\n" +
                                     "- 日记提醒是否准时触发。\n",
                             onConfirm = {
@@ -226,9 +257,7 @@ fun PermissionScreen(
                 subtitle = stringResource(R.string.ignore_battery_optimization_subtitle),
                 arrowText = permissionStates?.let { if (permissionStates!!.battery) "已忽略" else "未忽略" },
                 onClick = {
-                    requestPermission(
-                        context,
-                        activity,
+                    permissionRequest = PermissionRequest.Common(
                         descriptionFun = {
                             "该设置项可以调整应用的省电策略。" +
                                     "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
@@ -237,14 +266,33 @@ fun PermissionScreen(
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            permissionEvent = PermissionEvent(
+                            deniedEvent = DeniedEvent(
                                 message = "权限申请被拒绝，请前往权限设置界面授权。",
                                 permissionList = permissionList
                             )
                         },
                         onRequested = requestedCallback,
-                        PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
+                        permissions = listOf(PermissionLists.getRequestIgnoreBatteryOptimizationsPermission())
                     )
+//                    requestPermission(
+//                        context,
+//                        activity,
+//                        descriptionFun = {
+//                            "该设置项可以调整应用的省电策略。" +
+//                                    "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
+//                                    "影响范围如下：\n" +
+//                                    "- 日记提醒是否能够准点发送通知。\n"
+//                        },
+//                        onAllGranted = allGrantedCallback,
+//                        onDoNotAskAgain = { permissionList ->
+//                            deniedEvent = DeniedEvent(
+//                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+//                                permissionList = permissionList
+//                            )
+//                        },
+//                        onRequested = requestedCallback,
+//                        PermissionLists.getRequestIgnoreBatteryOptimizationsPermission()
+//                    )
                 },
                 onLongClick = {
                     WandererJournal.lockLifecycleObserver(true)
@@ -264,23 +312,38 @@ fun PermissionScreen(
                 subtitle = stringResource(R.string.alarm_permission_subtitle),
                 arrowText = permissionStates?.let { if (permissionStates!!.alarm) grantedText else notGrantedText },
                 onClick = {
-                    requestPermission(
-                        context,
-                        activity,
+                    permissionRequest = PermissionRequest.Common(
                         descriptionFun = {
                             "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
                                     "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            permissionEvent = PermissionEvent(
+                            deniedEvent = DeniedEvent(
                                 message = "权限申请被拒绝，请前往权限设置界面授权。",
                                 permissionList = permissionList
                             )
                         },
                         onRequested = requestedCallback,
-                        PermissionLists.getScheduleExactAlarmPermission()
+                        permissions = listOf(PermissionLists.getScheduleExactAlarmPermission())
                     )
+//                    requestPermission(
+//                        context,
+//                        activity,
+//                        descriptionFun = {
+//                            "该权限允许应用执行某些定时任务，以实现一些自动化功能，应用范围如下：\n" +
+//                                    "- 根据用户设置自动检测当天是否有日记并发送通知提醒。\n"
+//                        },
+//                        onAllGranted = allGrantedCallback,
+//                        onDoNotAskAgain = { permissionList ->
+//                            deniedEvent = DeniedEvent(
+//                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+//                                permissionList = permissionList
+//                            )
+//                        },
+//                        onRequested = requestedCallback,
+//                        PermissionLists.getScheduleExactAlarmPermission()
+//                    )
                 },
                 onLongClick = {
                     WandererJournal.lockLifecycleObserver(true)
@@ -310,19 +373,11 @@ fun PermissionScreen(
                     }
                 },
                 onClick = {
-                    requestLocationPermission(
-                        context,
-                        activity,
+                    permissionRequest = PermissionRequest.Location(
+                        hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
                         descriptionFun = {
                             "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
                                     "- 写日记时将位置信息保存至日记段落中。\n"
-                        },
-                        hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
-                        onDoNotAskAgain = { permissionList ->
-                            permissionEvent = PermissionEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
-                                permissionList = permissionList
-                            )
                         },
                         onRequested = { grantedList, deniedList ->
                             val noDenied = deniedList.isEmpty()
@@ -337,8 +392,43 @@ fun PermissionScreen(
                                     "已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节"
                                 )
                             }
+                        },
+                        onDoNotAskAgain = { permissionList ->
+                            deniedEvent = DeniedEvent(
+                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                                permissionList = permissionList
+                            )
                         }
                     )
+//                    requestLocationPermission(
+//                        context,
+//                        activity,
+//                        descriptionFun = {
+//                            "该权限允许应用获取设备所处的位置，应用范围如下：\n" +
+//                                    "- 写日记时将位置信息保存至日记段落中。\n"
+//                        },
+//                        hasFineLocation = { sendSnackMessage(scope, "已授予精确位置权限") },
+//                        onDoNotAskAgain = { permissionList ->
+//                            deniedEvent = DeniedEvent(
+//                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+//                                permissionList = permissionList
+//                            )
+//                        },
+//                        onRequested = { grantedList, deniedList ->
+//                            val noDenied = deniedList.isEmpty()
+//                            val noGranted = grantedList.isEmpty()
+//                            if (noGranted && !noDenied) {
+//                                sendSnackMessage(scope, "权限申请被拒绝")
+//                            } else if (noDenied && !noGranted) {
+//                                sendSnackMessage(scope, "已授予精确位置权限")
+//                            } else {
+//                                sendSnackMessage(
+//                                    scope,
+//                                    "已授予粗略位置权限，若需要更改精确程度，可长按定位权限选项进入设置界面手动调节"
+//                                )
+//                            }
+//                        }
+//                    )
                 },
                 onLongClick = {
                     WandererJournal.lockLifecycleObserver(true)
@@ -358,11 +448,72 @@ fun PermissionScreen(
         }
     }
 
-    // 权限申请信息对话框
-    permissionEvent?.let {
+    // 权限请求解释对话框
+    permissionRequest?.let {
+        when (it) {
+            is PermissionRequest.Common -> {
+                if (XXPermissions.isGrantedPermissions(context, it.permissions)) {
+                    return
+                }
+
+                val message = it.descriptionFun(it.permissions)
+                ActionDialog(
+                    onDismiss = { permissionRequest = null },
+                    onConfirm = {
+                        permissionRequest = null
+                        requestPermission(
+                            context,
+                            activity,
+                            it.onAllGranted,
+                            it.onDoNotAskAgain,
+                            it.onRequested,
+                            permissions = it.permissions
+                        )
+                    },
+                    confirmTitle = stringResource(R.string.go_to_request),
+                    title = stringResource(R.string.request_permission),
+                    message = message,
+                    useMarkdown = true
+                )
+            }
+
+            is PermissionRequest.Location -> {
+                val fineLocation = PermissionLists.getAccessFineLocationPermission()
+                val coarseLocation = PermissionLists.getAccessCoarseLocationPermission()
+                val isFineGranted = XXPermissions.isGrantedPermission(context, fineLocation)
+                val isCoarseGranted = XXPermissions.isGrantedPermission(context, coarseLocation)
+                if (isFineGranted && isCoarseGranted) {
+                    return
+                }
+
+                val message = it.descriptionFun(listOf(fineLocation, coarseLocation))
+                ActionDialog(
+                    onDismiss = { permissionRequest = null },
+                    onConfirm = {
+                        permissionRequest = null
+                        requestLocationPermission(
+                            context,
+                            activity,
+                            hasFineLocation = it.hasFineLocation,
+                            onlyCoarseLocation = it.onlyCoarseLocation,
+                            onDoNotAskAgain = it.onDoNotAskAgain,
+                            onRequested = it.onRequested
+                        )
+                    },
+                    confirmTitle = stringResource(R.string.go_to_request),
+                    title = stringResource(R.string.request_permission),
+                    message = message,
+                    useMarkdown = true
+                )
+            }
+        }
+    }
+
+    // 权限申请被拒绝信息对话框
+    deniedEvent?.let {
         PermissionRequestDialog(
             message = it.message,
-            onDismissRequest = { permissionEvent = null },
+            onDismissRequest = { deniedEvent = null },
             onConfirm = {
                 if (it.onConfirm == null) {
                     it.permissionList?.let { permissions ->
@@ -374,7 +525,7 @@ fun PermissionScreen(
                 } else {
                     it.onConfirm()
                 }
-                permissionEvent = null
+                deniedEvent = null
             }
         )
     }

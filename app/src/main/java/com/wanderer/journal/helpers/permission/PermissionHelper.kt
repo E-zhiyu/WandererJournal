@@ -7,11 +7,42 @@ import android.content.Intent
 import android.provider.Settings
 import android.widget.Toast
 import com.hjq.device.compat.DeviceOs
-import com.hjq.permissions.OnPermissionDescription
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.WandererJournal
+
+sealed class PermissionRequest(
+    val descriptionFun: (List<IPermission>) -> String = { "" },
+    val onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
+    val onRequested: (List<IPermission>, List<IPermission>) -> Unit,
+) {
+    // 其他权限
+    class Common(
+        val onAllGranted: (List<IPermission>) -> Unit,
+        onRequested: (List<IPermission>, List<IPermission>) -> Unit,
+        descriptionFun: (List<IPermission>) -> String = { "" },
+        onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
+        val permissions: List<IPermission>
+    ) : PermissionRequest(
+        descriptionFun = descriptionFun,
+        onDoNotAskAgain = onDoNotAskAgain,
+        onRequested = onRequested,
+    )
+
+    // 位置权限
+    class Location(
+        val onlyCoarseLocation: (() -> Unit)? = null,
+        val hasFineLocation: () -> Unit,
+        onRequested: (List<IPermission>, List<IPermission>) -> Unit,
+        descriptionFun: (List<IPermission>) -> String = { "" },
+        onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
+    ) : PermissionRequest(
+        descriptionFun = descriptionFun,
+        onDoNotAskAgain = onDoNotAskAgain,
+        onRequested = onRequested,
+    )
+}
 
 /**
  * 判断是否定义了自启动权限
@@ -61,7 +92,6 @@ fun requestAutoStartPermission(context: Context) {
  * 申请权限
  *
  * @param context 上下文
- * @param descriptionFun 根据权限列表动态生成权限描述的方法
  * @param onAllGranted 没有权限需要再申请的回调
  * @param onDoNotAskAgain 用户选择不再询问后再申请权限的回调
  * @param onRequested 权限申请情况回调
@@ -70,30 +100,25 @@ fun requestAutoStartPermission(context: Context) {
 fun requestPermission(
     context: Context,
     activity: Activity?,
-    descriptionFun: ((List<IPermission>) -> String)? = null,
     onAllGranted: (List<IPermission>) -> Unit,
     onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
     onRequested: (List<IPermission>, List<IPermission>) -> Unit,
-    vararg permissions: IPermission
+    permissions: List<IPermission>
 ) {
     if (permissions.isEmpty()) return
 
     if (XXPermissions.isGrantedPermissions(context, permissions)) {
-        onAllGranted(permissions.asList())
+        onAllGranted(permissions)
     } else if (
         onDoNotAskAgain != null &&
         activity != null &&
         XXPermissions.isDoNotAskAgainPermissions(activity, permissions)
     ) {
-        onDoNotAskAgain(permissions.asList())
+        onDoNotAskAgain(permissions)
     } else {
         WandererJournal.lockLifecycleObserver(true)
-        val description: OnPermissionDescription? =
-            if (descriptionFun == null) null else PermissionDialogDescription(descriptionFun)
-
         XXPermissions.with(context)
             .permissions(permissions)
-            .description(description)
             .request { grantedList, deniedList ->
                 WandererJournal.lockLifecycleObserver(false)
                 onRequested(grantedList, deniedList)
@@ -105,7 +130,6 @@ fun requestPermission(
  * 申请位置权限
  *
  * @param context 上下文
- * @param descriptionFun 根据权限列表动态生成权限描述的方法
  * @param hasFineLocation 已经拥有精确位置权限的回调
  * @param onlyCoarseLocation 仅有粗略位置的回调，若不为 null 会拦截接下来的精确位置申请逻辑
  * @param onDoNotAskAgain 用户选择不再询问后再申请权限的回调
@@ -114,7 +138,6 @@ fun requestPermission(
 fun requestLocationPermission(
     context: Context,
     activity: Activity?,
-    descriptionFun: ((List<IPermission>) -> String)? = null,
     hasFineLocation: () -> Unit,
     onlyCoarseLocation: (() -> Unit)? = null,
     onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,
@@ -137,12 +160,8 @@ fun requestLocationPermission(
         onDoNotAskAgain(permissionArray.asList())
     } else {
         WandererJournal.lockLifecycleObserver(true)
-        val description: OnPermissionDescription? =
-            if (descriptionFun == null) null else PermissionDialogDescription(descriptionFun)
-
         XXPermissions.with(context)
             .permissions(permissionArray)
-            .description(description)
             .request { grantedList, deniedList ->
                 WandererJournal.lockLifecycleObserver(false)
                 onRequested(grantedList, deniedList)
