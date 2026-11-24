@@ -1,7 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
 import android.content.res.Configuration
-import android.net.Uri
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MenuDefaults
@@ -29,8 +28,7 @@ import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
 import com.wanderer.journal.data.save.store.viewmodels.AutoBackupViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsAutoBackupViewModel
-import com.wanderer.journal.helpers.file.SAFHelper
-import com.wanderer.journal.helpers.file.SAFHelper.getReadablePathFromSafUri
+import com.wanderer.journal.helpers.file.getReadablePathFromSafUri
 import com.wanderer.journal.helpers.file.rememberCreateDocumentLauncherManual
 import com.wanderer.journal.helpers.file.rememberDocumentLauncher
 import com.wanderer.journal.helpers.file.rememberDocumentTreeLauncher
