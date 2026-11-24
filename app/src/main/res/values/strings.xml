@@ -238,6 +238,7 @@
     <string name="backup_directory_subtitle">自动生成备份文件的位置</string>
     <string name="append_paragraph_subtitle">导入并追加文本文件中的段落</string>
     <string name="import_diary_subtitle">从特定格式的文本文件中导入日记</string>
+    <string name="permission_dont_show_again_message">权限申请被拒绝，请前往权限设置界面授权。</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

@@ -12,6 +12,13 @@ import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
 import com.wanderer.journal.WandererJournal
 
+// 用户选择不再提示权限时还申请权限的事件
+class PermissionDoNotShowAgainEvent(
+    val message: String,
+    val permissionList: List<IPermission> = emptyList()
+)
+
+// 权限请求事件
 sealed class PermissionRequest(
     val descriptionFun: (List<IPermission>) -> String = { "" },
     val onDoNotAskAgain: ((List<IPermission>) -> Unit)? = null,

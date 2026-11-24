@@ -165,11 +165,11 @@ fun PermissionExplanationDialog(
                 onConfirm = {
                     onDismiss()
                     requestPermission(
-                        context,
-                        activity,
-                        permissionRequest.onAllGranted,
-                        permissionRequest.onDoNotAskAgain,
-                        permissionRequest.onRequested,
+                        context = context,
+                        activity = activity,
+                        onAllGranted = permissionRequest.onAllGranted,
+                        onDoNotAskAgain = permissionRequest.onDoNotAskAgain,
+                        onRequested = permissionRequest.onRequested,
                         permissions = permissionRequest.permissions
                     )
                 },
@@ -197,8 +197,8 @@ fun PermissionExplanationDialog(
                 onConfirm = {
                     onDismiss()
                     requestLocationPermission(
-                        context,
-                        activity,
+                        context = context,
+                        activity = activity,
                         hasFineLocation = permissionRequest.hasFineLocation,
                         onlyCoarseLocation = permissionRequest.onlyCoarseLocation,
                         onDoNotAskAgain = permissionRequest.onDoNotAskAgain,
@@ -214,7 +214,7 @@ fun PermissionExplanationDialog(
 
         // 自启动权限
         is PermissionRequest.AutoStart -> {
-            val message = permissionRequest.descriptionFun(listOf())
+            val message = permissionRequest.descriptionFun(emptyList())
             ActionDialog(
                 onDismiss = onDismiss,
                 onConfirm = {

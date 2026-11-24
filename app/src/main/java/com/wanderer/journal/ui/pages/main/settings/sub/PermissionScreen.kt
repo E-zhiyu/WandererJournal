@@ -40,6 +40,7 @@ import com.wanderer.journal.R
 import com.wanderer.journal.WandererJournal
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
+import com.wanderer.journal.helpers.permission.PermissionDoNotShowAgainEvent
 import com.wanderer.journal.helpers.permission.PermissionRequest
 import com.wanderer.journal.helpers.permission.isAutoStartDefined
 import com.wanderer.journal.helpers.permission.requestAutoStartPermission
@@ -54,13 +55,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-// 权限授予事件
-private class DeniedEvent(
-    val message: String,
-    val permissionList: List<IPermission>? = null,
-    val onConfirm: (() -> Unit)? = null
-)
 
 // 权限授予状态
 class PermissionState(
@@ -98,9 +92,12 @@ fun PermissionScreen(
     var permissionRequest by remember { mutableStateOf<PermissionRequest?>(null) }
 
     // 权限申请被拒绝的对话框
-    var deniedEvent: DeniedEvent? by remember { mutableStateOf(null) }
+    var permissionDoNotShowAgainEvent by remember {
+        mutableStateOf<PermissionDoNotShowAgainEvent?>(null)
+    }
 
     // 权限申请通用回调
+    val doNotShowAgainMessage = stringResource(R.string.permission_dont_show_again_message)
     val allGrantedCallback: (List<IPermission>) -> Unit = {
         sendSnackMessage(scope, "权限已授予")
     }
@@ -136,8 +133,8 @@ fun PermissionScreen(
                         descriptionFun = { "该权限允许应用调用摄像头，应用范围如下：\n- 写日记时使用系统相机添加媒体文件。\n" },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            deniedEvent = DeniedEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                            permissionDoNotShowAgainEvent = PermissionDoNotShowAgainEvent(
+                                message = doNotShowAgainMessage,
                                 permissionList = permissionList
                             )
                         },
@@ -171,8 +168,8 @@ fun PermissionScreen(
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            deniedEvent = DeniedEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                            permissionDoNotShowAgainEvent = PermissionDoNotShowAgainEvent(
+                                message = doNotShowAgainMessage,
                                 permissionList = permissionList
                             )
                         },
@@ -227,15 +224,14 @@ fun PermissionScreen(
                 onClick = {
                     permissionRequest = PermissionRequest.Common(
                         descriptionFun = {
-                            "该设置项可以调整应用的省电策略。" +
-                                    "如果需要确保应用在后台能够运行，请在电池优化设置界面找到对应应用，点击开关左侧的文本并勾选“无限制”。" +
-                                    "影响范围如下：\n" +
-                                    "- 日记提醒是否能够准点发送通知。\n"
+                            "该设置项可以调整应用的省电策略，影响范围如下：\n" +
+                                    "- 日记提醒是否能够准点发送通知。\n" +
+                                    "> HyperOS用户若无法忽略电池优化，请长按该选项找到本应用，然后点击开关左侧的文本并勾选“无限制”。"
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            deniedEvent = DeniedEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                            permissionDoNotShowAgainEvent = PermissionDoNotShowAgainEvent(
+                                message = doNotShowAgainMessage,
                                 permissionList = permissionList
                             )
                         },
@@ -268,8 +264,8 @@ fun PermissionScreen(
                         },
                         onAllGranted = allGrantedCallback,
                         onDoNotAskAgain = { permissionList ->
-                            deniedEvent = DeniedEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                            permissionDoNotShowAgainEvent = PermissionDoNotShowAgainEvent(
+                                message = doNotShowAgainMessage,
                                 permissionList = permissionList
                             )
                         },
@@ -326,8 +322,8 @@ fun PermissionScreen(
                             }
                         },
                         onDoNotAskAgain = { permissionList ->
-                            deniedEvent = DeniedEvent(
-                                message = "权限申请被拒绝，请前往权限设置界面授权。",
+                            permissionDoNotShowAgainEvent = PermissionDoNotShowAgainEvent(
+                                message = doNotShowAgainMessage,
                                 permissionList = permissionList
                             )
                         }
@@ -360,22 +356,16 @@ fun PermissionScreen(
     }
 
     // 权限申请被拒绝信息对话框
-    deniedEvent?.let {
+    permissionDoNotShowAgainEvent?.let {
         PermissionDeniedDialog(
             message = it.message,
-            onDismissRequest = { deniedEvent = null },
+            onDismissRequest = { permissionDoNotShowAgainEvent = null },
             onConfirm = {
-                if (it.onConfirm == null) {
-                    it.permissionList?.let { permissions ->
-                        XXPermissions.startPermissionActivity(
-                            context,
-                            permissions
-                        )
-                    }
-                } else {
-                    it.onConfirm()
-                }
-                deniedEvent = null
+                XXPermissions.startPermissionActivity(
+                    context,
+                    it.permissionList
+                )
+                permissionDoNotShowAgainEvent = null
             }
         )
     }
