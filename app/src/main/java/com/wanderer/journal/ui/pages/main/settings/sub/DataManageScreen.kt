@@ -248,7 +248,7 @@ fun DataManageScreen(
     // 多选对话框
     choiceDialogRequest?.let {
         val dataTypes = BackupDataType.entries
-        var checkedList by remember { mutableStateOf(dataTypes.map { true }) }
+        var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
         val onConfirm = {
             when (it) {
@@ -269,11 +269,14 @@ fun DataManageScreen(
         ) {
             dataTypes.forEach { type ->
                 ComposeCheckedTextView(
-                    checked = checkedList[type.ordinal],
-                    onCheckedChange = { checked->
-                        val mutableCheckedList = checkedList.toMutableList()
-                        mutableCheckedList[type.ordinal] = checked
-                        checkedList = mutableCheckedList.toList()
+                    checked = selectedTypes.contains(type),
+                    onCheckedChange = { checked ->
+                        // 3. 不可变集合的操作非常简洁
+                        selectedTypes = if (checked) {
+                            selectedTypes + type // 添加
+                        } else {
+                            selectedTypes - type // 移除
+                        }
                     },
                     text = type.title
                 )
