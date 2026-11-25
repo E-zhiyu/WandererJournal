@@ -24,7 +24,7 @@ import com.wanderer.journal.auxiliary.enums.RadiusStyle;
 import com.wanderer.journal.auxiliary.enums.types.ParagraphPrivacyType;
 import com.wanderer.journal.auxiliary.interfaces.adapter.AdapterOnClickListener;
 import com.wanderer.journal.auxiliary.interfaces.adapter.ViewHolderListener;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
@@ -175,8 +175,8 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
                     }
 
                     //转换为时间戳并返回负数 Key
-                    Long timeMillis = DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
-                    return -timeMillis;
+                    Long timeMillis = TypeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
+                    return timeMillis == null ? 0 : -timeMillis;
                 }
             };
         }

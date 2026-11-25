@@ -57,7 +57,7 @@ import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.text.RoleRefTextRule
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter
+import com.wanderer.journal.data.save.db.TypeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.composite.ui.DiaryContentUnionModel
 import com.wanderer.journal.helpers.text.hierarchicToAnnotatedString
@@ -160,7 +160,7 @@ fun DiaryScreen(
                     initDate = state.diaries.getOrNull(listState.firstVisibleItemIndex)?.diary?.diaryDate,
                     dateFilter = { pickerMillis ->
                         val diaryDateMillis =
-                            state.diaries.map { DateTimeConverter.fromLocalDate(it.diary.diaryDate) }
+                            state.diaries.map { TypeConverter.fromLocalDate(it.diary.diaryDate) }
                                 .toSet()
                         diaryDateMillis.contains(pickerMillis)
                     },
@@ -209,7 +209,7 @@ fun DiaryScreen(
                         mode = DatePickerMode.DateChange(item.diary),
                         initDate = item.diary.diaryDate,
                         dateFilter = { pickerMillis ->
-                            val todayMillis = DateTimeConverter.fromLocalDate(today)
+                            val todayMillis = TypeConverter.fromLocalDate(today) ?: 0
                             pickerMillis <= todayMillis
                         },
                         yearRange = IntRange(today.year - 150, today.year)
@@ -369,7 +369,7 @@ fun DiaryListItem(
                 val intent = Intent(context, ReadActivity::class.java).apply {
                     putExtra(
                         KeyStrings.INIT_DATE.v(),
-                        DateTimeConverter.fromLocalDate(item.diary.diaryDate)
+                        TypeConverter.fromLocalDate(item.diary.diaryDate)
                     )
                 }
                 context.startActivity(intent)

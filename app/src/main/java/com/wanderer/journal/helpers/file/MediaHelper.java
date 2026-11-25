@@ -25,7 +25,7 @@ import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.helpers.ExceptionHelper;
 import com.wanderer.journal.helpers.appearance.AppearanceHelper;
 
@@ -362,7 +362,7 @@ public class MediaHelper {
                     time = LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DATE_TIME_EXIF);
                 } else {
                     long lastModified = FileHelper.getLastModifyTimeByUri(context, uri);
-                    time = DateTimeConverter.toLocalDateTime(lastModified);
+                    time = TypeConverter.toLocalDateTime(lastModified);
                 }
 
                 // --- 像素尺寸 ---

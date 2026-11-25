@@ -10,8 +10,7 @@ import com.wanderer.journal.data.backup.pojo.MediaPojo
 import com.wanderer.journal.data.backup.pojo.ParagraphPojo
 import com.wanderer.journal.data.backup.pojo.RoleAliaPojo
 import com.wanderer.journal.data.backup.pojo.RolePojo
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter
-import com.wanderer.journal.data.save.db.converters.UriConverter
+import com.wanderer.journal.data.save.db.TypeConverter
 import com.wanderer.journal.data.save.db.entities.DiaryEntity
 import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity
 import com.wanderer.journal.data.save.db.entities.EmotionTagEntity
@@ -36,7 +35,7 @@ object EntityPojoMapper {
     // ==================== 日记 ====================
 
     fun toDiaryEntity(pojo: DiaryPojo): DiaryEntity =
-        DiaryEntity(DateTimeConverter.toLocalDate(pojo.diaryDate)).apply {
+        DiaryEntity(TypeConverter.toLocalDate(pojo.diaryDate)).apply {
             diaryId = pojo.diaryId
         }
 
@@ -46,7 +45,7 @@ object EntityPojoMapper {
     fun toDiaryPojo(entity: DiaryEntity): DiaryPojo =
         DiaryPojo(
             diaryId = entity.diaryId,
-            diaryDate = DateTimeConverter.fromLocalDate(entity.diaryDate) ?: 0L,
+            diaryDate = TypeConverter.fromLocalDate(entity.diaryDate) ?: 0L,
         )
 
     fun toDiaryPojoList(entityList: List<DiaryEntity>): List<DiaryPojo> =
@@ -58,7 +57,7 @@ object EntityPojoMapper {
         ParagraphEntity(
             pojo.parentDiaryId,
             pojo.content,
-            DateTimeConverter.toLocalDateTime(pojo.createTime),
+            TypeConverter.toLocalDateTime(pojo.createTime),
         ).apply {
             paragraphId = pojo.paragraphId
             privacyType = pojo.privacyType
@@ -71,7 +70,7 @@ object EntityPojoMapper {
         ParagraphPojo(
             paragraphId = entity.paragraphId,
             parentDiaryId = entity.parentDiaryId,
-            createTime = DateTimeConverter.fromLocalDateTime(entity.createTime) ?: 0L,
+            createTime = TypeConverter.fromLocalDateTime(entity.createTime) ?: 0L,
             content = entity.content,
             privacyType = entity.privacyType,
         )
@@ -84,7 +83,7 @@ object EntityPojoMapper {
     fun toMediaEntity(pojo: MediaPojo): MediaEntity =
         MediaEntity(
             pojo.parentParagraphId,
-            UriConverter.toUri(pojo.fileUri),
+            TypeConverter.toUri(pojo.fileUri),
         ).apply {
             mediaId = pojo.mediaId
         }
@@ -96,7 +95,7 @@ object EntityPojoMapper {
         MediaPojo(
             mediaId = entity.mediaId,
             parentParagraphId = entity.parentParagraphId,
-            fileUri = UriConverter.fromUri(entity.fileUri),
+            fileUri = TypeConverter.fromUri(entity.fileUri),
         )
 
     fun toMediaPojoList(entityList: List<MediaEntity>): List<MediaPojo> =
@@ -163,7 +162,7 @@ object EntityPojoMapper {
         ).apply {
             roleId = pojo.roleId
             useCount = pojo.useCount
-            latestUseTime = DateTimeConverter.toLocalDateTime(pojo.latestUseTime)
+            latestUseTime = TypeConverter.toLocalDateTime(pojo.latestUseTime)
         }
 
     fun toRoleEntityList(pojoList: List<RolePojo>): List<RoleEntity> =
@@ -178,7 +177,7 @@ object EntityPojoMapper {
             impression = entity.impression,
             relationship = entity.relationship,
             useCount = entity.useCount,
-            latestUseTime = DateTimeConverter.fromLocalDateTime(entity.latestUseTime) ?: 0L,
+            latestUseTime = TypeConverter.fromLocalDateTime(entity.latestUseTime) ?: 0L,
         )
 
     fun toRolePojoList(entityList: List<RoleEntity>): List<RolePojo> =
@@ -213,7 +212,7 @@ object EntityPojoMapper {
         LifeNoteEntity(
             pojo.insight,
             pojo.elaboration,
-            DateTimeConverter.toLocalDateTime(pojo.dateTime),
+            TypeConverter.toLocalDateTime(pojo.dateTime),
         ).apply {
             noteId = pojo.noteId
         }
@@ -226,7 +225,7 @@ object EntityPojoMapper {
             noteId = entity.noteId,
             insight = entity.insight,
             elaboration = entity.elaboration,
-            dateTime = DateTimeConverter.fromLocalDateTime(entity.dateTime) ?: 0L,
+            dateTime = TypeConverter.fromLocalDateTime(entity.dateTime) ?: 0L,
         )
 
     fun toLifeNotePojoList(entityList: List<LifeNoteEntity>): List<LifeNotePojo> =
@@ -239,7 +238,7 @@ object EntityPojoMapper {
             pojo.noteId,
             pojo.insight,
             pojo.elaboration,
-            DateTimeConverter.toLocalDateTime(pojo.updateDateTime),
+            TypeConverter.toLocalDateTime(pojo.updateDateTime),
         ).apply {
             historyId = pojo.historyId
         }
@@ -254,7 +253,7 @@ object EntityPojoMapper {
             noteId = entity.noteId,
             insight = entity.insight,
             elaboration = entity.elaboration,
-            updateDateTime = DateTimeConverter.fromLocalDateTime(entity.updateDateTime) ?: 0L,
+            updateDateTime = TypeConverter.fromLocalDateTime(entity.updateDateTime) ?: 0L,
         )
 
     fun toLifeNoteHistoryPojoList(

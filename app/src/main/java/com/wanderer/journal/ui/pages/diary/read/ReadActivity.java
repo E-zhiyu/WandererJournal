@@ -46,7 +46,7 @@ import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.auxiliary.enums.unique.ViewTags;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
 import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
@@ -573,22 +573,24 @@ public class ReadActivity extends AppCompatActivity {
         if (initBundle != null && initBundle.getLong(KeyStrings.INIT_DATE.v(), -1) != -1) {
             long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v());
             Log.d(LogTags.READ_ACTIVITY.n(), "初始日期：" + initDateTimestamp);
-            LocalDate initDiaryDate = DateTimeConverter.toLocalDate(initDateTimestamp);
+            LocalDate initDiaryDate = TypeConverter.toLocalDate(initDateTimestamp);
             FilterConditions conditions = viewModel.getFilterConditions();
-            disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, conditions.isHiddenShown)
-                    .flatMapPublisher(
-                            initPosition -> {
-                                initScrollPosition.set(initPosition);
-                                return viewModel.getParagraphPagingDataFlow(initPosition, db);
-                            }
-                    )
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            pagingData -> adapter.submitData(getLifecycle(), pagingData),
-                            e -> ExceptionHelper.showExceptionDialog(this, e)
-                    )
-            );
+            if (initDiaryDate != null) {
+                disposable.add(db.paragraphDao().getAdjustedPositionSingle(initDiaryDate, conditions.isHiddenShown)
+                        .flatMapPublisher(
+                                initPosition -> {
+                                    initScrollPosition.set(initPosition);
+                                    return viewModel.getParagraphPagingDataFlow(initPosition, db);
+                                }
+                        )
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                pagingData -> adapter.submitData(getLifecycle(), pagingData),
+                                e -> ExceptionHelper.showExceptionDialog(this, e)
+                        )
+                );
+            }
         } else {    //没有传递参数直接从最顶部开始
             initScrollPosition.set(0);
             disposable.add(viewModel.getParagraphPagingDataFlow(0, db)
@@ -884,7 +886,10 @@ public class ReadActivity extends AppCompatActivity {
                 Intent skip2Write = new Intent(ReadActivity.this, WriteActivity.class);
                 Bundle bundle = new Bundle();
 
-                bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDateTime(paragraph.getCreateTime())); //段落所在的日期
+                Long initDate = TypeConverter.fromLocalDateTime(paragraph.getCreateTime());
+                if (initDate != null) {
+                    bundle.putLong(KeyStrings.INIT_DATE.v(), initDate); //段落所在的日期
+                }
                 bundle.putLong(KeyStrings.WRITE_MODIFY_PARAGRAPH_ID.v(), paragraph.getParagraphId());    //段落 ID
 
                 skip2Write.putExtras(bundle);

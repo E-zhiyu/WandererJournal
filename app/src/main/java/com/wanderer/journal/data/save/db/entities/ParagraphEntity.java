@@ -5,9 +5,6 @@ import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
-
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +23,6 @@ import java.time.LocalDateTime;
                 @Index("privacyType")
         }
 )
-@TypeConverters({DateTimeConverter.class})
 public class ParagraphEntity {
     @PrimaryKey(autoGenerate = true)
     private long paragraphId;           //自增主键

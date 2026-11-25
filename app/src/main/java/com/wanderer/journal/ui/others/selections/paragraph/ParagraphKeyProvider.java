@@ -6,7 +6,7 @@ import androidx.paging.ItemSnapshotList;
 import androidx.recyclerview.selection.ItemKeyProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.data.save.db.entities.composite.ui.ParagraphUiModel;
 import com.wanderer.journal.ui.others.adapters.paragraph.ParagraphPagingAdapter;
 
@@ -29,10 +29,10 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
             if ((item instanceof ParagraphUiModel.Item)) {
                 return ((ParagraphUiModel.Item) item).model.getParagraph().getParagraphId(); // 返回你的唯一 ID
             } else if ((item instanceof ParagraphUiModel.Separator)) {
-                Long timeMillis = DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
+                Long timeMillis = TypeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date);
 
                 //永远返回负数时间戳
-                return -Math.abs(timeMillis);
+                return -Math.abs(timeMillis == null ? 0 : timeMillis);
             }
         }
         return null;
@@ -51,7 +51,7 @@ public class ParagraphKeyProvider extends ItemKeyProvider<Long> {
                 return i;
             } else if (key < 0 &&
                     (item instanceof ParagraphUiModel.Separator) &&
-                    Objects.equals(DateTimeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date), -key)
+                    Objects.equals(TypeConverter.fromLocalDate(((ParagraphUiModel.Separator) item).date), -key)
             ) {
                 return i;
             }

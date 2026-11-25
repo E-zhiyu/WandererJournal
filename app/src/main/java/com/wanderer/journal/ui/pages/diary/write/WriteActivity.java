@@ -61,7 +61,7 @@ import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 import com.wanderer.journal.auxiliary.enums.unique.TagStrings;
 import com.wanderer.journal.auxiliary.enums.unique.TransitionName;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.data.save.db.daos.ParagraphDao;
 import com.wanderer.journal.data.save.db.entities.LocationEntity;
 import com.wanderer.journal.data.save.db.entities.MediaEntity;
@@ -331,7 +331,7 @@ public class WriteActivity extends AppCompatActivity {
         if (initBundle == null) return LocalDate.now();
 
         long initDateTimestamp = initBundle.getLong(KeyStrings.INIT_DATE.v(), -1);
-        return initDateTimestamp == -1 ? LocalDate.now() : DateTimeConverter.toLocalDate(initDateTimestamp);
+        return initDateTimestamp == -1 ? LocalDate.now() : TypeConverter.toLocalDate(initDateTimestamp);
     }
 
     /**
@@ -1270,7 +1270,7 @@ public class WriteActivity extends AppCompatActivity {
                             startDate = LocalDate.now();
                         } else {
                             long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
-                            startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                            startDate = TypeConverter.toLocalDate(initDateTimeMillis);
                         }
 
                         //返回查询到的下标
@@ -1477,7 +1477,7 @@ public class WriteActivity extends AppCompatActivity {
                         startDate = LocalDate.now();
                     } else {
                         long initDateTimeMillis = initBundle.getLong(KeyStrings.INIT_DATE.v());
-                        startDate = DateTimeConverter.toLocalDate(initDateTimeMillis);
+                        startDate = TypeConverter.toLocalDate(initDateTimeMillis);
                     }
 
                     //更新数据
