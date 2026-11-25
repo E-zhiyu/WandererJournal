@@ -140,6 +140,21 @@ fun getReadablePathFromSafUri(context: Context, treeUri: Uri): String {
  * @param uri 需要获取显示名称的目录的 Uri
  */
 private fun getDisplayName(context: Context, uri: Uri): String {
+    val queryDisplayName: (context: Context, uri: Uri) -> String? = { context, uri ->
+        val projection = arrayOf(OpenableColumns.DISPLAY_NAME)
+        try {
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index != -1) cursor.getString(index)?.takeIf { it.isNotEmpty() } else null
+                } else null
+            }
+        } catch (e: Exception) {
+            Log.e(LogTags.SAF_HELPER.n(), "无法获取 Uri 的显示名称", e)
+            null
+        }
+    }
+
     // 先尝试按 Document Uri 直接查询（更通用）
     queryDisplayName(context, uri)?.let { return it }
 
@@ -155,19 +170,4 @@ private fun getDisplayName(context: Context, uri: Uri): String {
     }
 
     return uri.lastPathSegment ?: uri.toString()
-}
-
-private fun queryDisplayName(context: Context, uri: Uri): String? {
-    val projection = arrayOf(OpenableColumns.DISPLAY_NAME)
-    return try {
-        context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-            if (cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index != -1) cursor.getString(index)?.takeIf { it.isNotEmpty() } else null
-            } else null
-        }
-    } catch (e: Exception) {
-        Log.e(LogTags.SAF_HELPER.n(), "无法获取 Uri 的显示名称", e)
-        null
-    }
 }
