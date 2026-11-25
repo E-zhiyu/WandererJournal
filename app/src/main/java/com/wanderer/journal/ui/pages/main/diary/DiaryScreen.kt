@@ -65,7 +65,7 @@ import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.LargeTopAppBarListScaffold
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
-import com.wanderer.journal.ui.components.dialogs.ActionDialog
+import com.wanderer.journal.ui.components.dialogs.MessageDialog
 import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.rememberFabVisible
@@ -239,7 +239,7 @@ fun DiaryScreen(
 
     // 删除日记对话框
     diaryDeleteRequest?.let {
-        ActionDialog(
+        MessageDialog(
             onDismiss = { diaryDeleteRequest = null },
             onConfirm = it.onConfirm,
             title = stringResource(R.string.delete_diary),

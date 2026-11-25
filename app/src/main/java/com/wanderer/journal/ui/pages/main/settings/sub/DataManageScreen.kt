@@ -47,7 +47,7 @@ import com.wanderer.journal.helpers.file.rememberDocumentLauncher
 import com.wanderer.journal.helpers.file.rememberDocumentTreeLauncher
 import com.wanderer.journal.ui.components.ComposeCheckedTextView
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
-import com.wanderer.journal.ui.components.dialogs.MultiChoiceDialog
+import com.wanderer.journal.ui.components.dialogs.DialogScaffold
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSpinnerItem
@@ -65,6 +65,13 @@ private sealed class ChoiceDialogRequest {
 
     // 数据导入
     data object Import : ChoiceDialogRequest()
+}
+
+// 通过 SAF 打开文件的意图
+private sealed class DocumentOpenAction {
+    data object Restore : DocumentOpenAction()           // 数据恢复
+    data object AppendParagraph : DocumentOpenAction()   // 追加段落
+    data object ImportDiary : DocumentOpenAction()       // 从文本文件导入日记
 }
 
 private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
@@ -113,27 +120,41 @@ fun DataManageScreen(
     val dataTypes = BackupDataType.entries
     var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
-    // 导入数据时打开 SAF
+    // 用于打开文件的 SAF 打开函数
+    var documentOpenAction by remember { mutableStateOf<DocumentOpenAction>(DocumentOpenAction.Restore) }
     val tipImportStarted = stringResource(R.string.tip_import_started)
-    val importLauncher = rememberDocumentLauncher { uri ->
+    val openDocumentLauncher = rememberDocumentLauncher { uri ->
         uri?.let {
-            val choice = dataTypes.map { u -> selectedTypes.contains(u) }
-            val data = Data.Builder()
-                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
-                .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
-                .build()
-            val uuid = WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
-            observeWorker(uuid, context, scope, lifeOwner)
+            when (documentOpenAction) {
+                DocumentOpenAction.AppendParagraph -> {
 
-            scope.launch {
-                snackMessageChannel.send(tipImportStarted)
+                }
+
+                DocumentOpenAction.ImportDiary -> {
+
+                }
+
+                DocumentOpenAction.Restore -> {
+                    val choice = dataTypes.map { type -> selectedTypes.contains(type) }
+                    val data = Data.Builder()
+                        .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
+                        .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
+                        .build()
+                    val uuid =
+                        WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
+                    observeWorker(uuid, context, scope, lifeOwner)
+
+                    scope.launch {
+                        snackMessageChannel.send(tipImportStarted)
+                    }
+                }
             }
         }
     }
 
-    // 备份数据时打开 SAF
+    // 用于创建文件的 SAF 打开函数
     val tipExportStarted = stringResource(R.string.tip_export_started)
-    val exportLauncher = rememberCreateDocumentLauncherManual { uri ->
+    val createDocumentLauncher = rememberCreateDocumentLauncherManual { uri ->
         uri?.let {
             val choice = dataTypes.map { u -> selectedTypes.contains(u) }
             val data = Data.Builder()
@@ -148,7 +169,6 @@ fun DataManageScreen(
             }
         }
     }
-
 
     // 备份频率下拉框
     val backupFrequencies = BackupFrequency.entries
@@ -277,7 +297,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.append_paragraph_subtitle),
                 icon = painterResource(R.drawable.outline_convert_to_text_24),
                 onClick = {
-                    // TODO:完成回调
+                    openDocumentLauncher(arrayOf("text/plain"))
                 },
                 normalRadius = Radius.TopArray
             )
@@ -290,7 +310,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.import_diary_subtitle),
                 icon = painterResource(R.drawable.outline_note_stack_add_24),
                 onClick = {
-                    // TODO:完成回调
+                    openDocumentLauncher(arrayOf("text/plain"))
                 },
                 normalRadius = Radius.BottomArray
             )
@@ -303,16 +323,16 @@ fun DataManageScreen(
         val onConfirm = {
             when (it) {
                 is ChoiceDialogRequest.Export -> {
-                    exportLauncher("application/zip", FileHelper.generateBackupFileName())
+                    createDocumentLauncher("application/zip", FileHelper.generateBackupFileName())
                 }
 
                 is ChoiceDialogRequest.Import -> {
-                    importLauncher(arrayOf("application/zip"))
+                    openDocumentLauncher(arrayOf("application/zip"))
                 }
             }
         }
 
-        MultiChoiceDialog(
+        DialogScaffold(
             onDismiss = { choiceDialogRequest = null },
             onConfirm = onConfirm,
             title = stringResource(R.string.export_data)
