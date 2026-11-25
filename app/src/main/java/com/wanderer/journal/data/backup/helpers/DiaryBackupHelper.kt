@@ -1,50 +1,25 @@
-package com.wanderer.journal.data.backup.helpers;
+package com.wanderer.journal.data.backup.helpers
 
-import android.content.Context;
+import android.content.Context
+import com.wanderer.journal.auxiliary.classes.ImportResult
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType
+import com.wanderer.journal.data.backup.maps.DiaryDataMap
+import com.wanderer.journal.data.save.db.DiaryDb
 
-import androidx.annotation.NonNull;
+/**
+ * 日记数据的备份帮助器。
+ */
+class DiaryBackupHelper(context: Context) : BackupHelperBase<DiaryDb, DiaryDataMap>(
+    db = DiaryDb.getInstance(context),
+    dataSerializer = DiaryDataMap.serializer(),
+    tempDataFileName = requireNotNull(BackupDataType.DIARY.latestVersionFileName),
+) {
+    private val backupDao = db.dataBackupDao()
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanderer.journal.auxiliary.classes.ImportResult;
-import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
-import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
-import com.wanderer.journal.data.backup.maps.DiaryDataMap;
-import com.wanderer.journal.data.save.db.DiaryDb;
+    override suspend fun getAllDataInMap(): DiaryDataMap = backupDao.exportDiaryData()
 
-public class DiaryBackupHelper extends BackupHelperBase<DiaryDb, DiaryDataMap> {
-    public DiaryBackupHelper(Context context) {
-        super(context);
-    }
-
-    @Override
-    protected Class<DiaryDataMap> getMapClass() {
-        return DiaryDataMap.class;
-    }
-
-    @Override
-    protected DiaryDb getDatabase(Context context) {
-        return DiaryDb.getInstance(context);
-    }
-
-    @Override
-    protected DiaryDataMap getAllDataInMap() {
-        return db.dataBackupDao().exportDiaryData();
-    }
-
-    @Override
-    protected ImportResult saveDataInMapToDb(Context context, @NonNull DiaryDataMap map) {
-        return db.dataBackupDao().importDiaryData(context, map);
-    }
-
-    @Override
-    protected String getTempDataFileName() {
-        return BackupDataType.DIARY.getLatestVersionFileName();
-    }
-
-    @Override
-    protected DiaryDataMap getDataMap(String json, ImportDataVersionType versionType) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json, mapClass);
-    }
+    override suspend fun saveDataInMapToDb(
+        context: Context,
+        map: DiaryDataMap,
+    ): ImportResult = backupDao.importDiaryData(context, map)
 }

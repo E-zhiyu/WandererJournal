@@ -1,37 +1,16 @@
-package com.wanderer.journal.data.backup.maps;
+package com.wanderer.journal.data.backup.maps
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
-import com.wanderer.journal.data.backup.pojo.RolePojo;
+import com.wanderer.journal.data.backup.pojo.RoleAliaPojo
+import com.wanderer.journal.data.backup.pojo.RolePojo
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class RoleDataMap {
-    private List<RolePojo> roleList;            //角色列表
-    private List<RoleAliaPojo> roleAliaList;    //角色别称
-
-    public RoleDataMap() {
-    }
-
-    public RoleDataMap(List<RolePojo> roleList, List<RoleAliaPojo> roleAliaList) {
-        this.roleList = roleList;
-        this.roleAliaList = roleAliaList;
-    }
-
-    public List<RolePojo> getRoleList() {
-        return roleList;
-    }
-
-    public void setRoleList(List<RolePojo> roleList) {
-        this.roleList = roleList;
-    }
-
-    public List<RoleAliaPojo> getRoleAliaList() {
-        return roleAliaList;
-    }
-
-    public void setRoleAliaList(List<RoleAliaPojo> roleAliaList) {
-        this.roleAliaList = roleAliaList;
-    }
-}
+/**
+ * 一次角色数据备份中包含的所有数据集合。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class RoleDataMap(
+    val roleList: List<RolePojo>? = null,           // 角色列表
+    val roleAliaList: List<RoleAliaPojo>? = null,   // 角色别称
+)

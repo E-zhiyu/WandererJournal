@@ -1,166 +1,120 @@
-package com.wanderer.journal.data.backup.helpers;
+package com.wanderer.journal.data.backup.helpers
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.room.RoomDatabase;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanderer.journal.auxiliary.classes.ImportResult;
-import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
-import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
-import com.wanderer.journal.data.backup.maps.DataInfoMap;
-import com.wanderer.journal.helpers.AboutHelper;
-import com.wanderer.journal.helpers.file.FileHelper;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.room.RoomDatabase
+import com.wanderer.journal.auxiliary.classes.ImportResult
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType
+import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType
+import com.wanderer.journal.data.backup.BackupJson
+import com.wanderer.journal.data.backup.maps.DataInfoMap
+import com.wanderer.journal.helpers.AboutHelper
+import com.wanderer.journal.helpers.file.FileHelper
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
 
 /**
- * 数据帮助器基类
+ * 数据备份帮助器基类。
  *
- * @param <D> 数据库实例类型
- * @param <M> 数据字典类型
+ * @param D 数据库实例类型
+ * @param M 数据字典类型
+ * @param db 数据库实例
+ * @param dataSerializer 数据字典的序列化器
+ * @param tempDataFileName 临时数据文件名称
  */
-abstract public class BackupHelperBase<D extends RoomDatabase, M> {
-    public final static String DATA_INFO_JSON = "DataInfo.json";
-    protected D db;                     //数据库帮助器
-    protected Class<M> mapClass;        //数据字典类型
-    protected String tempDataFileName;  //临时数据文件名称
-
-    public BackupHelperBase(Context context) {
-        db = getDatabase(context);
-        mapClass = getMapClass();
-        tempDataFileName = getTempDataFileName();
-    }
-
+abstract class BackupHelperBase<D : RoomDatabase, M : Any>(
+    protected val db: D,
+    private val dataSerializer: KSerializer<M>,
+    private val tempDataFileName: String,
+) {
     /**
-     * 子类继承用来获取数据集合类型的方法
-     *
-     * @return 数据集合类型
+     * 从数据库中获取数据集合。
      */
-    protected abstract Class<M> getMapClass();
+    protected abstract suspend fun getAllDataInMap(): M
 
     /**
-     * 子类继承用来获取数据库实例的方法
-     *
-     * @param context 上下文
-     * @return 数据库实例
+     * 将数据集合中的数据保存至数据库。
      */
-    protected abstract D getDatabase(Context context);
+    protected abstract suspend fun saveDataInMapToDb(context: Context, map: M): ImportResult
 
     /**
-     * 从数据库中获取数据集合
+     * 将 JSON 文本反序列化为数据集合。
      *
-     * @return 数据集合
-     */
-    protected abstract M getAllDataInMap();
-
-    /**
-     * 将 map 中的数据保存至数据库的方法
+     * 备份 POJO 均通过 [com.wanderer.journal.data.backup.BackupJson] 解析：
+     * 无法映射为 Kotlin 数据类的未知字段会被忽略，缺失或为 `null` 的字段使用 Kotlin 默认值。
      *
-     * @param context 上下文
-     * @param map     数据集合
-     */
-    protected abstract ImportResult saveDataInMapToDb(Context context, M map);
-
-    /**
-     * 待继承的设置临时 JSON 文件名称的方法
-     *
-     * @return 临时 JSON 文件名称
-     */
-    protected abstract String getTempDataFileName();
-
-    /**
-     * 将 JSON 文本反序列化为数据集合
-     *
-     * @param json        需要反序列化的 JSON 文本
+     * @param json 需要反序列化的 JSON 文本
      * @param versionType 数据版本种类
      * @return 数据集合
      */
-    protected abstract M getDataMap(String json, ImportDataVersionType versionType) throws JsonProcessingException;
+    @Suppress("UNUSED_PARAMETER")
+    protected open fun getDataMap(json: String, versionType: ImportDataVersionType): M =
+        BackupJson.decodeFromString(dataSerializer, json)
 
     /**
-     * 从临时文件中导入数据
+     * 从临时文件中导入数据。
      *
-     * @param context     上下文
-     * @param file        临时文件对象
+     * @param context 上下文
+     * @param file 临时文件对象
      * @param versionType 导入数据的版本种类
-     * @return 带有导入结果的{@link Single}对象
+     * @return 数据导入的结果
      */
-    public Single<ImportResult> importDataFromTempFile(Context context, File file, ImportDataVersionType versionType) {
-        return Single.defer(() -> {
-            try {
-                //读取文件内容
-                String json = FileHelper.readContent(file);
+    suspend fun importDataFromTempFile(
+        context: Context,
+        file: File,
+        versionType: ImportDataVersionType,
+    ): ImportResult = withContext(Dispatchers.IO) {
+        // 读取文件内容
+        val json = FileHelper.readContent(file)
 
-                //得到数据字典实例
-                M dataMap = getDataMap(json, versionType);
+        // 得到数据字典实例
+        val dataMap = getDataMap(json, versionType)
 
-                //将对应的数据写入数据库
-                ImportResult result = saveDataInMapToDb(context, dataMap);
-                return Single.just(result);
-            } catch (IOException e) {
-                return Single.error(e);
-            }
-        });
+        // 将对应的数据写入数据库
+        saveDataInMapToDb(context, dataMap)
     }
 
     /**
-     * 将数据库中的数据转换为JSON字符串
-     *
-     * @return 转换得到的JSON字符串
-     * @throws JsonProcessingException JSON解析失败引发的异常
-     */
-    private String getDataInJSON() throws JsonProcessingException {
-        M dataMap = getAllDataInMap();
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(dataMap);
-    }
-
-    /**
-     * 导出数据并将JSON序列化后的字符串写入到临时数据文件中
+     * 导出数据并将 JSON 序列化后的字符串写入到临时数据文件中。
      *
      * @param context 上下文
-     * @return 是否成功
      */
-    public Completable exportDataToTempFile(Context context) {
-        return Completable.defer(() -> {
-            try {
-                String content = getDataInJSON();
-                FileHelper.writeContentToTempDataFile(context, tempDataFileName, content);
+    suspend fun exportDataToTempFile(context: Context) = withContext(Dispatchers.IO) {
+        // 将数据库中的数据转换为 JSON 字符串
+        val content = BackupJson.encodeToString(dataSerializer, getAllDataInMap())
 
-                return Completable.complete();
-            } catch (IOException e) {
-                return Completable.error(e);
-            }
-        });
+        // 写入临时数据文件
+        FileHelper.writeContentToTempDataFile(context, tempDataFileName, content)
     }
 
-    /**
-     * 生成备份数据信息集合
-     *
-     * @param context 上下文
-     * @param choice  备份数据选择情况
-     * @return 备份数据信息集合
-     * @throws PackageManager.NameNotFoundException 当前包名未找到时引发的异常
-     */
-    @NonNull
-    public static DataInfoMap generateDataInfo(Context context, @Nullable boolean[] choice) throws PackageManager.NameNotFoundException {
-        long versionCode = AboutHelper.getVersionCode(context);
-        List<String> fileNameList = Arrays.stream(BackupDataType.values())
-                .map(type -> choice == null || choice[type.ordinal()] ? type.getLatestVersionFileName() : null)
-                .collect(Collectors.toList());
+    companion object {
+        const val DATA_INFO_JSON = "DataInfo.json"
 
-        return new DataInfoMap(fileNameList, versionCode);
+        /**
+         * 生成备份数据信息集合。
+         *
+         * @param context 上下文
+         * @param choice 备份数据选择情况
+         * @return 备份数据信息集合
+         */
+        @JvmStatic
+        @Throws(PackageManager.NameNotFoundException::class)
+        fun generateDataInfo(context: Context, choice: BooleanArray?): DataInfoMap {
+            val versionCode = AboutHelper.getVersionCode(context)
+            val fileNameList = BackupDataType.entries.map { type ->
+                if (choice == null || choice.getOrNull(type.ordinal) == true) {
+                    type.latestVersionFileName
+                } else {
+                    null
+                }
+            }
+
+            return DataInfoMap(
+                appVersionCode = versionCode,
+                fileNames = fileNameList,
+            )
+        }
     }
 }

@@ -1,61 +1,23 @@
-package com.wanderer.journal.data.backup.pojo;
+package com.wanderer.journal.data.backup.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class LocationPojo {
-    private long paragraphId;       //段落编号（外键）
-    private double latitude;        //纬度
-    private double longitude;       //经度
-    private double altitude;        //海拔
-    private boolean isFineLocation = true; //是否为精确位置
-    private String provider = "";   //位置提供者
-
-    public long getParagraphId() {
-        return paragraphId;
-    }
-
-    public void setParagraphId(long paragraphId) {
-        this.paragraphId = paragraphId;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public double getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(double altitude) {
-        this.altitude = altitude;
-    }
-
-    public boolean isFineLocation() {
-        return isFineLocation;
-    }
-
-    public void setFineLocation(boolean fineLocation) {
-        isFineLocation = fineLocation;
-    }
-
-    public String getProvider() {
-        return provider;
-    }
-
-    public void setProvider(String provider) {
-        this.provider = provider;
-    }
-}
+/**
+ * 段落位置信息的备份 POJO。
+ *
+ * 原先的 Java Bean 使用 `isFineLocation()` 作为布尔字段的 getter，
+ * Jackson 会将其序列化为 `fineLocation`，因此这里通过 [SerialName] 保持与原备份文件兼容。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class LocationPojo(
+    val paragraphId: Long = 0,          // 段落编号（外键）
+    val latitude: Double = 0.0,         // 纬度
+    val longitude: Double = 0.0,        // 经度
+    val altitude: Double = 0.0,         // 海拔
+    @SerialName("fineLocation")
+    val isFineLocation: Boolean = true, // 是否为精确位置
+    val provider: String = "",          // 位置提供者
+)

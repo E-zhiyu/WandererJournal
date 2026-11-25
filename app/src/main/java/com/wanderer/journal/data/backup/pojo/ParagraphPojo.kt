@@ -1,55 +1,17 @@
-package com.wanderer.journal.data.backup.pojo;
+package com.wanderer.journal.data.backup.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class ParagraphPojo {
-    long paragraphId;       //段落ID
-    long parentDiaryId;     //父日记ID
-    long createTime;        //创建时间戳
-    String content;         //内容
-    int privacyType = 0;    //隐私种类
-
-    public ParagraphPojo() {
-    }
-
-    public long getParagraphId() {
-        return paragraphId;
-    }
-
-    public void setParagraphId(long paragraphId) {
-        this.paragraphId = paragraphId;
-    }
-
-    public long getParentDiaryId() {
-        return parentDiaryId;
-    }
-
-    public void setParentDiaryId(long parentDiaryId) {
-        this.parentDiaryId = parentDiaryId;
-    }
-
-    public long getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(long createTime) {
-        this.createTime = createTime;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public int getPrivacyType() {
-        return privacyType;
-    }
-
-    public void setPrivacyType(int privacyType) {
-        this.privacyType = privacyType;
-    }
-}
+/**
+ * 日记段落的备份 POJO。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class ParagraphPojo(
+    val paragraphId: Long = 0,      // 段落 ID
+    val parentDiaryId: Long = 0,    // 父日记 ID
+    val createTime: Long = 0,       // 创建时间戳
+    val content: String? = null,    // 内容
+    val privacyType: Int = 0,       // 隐私种类
+)

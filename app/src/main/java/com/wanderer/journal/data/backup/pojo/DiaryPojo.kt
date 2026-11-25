@@ -1,28 +1,14 @@
-package com.wanderer.journal.data.backup.pojo;
+package com.wanderer.journal.data.backup.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class DiaryPojo {
-    long diaryId;       //日记编号
-    long diaryDate;     //时间戳
-
-    public DiaryPojo() {
-    }
-
-    public long getDiaryId() {
-        return diaryId;
-    }
-
-    public void setDiaryId(long diaryId) {
-        this.diaryId = diaryId;
-    }
-
-    public long getDiaryDate() {
-        return diaryDate;
-    }
-
-    public void setDiaryDate(long diaryDate) {
-        this.diaryDate = diaryDate;
-    }
-}
+/**
+ * 日记数据的备份 POJO。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class DiaryPojo(
+    val diaryId: Long = 0,      // 日记编号
+    val diaryDate: Long = 0,    // 时间戳
+)

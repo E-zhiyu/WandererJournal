@@ -1,35 +1,17 @@
-package com.wanderer.journal.data.backup.maps;
+package com.wanderer.journal.data.backup.maps
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DataInfoMap {
-    private long appVersionCode;    //备份时的应用版本号
-    private List<String> fileNames; //备份数据的文件名，null 表示那个位置的数据类型没有导出
-
-    public DataInfoMap(List<String> fileNames, long appVersionCode) {
-        this.fileNames = fileNames;
-        this.appVersionCode = appVersionCode;
-    }
-
-    public DataInfoMap() {
-    }
-
-    public long getAppVersionCode() {
-        return appVersionCode;
-    }
-
-    public void setAppVersionCode(long appVersionCode) {
-        this.appVersionCode = appVersionCode;
-    }
-
-    public List<String> getFileNames() {
-        return fileNames;
-    }
-
-    public void setFileNames(List<String> fileNames) {
-        this.fileNames = fileNames;
-    }
-}
+/**
+ * 备份文件信息。
+ *
+ * [fileNames] 与 [com.wanderer.journal.auxiliary.enums.types.BackupDataType] 的枚举序数一一对应，
+ * 其中的 `null` 表示对应数据类型没有导出。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class DataInfoMap(
+    val appVersionCode: Long = 0,               // 备份时的应用版本号
+    val fileNames: List<String?> = emptyList(), // 备份数据的文件名，null 表示该位置的数据类型没有导出
+)
