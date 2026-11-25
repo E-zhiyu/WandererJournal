@@ -60,18 +60,8 @@ import java.util.UUID
 
 // 多选对话框请求
 private sealed class ChoiceDialogRequest {
-    // 数据导出
-    data object Export : ChoiceDialogRequest()
-
-    // 数据导入
-    data object Import : ChoiceDialogRequest()
-}
-
-// 通过 SAF 打开文件的意图
-private sealed class DocumentOpenAction {
-    data object Restore : DocumentOpenAction()           // 数据恢复
-    data object AppendParagraph : DocumentOpenAction()   // 追加段落
-    data object ImportDiary : DocumentOpenAction()       // 从文本文件导入日记
+    data object Export : ChoiceDialogRequest()  // 数据导出
+    data object Import : ChoiceDialogRequest()  // 数据导入
 }
 
 private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
@@ -121,33 +111,20 @@ fun DataManageScreen(
     var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
     // 用于打开文件的 SAF 打开函数
-    var documentOpenAction by remember { mutableStateOf<DocumentOpenAction>(DocumentOpenAction.Restore) }
     val tipImportStarted = stringResource(R.string.tip_import_started)
     val openDocumentLauncher = rememberDocumentLauncher { uri ->
         uri?.let {
-            when (documentOpenAction) {
-                DocumentOpenAction.AppendParagraph -> {
+            val choice = dataTypes.map { type -> selectedTypes.contains(type) }
+            val data = Data.Builder()
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
+                .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
+                .build()
+            val uuid =
+                WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
+            observeWorker(uuid, context, scope, lifeOwner)
 
-                }
-
-                DocumentOpenAction.ImportDiary -> {
-
-                }
-
-                DocumentOpenAction.Restore -> {
-                    val choice = dataTypes.map { type -> selectedTypes.contains(type) }
-                    val data = Data.Builder()
-                        .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
-                        .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
-                        .build()
-                    val uuid =
-                        WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
-                    observeWorker(uuid, context, scope, lifeOwner)
-
-                    scope.launch {
-                        snackMessageChannel.send(tipImportStarted)
-                    }
-                }
+            scope.launch {
+                snackMessageChannel.send(tipImportStarted)
             }
         }
     }
@@ -284,42 +261,10 @@ fun DataManageScreen(
                 normalRadius = Radius.BottomArray
             )
         }
-
-        // 其他标题
-        item {
-            SettingCategoryTitle(stringResource(R.string.others))
-        }
-
-        // 段落追加
-        item {
-            SettingClickableItem(
-                title = stringResource(R.string.append_paragraph),
-                subtitle = stringResource(R.string.append_paragraph_subtitle),
-                icon = painterResource(R.drawable.outline_convert_to_text_24),
-                onClick = {
-                    openDocumentLauncher(arrayOf("text/plain"))
-                },
-                normalRadius = Radius.TopArray
-            )
-        }
-
-        // 日记导入
-        item {
-            SettingClickableItem(
-                title = stringResource(R.string.import_diary),
-                subtitle = stringResource(R.string.import_diary_subtitle),
-                icon = painterResource(R.drawable.outline_note_stack_add_24),
-                onClick = {
-                    openDocumentLauncher(arrayOf("text/plain"))
-                },
-                normalRadius = Radius.BottomArray
-            )
-        }
     }
 
     // 多选对话框
     choiceDialogRequest?.let {
-
         val onConfirm = {
             when (it) {
                 is ChoiceDialogRequest.Export -> {
