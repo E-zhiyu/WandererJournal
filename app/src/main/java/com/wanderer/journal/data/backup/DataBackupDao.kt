@@ -15,11 +15,8 @@ import kotlinx.coroutines.withContext
 /**
  * 备份数据的导入导出器。
  *
- * 原先的 {@code DataBackupDao} 是一个带 {@code default} 方法的 Room DAO 接口，
- * 依靠 Room 的 {@code @Transaction} 保证导入导出操作的原子性。
- * 由于备份 POJO 与导入导出逻辑已迁移到 Kotlin，而项目使用的是 javac 的 Room
- * annotationProcessor（不是 KSP/KAPT），Room 无法为 Kotlin DAO 生成实现，
- * 因此原始 SQL 访问保留在 Java 的 [BackupDao] 中，本类负责事务、实体转换等编排逻辑。
+ * 直接数据库访问由 Kotlin 的 [BackupDao] 负责，
+ * 本类负责事务、实体转换等编排逻辑。
  */
 class DataBackupDao(private val db: DiaryDb) {
     private val dao: BackupDao by lazy { db.backupDao() }

@@ -1,69 +1,63 @@
-package com.wanderer.journal.data.save.db.daos;
+package com.wanderer.journal.data.save.db.daos
 
-import android.content.Context;
-import android.net.Uri;
-
-import androidx.room.Dao;
-import androidx.room.Delete;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-import androidx.room.Transaction;
-
-import com.wanderer.journal.data.save.db.entities.MediaEntity;
-import com.wanderer.journal.helpers.file.FileHelper;
-
-import java.util.List;
+import android.content.Context
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import com.wanderer.journal.data.save.db.entities.MediaEntity
+import com.wanderer.journal.helpers.file.FileHelper
 
 @Dao
-public interface MediaDao {
+interface MediaDao {
     /**
-     * 插入媒体
+     * 插入媒体。
      *
      * @param mediaEntityList 新媒体实例列表
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void insertMedia(List<MediaEntity> mediaEntityList);
+    fun insertMedia(mediaEntityList: List<MediaEntity>)
 
     /**
-     * 删除媒体记录
+     * 删除媒体记录。
      *
      * @param mediaEntityList 需要删除的媒体记录列表
      */
     @Delete
-    void deleteMedia(List<MediaEntity> mediaEntityList);
+    fun deleteMedia(mediaEntityList: List<MediaEntity>)
 
     /**
-     * 通过段落编号删除媒体记录
+     * 通过段落编号删除媒体记录。
      *
      * @param paragraphId 需要删除媒体记录的段落编号
      */
     @Query("DELETE FROM medias WHERE parentParagraphId = :paragraphId")
-    void deleteMediaByParagraphId(long paragraphId);
+    fun deleteMediaByParagraphId(paragraphId: Long)
 
     /**
-     * 媒体删除事务，同时删除数据库中的记录和文件系统中的文件
+     * 媒体删除事务，同时删除数据库中的记录和文件系统中的文件。
      *
      * @param mediaEntityList 需要删除的媒体列表
-     * @param context         上下文
+     * @param context 上下文
      */
     @Transaction
-    default void deleteMediasAndFiles(List<MediaEntity> mediaEntityList, Context context) {
-        deleteMedia(mediaEntityList);
+    fun deleteMediasAndFiles(mediaEntityList: List<MediaEntity>, context: Context) {
+        deleteMedia(mediaEntityList)
 
-        //删除文件
-        for (MediaEntity media : mediaEntityList) {
-            Uri mediaUri = media.getFileUri();
-            FileHelper.deleteFile(mediaUri, context);
+        // 删除文件
+        for (media in mediaEntityList) {
+            media.fileUri?.let { FileHelper.deleteFile(it, context) }
         }
     }
 
     /**
-     * 通过段落 ID 获取其绑定的媒体数据
+     * 通过段落 ID 获取其绑定的媒体数据。
      *
      * @param paragraphId 段落 ID
      * @return 媒体实体列表
      */
     @Query("SELECT * FROM medias WHERE parentParagraphId = :paragraphId")
-    List<MediaEntity> getMediaByParagraphId(long paragraphId);
+    fun getMediaByParagraphId(paragraphId: Long): List<MediaEntity>
 }
