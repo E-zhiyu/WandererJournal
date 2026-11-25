@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings.sub
 
+import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -21,8 +22,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.work.Data
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.wanderer.journal.R
 import com.wanderer.journal.automation.worker.WorkerScheduler
 import com.wanderer.journal.automation.worker.backup.BackupWorker
@@ -35,6 +40,7 @@ import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.store.viewmodels.AutoBackupViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsAutoBackupViewModel
 import com.wanderer.journal.helpers.file.FileHelper
+import com.wanderer.journal.helpers.file.SAFHelper
 import com.wanderer.journal.helpers.file.getReadablePathFromSafUri
 import com.wanderer.journal.helpers.file.rememberCreateDocumentLauncherManual
 import com.wanderer.journal.helpers.file.rememberDocumentLauncher
@@ -47,8 +53,10 @@ import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSpinnerItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSwitchItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 // 多选对话框请求
 private sealed class ChoiceDialogRequest {
@@ -68,6 +76,7 @@ fun DataManageScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val lifeOwner = LocalLifecycleOwner.current
 
     // 设置项
     val backupSettings by vm.autoBackup.collectAsStateWithLifecycle()
@@ -83,9 +92,19 @@ fun DataManageScreen(
     }
 
     // 打开 SAF 并选择目录的函数（备份目录选择）
-    val openDocumentTree = rememberDocumentTreeLauncher { uri ->
+    val selectBackupDir = rememberDocumentTreeLauncher { uri ->
         uri?.let {
             vm.setBackupDir(it.toString())
+            scope.launch {
+                snackMessageChannel.send(
+                    "已将备份目录设置为${
+                        SAFHelper.getReadablePathFromSafUri(
+                            context,
+                            it
+                        )
+                    }"
+                )
+            }
         }
     }
 
@@ -95,26 +114,38 @@ fun DataManageScreen(
     var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
     // 打开 SAF 并选择文件的函数（导入数据）
-    val openDocument = rememberDocumentLauncher { uri ->
+    val tipImportStarted = stringResource(R.string.tip_import_started)
+    val importLauncher = rememberDocumentLauncher { uri ->
         uri?.let {
             val choice = dataTypes.map { u -> selectedTypes.contains(u) }
             val data = Data.Builder()
                 .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
                 .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
                 .build()
-            WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
+            val uuid = WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
+            observeWorker(uuid, context, scope, lifeOwner)
+
+            scope.launch {
+                snackMessageChannel.send(tipImportStarted)
+            }
         }
     }
 
     // 打开 SAF 并创建文件的函数（备份数据）
-    val createDocument = rememberCreateDocumentLauncherManual { uri ->
+    val tipExportStarted = stringResource(R.string.tip_export_started)
+    val exportLauncher = rememberCreateDocumentLauncherManual { uri ->
         uri?.let {
             val choice = dataTypes.map { u -> selectedTypes.contains(u) }
             val data = Data.Builder()
                 .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
                 .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
                 .build()
-            WorkerScheduler.executeWorkOnceNow(context, BackupWorker::class.java, data)
+            val uuid = WorkerScheduler.executeWorkOnceNow(context, BackupWorker::class.java, data)
+            observeWorker(uuid, context, scope, lifeOwner)
+
+            scope.launch {
+                snackMessageChannel.send(tipExportStarted)
+            }
         }
     }
 
@@ -227,7 +258,7 @@ fun DataManageScreen(
                 ),
                 icon = painterResource(R.drawable.outline_folder_data_24),
                 onClick = {
-                    openDocumentTree(backupSettings.backupDirectory)
+                    selectBackupDir(backupSettings.backupDirectory)
                 },
                 normalRadius = Radius.BottomArray
             )
@@ -271,11 +302,11 @@ fun DataManageScreen(
         val onConfirm = {
             when (it) {
                 is ChoiceDialogRequest.Export -> {
-                    createDocument("application/zip", FileHelper.generateBackupFileName())
+                    exportLauncher("application/zip", FileHelper.generateBackupFileName())
                 }
 
                 is ChoiceDialogRequest.Import -> {
-                    openDocument(arrayOf("application/zip"))
+                    importLauncher(arrayOf("application/zip"))
                 }
             }
         }
@@ -301,6 +332,32 @@ fun DataManageScreen(
             }
         }
     }
+}
+
+/**
+ * 观察 Worker 的工作状态
+ */
+private fun observeWorker(
+    uuid: UUID,
+    context: Context,
+    scope: CoroutineScope,
+    owner: LifecycleOwner
+) {
+    WorkManager.getInstance(context)
+        .getWorkInfoByIdLiveData(uuid)
+        .observe(owner) { workInfo ->
+            if (workInfo == null) return@observe
+
+            //判断 Worker 是否运行结束
+            if (!workInfo.state.isFinished) return@observe
+
+            // 显示 SnackBar
+            val snackMessage = when (workInfo.state) {
+                WorkInfo.State.SUCCEEDED -> context.getString(R.string.tip_worker_succeed)
+                else -> context.getString(R.string.tip_worker_failed)
+            }
+            scope.launch { snackMessageChannel.send(snackMessage) }
+        }
 }
 
 @Preview(
