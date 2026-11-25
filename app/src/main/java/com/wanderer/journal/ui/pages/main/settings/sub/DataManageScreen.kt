@@ -26,13 +26,16 @@ import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType
 import com.wanderer.journal.data.save.store.viewmodels.AutoBackupViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsAutoBackupViewModel
 import com.wanderer.journal.helpers.file.getReadablePathFromSafUri
 import com.wanderer.journal.helpers.file.rememberCreateDocumentLauncherManual
 import com.wanderer.journal.helpers.file.rememberDocumentLauncher
 import com.wanderer.journal.helpers.file.rememberDocumentTreeLauncher
+import com.wanderer.journal.ui.components.ComposeCheckedTextView
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
+import com.wanderer.journal.ui.components.dialogs.MultiChoiceDialog
 import com.wanderer.journal.ui.pages.main.settings.SettingCategoryTitle
 import com.wanderer.journal.ui.pages.main.settings.SettingClickableItem
 import com.wanderer.journal.ui.pages.main.settings.SettingSpinnerItem
@@ -40,6 +43,15 @@ import com.wanderer.journal.ui.pages.main.settings.SettingSwitchItem
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+
+// 多选对话框请求
+private sealed class ChoiceDialogRequest {
+    // 数据导出
+    data object Export : ChoiceDialogRequest()
+
+    // 数据导入
+    data object Import : ChoiceDialogRequest()
+}
 
 private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
 
@@ -70,6 +82,9 @@ fun DataManageScreen(
             vm.setBackupDir(it.toString())
         }
     }
+
+    // 多选对话框请求
+    var choiceDialogRequest by remember { mutableStateOf<ChoiceDialogRequest?>(null) }
 
     // 打开 SAF 并选择文件的函数（导入数据）
     val openDocument = rememberDocumentLauncher { uri ->
@@ -105,7 +120,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.export_data_subtitle),
                 icon = painterResource(R.drawable.outline_file_export_24),
                 onClick = {
-                    // TODO:完成回调
+                    choiceDialogRequest = ChoiceDialogRequest.Export
                 },
                 normalRadius = Radius.TopArray
             )
@@ -119,7 +134,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.import_data_subtitle),
                 icon = painterResource(R.drawable.outline_download_24),
                 onClick = {
-                    // TODO:完成回调
+                    choiceDialogRequest = ChoiceDialogRequest.Import
                 },
                 normalRadius = Radius.BottomArray
             )
@@ -227,6 +242,42 @@ fun DataManageScreen(
                 },
                 normalRadius = Radius.BottomArray
             )
+        }
+    }
+
+    // 多选对话框
+    choiceDialogRequest?.let {
+        val dataTypes = BackupDataType.entries
+        var checkedList by remember { mutableStateOf(dataTypes.map { true }) }
+
+        val onConfirm = {
+            when (it) {
+                is ChoiceDialogRequest.Export -> {
+                    // TODO:导出确认回调
+                }
+
+                is ChoiceDialogRequest.Import -> {
+                    // TODO:导入确认回调
+                }
+            }
+        }
+
+        MultiChoiceDialog(
+            onDismiss = { choiceDialogRequest = null },
+            onConfirm = onConfirm,
+            title = stringResource(R.string.export_data)
+        ) {
+            dataTypes.forEach { type ->
+                ComposeCheckedTextView(
+                    checked = checkedList[type.ordinal],
+                    onCheckedChange = { checked->
+                        val mutableCheckedList = checkedList.toMutableList()
+                        mutableCheckedList[type.ordinal] = checked
+                        checkedList = mutableCheckedList.toList()
+                    },
+                    text = type.title
+                )
+            }
         }
     }
 }

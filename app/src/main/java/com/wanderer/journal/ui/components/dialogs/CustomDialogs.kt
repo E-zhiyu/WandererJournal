@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -95,9 +96,9 @@ fun ExceptionDialog(
 fun ActionDialog(
     onDismiss: () -> Unit,
     confirmTitle: String = stringResource(R.string.confirm),
-    onConfirm: (() -> Unit)? = { onDismiss() },
+    onConfirm: (() -> Unit)? = {},
     cancelTitle: String = stringResource(R.string.cancel),
-    onCancel: (() -> Unit)? = { onDismiss() },
+    onCancel: (() -> Unit)? = {},
     title: String,
     message: String,
     useMarkdown: Boolean = false
@@ -228,4 +229,61 @@ fun PermissionExplanationDialog(
             )
         }
     }
+}
+
+/**
+ * 多选对话框
+ *
+ * @param onDismiss 对话框消失回调，用于设置对话框状态
+ * @param confirmTitle 确认按钮的文本
+ * @param onConfirm 确认按钮点击回调，传递 null 则不包含确认按钮
+ * @param cancelTitle 取消按钮的文本
+ * @param onCancel 取消按钮点击回调
+ * @param title 对话框标题
+ * @param content 对话框的内容
+ */
+@Composable
+fun MultiChoiceDialog(
+    onDismiss: () -> Unit,
+    confirmTitle: String = stringResource(R.string.confirm),
+    onConfirm: (() -> Unit)? = {},
+    cancelTitle: String = stringResource(R.string.cancel),
+    onCancel: (() -> Unit)? = {},
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    AlertDialog(
+        modifier = Modifier.padding(top = 40.dp, bottom = 40.dp),
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                content()
+            }
+        },
+        confirmButton = {
+            onConfirm?.let {
+                TextButton(onClick = {
+                    it()
+                    onDismiss()
+                }) {
+                    Text(confirmTitle)
+                }
+            }
+        },
+        dismissButton = {
+            onCancel?.let {
+                TextButton(onClick = {
+                    it()
+                    onDismiss()
+                }) {
+                    Text(cancelTitle)
+                }
+            }
+        }
+    )
 }
