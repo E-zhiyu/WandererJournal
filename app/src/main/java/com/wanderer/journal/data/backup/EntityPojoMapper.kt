@@ -23,6 +23,8 @@ import com.wanderer.journal.data.save.db.entities.ParagraphEntity
 import com.wanderer.journal.data.save.db.entities.RoleAliaEntity
 import com.wanderer.journal.data.save.db.entities.RoleEntity
 
+// TODO:如果能直接用数据库实体作为备份 POJO 并实现 Uri、LocalDate 等类型的转换逻辑，则考虑将所有 POJO 类删除，改为使用可序列化的数据库实体类
+
 /**
  * 备份 POJO 与数据库实体之间的转换器。
  *

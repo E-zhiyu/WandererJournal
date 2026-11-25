@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
     kotlin("plugin.serialization") version "2.4.21"
     id("com.google.protobuf")
 }
@@ -27,13 +28,6 @@ android {
         versionName = "1.8.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                // 告诉 Room 将数据库架构导出到指定的 JSON 文件中
-                arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
-            }
-        }
     }
 
     buildTypes {
@@ -62,6 +56,11 @@ android {
         viewBinding = true    //TODO:完全 Compose 重构后删除 viewBinding 支持
         compose = true
     }
+}
+
+// 告诉 Room 将数据库架构导出到指定的 JSON 文件中
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 protobuf {
@@ -102,7 +101,7 @@ dependencies {
     implementation(libs.biometric)                   //生物验证依赖
     implementation(libs.room.runtime)                // Room 核心库
     implementation(libs.room.paging)                 // Room 的Paging 3支持
-    annotationProcessor(libs.room.compiler)          // Room 注解处理器
+    ksp(libs.room.compiler)                          // Room 的 KSP 注解处理器
     implementation(libs.room.rxjava3)                // Room的 RxJava 支持
     implementation(libs.androidx.room.room.ktx)     // Room 的 Kotlin 支持
     implementation(libs.paging.rxjava3)              // Paging 3的 RxJava支持

@@ -16,6 +16,7 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.org.jetbrains.kotlin.android) apply false
     alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.ksp) apply false
     id("com.google.protobuf") version "0.10.1" apply false
 }
 
