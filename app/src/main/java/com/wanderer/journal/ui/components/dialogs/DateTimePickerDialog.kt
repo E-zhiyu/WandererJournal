@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter
+import com.wanderer.journal.data.save.db.TypeConverter
 import java.time.LocalDate
 
 /**
@@ -29,7 +29,7 @@ fun DatePickerDialogWithFilter(
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDate?.let {
-            DateTimeConverter.fromLocalDate(it)
+            TypeConverter.fromLocalDate(it)
         },
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
@@ -43,7 +43,7 @@ fun DatePickerDialogWithFilter(
         confirmButton = {
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let {
-                    onConfirm(DateTimeConverter.toLocalDate(it))
+                    TypeConverter.toLocalDate(it)?.let { date -> onConfirm(date) }
                 }
                 onDismiss()
             }) { Text("确定") }

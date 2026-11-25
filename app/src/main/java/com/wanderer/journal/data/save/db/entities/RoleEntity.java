@@ -5,7 +5,7 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -45,7 +45,7 @@ public class RoleEntity {
         this.impression = impression;
         this.relationship = relationship;
         this.useCount = 0;
-        this.latestUseTime = DateTimeConverter.toLocalDateTime(0L);
+        this.latestUseTime = TypeConverter.toLocalDateTime(0L);
     }
 
     public long getRoleId() {

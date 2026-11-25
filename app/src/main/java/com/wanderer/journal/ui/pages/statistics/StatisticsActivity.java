@@ -27,7 +27,7 @@ import com.wanderer.journal.auxiliary.enums.text.EmotionType;
 import com.wanderer.journal.auxiliary.enums.text.RoleRelationship;
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings;
 import com.wanderer.journal.data.save.db.DiaryDb;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
+import com.wanderer.journal.data.save.db.TypeConverter;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.entities.RoleEntity;
 import com.wanderer.journal.data.save.db.entities.composite.union.UsedEmotionTagUnionModel;
@@ -283,7 +283,10 @@ public class StatisticsActivity extends AppCompatActivity {
                         Intent skip2DiaryRead = new Intent(this, ReadActivity.class);
                         Bundle bundle = new Bundle();
 
-                        bundle.putLong(KeyStrings.INIT_DATE.v(), DateTimeConverter.fromLocalDate(model.getDiaryDate()));
+                        Long initDate = TypeConverter.fromLocalDate(model.getDiaryDate());
+                        if (initDate != null) {
+                            bundle.putLong(KeyStrings.INIT_DATE.v(), initDate);
+                        }
 
                         skip2DiaryRead.putExtras(bundle);
                         startActivity(skip2DiaryRead);

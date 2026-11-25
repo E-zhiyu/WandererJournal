@@ -6,8 +6,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.wanderer.journal.data.backup.DataBackupDao
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter
-import com.wanderer.journal.data.save.db.converters.UriConverter
 import com.wanderer.journal.data.save.db.daos.BackupDao
 import com.wanderer.journal.data.save.db.daos.DiaryDao
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao
@@ -42,8 +40,7 @@ import com.wanderer.journal.data.save.db.entities.RoleEntity
     version = 11,
 )
 @TypeConverters(
-    DateTimeConverter::class,
-    UriConverter::class,
+    TypeConverter::class
 )
 abstract class DiaryDb : RoomDatabase() {
     abstract fun diaryDao(): DiaryDao
