@@ -26,7 +26,7 @@ import com.wanderer.journal.auxiliary.enums.unique.LogTags
 @Composable
 fun rememberDocumentLauncher(
     onResult: (Uri?) -> Unit
-): (Array<String>) -> Unit {
+): (fileTypes: Array<String>) -> Unit {
     val currentOnResult by rememberUpdatedState(onResult)
 
     val launcher = rememberLauncherForActivityResult(

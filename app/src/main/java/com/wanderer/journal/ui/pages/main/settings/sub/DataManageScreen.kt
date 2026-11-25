@@ -22,13 +22,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.Data
 import com.wanderer.journal.R
+import com.wanderer.journal.automation.worker.WorkerScheduler
+import com.wanderer.journal.automation.worker.backup.BackupWorker
+import com.wanderer.journal.automation.worker.backup.RestoreWorker
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.settings.BackupFrequency
 import com.wanderer.journal.auxiliary.enums.types.BackupDataType
+import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.store.viewmodels.AutoBackupViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsAutoBackupViewModel
+import com.wanderer.journal.helpers.file.FileHelper
 import com.wanderer.journal.helpers.file.getReadablePathFromSafUri
 import com.wanderer.journal.helpers.file.rememberCreateDocumentLauncherManual
 import com.wanderer.journal.helpers.file.rememberDocumentLauncher
@@ -85,17 +91,31 @@ fun DataManageScreen(
 
     // 多选对话框请求
     var choiceDialogRequest by remember { mutableStateOf<ChoiceDialogRequest?>(null) }
+    val dataTypes = BackupDataType.entries
+    var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
     // 打开 SAF 并选择文件的函数（导入数据）
     val openDocument = rememberDocumentLauncher { uri ->
         uri?.let {
-            // TODO:启动数据导入流程
+            val choice = dataTypes.map { u -> selectedTypes.contains(u) }
+            val data = Data.Builder()
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
+                .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
+                .build()
+            WorkerScheduler.executeWorkOnceNow(context, RestoreWorker::class.java, data)
         }
     }
 
     // 打开 SAF 并创建文件的函数（备份数据）
     val createDocument = rememberCreateDocumentLauncherManual { uri ->
-        // TODO:启动数据备份流程
+        uri?.let {
+            val choice = dataTypes.map { u -> selectedTypes.contains(u) }
+            val data = Data.Builder()
+                .putBooleanArray(KeyStrings.BACKUP_CHOICES.v(), choice.toBooleanArray())
+                .putString(KeyStrings.BACKUP_TARGET.v(), it.toString())
+                .build()
+            WorkerScheduler.executeWorkOnceNow(context, BackupWorker::class.java, data)
+        }
     }
 
     // 备份频率下拉框
@@ -247,17 +267,15 @@ fun DataManageScreen(
 
     // 多选对话框
     choiceDialogRequest?.let {
-        val dataTypes = BackupDataType.entries
-        var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
         val onConfirm = {
             when (it) {
                 is ChoiceDialogRequest.Export -> {
-                    // TODO:导出确认回调
+                    createDocument("application/zip", FileHelper.generateBackupFileName())
                 }
 
                 is ChoiceDialogRequest.Import -> {
-                    // TODO:导入确认回调
+                    openDocument(arrayOf("application/zip"))
                 }
             }
         }
