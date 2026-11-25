@@ -1,81 +1,24 @@
-package com.wanderer.journal.data.backup.maps;
+package com.wanderer.journal.data.backup.maps
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wanderer.journal.data.backup.pojo.DiaryPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
-import com.wanderer.journal.data.backup.pojo.LocationPojo;
-import com.wanderer.journal.data.backup.pojo.MediaPojo;
-import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
+import com.wanderer.journal.data.backup.pojo.DiaryPojo
+import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo
+import com.wanderer.journal.data.backup.pojo.EmotionTagPojo
+import com.wanderer.journal.data.backup.pojo.LocationPojo
+import com.wanderer.journal.data.backup.pojo.MediaPojo
+import com.wanderer.journal.data.backup.pojo.ParagraphPojo
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class DiaryDataMap {
-    private List<DiaryPojo> diaryList;                              //日记列表
-    private List<ParagraphPojo> paragraphList;                      //段落列表
-    private List<MediaPojo> mediaList;                              //媒体文件列表
-    private List<LocationPojo> locationList;                        //段落位置信息
-    private List<EmotionTagPojo> emotionTagList;                    //情绪标签列表
-    private List<EmotionParagraphRefPojo> emotionParagraphRefList;  //情绪标签与段落关系列表
-
-    public DiaryDataMap() {
-    }
-
-    public DiaryDataMap(List<DiaryPojo> diaryList, List<ParagraphPojo> paragraphList, List<MediaPojo> mediaList, List<LocationPojo> locationList, List<EmotionTagPojo> emotionTagList, List<EmotionParagraphRefPojo> emotionParagraphRefList) {
-        this.diaryList = diaryList;
-        this.paragraphList = paragraphList;
-        this.mediaList = mediaList;
-        this.locationList = locationList;
-        this.emotionTagList = emotionTagList;
-        this.emotionParagraphRefList = emotionParagraphRefList;
-    }
-
-    public List<DiaryPojo> getDiaryList() {
-        return diaryList;
-    }
-
-    public void setDiaryList(List<DiaryPojo> diaryList) {
-        this.diaryList = diaryList;
-    }
-
-    public List<ParagraphPojo> getParagraphList() {
-        return paragraphList;
-    }
-
-    public void setParagraphList(List<ParagraphPojo> paragraphList) {
-        this.paragraphList = paragraphList;
-    }
-
-    public List<MediaPojo> getMediaList() {
-        return mediaList;
-    }
-
-    public void setMediaList(List<MediaPojo> mediaList) {
-        this.mediaList = mediaList;
-    }
-
-    public List<LocationPojo> getLocationList() {
-        return locationList;
-    }
-
-    public void setLocationList(List<LocationPojo> locationList) {
-        this.locationList = locationList;
-    }
-
-    public List<EmotionTagPojo> getEmotionTagList() {
-        return emotionTagList;
-    }
-
-    public void setEmotionTagList(List<EmotionTagPojo> emotionTagList) {
-        this.emotionTagList = emotionTagList;
-    }
-
-    public List<EmotionParagraphRefPojo> getEmotionParagraphRefList() {
-        return emotionParagraphRefList;
-    }
-
-    public void setEmotionParagraphRefList(List<EmotionParagraphRefPojo> emotionParagraphRefList) {
-        this.emotionParagraphRefList = emotionParagraphRefList;
-    }
-}
+/**
+ * 一次日记数据备份中包含的所有数据集合。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class DiaryDataMap(
+    val diaryList: List<DiaryPojo>? = null,                             // 日记列表
+    val paragraphList: List<ParagraphPojo>? = null,                     // 段落列表
+    val mediaList: List<MediaPojo>? = null,                             // 媒体文件列表
+    val locationList: List<LocationPojo>? = null,                       // 段落位置信息
+    val emotionTagList: List<EmotionTagPojo>? = null,                   // 情绪标签列表
+    val emotionParagraphRefList: List<EmotionParagraphRefPojo>? = null, // 情绪标签与段落关系列表
+)

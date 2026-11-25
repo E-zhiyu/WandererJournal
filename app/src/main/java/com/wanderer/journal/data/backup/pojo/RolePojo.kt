@@ -1,83 +1,20 @@
-package com.wanderer.journal.data.backup.pojo;
+package com.wanderer.journal.data.backup.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略JSON中多余字段
-public class RolePojo {
-    private long roleId;
-    private String name;
-    private String displayName = "";
-    private String identity;
-    private String impression;
-    private int relationship;
-    private int useCount;
-    private long latestUseTime;
-
-    public RolePojo() {
-    }
-
-    public long getRoleId() {
-        return roleId;
-    }
-
-    public void setRoleId(long roleId) {
-        this.roleId = roleId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-
-    public String getIdentity() {
-        return identity;
-    }
-
-    public void setIdentity(String identity) {
-        this.identity = identity;
-    }
-
-    public String getImpression() {
-        return impression;
-    }
-
-    public void setImpression(String impression) {
-        this.impression = impression;
-    }
-
-    public int getRelationship() {
-        return relationship;
-    }
-
-    public void setRelationship(int relationship) {
-        this.relationship = relationship;
-    }
-
-    public int getUseCount() {
-        return useCount;
-    }
-
-    public void setUseCount(int useCount) {
-        this.useCount = useCount;
-    }
-
-    public long getLatestUseTime() {
-        return latestUseTime;
-    }
-
-    public void setLatestUseTime(long latestUseTime) {
-        this.latestUseTime = latestUseTime;
-    }
-}
+/**
+ * 角色数据的备份 POJO。
+ */
+@Serializable
+@JsonIgnoreUnknownKeys
+data class RolePojo(
+    val roleId: Long = 0,
+    val name: String? = null,
+    val displayName: String = "",
+    val identity: String? = null,
+    val impression: String? = null,
+    val relationship: Int = 0,
+    val useCount: Int = 0,
+    val latestUseTime: Long = 0,
+)

@@ -1,48 +1,25 @@
-package com.wanderer.journal.data.backup.helpers;
+package com.wanderer.journal.data.backup.helpers
 
-import android.content.Context;
+import android.content.Context
+import com.wanderer.journal.auxiliary.classes.ImportResult
+import com.wanderer.journal.auxiliary.enums.types.BackupDataType
+import com.wanderer.journal.data.backup.maps.RoleDataMap
+import com.wanderer.journal.data.save.db.DiaryDb
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanderer.journal.auxiliary.classes.ImportResult;
-import com.wanderer.journal.auxiliary.enums.types.BackupDataType;
-import com.wanderer.journal.auxiliary.enums.types.ImportDataVersionType;
-import com.wanderer.journal.data.backup.maps.RoleDataMap;
-import com.wanderer.journal.data.save.db.DiaryDb;
+/**
+ * 角色数据的备份帮助器。
+ */
+class RoleBackupHelper(context: Context) : BackupHelperBase<DiaryDb, RoleDataMap>(
+    db = DiaryDb.getInstance(context),
+    dataSerializer = RoleDataMap.serializer(),
+    tempDataFileName = requireNotNull(BackupDataType.ROLE.latestVersionFileName),
+) {
+    private val backupDao = db.dataBackupDao()
 
-public class RoleBackupHelper extends BackupHelperBase<DiaryDb, RoleDataMap> {
-    public RoleBackupHelper(Context context) {
-        super(context);
-    }
+    override suspend fun getAllDataInMap(): RoleDataMap = backupDao.exportRoleData()
 
-    @Override
-    protected Class<RoleDataMap> getMapClass() {
-        return RoleDataMap.class;
-    }
-
-    @Override
-    protected DiaryDb getDatabase(Context context) {
-        return DiaryDb.getInstance(context);
-    }
-
-    @Override
-    protected RoleDataMap getAllDataInMap() {
-        return db.dataBackupDao().exportRoleData();
-    }
-
-    @Override
-    protected ImportResult saveDataInMapToDb(Context context, RoleDataMap map) {
-        return db.dataBackupDao().importRoleData(map);
-    }
-
-    @Override
-    protected String getTempDataFileName() {
-        return BackupDataType.ROLE.getLatestVersionFileName();
-    }
-
-    @Override
-    protected RoleDataMap getDataMap(String json, ImportDataVersionType versionType) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json, mapClass);
-    }
+    override suspend fun saveDataInMapToDb(
+        context: Context,
+        map: RoleDataMap,
+    ): ImportResult = backupDao.importRoleData(map)
 }

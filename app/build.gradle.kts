@@ -98,7 +98,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation(libs.rxjava)                      //多线程
     implementation(libs.work.runtime)                //自动任务执行
-    implementation(libs.work.rxjava3)                // WorkManager 的 RxJava 支持
     implementation(libs.rxandroid)                   //线程切换
     implementation(libs.biometric)                   //生物验证依赖
     implementation(libs.room.runtime)                // Room 核心库
@@ -109,8 +108,6 @@ dependencies {
     implementation(libs.paging.rxjava3)              // Paging 3的 RxJava支持
     implementation(libs.paging.runtime)              // RecyclerView 局部加载
     implementation(libs.jackson.databind)            // JSON 解析
-    implementation(libs.mapstruct)                   // Pojo 与 Entity 转换
-    annotationProcessor(libs.mapstruct.processor)    // Mapstruct 注解处理器
     implementation(libs.documentfile)                // 用于解析SAF 返回的指向本地文件的 Uri
     implementation(libs.core)                        // Markdown支持
     implementation(libs.lifecycle.process)           // 生命周期监听

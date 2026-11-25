@@ -10,6 +10,7 @@ import androidx.room.TypeConverters;
 import com.wanderer.journal.data.backup.DataBackupDao;
 import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
 import com.wanderer.journal.data.save.db.converters.UriConverter;
+import com.wanderer.journal.data.save.db.daos.BackupDao;
 import com.wanderer.journal.data.save.db.daos.DiaryDao;
 import com.wanderer.journal.data.save.db.daos.EmotionTagDao;
 import com.wanderer.journal.data.save.db.daos.LifeNoteDao;
@@ -94,7 +95,21 @@ public abstract class DiaryDb extends RoomDatabase {
 
     public abstract RoleDao roleDao();
 
-    public abstract DataBackupDao dataBackupDao();
+    /**
+     * 备份功能使用的原始数据库访问接口。
+     *
+     * @return 备份原始 DAO
+     */
+    public abstract BackupDao backupDao();
+
+    /**
+     * 获取备份数据的导入导出器。
+     *
+     * @return 备份数据导入导出器
+     */
+    public DataBackupDao dataBackupDao() {
+        return new DataBackupDao(this);
+    }
 
     public abstract LifeNoteDao lifeNoteDao();
 }

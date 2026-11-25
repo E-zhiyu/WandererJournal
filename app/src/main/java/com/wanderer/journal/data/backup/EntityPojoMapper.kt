@@ -1,162 +1,289 @@
-package com.wanderer.journal.data.backup;
+package com.wanderer.journal.data.backup
 
-import android.net.Uri;
+import com.wanderer.journal.data.backup.pojo.DiaryPojo
+import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo
+import com.wanderer.journal.data.backup.pojo.EmotionTagPojo
+import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo
+import com.wanderer.journal.data.backup.pojo.LifeNotePojo
+import com.wanderer.journal.data.backup.pojo.LocationPojo
+import com.wanderer.journal.data.backup.pojo.MediaPojo
+import com.wanderer.journal.data.backup.pojo.ParagraphPojo
+import com.wanderer.journal.data.backup.pojo.RoleAliaPojo
+import com.wanderer.journal.data.backup.pojo.RolePojo
+import com.wanderer.journal.data.save.db.converters.DateTimeConverter
+import com.wanderer.journal.data.save.db.converters.UriConverter
+import com.wanderer.journal.data.save.db.entities.DiaryEntity
+import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity
+import com.wanderer.journal.data.save.db.entities.EmotionTagEntity
+import com.wanderer.journal.data.save.db.entities.LifeNoteEntity
+import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity
+import com.wanderer.journal.data.save.db.entities.LocationEntity
+import com.wanderer.journal.data.save.db.entities.MediaEntity
+import com.wanderer.journal.data.save.db.entities.ParagraphEntity
+import com.wanderer.journal.data.save.db.entities.RoleAliaEntity
+import com.wanderer.journal.data.save.db.entities.RoleEntity
 
-import com.wanderer.journal.data.backup.pojo.DiaryPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
-import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
-import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
-import com.wanderer.journal.data.backup.pojo.LocationPojo;
-import com.wanderer.journal.data.backup.pojo.MediaPojo;
-import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
-import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
-import com.wanderer.journal.data.backup.pojo.RolePojo;
-import com.wanderer.journal.data.save.db.converters.DateTimeConverter;
-import com.wanderer.journal.data.save.db.converters.UriConverter;
-import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
-import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
-import com.wanderer.journal.data.save.db.entities.LocationEntity;
-import com.wanderer.journal.data.save.db.entities.MediaEntity;
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
-import com.wanderer.journal.data.save.db.entities.RoleEntity;
+/**
+ * 备份 POJO 与数据库实体之间的转换器。
+ *
+ * 原实现使用 MapStruct 自动生成转换代码；由于备份 POJO 已改为 Kotlin 数据类，
+ * 这里改为显式的手写映射，避免继续依赖 Java 注解处理器，同时保持原有的时间戳、Uri 转换规则。
+ */
+object EntityPojoMapper {
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
+    // ==================== 日记 ====================
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+    fun toDiaryEntity(pojo: DiaryPojo): DiaryEntity =
+        DiaryEntity(DateTimeConverter.toLocalDate(pojo.diaryDate)).apply {
+            diaryId = pojo.diaryId
+        }
 
-@Mapper
-public interface EntityPojoMapper {
-    EntityPojoMapper INSTANCE = Mappers.getMapper(EntityPojoMapper.class);
+    fun toDiaryEntityList(pojoList: List<DiaryPojo>): List<DiaryEntity> =
+        pojoList.map(::toDiaryEntity)
 
-    @Named("longToTime")
-    default LocalDateTime longToTime(long timeMillis) {
-        return DateTimeConverter.toLocalDateTime(timeMillis);
-    }
+    fun toDiaryPojo(entity: DiaryEntity): DiaryPojo =
+        DiaryPojo(
+            diaryId = entity.diaryId,
+            diaryDate = DateTimeConverter.fromLocalDate(entity.diaryDate) ?: 0L,
+        )
 
-    @Named("timeToLong")
-    default long timeToLong(LocalDateTime time) {
-        return DateTimeConverter.fromLocalDateTime(time);
-    }
+    fun toDiaryPojoList(entityList: List<DiaryEntity>): List<DiaryPojo> =
+        entityList.map(::toDiaryPojo)
 
-    @Named("longToDate")
-    default LocalDate longToDate(long timeMillis) {
-        return DateTimeConverter.toLocalDate(timeMillis);
-    }
+    // ==================== 段落 ====================
 
-    @Named("dateToLong")
-    default long dateToLong(LocalDate date) {
-        return DateTimeConverter.fromLocalDate(date);
-    }
+    fun toParagraphEntity(pojo: ParagraphPojo): ParagraphEntity =
+        ParagraphEntity(
+            pojo.parentDiaryId,
+            pojo.content,
+            DateTimeConverter.toLocalDateTime(pojo.createTime),
+        ).apply {
+            paragraphId = pojo.paragraphId
+            privacyType = pojo.privacyType
+        }
 
-    @Named("strToUri")
-    default Uri strToUri(String string) {
-        return UriConverter.toUri(string);
-    }
+    fun toParagraphEntityList(pojoList: List<ParagraphPojo>): List<ParagraphEntity> =
+        pojoList.map(::toParagraphEntity)
 
-    @Named("uriToStr")
-    default String uriToStr(Uri uri) {
-        return UriConverter.fromUri(uri);
-    }
+    fun toParagraphPojo(entity: ParagraphEntity): ParagraphPojo =
+        ParagraphPojo(
+            paragraphId = entity.paragraphId,
+            parentDiaryId = entity.parentDiaryId,
+            createTime = DateTimeConverter.fromLocalDateTime(entity.createTime) ?: 0L,
+            content = entity.content,
+            privacyType = entity.privacyType,
+        )
 
-    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "longToDate")
-    DiaryEntity toDiaryEntity(DiaryPojo pojo);
+    fun toParagraphPojoList(entityList: List<ParagraphEntity>): List<ParagraphPojo> =
+        entityList.map(::toParagraphPojo)
 
-    List<DiaryEntity> toDiaryEntityList(List<DiaryPojo> pojoList);
+    // ==================== 媒体 ====================
 
-    @Mapping(target = "diaryDate", source = "diaryDate", qualifiedByName = "dateToLong")
-    DiaryPojo toDiaryPojo(DiaryEntity entity);
+    fun toMediaEntity(pojo: MediaPojo): MediaEntity =
+        MediaEntity(
+            pojo.parentParagraphId,
+            UriConverter.toUri(pojo.fileUri),
+        ).apply {
+            mediaId = pojo.mediaId
+        }
 
-    List<DiaryPojo> toDiaryPojoList(List<DiaryEntity> entityList);
+    fun toMediaEntityList(pojoList: List<MediaPojo>): List<MediaEntity> =
+        pojoList.map(::toMediaEntity)
 
-    @Mapping(target = "createTime", source = "createTime", qualifiedByName = "longToTime")
-    ParagraphEntity toParagraphEntity(ParagraphPojo pojo);
+    fun toMediaPojo(entity: MediaEntity): MediaPojo =
+        MediaPojo(
+            mediaId = entity.mediaId,
+            parentParagraphId = entity.parentParagraphId,
+            fileUri = UriConverter.fromUri(entity.fileUri),
+        )
 
-    List<ParagraphEntity> toParagraphEntityList(List<ParagraphPojo> pojoList);
+    fun toMediaPojoList(entityList: List<MediaEntity>): List<MediaPojo> =
+        entityList.map(::toMediaPojo)
 
-    @Mapping(target = "createTime", source = "createTime", qualifiedByName = "timeToLong")
-    ParagraphPojo toParagraphPojo(ParagraphEntity entity);
+    // ==================== 情绪标签 ====================
 
-    List<ParagraphPojo> toParagraphPojoList(List<ParagraphEntity> entityList);
+    fun toEmotionTagEntity(pojo: EmotionTagPojo): EmotionTagEntity =
+        EmotionTagEntity(
+            pojo.name,
+            pojo.description,
+            pojo.type,
+        ).apply {
+            emotionId = pojo.emotionId
+        }
 
-    @Mapping(target = "fileUri", source = "fileUri", qualifiedByName = "strToUri")
-    MediaEntity toMediaEntity(MediaPojo pojo);
+    fun toEmotionTagEntityList(pojoList: List<EmotionTagPojo>): List<EmotionTagEntity> =
+        pojoList.map(::toEmotionTagEntity)
 
-    List<MediaEntity> toMediaEntityList(List<MediaPojo> pojoList);
+    fun toEmotionTagPojo(entity: EmotionTagEntity): EmotionTagPojo =
+        EmotionTagPojo(
+            emotionId = entity.emotionId,
+            name = entity.name,
+            description = entity.description,
+            type = entity.type,
+        )
 
-    @Mapping(target = "fileUri", source = "fileUri", qualifiedByName = "uriToStr")
-    MediaPojo toMediaPojo(MediaEntity entity);
+    fun toEmotionTagPojoList(entityList: List<EmotionTagEntity>): List<EmotionTagPojo> =
+        entityList.map(::toEmotionTagPojo)
 
-    List<MediaPojo> toMediaPojoList(List<MediaEntity> entityList);
+    // ==================== 情绪标签与段落关系 ====================
 
-    EmotionTagEntity toEmotionTagEntity(EmotionTagPojo pojo);
+    fun toEmotionParagraphRefEntity(pojo: EmotionParagraphRefPojo): EmotionParagraphRefEntity =
+        EmotionParagraphRefEntity(
+            pojo.emotionId,
+            pojo.paragraphId,
+            pojo.degree,
+        )
 
-    List<EmotionTagEntity> toEmotionTagEntityList(List<EmotionTagPojo> pojoList);
+    fun toEmotionParagraphRefEntityList(
+        pojoList: List<EmotionParagraphRefPojo>,
+    ): List<EmotionParagraphRefEntity> = pojoList.map(::toEmotionParagraphRefEntity)
 
-    EmotionTagPojo toEmotionTagPojo(EmotionTagEntity entity);
+    fun toEmotionParagraphRefPojo(entity: EmotionParagraphRefEntity): EmotionParagraphRefPojo =
+        EmotionParagraphRefPojo(
+            paragraphId = entity.paragraphId,
+            emotionId = entity.emotionId,
+            degree = entity.degree,
+        )
 
-    List<EmotionTagPojo> toEmotionTagPojoList(List<EmotionTagEntity> entityList);
+    fun toEmotionParagraphRefPojoList(
+        entityList: List<EmotionParagraphRefEntity>,
+    ): List<EmotionParagraphRefPojo> = entityList.map(::toEmotionParagraphRefPojo)
 
-    EmotionParagraphRefEntity toEmotionParagraphRefEntity(EmotionParagraphRefPojo pojo);
+    // ==================== 角色 ====================
 
-    List<EmotionParagraphRefEntity> toEmotionParagraphRefEntityList(List<EmotionParagraphRefPojo> pojoList);
+    fun toRoleEntity(pojo: RolePojo): RoleEntity =
+        RoleEntity(
+            pojo.name,
+            pojo.displayName,
+            pojo.identity,
+            pojo.impression,
+            pojo.relationship,
+        ).apply {
+            roleId = pojo.roleId
+            useCount = pojo.useCount
+            latestUseTime = DateTimeConverter.toLocalDateTime(pojo.latestUseTime)
+        }
 
-    EmotionParagraphRefPojo toEmotionParagraphRefPojo(EmotionParagraphRefEntity entity);
+    fun toRoleEntityList(pojoList: List<RolePojo>): List<RoleEntity> =
+        pojoList.map(::toRoleEntity)
 
-    List<EmotionParagraphRefPojo> toEmotionParagraphRefPojoList(List<EmotionParagraphRefEntity> entityList);
+    fun toRolePojo(entity: RoleEntity): RolePojo =
+        RolePojo(
+            roleId = entity.roleId,
+            name = entity.name,
+            displayName = entity.displayName ?: "",
+            identity = entity.identity,
+            impression = entity.impression,
+            relationship = entity.relationship,
+            useCount = entity.useCount,
+            latestUseTime = DateTimeConverter.fromLocalDateTime(entity.latestUseTime) ?: 0L,
+        )
 
-    @Mapping(target = "latestUseTime", source = "latestUseTime", qualifiedByName = "longToTime")
-    RoleEntity toRoleEntity(RolePojo pojo);
+    fun toRolePojoList(entityList: List<RoleEntity>): List<RolePojo> =
+        entityList.map(::toRolePojo)
 
-    List<RoleEntity> toRoleEntityList(List<RolePojo> pojoList);
+    // ==================== 角色别名 ====================
 
-    @Mapping(target = "latestUseTime", source = "latestUseTime", qualifiedByName = "timeToLong")
-    RolePojo toRolePojo(RoleEntity entity);
+    fun toRoleAliaEntity(pojo: RoleAliaPojo): RoleAliaEntity =
+        RoleAliaEntity(
+            pojo.alia,
+            pojo.roleId,
+        ).apply {
+            aliaId = pojo.aliaId
+        }
 
-    List<RolePojo> toRolePojoList(List<RoleEntity> entityList);
+    fun toRoleAliaEntityList(pojoList: List<RoleAliaPojo>): List<RoleAliaEntity> =
+        pojoList.map(::toRoleAliaEntity)
 
-    RoleAliaEntity toRoleAliaEntity(RoleAliaPojo pojo);
+    fun toRoleAliaPojo(entity: RoleAliaEntity): RoleAliaPojo =
+        RoleAliaPojo(
+            aliaId = entity.aliaId,
+            roleId = entity.roleId,
+            alia = entity.alia,
+        )
 
-    List<RoleAliaEntity> toRoleAliaEntityList(List<RoleAliaPojo> pojoList);
+    fun toRoleAliaPojoList(entityList: List<RoleAliaEntity>): List<RoleAliaPojo> =
+        entityList.map(::toRoleAliaPojo)
 
-    RoleAliaPojo toRoleAliaPojo(RoleAliaEntity entity);
+    // ==================== 人生笔记 ====================
 
-    List<RoleAliaPojo> toRoleAliaPojoList(List<RoleAliaEntity> entityList);
+    fun toLifeNoteEntity(pojo: LifeNotePojo): LifeNoteEntity =
+        LifeNoteEntity(
+            pojo.insight,
+            pojo.elaboration,
+            DateTimeConverter.toLocalDateTime(pojo.dateTime),
+        ).apply {
+            noteId = pojo.noteId
+        }
 
-    @Mapping(target = "dateTime", source = "dateTime", qualifiedByName = "longToTime")
-    LifeNoteEntity toLifeNoteEntity(LifeNotePojo pojo);
+    fun toLifeNoteEntityList(pojoList: List<LifeNotePojo>): List<LifeNoteEntity> =
+        pojoList.map(::toLifeNoteEntity)
 
-    List<LifeNoteEntity> toLifeNoteEntityList(List<LifeNotePojo> pojoList);
+    fun toLifeNotePojo(entity: LifeNoteEntity): LifeNotePojo =
+        LifeNotePojo(
+            noteId = entity.noteId,
+            insight = entity.insight,
+            elaboration = entity.elaboration,
+            dateTime = DateTimeConverter.fromLocalDateTime(entity.dateTime) ?: 0L,
+        )
 
-    @Mapping(target = "dateTime", source = "dateTime", qualifiedByName = "timeToLong")
-    LifeNotePojo toLifeNotePojo(LifeNoteEntity entity);
+    fun toLifeNotePojoList(entityList: List<LifeNoteEntity>): List<LifeNotePojo> =
+        entityList.map(::toLifeNotePojo)
 
-    List<LifeNotePojo> toLifeNotePojoList(List<LifeNoteEntity> entityList);
+    // ==================== 人生笔记历史 ====================
 
-    @Mapping(target = "updateDateTime", source = "updateDateTime", qualifiedByName = "longToTime")
-    LifeNoteHistoryEntity toLifeNoteHistoryEntity(LifeNoteHistoryPojo pojo);
+    fun toLifeNoteHistoryEntity(pojo: LifeNoteHistoryPojo): LifeNoteHistoryEntity =
+        LifeNoteHistoryEntity(
+            pojo.noteId,
+            pojo.insight,
+            pojo.elaboration,
+            DateTimeConverter.toLocalDateTime(pojo.updateDateTime),
+        ).apply {
+            historyId = pojo.historyId
+        }
 
-    List<LifeNoteHistoryEntity> toLifeNoteHistoryEntityList(List<LifeNoteHistoryPojo> pojoList);
+    fun toLifeNoteHistoryEntityList(
+        pojoList: List<LifeNoteHistoryPojo>,
+    ): List<LifeNoteHistoryEntity> = pojoList.map(::toLifeNoteHistoryEntity)
 
-    @Mapping(target = "updateDateTime", source = "updateDateTime", qualifiedByName = "timeToLong")
-    LifeNoteHistoryPojo toLifeNoteHistoryPojo(LifeNoteHistoryEntity entity);
+    fun toLifeNoteHistoryPojo(entity: LifeNoteHistoryEntity): LifeNoteHistoryPojo =
+        LifeNoteHistoryPojo(
+            historyId = entity.historyId,
+            noteId = entity.noteId,
+            insight = entity.insight,
+            elaboration = entity.elaboration,
+            updateDateTime = DateTimeConverter.fromLocalDateTime(entity.updateDateTime) ?: 0L,
+        )
 
-    List<LifeNoteHistoryPojo> toLifeNoteHistoryPojoList(List<LifeNoteHistoryEntity> historyEntityList);
+    fun toLifeNoteHistoryPojoList(
+        entityList: List<LifeNoteHistoryEntity>,
+    ): List<LifeNoteHistoryPojo> = entityList.map(::toLifeNoteHistoryPojo)
 
-    LocationEntity toLocationEntity(LocationPojo pojo);
+    // ==================== 位置 ====================
 
-    List<LocationEntity> toLocationEntityList(List<LocationPojo> pojoList);
+    fun toLocationEntity(pojo: LocationPojo): LocationEntity =
+        LocationEntity(
+            pojo.paragraphId,
+            pojo.latitude,
+            pojo.longitude,
+            pojo.altitude,
+            pojo.isFineLocation,
+            pojo.provider,
+        )
 
-    LocationPojo toLocationPojo(LocationEntity entity);
+    fun toLocationEntityList(pojoList: List<LocationPojo>): List<LocationEntity> =
+        pojoList.map(::toLocationEntity)
 
-    List<LocationPojo> toLocationPojoList(List<LocationEntity> entityList);
+    fun toLocationPojo(entity: LocationEntity): LocationPojo =
+        LocationPojo(
+            paragraphId = entity.paragraphId,
+            latitude = entity.latitude,
+            longitude = entity.longitude,
+            altitude = entity.altitude,
+            isFineLocation = entity.isFineLocation,
+            provider = entity.provider ?: "",
+        )
+
+    fun toLocationPojoList(entityList: List<LocationEntity>): List<LocationPojo> =
+        entityList.map(::toLocationPojo)
 }

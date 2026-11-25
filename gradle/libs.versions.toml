@@ -16,7 +16,6 @@ appcompat = "1.8.0"
 kotlinxSerializationJson = "1.13.0"
 lifecycleProcess = "2.11.0"
 lubanVersion = "2.0.3"
-mapstruct = "1.6.3"
 material = "1.14.0"
 materialdatetimepicker = "4.2.3"
 mikepenzMultiplatformMarkdownRendererM3 = "0.46.0"
@@ -63,8 +62,6 @@ gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
 lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose" }
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose" }
-mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
-mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material" }
 materialdatetimepicker = { module = "com.wdullaer:materialdatetimepicker", version.ref = "materialdatetimepicker" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -97,7 +94,6 @@ flexbox = { module = "com.google.android.flexbox:flexbox", version.ref = "flexbo
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
 core = { module = "io.noties.markwon:core", version.ref = "core" }
 work-runtime = { module = "androidx.work:work-runtime", version.ref = "workRuntime" }
-work-rxjava3 = { module = "androidx.work:work-rxjava3", version.ref = "workRuntime" }
 xxpermissions = { module = "com.github.getActivity:XXPermissions", version.ref = "xxpermissions" }
 zibin-luban = { module = "top.zibin:luban", version.ref = "lubanVersion" }
 androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }

@@ -1,550 +1,253 @@
-package com.wanderer.journal.data.backup;
+package com.wanderer.journal.data.backup
 
-import android.content.Context;
+import android.content.Context
+import com.wanderer.journal.auxiliary.classes.ImportResult
+import com.wanderer.journal.data.backup.maps.DiaryDataMap
+import com.wanderer.journal.data.backup.maps.LifeNoteDataMap
+import com.wanderer.journal.data.backup.maps.RoleDataMap
+import com.wanderer.journal.data.save.db.DiaryDb
+import com.wanderer.journal.data.save.db.daos.BackupDao
+import java.util.Locale
+import java.util.concurrent.Callable
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-import androidx.room.Transaction;
-
-import com.wanderer.journal.auxiliary.classes.ImportResult;
-import com.wanderer.journal.data.backup.maps.DiaryDataMap;
-import com.wanderer.journal.data.backup.maps.LifeNoteDataMap;
-import com.wanderer.journal.data.backup.maps.RoleDataMap;
-import com.wanderer.journal.data.backup.pojo.DiaryPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionParagraphRefPojo;
-import com.wanderer.journal.data.backup.pojo.EmotionTagPojo;
-import com.wanderer.journal.data.backup.pojo.LifeNoteHistoryPojo;
-import com.wanderer.journal.data.backup.pojo.LifeNotePojo;
-import com.wanderer.journal.data.backup.pojo.LocationPojo;
-import com.wanderer.journal.data.backup.pojo.MediaPojo;
-import com.wanderer.journal.data.backup.pojo.ParagraphPojo;
-import com.wanderer.journal.data.backup.pojo.RoleAliaPojo;
-import com.wanderer.journal.data.backup.pojo.RolePojo;
-import com.wanderer.journal.data.save.db.entities.DiaryEntity;
-import com.wanderer.journal.data.save.db.entities.EmotionParagraphRefEntity;
-import com.wanderer.journal.data.save.db.entities.EmotionTagEntity;
-import com.wanderer.journal.data.save.db.entities.LifeNoteEntity;
-import com.wanderer.journal.data.save.db.entities.LifeNoteHistoryEntity;
-import com.wanderer.journal.data.save.db.entities.LocationEntity;
-import com.wanderer.journal.data.save.db.entities.MediaEntity;
-import com.wanderer.journal.data.save.db.entities.ParagraphEntity;
-import com.wanderer.journal.data.save.db.entities.RoleAliaEntity;
-import com.wanderer.journal.data.save.db.entities.RoleEntity;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-
-@Dao
-public interface DataBackupDao {
-    /**
-     * 导出“日记数据”选项对应的数据
-     *
-     * @return 日记数据集合
-     */
-    @Transaction
-    default DiaryDataMap exportDiaryData() {
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-
-        //读取日记数据
-        List<DiaryEntity> diaryEntityList = readDiaryData();
-        List<DiaryPojo> diaryPojoList = mapper.toDiaryPojoList(diaryEntityList);
-
-        //读取段落数据
-        List<ParagraphEntity> paragraphEntityList = readParagraphData();
-        List<ParagraphPojo> paragraphPojoList = mapper.toParagraphPojoList(paragraphEntityList);
-
-        //读取媒体数据
-        List<MediaEntity> mediaEntityList = readMediaData();
-        List<MediaPojo> mediaPojoList = mapper.toMediaPojoList(mediaEntityList);
-
-        //读取位置数据
-        List<LocationEntity> locationEntityList = readLocationData();
-        List<LocationPojo> locationPojoList = mapper.toLocationPojoList(locationEntityList);
-
-        //读取情绪标签数据
-        List<EmotionTagEntity> emotionTagWithParagraphList = readEmotionData();
-        List<EmotionTagPojo> emotionTagPojoList = mapper.toEmotionTagPojoList(emotionTagWithParagraphList);
-
-        //读取情绪标签与段落关系数据
-        List<EmotionParagraphRefEntity> emotionParagraphRefEntityList = readEmotionRefData();
-        List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = mapper.toEmotionParagraphRefPojoList(emotionParagraphRefEntityList);
-
-        return new DiaryDataMap(
-                diaryPojoList,
-                paragraphPojoList,
-                mediaPojoList,
-                locationPojoList,
-                emotionTagPojoList,
-                emotionParagraphRefPojoList
-        );
-    }
+/**
+ * 备份数据的导入导出器。
+ *
+ * 原先的 {@code DataBackupDao} 是一个带 {@code default} 方法的 Room DAO 接口，
+ * 依靠 Room 的 {@code @Transaction} 保证导入导出操作的原子性。
+ * 由于备份 POJO 与导入导出逻辑已迁移到 Kotlin，而项目使用的是 javac 的 Room
+ * annotationProcessor（不是 KSP/KAPT），Room 无法为 Kotlin DAO 生成实现，
+ * 因此原始 SQL 访问保留在 Java 的 [BackupDao] 中，本类负责事务、实体转换等编排逻辑。
+ */
+class DataBackupDao(private val db: DiaryDb) {
+    private val dao: BackupDao by lazy { db.backupDao() }
 
     /**
-     * 导入“日记数据”选项对应的数据
-     *
-     * @param data 日记数据集合
-     * @return 数据导入的结果
+     * 导出“日记数据”选项对应的数据。
      */
-    @Transaction
-    default ImportResult importDiaryData(Context context, DiaryDataMap data) {
-        if (data == null) return ImportResult.missed();
-
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Throwable> exceptionList = new ArrayList<>();
-
-        //清空旧数据
-        clearEmotionParagraphRef();
-        clearEmotionTag();
-        clearMediaData();
-        clearLocationData();
-        clearParagraphData();
-        clearDiaryData();
-
-        //导入日记数据
-        try {
-            List<DiaryPojo> diaryPojoList = data.getDiaryList();
-            if (diaryPojoList != null && !diaryPojoList.isEmpty()) {
-                List<DiaryEntity> diaryEntityList = mapper.toDiaryEntityList(diaryPojoList);
-                writeDiaryData(diaryEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入段落数据
-        try {
-            List<ParagraphPojo> paragraphPojoList = data.getParagraphList();
-            if (paragraphPojoList != null && !paragraphPojoList.isEmpty()) {
-                List<ParagraphEntity> paragraphEntityList = mapper.toParagraphEntityList(paragraphPojoList);
-                writeParagraphData(paragraphEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入媒体数据
-        try {
-            List<MediaPojo> mediaPojoList = data.getMediaList();
-            if (mediaPojoList != null && !mediaPojoList.isEmpty()) {
-                //替换包名为当前包名
-                String replacement = String.format(
-                        Locale.getDefault(),
-                        "Android/data/%s/files/",
-                        context.getPackageName()
-                );
-                List<MediaPojo> uriConvertedPojoList = mediaPojoList.stream()
-                        .peek(media -> {
-                            String uriStr = media.getFileUri();
-                            String currentPackageNameUri = uriStr.replaceAll(
-                                    "Android/data/([^/]+)/files/",
-                                    replacement
-                            );
-                            media.setFileUri(currentPackageNameUri);
-                        })
-                        .collect(Collectors.toList());
-
-                writeMediaData(mapper.toMediaEntityList(uriConvertedPojoList));
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入位置数据
-        try {
-            List<LocationPojo> locationPojoList = data.getLocationList();
-            if (locationPojoList != null && !locationPojoList.isEmpty()) {
-                List<LocationEntity> locationEntityList = mapper.toLocationEntityList(locationPojoList);
-                writeLocationData(locationEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入情绪标签数据
-        try {
-            List<EmotionTagPojo> emotionTagPojoList = data.getEmotionTagList();
-            if (emotionTagPojoList != null && !emotionTagPojoList.isEmpty()) {
-                List<EmotionTagEntity> emotionTagEntityList =
-                        mapper.toEmotionTagEntityList(emotionTagPojoList);
-                writeEmotionTagData(emotionTagEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入情绪标签与段落关系数据
-        try {
-            List<EmotionParagraphRefPojo> emotionParagraphRefPojoList = data.getEmotionParagraphRefList();
-            if (emotionParagraphRefPojoList != null && !emotionParagraphRefPojoList.isEmpty()) {
-                List<EmotionParagraphRefEntity> emotionParagraphRefEntityList =
-                        mapper.toEmotionParagraphRefEntityList(emotionParagraphRefPojoList);
-                writeEmotionParagraphRefData(emotionParagraphRefEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //返回导入结果
-        if (exceptionList.isEmpty()) {
-            return ImportResult.success();
-        } else {
-            return ImportResult.partlySuccess(exceptionList);
+    suspend fun exportDiaryData(): DiaryDataMap = withContext(Dispatchers.IO) {
+        inTransaction {
+            DiaryDataMap(
+                diaryList = EntityPojoMapper.toDiaryPojoList(dao.readDiaryData()),
+                paragraphList = EntityPojoMapper.toParagraphPojoList(dao.readParagraphData()),
+                mediaList = EntityPojoMapper.toMediaPojoList(dao.readMediaData()),
+                locationList = EntityPojoMapper.toLocationPojoList(dao.readLocationData()),
+                emotionTagList = EntityPojoMapper.toEmotionTagPojoList(dao.readEmotionData()),
+                emotionParagraphRefList = EntityPojoMapper.toEmotionParagraphRefPojoList(
+                    dao.readEmotionRefData()
+                ),
+            )
         }
     }
 
     /**
-     * 导出所有角色数据
-     *
-     * @return 角色数据集合
+     * 导入“日记数据”选项对应的数据。
      */
-    @Transaction
-    default RoleDataMap exportRoleData() {
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
+    suspend fun importDiaryData(context: Context, data: DiaryDataMap?): ImportResult =
+        withContext(Dispatchers.IO) {
+            if (data == null) return@withContext ImportResult.missed()
 
-        //读取角色数据
-        List<RoleEntity> roleEntityList = readRoleData();
-        List<RolePojo> rolePojoList = mapper.toRolePojoList(roleEntityList);
+            inTransaction {
+                val exceptionList = mutableListOf<Throwable>()
 
-        //读取角色别名数据
-        List<RoleAliaEntity> roleAliaEntityList = readRoleAliaData();
-        List<RoleAliaPojo> roleAliaPojoList = mapper.toRoleAliaPojoList(roleAliaEntityList);
+                // 清空旧数据
+                dao.clearEmotionParagraphRef()
+                dao.clearEmotionTag()
+                dao.clearMediaData()
+                dao.clearLocationData()
+                dao.clearParagraphData()
+                dao.clearDiaryData()
 
-        return new RoleDataMap(rolePojoList, roleAliaPojoList);
-    }
+                // 导入日记数据
+                try {
+                    data.diaryList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeDiaryData(EntityPojoMapper.toDiaryEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入段落数据
+                try {
+                    data.paragraphList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeParagraphData(EntityPojoMapper.toParagraphEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入媒体数据
+                try {
+                    data.mediaList?.takeIf { it.isNotEmpty() }?.let { mediaPojoList ->
+                        // 替换包名为当前包名
+                        val replacement = String.format(
+                            Locale.getDefault(),
+                            "Android/data/%s/files/",
+                            context.packageName,
+                        )
+                        val packagePathRegex = Regex("Android/data/([^/]+)/files/")
+                        val uriConvertedPojoList = mediaPojoList.map { media ->
+                            media.copy(
+                                fileUri = media.fileUri?.replace(packagePathRegex, replacement)
+                            )
+                        }
+
+                        dao.writeMediaData(EntityPojoMapper.toMediaEntityList(uriConvertedPojoList))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入位置数据
+                try {
+                    data.locationList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeLocationData(EntityPojoMapper.toLocationEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入情绪标签数据
+                try {
+                    data.emotionTagList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeEmotionTagData(EntityPojoMapper.toEmotionTagEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入情绪标签与段落关系数据
+                try {
+                    data.emotionParagraphRefList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeEmotionParagraphRefData(
+                            EntityPojoMapper.toEmotionParagraphRefEntityList(it)
+                        )
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 返回导入结果
+                if (exceptionList.isEmpty()) {
+                    ImportResult.success()
+                } else {
+                    ImportResult.partlySuccess(exceptionList)
+                }
+            }
+        }
 
     /**
-     * 导入所有角色数据
-     *
-     * @param data 角色数据集合
-     * @return 数据导入的结果
+     * 导出所有角色数据。
      */
-    @Transaction
-    default ImportResult importRoleData(RoleDataMap data) {
-        if (data == null) return ImportResult.missed();
-
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Throwable> exceptionList = new ArrayList<>();
-
-        //清空旧数据
-        clearRoleAlia();
-        clearRole();
-
-        //导入角色数据
-        try {
-            List<RolePojo> rolePojoList = data.getRoleList();
-            if (rolePojoList != null && !rolePojoList.isEmpty()) {
-                List<RoleEntity> roleEntityList = mapper.toRoleEntityList(rolePojoList);
-                writeRoleData(roleEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入角色别名数据
-        try {
-            List<RoleAliaPojo> roleAliaPojoList = data.getRoleAliaList();
-            if (roleAliaPojoList != null && !roleAliaPojoList.isEmpty()) {
-                List<RoleAliaEntity> roleAliaEntityList = mapper.toRoleAliaEntityList(roleAliaPojoList);
-                writeRoleAliaList(roleAliaEntityList);
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //返回导入结果
-        if (exceptionList.isEmpty()) {
-            return ImportResult.success();
-        } else {
-            return ImportResult.partlySuccess(exceptionList);
-        }
-    }
-
-    /**
-     * 导出所有人生笔记数据
-     *
-     * @return 包含所有人生笔记数据的集合
-     */
-    @Transaction
-    default LifeNoteDataMap exportLifeNoteData() {
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-
-        //读取人生笔记数据
-        List<LifeNoteEntity> lifeNoteEntityList = readLifeNoteData();
-        List<LifeNotePojo> lifeNotePojoList = mapper.toLifeNotePojoList(lifeNoteEntityList);
-
-        //读取人生笔记历史记录数据
-        List<LifeNoteHistoryEntity> lifeNoteHistoryEntityList = readLifeNoteHistoryData();
-        List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = mapper.toLifeNoteHistoryPojoList(lifeNoteHistoryEntityList);
-
-        return new LifeNoteDataMap(lifeNotePojoList, lifeNoteHistoryPojoList);
-    }
-
-    /**
-     * 导入所有人生笔记数据
-     *
-     * @param data 包含所有人生笔记数据的集合
-     * @return 数据导入的结果
-     */
-    @Transaction
-    default ImportResult importLifeNoteData(LifeNoteDataMap data) {
-        if (data == null) return ImportResult.missed();
-
-        EntityPojoMapper mapper = EntityPojoMapper.INSTANCE;
-        List<Throwable> exceptionList = new ArrayList<>();
-
-        //清空旧数据
-        clearLifeNote();
-        clearLifeNoteHistory();
-
-        //导入人生笔记数据
-        try {
-            List<LifeNotePojo> lifeNotePojoList = data.getLifeNoteList();
-            if (lifeNotePojoList != null && !lifeNotePojoList.isEmpty()) {
-                writeLifeNote(mapper.toLifeNoteEntityList(lifeNotePojoList));
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //导入人生笔记历史记录数据
-        try {
-            List<LifeNoteHistoryPojo> lifeNoteHistoryPojoList = data.getLifeNoteHistoryList();
-            if (lifeNoteHistoryPojoList != null && !lifeNoteHistoryPojoList.isEmpty()) {
-                writeLifeNoteHistory(mapper.toLifeNoteHistoryEntityList(lifeNoteHistoryPojoList));
-            }
-        } catch (Exception e) {
-            exceptionList.add(e);
-        }
-
-        //返回导入结果
-        if (exceptionList.isEmpty()) {
-            return ImportResult.success();
-        } else {
-            return ImportResult.partlySuccess(exceptionList);
+    suspend fun exportRoleData(): RoleDataMap = withContext(Dispatchers.IO) {
+        inTransaction {
+            RoleDataMap(
+                roleList = EntityPojoMapper.toRolePojoList(dao.readRoleData()),
+                roleAliaList = EntityPojoMapper.toRoleAliaPojoList(dao.readRoleAliaData()),
+            )
         }
     }
 
     /**
-     * 导出日记表
-     *
-     * @return 日记实体列表
+     * 导入所有角色数据。
      */
-    @Query("SELECT * FROM diaries")
-    List<DiaryEntity> readDiaryData();
+    suspend fun importRoleData(data: RoleDataMap?): ImportResult = withContext(Dispatchers.IO) {
+        if (data == null) return@withContext ImportResult.missed()
+
+        inTransaction {
+            val exceptionList = mutableListOf<Throwable>()
+
+            // 清空旧数据
+            dao.clearRoleAlia()
+            dao.clearRole()
+
+            // 导入角色数据
+            try {
+                data.roleList?.takeIf { it.isNotEmpty() }?.let {
+                    dao.writeRoleData(EntityPojoMapper.toRoleEntityList(it))
+                }
+            } catch (e: Exception) {
+                exceptionList.add(e)
+            }
+
+            // 导入角色别名数据
+            try {
+                data.roleAliaList?.takeIf { it.isNotEmpty() }?.let {
+                    dao.writeRoleAliaList(EntityPojoMapper.toRoleAliaEntityList(it))
+                }
+            } catch (e: Exception) {
+                exceptionList.add(e)
+            }
+
+            // 返回导入结果
+            if (exceptionList.isEmpty()) {
+                ImportResult.success()
+            } else {
+                ImportResult.partlySuccess(exceptionList)
+            }
+        }
+    }
 
     /**
-     * 导入日记表
-     *
-     * @param diaryEntityList 待导入的日记数据列表
+     * 导出所有人生笔记数据。
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void writeDiaryData(List<DiaryEntity> diaryEntityList);
+    suspend fun exportLifeNoteData(): LifeNoteDataMap = withContext(Dispatchers.IO) {
+        inTransaction {
+            LifeNoteDataMap(
+                lifeNoteList = EntityPojoMapper.toLifeNotePojoList(dao.readLifeNoteData()),
+                lifeNoteHistoryList = EntityPojoMapper.toLifeNoteHistoryPojoList(
+                    dao.readLifeNoteHistoryData()
+                ),
+            )
+        }
+    }
 
     /**
-     * 清空日记表
+     * 导入所有人生笔记数据。
      */
-    @Query("DELETE FROM diaries")
-    void clearDiaryData();
+    suspend fun importLifeNoteData(data: LifeNoteDataMap?): ImportResult =
+        withContext(Dispatchers.IO) {
+            if (data == null) return@withContext ImportResult.missed()
+
+            inTransaction {
+                val exceptionList = mutableListOf<Throwable>()
+
+                // 清空旧数据
+                dao.clearLifeNote()
+                dao.clearLifeNoteHistory()
+
+                // 导入人生笔记数据
+                try {
+                    data.lifeNoteList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeLifeNote(EntityPojoMapper.toLifeNoteEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 导入人生笔记历史记录数据
+                try {
+                    data.lifeNoteHistoryList?.takeIf { it.isNotEmpty() }?.let {
+                        dao.writeLifeNoteHistory(EntityPojoMapper.toLifeNoteHistoryEntityList(it))
+                    }
+                } catch (e: Exception) {
+                    exceptionList.add(e)
+                }
+
+                // 返回导入结果
+                if (exceptionList.isEmpty()) {
+                    ImportResult.success()
+                } else {
+                    ImportResult.partlySuccess(exceptionList)
+                }
+            }
+        }
 
     /**
-     * 导出段落表
-     *
-     * @return 段落实体列表
+     * 在数据库事务中执行 [block]。
      */
-    @Query("SELECT * FROM paragraphs")
-    List<ParagraphEntity> readParagraphData();
-
-    /**
-     * 清空段落表
-     */
-    @Query("DELETE FROM paragraphs")
-    void clearParagraphData();
-
-    /**
-     * 导入段落表
-     *
-     * @param paragraphEntityList 待导入数据的实体列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void writeParagraphData(List<ParagraphEntity> paragraphEntityList);
-
-    /**
-     * 导出情绪标签数据
-     *
-     * @return 情绪标签实体列表
-     */
-    @Query("SELECT * FROM emotionTags")
-    List<EmotionTagEntity> readEmotionData();
-
-    /**
-     * 导出情绪标签与段落对应关系数据
-     *
-     * @return 映射实体列表
-     */
-    @Query("SELECT * FROM emotionParagraphCrossRef")
-    List<EmotionParagraphRefEntity> readEmotionRefData();
-
-    /**
-     * 清空情绪标签表
-     */
-    @Query("DELETE FROM emotionTags")
-    void clearEmotionTag();
-
-    /**
-     * 清空情绪标签与段落的关系表
-     */
-    @Query("DELETE FROM emotionParagraphCrossRef")
-    void clearEmotionParagraphRef();
-
-    /**
-     * 导入情绪标签数据
-     *
-     * @param emotionTagEntityList 情绪标签实体列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void writeEmotionTagData(List<EmotionTagEntity> emotionTagEntityList);
-
-    /**
-     * 导入情绪标签与日记段落关系的数据
-     *
-     * @param refList 关系列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void writeEmotionParagraphRefData(List<EmotionParagraphRefEntity> refList);
-
-    /**
-     * 导出媒体表
-     *
-     * @return 媒体实体列表
-     */
-    @Query("SELECT * FROM medias")
-    List<MediaEntity> readMediaData();
-
-    /**
-     * 清空媒体表
-     */
-    @Query("DELETE FROM medias")
-    void clearMediaData();
-
-    /**
-     * 导入媒体表
-     *
-     * @param mediaEntityList 新数据实体列表
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void writeMediaData(List<MediaEntity> mediaEntityList);
-
-    /**
-     * 读取段落位置信息
-     *
-     * @return 段落位置信息
-     */
-    @Query("SELECT * FROM locations")
-    List<LocationEntity> readLocationData();
-
-    /**
-     * 清空段落位置信息
-     */
-    @Query("DELETE FROM locations")
-    void clearLocationData();
-
-    /**
-     * 写入段落位置信息
-     *
-     * @param list 段落位置数据
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void writeLocationData(List<LocationEntity> list);
-
-    /**
-     * 导出角色数据
-     *
-     * @return 角色列表
-     */
-    @Query("SELECT * FROM roles")
-    List<RoleEntity> readRoleData();
-
-    /**
-     * 导出角色别称数据
-     *
-     * @return 角色别称列表
-     */
-    @Query("SELECT * FROM roleAlias")
-    List<RoleAliaEntity> readRoleAliaData();
-
-    /**
-     * 清空角色表
-     */
-    @Query("DELETE FROM roles")
-    void clearRole();
-
-    /**
-     * 清空角色别名表
-     */
-    @Query("DELETE FROM roleAlias")
-    void clearRoleAlia();
-
-    /**
-     * 导入角色数据
-     *
-     * @param roleList 角色列表
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void writeRoleData(List<RoleEntity> roleList);
-
-    /**
-     * 导入角色别名数据
-     *
-     * @param roleAliaEntityList 角色别名列表
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void writeRoleAliaList(List<RoleAliaEntity> roleAliaEntityList);
-
-    /**
-     * 导出人生笔记数据
-     *
-     * @return 人生笔记列表
-     */
-    @Query("SELECT * FROM lifeNotes")
-    List<LifeNoteEntity> readLifeNoteData();
-
-    /**
-     * 导出人生笔记历史记录数据
-     *
-     * @return 人生笔记历史记录列表
-     */
-    @Query("SELECT * FROM lifeNoteHistories")
-    List<LifeNoteHistoryEntity> readLifeNoteHistoryData();
-
-    /**
-     * 清除人生笔记表
-     */
-    @Query("DELETE FROM lifeNotes")
-    void clearLifeNote();
-
-    /**
-     * 清空人生笔记历史记录表
-     */
-    @Query("DELETE FROM lifeNoteHistories")
-    void clearLifeNoteHistory();
-
-    /**
-     * 导入人生笔记数据
-     *
-     * @param list 人生笔记列表
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void writeLifeNote(List<LifeNoteEntity> list);
-
-    /**
-     * 导入人生笔记历史记录
-     *
-     * @param list 人生笔记历史记录列表
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void writeLifeNoteHistory(List<LifeNoteHistoryEntity> list);
+    private fun <T> inTransaction(block: () -> T): T =
+        db.runInTransaction(Callable { block() })
 }
