@@ -217,8 +217,8 @@
     <string name="tip_long_click_skip_to_permission_settings">可长按进入权限设置界面</string>
     <string name="tip_alarm_need_autostart">日记提醒功能需要自启动权限</string>
     <string name="backup_and_restore">备份与恢复</string>
-    <string name="export_data_subtitle">将应用数据导出为外部文件</string>
-    <string name="import_data_subtitle">从备份文件导入应用数据</string>
+    <string name="export_data_subtitle">将应用数据导出到指定位置</string>
+    <string name="import_data_subtitle">从指定的文件导入应用数据</string>
     <string name="auto_backup_switch_subtitle">自动生成备份文件</string>
     <string name="backup_frequency_subtitle">生成备份文件的时间间隔</string>
     <string name="backup_directory_subtitle">自动生成备份文件的位置</string>

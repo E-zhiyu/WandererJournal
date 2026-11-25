@@ -113,7 +113,7 @@ fun DataManageScreen(
     val dataTypes = BackupDataType.entries
     var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
-    // 打开 SAF 并选择文件的函数（导入数据）
+    // 导入数据时打开 SAF
     val tipImportStarted = stringResource(R.string.tip_import_started)
     val importLauncher = rememberDocumentLauncher { uri ->
         uri?.let {
@@ -131,7 +131,7 @@ fun DataManageScreen(
         }
     }
 
-    // 打开 SAF 并创建文件的函数（备份数据）
+    // 备份数据时打开 SAF
     val tipExportStarted = stringResource(R.string.tip_export_started)
     val exportLauncher = rememberCreateDocumentLauncherManual { uri ->
         uri?.let {
@@ -148,6 +148,7 @@ fun DataManageScreen(
             }
         }
     }
+
 
     // 备份频率下拉框
     val backupFrequencies = BackupFrequency.entries
