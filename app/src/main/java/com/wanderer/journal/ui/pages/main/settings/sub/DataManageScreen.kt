@@ -264,37 +264,6 @@ fun DataManageScreen(
                 normalRadius = Radius.BottomArray
             )
         }
-
-        // 其他标题
-        item {
-            SettingCategoryTitle(stringResource(R.string.others))
-        }
-
-        // 段落追加
-        item {
-            SettingClickableItem(
-                title = stringResource(R.string.append_paragraph),
-                subtitle = stringResource(R.string.append_paragraph_subtitle),
-                icon = painterResource(R.drawable.outline_convert_to_text_24),
-                onClick = {
-                    // TODO:完成回调
-                },
-                normalRadius = Radius.TopArray
-            )
-        }
-
-        // 日记导入
-        item {
-            SettingClickableItem(
-                title = stringResource(R.string.import_diary),
-                subtitle = stringResource(R.string.import_diary_subtitle),
-                icon = painterResource(R.drawable.outline_note_stack_add_24),
-                onClick = {
-                    // TODO:完成回调
-                },
-                normalRadius = Radius.BottomArray
-            )
-        }
     }
 
     // 多选对话框
