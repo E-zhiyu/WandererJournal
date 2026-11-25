@@ -73,10 +73,6 @@
             android:exported="false"
             android:parentActivityName=".ui.pages.main.MainActivity" />
         <activity
-            android:name=".ui.pages.main.settings.sub.DataManageActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.pages.main.MainActivity" />
-        <activity
             android:name=".ui.pages.share.SharePreviewActivity"
             android:exported="false"
             android:parentActivityName=".ui.pages.diary.read.ReadActivity" />
