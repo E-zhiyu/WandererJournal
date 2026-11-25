@@ -141,7 +141,7 @@ suspend fun deleteFile(uri: Uri, context: Context) = withContext(Dispatchers.IO)
             try {
                 context.contentResolver.delete(uri, null, null)
                 Log.d(LogTags.FILE_HELPER.n(), "ContentUri delete success: $uri")
-            } catch (e: UnsupportedOperationException) {
+            } catch (_: UnsupportedOperationException) {
                 Log.e(LogTags.FILE_HELPER.n(), "ContentUri delete failed: $uri")
             }
         }
