@@ -30,4 +30,8 @@ sealed interface ScreenRoutes {
     // 数据管理界面
     @Serializable
     data object DataManage: ScreenRoutes
+
+    // 媒体列表界面
+    @Serializable
+    data object MediaList: ScreenRoutes
 }

@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.main.settings
 
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import androidx.biometric.BiometricManager
@@ -46,7 +45,6 @@ import com.wanderer.journal.helpers.BiometricHelper
 import com.wanderer.journal.helpers.UpdateHelper
 import com.wanderer.journal.helpers.appearance.ThemeHelper
 import com.wanderer.journal.ui.components.LazyLargeTopAppBarScaffold
-import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 
@@ -58,6 +56,7 @@ fun SettingsScreen(
     onSkipToShare: () -> Unit,
     onSkipToDiaryAlarm: () -> Unit,
     onSkipToDataManage: () -> Unit,
+    onSkipToMediaList: () -> Unit,
     appVm: AppSettingsViewModel = dsAppSettingsViewModel(),
     updateVm: UpdateViewModel = dsUpdateViewModel(),
     securityVm: SecurityViewModel = dsSecurityViewModel()
@@ -251,14 +250,7 @@ fun SettingsScreen(
                 subtitle = "点击进入媒体文件列表",
                 icon = painterResource(id = R.drawable.outline_perm_media_24),
                 normalRadius = Radius.BottomArray,
-                onClick = {
-                    context.startActivity(
-                        Intent(
-                            context,
-                            MediaListActivity::class.java
-                        )
-                    )
-                }
+                onClick = onSkipToMediaList
             )
         }
 
@@ -447,6 +439,7 @@ fun Preview() {
     MaterialAppTheme {
         SettingsScreen(
             CompositeDisposable(),
+            {},
             {},
             {},
             {},
