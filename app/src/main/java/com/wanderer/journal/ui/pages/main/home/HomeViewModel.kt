@@ -1,6 +1,5 @@
 package com.wanderer.journal.ui.pages.main.home
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -33,10 +32,9 @@ data class HomeUiState(
     val errorMessage: String? = null,
 )
 
-class HomeViewModel(context: Context) : ViewModel() {
-
-    private val db = DiaryDb.getInstance(context)
-
+class HomeViewModel(
+    db: DiaryDb
+) : ViewModel() {
     // 唯一可变的状态源：只放"业务数据 + 提示文本 + 错误"
     private val _tips = MutableStateFlow("")
 
@@ -72,7 +70,7 @@ class HomeViewModel(context: Context) : ViewModel() {
     val error: StateFlow<String?> = _error.asStateFlow()
 
     // 再组合剩余的部分
-    private val _uiState: StateFlow<HomeUiState> = combine(
+    val uiState: StateFlow<HomeUiState> = combine(
         startDateFlow,      // LocalDate?
         countsFlow,         // Counts
         _tips,              // String
@@ -92,8 +90,6 @@ class HomeViewModel(context: Context) : ViewModel() {
         )
     }.catch { e -> _error.value = e.message }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
-
-    val uiState: StateFlow<HomeUiState> = _uiState
 
     private fun formatStartDate(date: LocalDate?): Pair<String?, String?> {
         return if (date == null) {
@@ -124,7 +120,7 @@ fun homeViewModel(): HomeViewModel {
     val context = LocalContext.current
     return viewModel(
         factory = viewModelFactory {
-            initializer { HomeViewModel(context) }
+            initializer { HomeViewModel(DiaryDb.getInstance(context)) }
         }
     )
 }
