@@ -20,11 +20,11 @@ import kotlinx.coroutines.withContext
  * 媒体列表项。
  *
  * @param info 扫描到的媒体文件信息
- * @param isUnreferenced 是否未被数据库中的媒体记录引用（即“未关联”文件）
+ * @param referencedMediaId 关联到数据库中的媒体编号
  */
 data class MediaListItem(
     val info: MediaFileInfo,
-    val isUnreferenced: Boolean,
+    val referencedMediaId: Long?
 )
 
 /**
@@ -69,20 +69,20 @@ class MediaListViewModel(application: Application) : AndroidViewModel(applicatio
                 // 查询数据库中所有被引用的媒体 Uri。
                 // 这里只取文件名进行比较：备份恢复后 fileUri 中的包名/路径可能变化，
                 // 但同一个媒体目录中的文件名是唯一的，因此按文件名比较更稳健。
-                val referencedFileNames = withContext(Dispatchers.IO) {
+                val savedMedias = withContext(Dispatchers.IO) {
                     DiaryDb.getInstance(context)
                         .mediaDao()
-                        .getAllMediaFileUris()
-                        .mapNotNull { uri ->
-                            uri.lastPathSegment?.takeIf { name -> name.isNotEmpty() }
-                        }
-                        .toSet()
+                        .getAllMediaIdAndFileUris()
                 }
+                val idNameMap = savedMedias.associateBy(
+                    { it.fileUri.lastPathSegment },
+                    { it.mediaId }
+                )
 
                 val newItems = mediaFiles.map { info ->
                     MediaListItem(
                         info = info,
-                        isUnreferenced = info.name !in referencedFileNames,
+                        referencedMediaId = if (info.name !in idNameMap.keys) null else idNameMap[info.name],
                     )
                 }
 

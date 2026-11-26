@@ -267,13 +267,13 @@ private fun MediaListContent(
 
     val displayedItems = remember(uiState.items, showOnlyUnreferenced) {
         if (showOnlyUnreferenced) {
-            uiState.items.filter { it.isUnreferenced }
+            uiState.items.filter { it.referencedMediaId == null }
         } else {
             uiState.items
         }
     }
     val unreferencedCount = remember(uiState.items) {
-        uiState.items.count { it.isUnreferenced }
+        uiState.items.count { it.referencedMediaId == null }
     }
 
     var orderingMenuExpanded by remember { mutableStateOf(false) }
@@ -484,7 +484,7 @@ private fun MediaGridItem(
         )
 
         // 未被数据库引用的媒体文件标识
-        if (item.isUnreferenced) {
+        if (item.referencedMediaId == null) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -559,7 +559,7 @@ private fun MediaListScreenPreview() {
                     "preview_1.jpg",
                     0L,
                 ),
-                isUnreferenced = false,
+                referencedMediaId = null,
             ),
             MediaListItem(
                 info = MediaFileInfo(
@@ -568,7 +568,7 @@ private fun MediaListScreenPreview() {
                     "preview_2.jpg",
                     1L,
                 ),
-                isUnreferenced = true,
+                referencedMediaId = 1,
             ),
         )
     }
