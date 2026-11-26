@@ -103,6 +103,7 @@ fun MediaListScreen(
 
     var showOnlyUnreferenced by rememberSaveable { mutableStateOf(false) }  // 是否仅显示未关联的媒体
     var compressTarget by remember { mutableStateOf<MediaListItem?>(null) } // 需要压缩的目标
+    var deleteTarget by remember { mutableStateOf<MediaListItem?>(null) }   // 需要删除的目标
     var isCompressing by remember { mutableStateOf(false) }                 // 是否正在压缩
     var errorMessage by remember { mutableStateOf<String?>(null) }          // 错误提示信息
 
@@ -192,22 +193,35 @@ fun MediaListScreen(
         onSetAscending = viewModel::setAscending,
         onOpenMedia = openMedia,
         onCompressMedia = { if (!isCompressing) compressTarget = it },
+        onDeleteMedia = { deleteTarget = it },
         snackHostState = snackHostState,
     )
 
     // 压缩确认对话框
-    compressTarget?.let { target ->
+    compressTarget?.let {
         MessageDialog(
             onDismiss = { compressTarget = null },
-            confirmTitle = stringResource(R.string.confirm),
             onConfirm = {
                 compressTarget = null
-                startCompression(target)
+                startCompression(it)
             },
-            cancelTitle = stringResource(R.string.cancel),
             title = stringResource(R.string.compress),
             message = stringResource(R.string.compress_confirm_message),
             useMarkdown = true,
+        )
+    }
+
+    // 删除确认对话框
+    deleteTarget?.let {
+        MessageDialog(
+            onDismiss = { deleteTarget = null },
+            onConfirm = {
+                viewModel.onDeleteMedia(it)
+                viewModel.refresh()
+                deleteTarget = null
+            },
+            title = stringResource(R.string.delete_media),
+            message = stringResource(R.string.delete_media_message)
         )
     }
 
@@ -255,6 +269,7 @@ private fun MediaListContent(
     onSetAscending: (Boolean) -> Unit,
     onOpenMedia: (Int, List<MediaListItem>) -> Unit,
     onCompressMedia: (MediaListItem) -> Unit,
+    onDeleteMedia: (MediaListItem) -> Unit,
     snackHostState: SnackbarHostState,
 ) {
     val title = stringResource(R.string.media_list)
@@ -447,6 +462,7 @@ private fun MediaListContent(
                         item = item,
                         onClick = { onOpenMedia(index, displayedItems) },
                         onCompress = { onCompressMedia(item) },
+                        onDelete = { onDeleteMedia(item) }
                     )
                 }
             }
@@ -462,6 +478,7 @@ private fun MediaGridItem(
     item: MediaListItem,
     onClick: () -> Unit,
     onCompress: () -> Unit,
+    onDelete: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -531,6 +548,20 @@ private fun MediaGridItem(
                     menuExpanded = false
                     onCompress()
                 },
+                shape = MenuDefaults.itemShape(0, 2).shape
+            )
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = stringResource(R.string.delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                },
+                onClick = {
+                    menuExpanded = false
+                    onDelete()
+                },
+                shape = MenuDefaults.itemShape(1, 2).shape
             )
         }
     }
@@ -587,6 +618,7 @@ private fun MediaListScreenPreview() {
             onSetAscending = {},
             onOpenMedia = { _, _ -> },
             onCompressMedia = {},
+            onDeleteMedia = {},
             snackHostState = remember { SnackbarHostState() },
         )
     }

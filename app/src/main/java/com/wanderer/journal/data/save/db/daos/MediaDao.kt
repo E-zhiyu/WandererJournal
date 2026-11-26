@@ -29,6 +29,14 @@ interface MediaDao {
     fun deleteMedia(mediaEntityList: List<MediaEntity>)
 
     /**
+     * 通过媒体编号删除媒体记录
+     *
+     * @param id 待删除的媒体记录的编号
+     */
+    @Query("DELETE FROM medias WHERE mediaId = :id")
+    fun deleteMediaById(id: Long)
+
+    /**
      * 通过段落编号删除媒体记录。
      *
      * @param paragraphId 需要删除媒体记录的段落编号

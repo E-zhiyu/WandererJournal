@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo
 import com.wanderer.journal.data.save.db.DiaryDb
+import com.wanderer.journal.helpers.file.deleteFile
 import com.wanderer.journal.helpers.file.readMediaDir
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -150,5 +151,21 @@ class MediaListViewModel(application: Application) : AndroidViewModel(applicatio
         return items.sortedWith(
             if (ascending) comparator else comparator.reversed()
         )
+    }
+
+    /**
+     * 删除媒体文件及其在数据库中的记录
+     *
+     * @param item 需要删除的媒体项
+     */
+    fun onDeleteMedia(item: MediaListItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val uri = item.info.uri
+            val context = getApplication<Application>()
+            uri?.let { deleteFile(uri = uri, context = context) }
+            item.referencedMediaId?.let {
+                DiaryDb.getInstance(context).mediaDao().deleteMediaById(it)
+            }
+        }
     }
 }
