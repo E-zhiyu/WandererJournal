@@ -1,8 +1,6 @@
 package com.wanderer.journal.ui.pages.main.settings.sub.media
 
-import android.content.Intent
 import android.content.res.Configuration
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,7 +74,6 @@ import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo
-import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback
 import com.wanderer.journal.helpers.file.compressImage
 import com.wanderer.journal.helpers.text.shortenFileSize
@@ -84,7 +81,7 @@ import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.dialogs.DialogScaffold
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.components.dialogs.MessageDialog
-import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity
+import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -92,10 +89,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun MediaListScreen(
     onNavigateBack: () -> Unit,
+    onSkipToFullScreenMedia: (ScreenRoutes.FullScreenMedia) -> Unit,
     viewModel: MediaListViewModel = viewModel(),
 ) {
     val context = LocalContext.current
-    val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val snackHostState = remember { SnackbarHostState() }
@@ -107,12 +104,6 @@ fun MediaListScreen(
     var deleteTarget by remember { mutableStateOf<MediaListItem?>(null) }   // 需要删除的目标
     var isCompressing by remember { mutableStateOf(false) }                 // 是否正在压缩
     var errorMessage by remember { mutableStateOf<String?>(null) }          // 错误提示信息
-
-    // 每次界面回到前台时重新扫描媒体目录并查询数据库，
-    // 以便从全屏查看、系统相册等界面返回后能反映最新的文件/数据库状态。
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME, lifecycleOwner) {
-        viewModel.refresh()
-    }
 
     // ViewModel 加载失败时显示错误对话框
     LaunchedEffect(uiState.error) {
@@ -170,17 +161,9 @@ fun MediaListScreen(
      * TODO:后续如果把全屏查看也迁移到 Compose，可以使用 SharedTransitionLayout 实现逐项转场。
      */
     val openMedia: (Int, List<MediaListItem>) -> Unit = { index, itemList ->
-        val uriStrings = itemList.map { it.info.uri.toString() }.toTypedArray()
-        val intent = Intent(context, FullScreenMediaActivity::class.java).apply {
-            putExtra(KeyStrings.FILE_URIS.v(), uriStrings)
-            putExtra(KeyStrings.VIEW_HOLDER_POSITION.v(), index)
-        }
-
-        if (activity != null) {
-            activity.startActivity(intent)
-        } else {
-            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        }
+        val uriStrings = itemList.map { it.info.uri.toString() }
+        val route = ScreenRoutes.FullScreenMedia(uriStrings, index)
+        onSkipToFullScreenMedia(route)
     }
 
     // 主内容
