@@ -176,7 +176,7 @@
     <string name="media_list_summary">共 %1$d 个媒体文件，其中 %2$d 个未关联</string>
     <string name="filter_unlinked_media">仅显示未关联</string>
     <string name="no_unlinked_media">没有未关联的媒体文件</string>
-    <string name="compress_confirm_message">即将压缩图片的体积，这可能导致以下不可逆的结果：\n\n1. 图片变得模糊；\n2. 原本的HDR显示效果丢失；\n3. 原本的动态照片效果丢失。\n\n确认继续吗？</string>
+    <string name="compress_confirm_message">即将压缩图片的体积，这可能导致以下不可逆的结果：\n\n1. 图片变得模糊；\n2. 原本的HDR显示效果丢失；\n3. 原本的动态照片效果丢失；\n4. 照片中的拍摄设备等信息丢失。\n\n确认继续吗？</string>
     <string name="compressing">正在压缩</string>
     <string name="compressing_message">请稍候……</string>
     <string name="compress_success">压缩成功</string>
