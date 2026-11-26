@@ -65,9 +65,9 @@ import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
 import com.wanderer.journal.ui.components.LargeTopAppBarListScaffold
 import com.wanderer.journal.ui.components.PressableCard
 import com.wanderer.journal.ui.components.PressableFAB
-import com.wanderer.journal.ui.components.dialogs.MessageDialog
 import com.wanderer.journal.ui.components.dialogs.DatePickerDialogWithFilter
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
+import com.wanderer.journal.ui.components.dialogs.MessageDialog
 import com.wanderer.journal.ui.components.rememberFabVisible
 import com.wanderer.journal.ui.pages.diary.read.ReadActivity
 import com.wanderer.journal.ui.pages.diary.write.WriteActivity
@@ -440,7 +440,12 @@ fun DiaryListItem(
                     shape = MenuDefaults.leadingItemShape
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete_diary)) },
+                    text = {
+                        Text(
+                            stringResource(R.string.delete_diary),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    },
                     onClick = {
                         expanded = false
                         onDelete()
