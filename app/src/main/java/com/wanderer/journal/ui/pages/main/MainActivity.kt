@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.wanderer.journal.AppSettings
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.enums.unique.LogTags
@@ -182,15 +183,18 @@ private fun MainScreen(
                 // 媒体列表界面
                 composable<ScreenRoutes.MediaList> {
                     MediaListScreen(
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        onSkipToFullScreenMedia = { route -> navController.navigate(route) }
                     )
                 }
 
                 // 全屏媒体界面
-                composable<ScreenRoutes.FullScreenMedia> {
+                composable<ScreenRoutes.FullScreenMedia> { backStackEntry ->
+                    val route: ScreenRoutes.FullScreenMedia = backStackEntry.toRoute()
                     FullScreenMediaScreen(
                         onNavigateBack = { navController.popBackStack() },
-                        uris = emptyList()
+                        uris = route.uris,
+                        initialPos = route.initialPos
                     )
                 }
             }

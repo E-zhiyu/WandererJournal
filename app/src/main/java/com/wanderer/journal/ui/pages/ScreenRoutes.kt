@@ -38,5 +38,5 @@ sealed interface ScreenRoutes {
 
     // 全屏大图界面
     @Serializable
-    data class FullScreenMedia(val uris: List<String>, val initialPos: Int)
+    data class FullScreenMedia(val uris: List<String>, val initialPos: Int = 0)
 }

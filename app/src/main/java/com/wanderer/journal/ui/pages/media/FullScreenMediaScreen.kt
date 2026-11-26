@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.webkit.MimeTypeMap
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -45,7 +44,6 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import coil.compose.AsyncImage
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
@@ -55,12 +53,13 @@ import com.wanderer.journal.helpers.file.shareFile
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.launch
+import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import java.io.File
 
 @Composable
 fun FullScreenMediaScreen(
     uris: List<String>,
-    initialPos: Int = 0,
+    initialPos: Int,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -148,7 +147,7 @@ fun FullScreenMediaScreen(
         ) { page ->
             val uri = uris.getOrNull(page)
             if (uri != null) {
-                AsyncImage(
+                ZoomableAsyncImage(
                     model = uri.toUri(),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
@@ -271,9 +270,6 @@ fun FullScreenMediaScreen(
             }
         }
     }
-
-    // 返回键处理
-    BackHandler { onNavigateBack() }
 }
 
 @Preview(
@@ -292,6 +288,7 @@ private fun FullScreenMediaScreenPreview() {
     MaterialAppTheme {
         FullScreenMediaScreen(
             uris = emptyList(),
+            initialPos = 0,
             onNavigateBack = {}
         )
     }
