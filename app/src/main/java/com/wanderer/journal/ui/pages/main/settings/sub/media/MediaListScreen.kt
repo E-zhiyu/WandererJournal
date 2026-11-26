@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,8 +65,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -104,6 +103,13 @@ fun MediaListScreen(
     var deleteTarget by remember { mutableStateOf<MediaListItem?>(null) }   // 需要删除的目标
     var isCompressing by remember { mutableStateOf(false) }                 // 是否正在压缩
     var errorMessage by remember { mutableStateOf<String?>(null) }          // 错误提示信息
+
+    // 界面创建时刷新
+    DisposableEffect(Unit) {
+        viewModel.refresh()
+        onDispose {
+        }
+    }
 
     // ViewModel 加载失败时显示错误对话框
     LaunchedEffect(uiState.error) {
