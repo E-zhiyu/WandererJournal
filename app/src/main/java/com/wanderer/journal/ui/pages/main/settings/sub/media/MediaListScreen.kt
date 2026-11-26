@@ -101,10 +101,10 @@ fun MediaListScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    var showOnlyUnreferenced by rememberSaveable { mutableStateOf(false) }
-    var compressTarget by remember { mutableStateOf<MediaListItem?>(null) }
-    var isCompressing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var showOnlyUnreferenced by rememberSaveable { mutableStateOf(false) }  // 是否仅显示未关联的媒体
+    var compressTarget by remember { mutableStateOf<MediaListItem?>(null) } // 需要压缩的目标
+    var isCompressing by remember { mutableStateOf(false) }                 // 是否正在压缩
+    var errorMessage by remember { mutableStateOf<String?>(null) }          // 错误提示信息
 
     // 每次界面回到前台时重新扫描媒体目录并查询数据库，
     // 以便从全屏查看、系统相册等界面返回后能反映最新的文件/数据库状态。
@@ -165,7 +165,7 @@ fun MediaListScreen(
      *
      * 旧界面使用共享元素转场；Compose 中如果把 LocalView（整个 ComposeView）作为共享元素，
      * 动画会作用到整个页面而不是单个网格项，因此这里先直接启动 Activity。
-     * 后续如果把全屏查看也迁移到 Compose，可以使用 SharedTransitionLayout 实现逐项转场。
+     * TODO:后续如果把全屏查看也迁移到 Compose，可以使用 SharedTransitionLayout 实现逐项转场。
      */
     val openMedia: (Int, List<MediaListItem>) -> Unit = { index, itemList ->
         val uriStrings = itemList.map { it.info.uri.toString() }.toTypedArray()
@@ -181,6 +181,7 @@ fun MediaListScreen(
         }
     }
 
+    // 主内容
     MediaListContent(
         uiState = uiState,
         showOnlyUnreferenced = showOnlyUnreferenced,
@@ -231,7 +232,7 @@ fun MediaListScreen(
         }
     }
 
-    // 压缩等操作产生的异常
+    // 异常对话框
     errorMessage?.let { message ->
         ExceptionDialog(
             onDismiss = { errorMessage = null },

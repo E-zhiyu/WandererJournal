@@ -50,7 +50,6 @@ fun DatePickerDialogWithFilter(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
     ) {
-        // TODO:修复充满屏幕宽度的BUG
         DatePicker(state = datePickerState)
     }
 }
