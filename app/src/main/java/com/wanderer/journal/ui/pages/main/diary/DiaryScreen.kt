@@ -442,7 +442,7 @@ fun DiaryListItem(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            stringResource(R.string.delete_diary),
+                            text = stringResource(R.string.delete_diary),
                             color = MaterialTheme.colorScheme.error
                         )
                     },
