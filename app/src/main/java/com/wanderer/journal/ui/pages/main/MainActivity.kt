@@ -52,10 +52,11 @@ import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmScreen
-import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListScreen
+import com.wanderer.journal.ui.pages.media.FullScreenMediaScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
@@ -184,6 +185,13 @@ private fun MainScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
+
+                // 全屏媒体界面
+                composable<ScreenRoutes.FullScreenMedia> {
+                    FullScreenMediaScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
 
@@ -260,7 +268,7 @@ private fun MainTabs(
                     onSkipToShare = { navController.navigate(ScreenRoutes.ShareSettings) },
                     onSkipToDiaryAlarm = { navController.navigate(ScreenRoutes.DiaryAlarmSettings) },
                     onSkipToDataManage = { navController.navigate(ScreenRoutes.DataManage) },
-                    onSkipToMediaList = {navController.navigate(ScreenRoutes.MediaList)}
+                    onSkipToMediaList = { navController.navigate(ScreenRoutes.MediaList) }
                 )
             }
         }

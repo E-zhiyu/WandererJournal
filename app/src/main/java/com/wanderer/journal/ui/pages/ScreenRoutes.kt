@@ -1,5 +1,6 @@
 package com.wanderer.journal.ui.pages
 
+import android.net.Uri
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -34,4 +35,8 @@ sealed interface ScreenRoutes {
     // 媒体列表界面
     @Serializable
     data object MediaList: ScreenRoutes
+
+    // 全屏大图界面
+    @Serializable
+    data class FullScreenMedia(val uris: List<String>, val initialPos: Int)
 }
