@@ -2,9 +2,7 @@ package com.wanderer.journal.ui.pages.main.settings.sub.media
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,10 +37,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableDropdownMenuItem
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -67,6 +64,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -89,15 +87,7 @@ import com.wanderer.journal.ui.pages.media.FullScreenMediaActivity
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import androidx.core.net.toUri
 
-/**
- * 媒体文件列表界面（Compose 版本）。
- *
- * 迁移自原来的 `MediaListActivity` + `MediaListAdapter` + `MediaListViewModel`。
- * 除展示媒体目录中的图片外，还会查询数据库中所有被引用的 `fileUri`，
- * 为扫描到但未被数据库引用的文件显示“未关联”标识。
- */
 @Composable
 fun MediaListScreen(
     onNavigateBack: () -> Unit,
@@ -130,14 +120,10 @@ fun MediaListScreen(
         }
     }
 
-    // 旧界面在进入时申请通知权限，用于在压缩图片时显示进度通知。
-    // 当前压缩进度改为 Compose 对话框展示，且 MediaHelper.kt 中的 compressImage
-    // 不再发送通知，因此这里不再申请 POST_NOTIFICATIONS。
-    // 如果以后恢复通知式进度，可以调用 Kt 文件中的 requestPermission(...)。
-
     /**
      * 开始压缩指定媒体文件。
      */
+    val tipCompressSuccess = stringResource(R.string.compress_success)
     fun startCompression(target: MediaListItem) {
         isCompressing = true
         scope.launch {
@@ -158,9 +144,7 @@ fun MediaListScreen(
                             scope.launch {
                                 isCompressing = false
                                 viewModel.refresh()
-                                snackHostState.showSnackbar(
-                                    context.getString(R.string.compress_success)
-                                )
+                                snackHostState.showSnackbar(tipCompressSuccess)
                             }
                         }
                     },
@@ -347,24 +331,14 @@ private fun MediaListContent(
                         Box {
                             SplitButtonLayout(
                                 leadingButton = {
-                                    TextButton(onClick = { orderingMenuExpanded = true }) {
+                                    SplitButtonDefaults.LeadingButton(onClick = {}) {
                                         Text(stringResource(uiState.ordering.titleRes))
-                                        Spacer(Modifier.width(4.dp))
-                                        Icon(
-                                            painter = painterResource(
-                                                if (uiState.isAscending) {
-                                                    R.drawable.outline_keyboard_arrow_up_24
-                                                } else {
-                                                    R.drawable.outline_keyboard_arrow_down_24
-                                                }
-                                            ),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp),
-                                        )
                                     }
                                 },
                                 trailingButton = {
-                                    IconButton(onClick = { orderingMenuExpanded = true }) {
+                                    SplitButtonDefaults.TrailingButton(onClick = {
+                                        orderingMenuExpanded = true
+                                    }) {
                                         Icon(
                                             painter = painterResource(R.drawable.outline_unfold_more_24),
                                             contentDescription = null,
@@ -410,15 +384,17 @@ private fun MediaListContent(
                                     },
                                     shapes = MenuDefaults.itemShape(1, 2),
                                 )
+                                HorizontalDivider()
+                                SelectableDropdownMenuItem(
+                                    selected = showOnlyUnreferenced,
+                                    text = { Text(stringResource(R.string.filter_unlinked_media)) },
+                                    onClick = {
+                                        onToggleUnreferencedFilter(!showOnlyUnreferenced)
+                                    },
+                                    shapes = MenuDefaults.itemShape(0, 1),
+                                )
                             }
                         }
-
-                        // 额外提供筛选，方便集中查看数据库中未引用的媒体文件
-                        FilterChip(
-                            selected = showOnlyUnreferenced,
-                            onClick = { onToggleUnreferencedFilter(!showOnlyUnreferenced) },
-                            label = { Text(stringResource(R.string.filter_unlinked_media)) },
-                        )
                     }
 
                     Spacer(Modifier.height(8.dp))
@@ -435,6 +411,7 @@ private fun MediaListContent(
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
             }
 
@@ -478,7 +455,6 @@ private fun MediaListContent(
 /**
  * 单个媒体网格项。
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MediaGridItem(
     item: MediaListItem,
