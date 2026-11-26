@@ -44,6 +44,7 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import coil.compose.AsyncImage
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
@@ -108,20 +109,31 @@ fun FullScreenMediaScreen(
         activity?.window?.colorMode = colorMode
     }
 
-    // 全屏沉浸
+    // 系统栏显隐跟随 controlsVisible
+    LaunchedEffect(controlsVisible) {
+        val window = activity?.window ?: return@LaunchedEffect
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+
+        if (controlsVisible) {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    // 进入页面时配置一次系统栏行为
     DisposableEffect(Unit) {
         val window = activity?.window
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.isAppearanceLightStatusBars = false
             controller.isAppearanceLightNavigationBars = false
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         onDispose {
-            // 恢复系统栏（视需求）
+            // 离开时恢复系统栏，避免影响其他页面
             if (window != null) {
                 WindowCompat.getInsetsController(window, window.decorView)
                     .show(WindowInsetsCompat.Type.systemBars())
@@ -147,7 +159,8 @@ fun FullScreenMediaScreen(
         ) { page ->
             val uri = uris.getOrNull(page)
             if (uri != null) {
-                ZoomableAsyncImage(
+                // TODO:改为可缩放，但是要注意手指点击时能否隐藏按钮（已知存在手势冲突）
+                AsyncImage(
                     model = uri.toUri(),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
