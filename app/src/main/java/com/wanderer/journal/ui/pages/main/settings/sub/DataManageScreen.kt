@@ -58,9 +58,10 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 // 多选对话框请求
-private sealed class ChoiceDialogRequest {
-    data object Export : ChoiceDialogRequest()  // 数据导出
-    data object Import : ChoiceDialogRequest()  // 数据导入
+private sealed class SafRequest {
+    data object Export : SafRequest()  // 数据导出
+    data object Import : SafRequest()  // 数据导入
+    data class SelectBackupDir(val initialUri: String) : SafRequest()   //选择自动备份的目录
 }
 
 private val snackMessageChannel = Channel<String>(Channel.BUFFERED) // Snackbar 一次性文本频道
@@ -73,9 +74,6 @@ fun DataManageScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val lifeOwner = LocalLifecycleOwner.current
-
-    // 设置项
-    val backupSettings by vm.autoBackup.collectAsStateWithLifecycle()
 
     // Snackbar
     val snackHostState = remember { SnackbarHostState() }
@@ -105,7 +103,7 @@ fun DataManageScreen(
     }
 
     // 多选对话框请求
-    var choiceDialogRequest by remember { mutableStateOf<ChoiceDialogRequest?>(null) }
+    var safRequest by remember { mutableStateOf<SafRequest?>(null) }
     val dataTypes = BackupDataType.entries
     var selectedTypes by remember { mutableStateOf(dataTypes.toSet()) }
 
@@ -146,7 +144,89 @@ fun DataManageScreen(
         }
     }
 
-    // 备份频率下拉框
+    // 界面内容
+    DataManageContent(
+        onNavigateBack = onNavigateBack,
+        snackHostState = snackHostState,
+        openSaf = { safRequest = it },
+        vm = vm
+    )
+
+    // 多选对话框
+    safRequest?.let {
+        when (it) {
+            is SafRequest.Export -> {
+                DialogScaffold(
+                    onDismiss = { safRequest = null },
+                    onConfirm = {
+                        createDocumentLauncher(
+                            "application/zip",
+                            FileHelper.generateBackupFileName()
+                        )
+                    },
+                    title = stringResource(R.string.export_data)
+                ) {
+                    dataTypes.forEach { type ->
+                        ComposeCheckedTextView(
+                            checked = selectedTypes.contains(type),
+                            onCheckedChange = { checked ->
+                                // 3. 不可变集合的操作非常简洁
+                                selectedTypes = if (checked) {
+                                    selectedTypes + type // 添加
+                                } else {
+                                    selectedTypes - type // 移除
+                                }
+                            },
+                            text = type.title,
+                        )
+                    }
+                }
+            }
+
+            is SafRequest.Import -> {
+                DialogScaffold(
+                    onDismiss = { safRequest = null },
+                    onConfirm = { openDocumentLauncher(arrayOf("application/zip")) },
+                    title = stringResource(R.string.import_data)
+                ) {
+                    dataTypes.forEach { type ->
+                        ComposeCheckedTextView(
+                            checked = selectedTypes.contains(type),
+                            onCheckedChange = { checked ->
+                                // 3. 不可变集合的操作非常简洁
+                                selectedTypes = if (checked) {
+                                    selectedTypes + type // 添加
+                                } else {
+                                    selectedTypes - type // 移除
+                                }
+                            },
+                            text = type.title
+                        )
+                    }
+                }
+            }
+
+            is SafRequest.SelectBackupDir -> {
+                selectBackupDir(it.initialUri)
+                safRequest = null
+            }
+        }
+    }
+}
+
+@Composable
+private fun DataManageContent(
+    onNavigateBack: () -> Unit,
+    snackHostState: SnackbarHostState,
+    openSaf: (safRequest: SafRequest) -> Unit,
+    vm: AutoBackupViewModel = dsAutoBackupViewModel()
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // 设置项
+    val backupSettings by vm.autoBackup.collectAsStateWithLifecycle()
+
     val backupFrequencies = BackupFrequency.entries
     var frequencyExpanded by remember { mutableStateOf(false) }
 
@@ -168,7 +248,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.export_data_subtitle),
                 icon = painterResource(R.drawable.outline_file_export_24),
                 onClick = {
-                    choiceDialogRequest = ChoiceDialogRequest.Export
+                    openSaf(SafRequest.Export)
                 },
                 normalRadius = Radius.TopArray
             )
@@ -182,7 +262,7 @@ fun DataManageScreen(
                 subtitle = stringResource(R.string.import_data_subtitle),
                 icon = painterResource(R.drawable.outline_download_24),
                 onClick = {
-                    choiceDialogRequest = ChoiceDialogRequest.Import
+                    openSaf(SafRequest.Import)
                 },
                 normalRadius = Radius.BottomArray
             )
@@ -255,46 +335,10 @@ fun DataManageScreen(
                 ),
                 icon = painterResource(R.drawable.outline_folder_data_24),
                 onClick = {
-                    selectBackupDir(backupSettings.backupDirectory)
+                    openSaf(SafRequest.SelectBackupDir(backupSettings.backupDirectory))
                 },
                 normalRadius = Radius.BottomArray
             )
-        }
-    }
-
-    // 多选对话框
-    choiceDialogRequest?.let {
-        val onConfirm = {
-            when (it) {
-                is ChoiceDialogRequest.Export -> {
-                    createDocumentLauncher("application/zip", FileHelper.generateBackupFileName())
-                }
-
-                is ChoiceDialogRequest.Import -> {
-                    openDocumentLauncher(arrayOf("application/zip"))
-                }
-            }
-        }
-
-        DialogScaffold(
-            onDismiss = { choiceDialogRequest = null },
-            onConfirm = onConfirm,
-            title = stringResource(R.string.export_data)
-        ) {
-            dataTypes.forEach { type ->
-                ComposeCheckedTextView(
-                    checked = selectedTypes.contains(type),
-                    onCheckedChange = { checked ->
-                        // 3. 不可变集合的操作非常简洁
-                        selectedTypes = if (checked) {
-                            selectedTypes + type // 添加
-                        } else {
-                            selectedTypes - type // 移除
-                        }
-                    },
-                    text = type.title
-                )
-            }
         }
     }
 }
