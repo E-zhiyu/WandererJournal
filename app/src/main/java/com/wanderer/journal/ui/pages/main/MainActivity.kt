@@ -52,7 +52,7 @@ import com.wanderer.journal.ui.pages.main.settings.SettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.AboutScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.DataManageScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.DiaryAlarmScreen
-import com.wanderer.journal.ui.pages.main.settings.sub.MediaListScreen
+import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.PermissionScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen

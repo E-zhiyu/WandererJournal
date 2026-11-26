@@ -1,6 +1,7 @@
 package com.wanderer.journal.data.save.db.daos
 
 import android.content.Context
+import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -60,4 +61,13 @@ interface MediaDao {
      */
     @Query("SELECT * FROM medias WHERE parentParagraphId = :paragraphId")
     fun getMediaByParagraphId(paragraphId: Long): List<MediaEntity>
+
+    /**
+     * 获取数据库中所有媒体文件的 Uri。
+     *
+     * 用于媒体列表界面判断扫描到的文件是否被数据库引用。
+     * 这里过滤掉 `null`，避免 `Uri` 类型转换器收到空值。
+     */
+    @Query("SELECT DISTINCT fileUri FROM medias WHERE fileUri IS NOT NULL")
+    fun getAllMediaFileUris(): List<Uri>
 }

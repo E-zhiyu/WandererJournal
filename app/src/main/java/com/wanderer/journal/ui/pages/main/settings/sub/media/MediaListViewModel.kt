@@ -1,80 +1,155 @@
-package com.wanderer.journal.ui.pages.main.settings.sub.media;
+package com.wanderer.journal.ui.pages.main.settings.sub.media
 
-import android.content.Context;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo
+import com.wanderer.journal.data.save.db.DiaryDb
+import com.wanderer.journal.helpers.file.readMediaDir
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
+/**
+ * 媒体列表项。
+ *
+ * @param info 扫描到的媒体文件信息
+ * @param isUnreferenced 是否未被数据库中的媒体记录引用（即“未关联”文件）
+ */
+data class MediaListItem(
+    val info: MediaFileInfo,
+    val isUnreferenced: Boolean,
+)
 
-import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo;
-import com.wanderer.journal.helpers.file.MediaHelper;
+/**
+ * 媒体列表界面状态。
+ */
+data class MediaListUiState(
+    val items: List<MediaListItem> = emptyList(),
+    val ordering: Ordering = Ordering.TIME,
+    val isAscending: Boolean = true,
+    val isLoading: Boolean = true,
+    val error: Throwable? = null,
+)
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+/**
+ * 媒体列表 ViewModel。
+ *
+ * 原实现使用 `BehaviorProcessor` + `Flowable.combineLatest` 实现排序切换，
+ * 这里改为 `StateFlow` + Kotlin 协程：
+ * - 扫描媒体目录、查询数据库都在 IO 调度器上执行；
+ * - 切换排序时只重排内存中的列表，不再重复读取文件系统和数据库；
+ * - 文件系统或数据库发生变化时通过 [refresh] 重新加载。
+ */
+class MediaListViewModel(application: Application) : AndroidViewModel(application) {
+    private val _uiState = MutableStateFlow(MediaListUiState())
+    val uiState: StateFlow<MediaListUiState> = _uiState.asStateFlow()
 
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.processors.BehaviorProcessor;
-
-public class MediaListViewModel extends ViewModel {
-    private final MutableLiveData<Ordering> orderingLiveData = new MutableLiveData<>(Ordering.TIME);
-    private final BehaviorProcessor<Boolean> isInOrderProcessor = BehaviorProcessor.createDefault(true);  //是否顺序排序
-    private final BehaviorProcessor<Ordering> orderingProcessor = BehaviorProcessor.createDefault(Ordering.TIME);    //按照什么排序
-
-    public boolean isInOrder() {
-        return isInOrderProcessor.getValue() == null || isInOrderProcessor.getValue();
-    }
-
-    public void setInOrder(boolean inOrder) {
-        isInOrderProcessor.onNext(inOrder);
-    }
-
-    public MutableLiveData<Ordering> getOrdering() {
-        return orderingLiveData;
-    }
+    private var loadJob: Job? = null
 
     /**
-     * 设置排序种类
-     *
-     * @param ordering 排序种类
+     * 重新扫描媒体目录，并查询数据库中被引用的媒体文件。
      */
-    public void setOrdering(Ordering ordering) {
-        orderingProcessor.onNext(ordering);
-    }
+    fun refresh() {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
-    /**
-     * 获取媒体文件数据
-     *
-     * @param context 上下文
-     * @return 媒体文件数据列表
-     */
-    public Flowable<List<MediaFileInfo>> getMediaFileInfoFlowable(Context context) {
-        return Flowable.combineLatest(
-                orderingProcessor.debounce(50, TimeUnit.MILLISECONDS),
-                isInOrderProcessor.debounce(50, TimeUnit.MILLISECONDS),
-                (ordering, isInOrder) -> {
-                    orderingLiveData.postValue(ordering);
-                    List<MediaFileInfo> infoList = MediaHelper.readMediaDir(context);
+            try {
+                val context = getApplication<Application>()
 
-                    //进行排序
-                    switch (ordering) {
-                        case SIZE:
-                            infoList.sort(Comparator.comparing(MediaFileInfo::getSize));
-                            break;
-                        case NAME:
-                            infoList.sort(Comparator.comparing(MediaFileInfo::getName));
-                            break;
-                        case TIME:
-                        default:
-                            infoList.sort(Comparator.comparing(MediaFileInfo::getCreatedTimeStamp));
-                    }
+                // 读取媒体目录（函数内部已切换到 IO 调度器）
+                val mediaFiles = readMediaDir(context)
 
-                    if (!isInOrder) {
-                        Collections.reverse(infoList);
-                    }
-
-                    return infoList;
+                // 查询数据库中所有被引用的媒体 Uri。
+                // 这里只取文件名进行比较：备份恢复后 fileUri 中的包名/路径可能变化，
+                // 但同一个媒体目录中的文件名是唯一的，因此按文件名比较更稳健。
+                val referencedFileNames = withContext(Dispatchers.IO) {
+                    DiaryDb.getInstance(context)
+                        .mediaDao()
+                        .getAllMediaFileUris()
+                        .mapNotNull { uri ->
+                            uri.lastPathSegment?.takeIf { name -> name.isNotEmpty() }
+                        }
+                        .toSet()
                 }
-        );
+
+                val newItems = mediaFiles.map { info ->
+                    MediaListItem(
+                        info = info,
+                        isUnreferenced = info.name !in referencedFileNames,
+                    )
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        items = sortItems(newItems, state.ordering, state.isAscending),
+                        isLoading = false,
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e) }
+            }
+        }
+    }
+
+    /**
+     * 设置排序方式。
+     */
+    fun setOrdering(ordering: Ordering) {
+        _uiState.update { state ->
+            state.copy(
+                ordering = ordering,
+                items = sortItems(state.items, ordering, state.isAscending),
+            )
+        }
+    }
+
+    /**
+     * 设置排序方向。
+     *
+     * @param ascending `true` 表示升序，`false` 表示降序
+     */
+    fun setAscending(ascending: Boolean) {
+        _uiState.update { state ->
+            state.copy(
+                isAscending = ascending,
+                items = sortItems(state.items, state.ordering, ascending),
+            )
+        }
+    }
+
+    /**
+     * 清除错误状态。
+     */
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
+    /**
+     * 按排序方式和方向排序。
+     */
+    private fun sortItems(
+        items: List<MediaListItem>,
+        ordering: Ordering,
+        ascending: Boolean,
+    ): List<MediaListItem> {
+        val comparator: Comparator<MediaListItem> = when (ordering) {
+            Ordering.SIZE -> compareBy { it.info.size }
+            Ordering.NAME -> compareBy { it.info.name }
+            Ordering.TIME -> compareBy { it.info.createdTimeStamp }
+        }
+
+        return items.sortedWith(
+            if (ascending) comparator else comparator.reversed()
+        )
     }
 }

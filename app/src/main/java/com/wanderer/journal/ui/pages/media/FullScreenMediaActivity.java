@@ -70,13 +70,21 @@ public class FullScreenMediaActivity extends AppCompatActivity {
 
         initBundle = getIntent().getExtras();
         initViews();
-        getWindow().getSharedElementEnterTransition().addListener(new TransitionListenerAdapter() {
-            @Override
-            public void onTransitionEnd(Transition transition) {
-                //动画播放完毕后隐藏状态栏
-                hideSystemUI();
-            }
-        });
+
+        // Compose 媒体列表直接启动本界面时不会传入共享元素转场，此时 getSharedElementEnterTransition() 可能为 null。
+        // 有转场时等动画结束再隐藏系统栏；没有转场时直接隐藏，避免空指针。
+        Transition sharedElementEnterTransition = getWindow().getSharedElementEnterTransition();
+        if (sharedElementEnterTransition != null) {
+            sharedElementEnterTransition.addListener(new TransitionListenerAdapter() {
+                @Override
+                public void onTransitionEnd(Transition transition) {
+                    //动画播放完毕后隐藏状态栏
+                    hideSystemUI();
+                }
+            });
+        } else {
+            hideSystemUI();
+        }
 
         //设置返回监听
         OnBackPressedCallback backPressedCallback = new OnBackPressedCallback(true) {
