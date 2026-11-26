@@ -41,8 +41,7 @@ data class MediaListUiState(
 /**
  * 媒体列表 ViewModel。
  *
- * 原实现使用 `BehaviorProcessor` + `Flowable.combineLatest` 实现排序切换，
- * 这里改为 `StateFlow` + Kotlin 协程：
+ * 这里通过 `StateFlow` + Kotlin 协程实现排序切换：
  * - 扫描媒体目录、查询数据库都在 IO 调度器上执行；
  * - 切换排序时只重排内存中的列表，不再重复读取文件系统和数据库；
  * - 文件系统或数据库发生变化时通过 [refresh] 重新加载。
