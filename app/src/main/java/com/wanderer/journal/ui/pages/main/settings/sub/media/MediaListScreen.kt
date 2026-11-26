@@ -345,57 +345,57 @@ private fun MediaListContent(
                                             contentDescription = null,
                                         )
                                     }
+
+                                    LargeRadiusDropdownMenu(
+                                        expanded = orderingMenuExpanded,
+                                        onDismissRequest = { orderingMenuExpanded = false },
+                                    ) {
+                                        Ordering.entries.forEachIndexed { index, ordering ->
+                                            SelectableDropdownMenuItem(
+                                                selected = ordering == uiState.ordering,
+                                                text = { Text(stringResource(ordering.titleRes)) },
+                                                onClick = {
+                                                    orderingMenuExpanded = false
+                                                    onSelectOrdering(ordering)
+                                                },
+                                                shapes = MenuDefaults.itemShape(
+                                                    index,
+                                                    Ordering.entries.size,
+                                                ),
+                                            )
+                                        }
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = Interval.DividerPadding))
+                                        SelectableDropdownMenuItem(
+                                            selected = uiState.isAscending,
+                                            text = { Text(stringResource(R.string.from_small_to_large)) },
+                                            onClick = {
+                                                orderingMenuExpanded = false
+                                                onSetAscending(true)
+                                            },
+                                            shapes = MenuDefaults.itemShape(0, 2),
+                                        )
+                                        SelectableDropdownMenuItem(
+                                            selected = !uiState.isAscending,
+                                            text = { Text(stringResource(R.string.from_large_to_small)) },
+                                            onClick = {
+                                                orderingMenuExpanded = false
+                                                onSetAscending(false)
+                                            },
+                                            shapes = MenuDefaults.itemShape(1, 2),
+                                        )
+                                        HorizontalDivider(modifier = Modifier.padding(vertical = Interval.DividerPadding))
+                                        SelectableDropdownMenuItem(
+                                            selected = showOnlyUnreferenced,
+                                            text = { Text(stringResource(R.string.filter_unlinked_media)) },
+                                            onClick = {
+                                                orderingMenuExpanded = false
+                                                onToggleUnreferencedFilter(!showOnlyUnreferenced)
+                                            },
+                                            shapes = MenuDefaults.itemShape(0, 1),
+                                        )
+                                    }
                                 },
                             )
-
-                            LargeRadiusDropdownMenu(
-                                expanded = orderingMenuExpanded,
-                                onDismissRequest = { orderingMenuExpanded = false },
-                            ) {
-                                Ordering.entries.forEachIndexed { index, ordering ->
-                                    SelectableDropdownMenuItem(
-                                        selected = ordering == uiState.ordering,
-                                        text = { Text(stringResource(ordering.titleRes)) },
-                                        onClick = {
-                                            orderingMenuExpanded = false
-                                            onSelectOrdering(ordering)
-                                        },
-                                        shapes = MenuDefaults.itemShape(
-                                            index,
-                                            Ordering.entries.size,
-                                        ),
-                                    )
-                                }
-                                HorizontalDivider()
-                                SelectableDropdownMenuItem(
-                                    selected = uiState.isAscending,
-                                    text = { Text(stringResource(R.string.from_small_to_large)) },
-                                    onClick = {
-                                        orderingMenuExpanded = false
-                                        onSetAscending(true)
-                                    },
-                                    shapes = MenuDefaults.itemShape(0, 2),
-                                )
-                                SelectableDropdownMenuItem(
-                                    selected = !uiState.isAscending,
-                                    text = { Text(stringResource(R.string.from_large_to_small)) },
-                                    onClick = {
-                                        orderingMenuExpanded = false
-                                        onSetAscending(false)
-                                    },
-                                    shapes = MenuDefaults.itemShape(1, 2),
-                                )
-                                HorizontalDivider()
-                                SelectableDropdownMenuItem(
-                                    selected = showOnlyUnreferenced,
-                                    text = { Text(stringResource(R.string.filter_unlinked_media)) },
-                                    onClick = {
-                                        orderingMenuExpanded = false
-                                        onToggleUnreferencedFilter(!showOnlyUnreferenced)
-                                    },
-                                    shapes = MenuDefaults.itemShape(0, 1),
-                                )
-                            }
                         }
                     }
 
