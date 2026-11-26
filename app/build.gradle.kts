@@ -135,9 +135,10 @@ dependencies {
     implementation(libs.activity.compose)       // Activity 集成 Compose
     implementation(libs.navigation.compose)     // Navigation 导航（用于页面跳转）
     implementation(libs.coil.compose)           // Compose 专用的图片加载库（替代 Glide）
+    implementation(libs.me.saket.telephoto.zoomable.image.coil3) // 可缩放的 Coil 图片显示辅助库
     implementation(libs.datastore.preferences4) // 取代 SharedPreference 的简单数据存储API
     implementation(libs.protobuf.javalite)      // proto 依赖(搭配 datastore)
     implementation(libs.kotlinx.serialization.json) // Kotlin Json 反序列化
     implementation(libs.com.mikepenz.multiplatform.markdown.renderer.m3)    // Markdown 渲染
-    implementation(libs.constraintlayout.compose)
+    implementation(libs.constraintlayout.compose)   // ConstraintLayout 布局管理器
 }

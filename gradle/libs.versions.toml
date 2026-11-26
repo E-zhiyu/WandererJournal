@@ -19,6 +19,7 @@ lifecycleProcess = "2.11.0"
 lubanVersion = "2.0.3"
 material = "1.14.0"
 materialdatetimepicker = "4.2.3"
+meSaketTelephotoZoomableImageCoil2 = "0.19.0"
 mikepenzMultiplatformMarkdownRendererM3 = "0.46.0"
 pagingRxjava3 = "3.4.2"
 pinyin4j = "2.5.1"
@@ -67,6 +68,7 @@ material3 = { module = "androidx.compose.material3:material3", version.ref = "co
 materialdatetimepicker = { module = "com.wdullaer:materialdatetimepicker", version.ref = "materialdatetimepicker" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+me-saket-telephoto-zoomable-image-coil3 = { module = "me.saket.telephoto:zoomable-image-coil", version.ref = "meSaketTelephotoZoomableImageCoil2" }
 navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRxjava3" }
 paging-rxjava3 = { module = "androidx.paging:paging-rxjava3", version.ref = "pagingRxjava3" }
