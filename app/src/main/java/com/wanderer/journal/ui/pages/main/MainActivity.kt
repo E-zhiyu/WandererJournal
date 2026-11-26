@@ -189,7 +189,8 @@ private fun MainScreen(
                 // 全屏媒体界面
                 composable<ScreenRoutes.FullScreenMedia> {
                     FullScreenMediaScreen(
-                        onNavigateBack = { navController.popBackStack() }
+                        onNavigateBack = { navController.popBackStack() },
+                        uris = emptyList()
                     )
                 }
             }
