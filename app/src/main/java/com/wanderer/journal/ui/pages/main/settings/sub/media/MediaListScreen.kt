@@ -390,6 +390,7 @@ private fun MediaListContent(
                                     selected = showOnlyUnreferenced,
                                     text = { Text(stringResource(R.string.filter_unlinked_media)) },
                                     onClick = {
+                                        orderingMenuExpanded = false
                                         onToggleUnreferencedFilter(!showOnlyUnreferenced)
                                     },
                                     shapes = MenuDefaults.itemShape(0, 1),
