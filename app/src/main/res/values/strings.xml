@@ -254,6 +254,7 @@
     <string name="privacy_data_answer">A : 本APP不收集任何数据，且使用过程中产生的所有数据都仅保存到本地，您无需担心任何隐私泄露问题。</string>
     <string name="delete_media">删除媒体</string>
     <string name="delete_media_message">删除媒体后将不能在段落中查看该媒体，并且该操作不可逆，确定要删除该媒体吗？</string>
+    <string name="media_saved_to_gallery">已成功保存至相册。</string>
 
     <string-array name="tips_array">
         <item>长按添加日记按钮可以补写日记。</item>

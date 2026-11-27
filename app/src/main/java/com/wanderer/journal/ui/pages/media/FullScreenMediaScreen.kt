@@ -19,6 +19,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,6 +79,10 @@ fun FullScreenMediaScreen(
         )
     }
 
+    // Snackbar 状态
+    val snackHostState = remember { SnackbarHostState() }
+    val savedMessage = stringResource(R.string.media_saved_to_gallery)
+
     // Pager
     val pagerState = rememberPagerState(
         initialPage = initialPos.coerceIn(0, (uris.size - 1).coerceAtLeast(0)),
@@ -92,8 +99,7 @@ fun FullScreenMediaScreen(
         val uriStr = uris.getOrNull(pos) ?: return@LaunchedEffect
         if (!MediaPreference.getHdrDisplay(context)) return@LaunchedEffect
         try {
-            val hdr = isHdrImage(context, uriStr.toUri())
-            isHdr = hdr
+            isHdr = isHdrImage(context, uriStr.toUri())
         } catch (e: Exception) {
             errorMessage = e.message ?: "检测 HDR 失败"
             isHdr = false
@@ -110,7 +116,6 @@ fun FullScreenMediaScreen(
     LaunchedEffect(controlsVisible) {
         val window = activity?.window ?: return@LaunchedEffect
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-
         if (controlsVisible) {
             controller.show(WindowInsetsCompat.Type.systemBars())
         } else {
@@ -130,7 +135,6 @@ fun FullScreenMediaScreen(
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         onDispose {
-            // 离开时恢复系统栏，避免影响其他页面
             if (window != null) {
                 WindowCompat.getInsetsController(window, window.decorView)
                     .show(WindowInsetsCompat.Type.systemBars())
@@ -139,142 +143,148 @@ fun FullScreenMediaScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize()
-        ) { page ->
-            val uri = uris.getOrNull(page)
-            if (uri != null) {
-                ZoomableAsyncImage(
-                    onClick = { controlsVisible = !controlsVisible },
-                    model = uri.toUri(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-
-        // HDR 标志（带淡入淡出）
-        AnimatedVisibility(
-            visible = controlsVisible && isHdr,
-            enter = fadeIn(),
-            exit = fadeOut(),
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackHostState) }
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 20.dp, top = 100.dp)
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = Color.Black.copy(alpha = 0.4f)
-            ) {
-                Text(
-                    text = stringResource(R.string.HDR),
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-        }
-
-        // 底部按钮组（分享 / 保存）
-        AnimatedVisibility(
-            visible = controlsVisible,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(
-                    onClick = {
-                        val pos = pagerState.currentPage
-                        val uriStr = uris.getOrNull(pos) ?: return@IconButton
-                        scope.launch {
-                            try {
-                                val uri = uriStr.toUri()
-                                val file = File(uri.path ?: error("无法获取文件路径"))
-                                val ext = MimeTypeMap.getFileExtensionFromUrl(uriStr)
-                                val mime = MimeTypeMap.getSingleton()
-                                    .getMimeTypeFromExtension(ext.lowercase())
-                                shareFile(context, file, mime ?: "*/*")
-                            } catch (e: Exception) {
-                                errorMessage = e.message ?: "分享失败"
-                            }
-                        }
-                    },
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                        MaterialTheme.shapes.extraLarge
-                    )
-                ) {
-                    Icon(
-                        painterResource(R.drawable.outline_share_24),
-                        contentDescription = stringResource(R.string.btn_share),
-                    )
-                }
-                IconButton(
-                    onClick = {
-                        val pos = pagerState.currentPage
-                        val uriStr = uris.getOrNull(pos) ?: return@IconButton
-                        scope.launch {
-                            try {
-                                saveMediaToGallery(context, uriStr.toUri())
-                                // TODO:可用 Snackbar/Toast
-                            } catch (e: Exception) {
-                                errorMessage = e.message ?: "保存失败"
-                            }
-                        }
-                    },
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                        MaterialTheme.shapes.extraLarge
-                    )
-                ) {
-                    Icon(
-                        painterResource(R.drawable.outline_download_24),
-                        contentDescription = stringResource(R.string.btn_save),
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                val uri = uris.getOrNull(page)
+                if (uri != null) {
+                    ZoomableAsyncImage(
+                        onClick = { controlsVisible = !controlsVisible },
+                        model = uri.toUri(),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
-        }
 
-        // 详情按钮（右下角，与底部按钮同高）
-        AnimatedVisibility(
-            visible = controlsVisible,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 25.dp, bottom = 20.dp)
-        ) {
-            IconButton(
-                onClick = {
-                    val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
-                    // TODO:过渡期仍启动原 Activity；迁移后改为 navController.navigate(MediaInfoRoute(...))
-                    val intent = Intent(context, MediaInfoActivity::class.java).apply {
-                        putExtra(KeyStrings.FILE_URIS.v(), uriStr)
+            // HDR 标志
+            AnimatedVisibility(
+                visible = controlsVisible && isHdr,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 20.dp, top = 100.dp)
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = Color.Black.copy(alpha = 0.4f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.HDR),
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
+
+            // 底部按钮组
+            AnimatedVisibility(
+                visible = controlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            val pos = pagerState.currentPage
+                            val uriStr = uris.getOrNull(pos) ?: return@IconButton
+                            scope.launch {
+                                try {
+                                    val uri = uriStr.toUri()
+                                    val file = File(uri.path ?: error("无法获取文件路径"))
+                                    val ext = MimeTypeMap.getFileExtensionFromUrl(uriStr)
+                                    val mime = MimeTypeMap.getSingleton()
+                                        .getMimeTypeFromExtension(ext.lowercase())
+                                    shareFile(context, file, mime ?: "*/*")
+                                } catch (e: Exception) {
+                                    errorMessage = e.message ?: "分享失败"
+                                }
+                            }
+                        },
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                            MaterialTheme.shapes.extraLarge
+                        )
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.outline_share_24),
+                            contentDescription = stringResource(R.string.btn_share),
+                        )
                     }
-                    context.startActivity(intent)
-                },
-                modifier = Modifier.background(
-                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                    MaterialTheme.shapes.extraLarge
-                )
+                    IconButton(
+                        onClick = {
+                            val pos = pagerState.currentPage
+                            val uriStr = uris.getOrNull(pos) ?: return@IconButton
+                            scope.launch {
+                                try {
+                                    saveMediaToGallery(context, uriStr.toUri())
+                                    snackHostState.showSnackbar(savedMessage)
+                                } catch (e: Exception) {
+                                    errorMessage = e.message ?: "保存失败"
+                                }
+                            }
+                        },
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                            MaterialTheme.shapes.extraLarge
+                        )
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.outline_download_24),
+                            contentDescription = stringResource(R.string.btn_save),
+                        )
+                    }
+                }
+            }
+
+            // 详情按钮
+            AnimatedVisibility(
+                visible = controlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 25.dp, bottom = 20.dp)
             ) {
-                Icon(
-                    painterResource(R.drawable.outline_info_24),
-                    contentDescription = null,
-                )
+                IconButton(
+                    onClick = {
+                        val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
+                        val intent = Intent(context, MediaInfoActivity::class.java).apply {
+                            putExtra(KeyStrings.FILE_URIS.v(), uriStr)
+                        }
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                        MaterialTheme.shapes.extraLarge
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.outline_info_24),
+                        contentDescription = null,
+                    )
+                }
             }
         }
     }
