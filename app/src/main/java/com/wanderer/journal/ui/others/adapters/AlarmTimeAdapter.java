@@ -84,6 +84,6 @@ public class AlarmTimeAdapter extends ListAdapter<LocalTime, AlarmTimeAdapter.Al
     @Override
     public void onBindViewHolder(@NonNull AlarmTimeViewHolder holder, int position) {
         LocalTime time = getItem(position);
-        holder.binding.chip.setText(time.format(CustomDateTimeFormatter.TIME));
+        holder.binding.chip.setText(time.format(CustomDateTimeFormatter.Time));
     }
 }

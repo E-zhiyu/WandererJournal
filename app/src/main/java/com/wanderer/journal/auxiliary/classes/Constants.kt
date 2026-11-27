@@ -2,6 +2,8 @@ package com.wanderer.journal.auxiliary.classes
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 // 圆角相关静态值
 object Radius {
@@ -40,9 +42,35 @@ object Interval {
     val SidePadding = 16.dp     // 默认的横向屏幕安全边距
 }
 
+// 大小
 object Size {
     // 图标大小
     val bodySmallIcon = 16.dp   // 对应 bodySmall 字号的图标大小
+}
+
+// 时间 Formatter
+object CustomDateTimeFormatter {
+    @JvmField
+    val Backup: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd(HHmmss)")
+
+    @JvmField
+    val Time: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    @JvmField
+    val LocalDate: DateTimeFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+    @JvmField
+    val DateWithWeek: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd EEEE")
+
+    @JvmField
+    val DateTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+    @JvmField
+    val DateTimeSecond: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+
+    @JvmField
+    val DateTimeMediaDetail: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd\nEEEE\nHH:mm")
 }
 
 // 更新日志

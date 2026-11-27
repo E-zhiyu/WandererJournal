@@ -119,9 +119,9 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
     public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
-            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DateWithWeek);
         } else if (model instanceof ParagraphUiModel.Item) {
-            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DateWithWeek);
         } else {
             return context.getString(R.string.not_applicable);
         }
@@ -490,7 +490,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
 
             //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
-            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.TIME));
+            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.Time));
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
@@ -498,7 +498,7 @@ public class ParagraphPagingAdapter extends PagingDataAdapter<ParagraphUiModel, 
             SeparatorViewHolder separatorViewHolder = (SeparatorViewHolder) holder;
 
             //分隔符文本
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DateWithWeek);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }

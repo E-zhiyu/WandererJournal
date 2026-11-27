@@ -90,7 +90,7 @@ public class InfoShower {
 
                         //插入时间
                         "**" + context.getString(R.string.time) + ":** " +
-                        updateDateTime.format(CustomDateTimeFormatter.DATE_TIME) +
+                        updateDateTime.format(CustomDateTimeFormatter.DateTime) +
                         "\n\n";
 
         //显示对话框

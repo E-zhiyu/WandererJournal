@@ -289,7 +289,7 @@ public class MediaHelper {
                 // --- 拍摄时间 / 修改时间 ---
                 String timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL); // 优先获取原始拍摄时间
                 if (timeStr != null) {
-                    time = LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DATE_TIME_EXIF);
+                    time = LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DateTimeSecond);
                 } else {
                     long lastModified = FileHelper.getLastModifyTimeByUri(context, uri);
                     time = TypeConverter.toLocalDateTime(lastModified);

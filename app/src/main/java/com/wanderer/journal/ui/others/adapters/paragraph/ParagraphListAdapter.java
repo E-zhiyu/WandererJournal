@@ -93,9 +93,9 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
     public String getHeaderData(int position, Context context) {
         ParagraphUiModel model = getItem(position);
         if (model instanceof ParagraphUiModel.Separator) {
-            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            return ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DateWithWeek);
         } else if (model instanceof ParagraphUiModel.Item) {
-            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            return ((ParagraphUiModel.Item) model).model.getParagraph().getCreateTime().format(CustomDateTimeFormatter.DateWithWeek);
         } else {
             return context.getString(R.string.not_applicable);
         }
@@ -306,7 +306,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
 
             //时间
             LocalDateTime dateTime = paragraph.getCreateTime();
-            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.TIME));
+            itemHolder.binding.dateTimeText.setText(dateTime.format(CustomDateTimeFormatter.Time));
 
             //设置圆角
             setRadius(itemHolder.binding.getRoot(), holder.getBindingAdapterPosition());
@@ -314,7 +314,7 @@ public class ParagraphListAdapter extends ListAdapter<ParagraphUiModel, Recycler
             ParagraphListAdapter.DateSeparatorViewHolder separatorViewHolder = (ParagraphListAdapter.DateSeparatorViewHolder) holder;
 
             //分隔符文字
-            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+            String dateStr = ((ParagraphUiModel.Separator) uiModel).date.format(CustomDateTimeFormatter.DateWithWeek);
             separatorViewHolder.binding.separatorText.setText(dateStr);
         }
     }

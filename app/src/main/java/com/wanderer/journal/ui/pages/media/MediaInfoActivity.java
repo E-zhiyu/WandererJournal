@@ -74,9 +74,9 @@ public class MediaInfoActivity extends AppCompatActivity {
                         .subscribe(
                                 detail -> {
                                     //时间信息
-                                    LocalDateTime time = detail.getTime();
+                                    LocalDateTime time = detail.getDateTime();
                                     if (time != null) {
-                                        binding.timeText.setText(time.format(CustomDateTimeFormatter.DATE_TIME_MEDIA_DETAIL));
+                                        binding.timeText.setText(time.format(CustomDateTimeFormatter.DateTimeMediaDetail));
                                     } else {
                                         binding.timeText.setText("未知");
                                     }

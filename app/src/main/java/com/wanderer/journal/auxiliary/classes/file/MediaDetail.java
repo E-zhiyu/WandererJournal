@@ -29,7 +29,7 @@ public class MediaDetail {
         this.isFlashUsed = isFlashUsed;
     }
 
-    public LocalDateTime getTime() {
+    public LocalDateTime getDateTime() {
         return time;
     }
 

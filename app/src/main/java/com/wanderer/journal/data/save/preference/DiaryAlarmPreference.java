@@ -65,7 +65,7 @@ public class DiaryAlarmPreference {
 
         //转换为 LocalTime 类型并返回
         return timeStrList.stream()
-                .map(str -> LocalTime.parse(str, CustomDateTimeFormatter.TIME)).sorted()
+                .map(str -> LocalTime.parse(str, CustomDateTimeFormatter.Time)).sorted()
                 .collect(Collectors.toList());
     }
 
@@ -77,7 +77,7 @@ public class DiaryAlarmPreference {
      */
     public static void setAlarmTime(Context context, @NonNull List<LocalTime> timeList) {
         List<String> timeStrList = timeList.stream()
-                .map(localTime -> localTime.format(CustomDateTimeFormatter.TIME))
+                .map(localTime -> localTime.format(CustomDateTimeFormatter.Time))
                 .collect(Collectors.toList());
 
         //将列表转换为JSON

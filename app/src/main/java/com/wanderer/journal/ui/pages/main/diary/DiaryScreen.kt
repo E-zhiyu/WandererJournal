@@ -217,7 +217,7 @@ fun DiaryScreen(
                 },
                 {
                     val message =
-                        "确认要删除`${CustomDateTimeFormatter.LOCAL_DATE.format(item.diary.diaryDate)}`的日记吗？"
+                        "确认要删除`${CustomDateTimeFormatter.LocalDate.format(item.diary.diaryDate)}`的日记吗？"
                     diaryDeleteRequest = DiaryDeleteRequest(
                         message = message,
                         onConfirm = {
@@ -392,7 +392,7 @@ fun DiaryListItem(
                     Modifier.weight(1f)
                 ) {
                     Text(
-                        text = item.diary.diaryDate.format(CustomDateTimeFormatter.DATE_WITH_WEEK),
+                        text = item.diary.diaryDate.format(CustomDateTimeFormatter.DateWithWeek),
                         style = MaterialTheme.typography.titleMedium,
                     )
                     // 富文本摘要

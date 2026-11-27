@@ -288,7 +288,7 @@ suspend fun getMediaDetail(context: Context, uri: Uri): MediaDetail =
                 // --- 拍摄时间 / 修改时间 ---
                 val timeStr = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
                 time = if (timeStr != null) {
-                    LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DATE_TIME_EXIF)
+                    LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DateTimeSecond)
                 } else {
                     val lastModified = FileHelper.getLastModifyTimeByUri(context, uri)
                     TypeConverter.toLocalDateTime(lastModified)

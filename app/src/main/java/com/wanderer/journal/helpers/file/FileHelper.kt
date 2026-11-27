@@ -50,7 +50,7 @@ fun generateBackupFileName(): String = String.format(
     Locale.getDefault(),
     "%s_%s.zip",
     BACKUP_FILE_NAME,
-    LocalDateTime.now().format(CustomDateTimeFormatter.BACKUP)
+    LocalDateTime.now().format(CustomDateTimeFormatter.Backup)
 )
 
 /**

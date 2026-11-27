@@ -323,7 +323,7 @@ public class SharePreviewActivity extends AppCompatActivity {
                 if (model instanceof ParagraphUiModel.Separator) {
                     builder.append("\"type\":\"date\",\"content\":");
                     builder.append("\"");
-                    String date = ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DATE_WITH_WEEK);
+                    String date = ((ParagraphUiModel.Separator) model).date.format(CustomDateTimeFormatter.DateWithWeek);
                     builder.append(date);
                     builder.append("\"");
                 } else if (model instanceof ParagraphUiModel.Item) {
@@ -401,7 +401,7 @@ public class SharePreviewActivity extends AppCompatActivity {
 
                     //添加时间字段
                     if (enableTime) {
-                        String time = paragraph.getCreateTime().format(CustomDateTimeFormatter.TIME);
+                        String time = paragraph.getCreateTime().format(CustomDateTimeFormatter.Time);
                         builder.append(",");
                         builder.append("\"time\":");
                         builder.append("\"").append(time).append("\"");

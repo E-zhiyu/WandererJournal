@@ -267,7 +267,7 @@ public class StatisticsActivity extends AppCompatActivity {
                     );
 
                     //设置文本和按钮可见性
-                    windowBinding.dateText.setText(model.getDiaryDate().format(CustomDateTimeFormatter.LOCAL_DATE));
+                    windowBinding.dateText.setText(model.getDiaryDate().format(CustomDateTimeFormatter.LocalDate));
                     String lenStr;
                     if (model.getDiaryLength() == 0) {
                         lenStr = "无日记";

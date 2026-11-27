@@ -126,7 +126,7 @@ public class LifeNoteListAdapter extends ListAdapter<LifeNoteEntity, LifeNoteLis
         holder.binding.elaborationText.setText(entity.getElaboration().isEmpty() ? "<无阐述>" : entity.getElaboration());
 
         //时间
-        holder.binding.dateTimeText.setText(entity.getDateTime().format(CustomDateTimeFormatter.DATE_TIME));
+        holder.binding.dateTimeText.setText(entity.getDateTime().format(CustomDateTimeFormatter.DateTime));
 
         //设置圆角
         AppearanceHelper.setRecyclerItemRadius(holder.binding.getRoot(), getItemCount(), holder.getBindingAdapterPosition());
