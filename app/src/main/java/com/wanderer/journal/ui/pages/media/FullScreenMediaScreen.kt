@@ -17,14 +17,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +40,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -91,11 +95,10 @@ fun FullScreenMediaScreen(
     )
 
     // 当前页的 HDR 状态
-    var isHdr by remember { mutableStateOf(false) }
+    var isHdr by remember { mutableStateOf(true) }
 
     // 翻页时异步检测 HDR
     LaunchedEffect(pagerState.currentPage) {
-        isHdr = false
         val pos = pagerState.currentPage
         val uriStr = uris.getOrNull(pos) ?: return@LaunchedEffect
         if (!MediaPreference.getHdrDisplay(context)) return@LaunchedEffect
@@ -145,7 +148,33 @@ fun FullScreenMediaScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackHostState) }
+        snackbarHost = { SnackbarHost(snackHostState) },
+        topBar = {
+            AnimatedVisibility(
+                visible = controlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                            )
+                        }
+                    },
+                    title = {
+                        // TODO:标题
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        MaterialTheme.colorScheme.background.copy(
+                            alpha = 0.4f
+                        )
+                    )
+                )
+            }
+        }
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
@@ -174,16 +203,18 @@ fun FullScreenMediaScreen(
                 enter = fadeIn(),
                 exit = fadeOut(),
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 20.dp, top = 100.dp)
+                    .align(Alignment.BottomStart)
+                    .padding(start = 20.dp, bottom = 120.dp)
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = Color.Black.copy(alpha = 0.4f)
+                Card(
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
+                    )
                 ) {
                     Text(
                         text = stringResource(R.string.HDR),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
@@ -200,6 +231,7 @@ fun FullScreenMediaScreen(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 20.dp)
             ) {
+                // TODO:调整按钮的位置
                 Row(
                     modifier = Modifier.padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
