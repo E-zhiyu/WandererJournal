@@ -9,10 +9,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,6 +18,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -54,6 +54,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
+import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
 import com.wanderer.journal.data.save.store.viewmodels.AppSettingsViewModel
@@ -256,74 +257,90 @@ fun FullScreenMediaScreen(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 20.dp)
             ) {
-                // TODO:调整按钮的位置
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconButton(
-                        onClick = {
-                            val pos = pagerState.currentPage
-                            val uriStr = uris.getOrNull(pos) ?: return@IconButton
-                            scope.launch {
-                                try {
-                                    val uri = uriStr.toUri()
-                                    val file = File(uri.path ?: error("无法获取文件路径"))
-                                    val ext = MimeTypeMap.getFileExtensionFromUrl(uriStr)
-                                    val mime = MimeTypeMap.getSingleton()
-                                        .getMimeTypeFromExtension(ext.lowercase())
-                                    shareFile(context, file, mime ?: "*/*")
-                                } catch (e: Exception) {
-                                    errorMessage = e.message ?: "分享失败"
-                                }
-                            }
-                        },
-                        modifier = Modifier.background(
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                            MaterialTheme.shapes.extraLarge
-                        )
+                Box {
+                    ButtonGroup(
+                        modifier = Modifier.align(Alignment.Center),
+                        overflowIndicator = { ButtonGroupDefaults.OverflowIndicator(it) }
                     ) {
-                        Icon(
-                            painterResource(R.drawable.outline_share_24),
-                            contentDescription = stringResource(R.string.btn_share),
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            val pos = pagerState.currentPage
-                            val uriStr = uris.getOrNull(pos) ?: return@IconButton
-                            scope.launch {
-                                try {
-                                    saveMediaToGallery(context, uriStr.toUri())
-                                    snackHostState.showSnackbar(savedMessage)
-                                } catch (e: Exception) {
-                                    errorMessage = e.message ?: "保存失败"
+                        customItem(
+                            buttonGroupContent = {
+                                IconButton(
+                                    onClick = {
+                                        val pos = pagerState.currentPage
+                                        val uriStr = uris.getOrNull(pos) ?: return@IconButton
+                                        scope.launch {
+                                            try {
+                                                val uri = uriStr.toUri()
+                                                val file =
+                                                    File(uri.path ?: error("无法获取文件路径"))
+                                                val ext =
+                                                    MimeTypeMap.getFileExtensionFromUrl(uriStr)
+                                                val mime = MimeTypeMap.getSingleton()
+                                                    .getMimeTypeFromExtension(ext.lowercase())
+                                                shareFile(context, file, mime ?: "*/*")
+                                            } catch (e: Exception) {
+                                                errorMessage = e.message ?: "分享失败"
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .background(
+                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                                            MaterialTheme.shapes.extraLarge
+                                        )
+                                        .align(Alignment.Center)
+                                ) {
+                                    Icon(
+                                        painterResource(R.drawable.outline_share_24),
+                                        contentDescription = stringResource(R.string.btn_share),
+                                    )
                                 }
-                            }
-                        },
-                        modifier = Modifier.background(
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                            MaterialTheme.shapes.extraLarge
-                        )
-                    ) {
-                        Icon(
-                            painterResource(R.drawable.outline_download_24),
-                            contentDescription = stringResource(R.string.btn_save),
-                        )
+                                IconButton(
+                                    onClick = {
+                                        val pos = pagerState.currentPage
+                                        val uriStr = uris.getOrNull(pos) ?: return@IconButton
+                                        scope.launch {
+                                            try {
+                                                saveMediaToGallery(context, uriStr.toUri())
+                                                snackHostState.showSnackbar(savedMessage)
+                                            } catch (e: Exception) {
+                                                errorMessage = e.message ?: "保存失败"
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .background(
+                                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                                            MaterialTheme.shapes.extraLarge
+                                        )
+                                        .align(Alignment.Center)
+                                ) {
+                                    Icon(
+                                        painterResource(R.drawable.outline_download_24),
+                                        contentDescription = stringResource(R.string.btn_save),
+                                    )
+                                }
+                            },
+                            menuContent = {})
                     }
 
                     IconButton(
                         onClick = {
-                            val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
-                            val intent = Intent(context, MediaInfoActivity::class.java).apply {
-                                putExtra(KeyStrings.FILE_URIS.v(), uriStr)
-                            }
+                            val uriStr = uris.getOrNull(pagerState.currentPage)
+                                ?: return@IconButton
+                            val intent =
+                                Intent(context, MediaInfoActivity::class.java).apply {
+                                    putExtra(KeyStrings.FILE_URIS.v(), uriStr)
+                                }
                             context.startActivity(intent)
                         },
-                        modifier = Modifier.background(
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                            MaterialTheme.shapes.extraLarge
-                        )
+                        modifier = Modifier
+                            .padding(end = Interval.SidePadding)
+                            .background(
+                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                                MaterialTheme.shapes.extraLarge
+                            )
+                            .align(Alignment.CenterEnd)
                     ) {
                         Icon(
                             painterResource(R.drawable.outline_info_24),
