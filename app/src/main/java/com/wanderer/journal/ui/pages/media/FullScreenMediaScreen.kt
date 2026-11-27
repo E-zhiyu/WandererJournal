@@ -51,10 +51,13 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
+import com.wanderer.journal.data.save.store.viewmodels.AppSettingsViewModel
+import com.wanderer.journal.data.save.store.viewmodels.dsAppSettingsViewModel
 import com.wanderer.journal.helpers.file.getMediaDetail
 import com.wanderer.journal.helpers.file.isHdrImage
 import com.wanderer.journal.helpers.file.saveMediaToGallery
@@ -70,7 +73,8 @@ import java.time.LocalDateTime
 fun FullScreenMediaScreen(
     uris: List<String>,
     initialPos: Int,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    vm: AppSettingsViewModel = dsAppSettingsViewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -118,8 +122,12 @@ fun FullScreenMediaScreen(
     }
 
     // 应用 HDR 色彩模式
-    LaunchedEffect(isHdr) {
-        val colorMode = if (isHdr) ActivityInfo.COLOR_MODE_HDR else ActivityInfo.COLOR_MODE_DEFAULT
+    val appSettings by vm.appSettings.collectAsStateWithLifecycle()
+    LaunchedEffect(isHdr, appSettings.showHdr) {
+        val colorMode = if (isHdr && appSettings.showHdr)
+            ActivityInfo.COLOR_MODE_HDR
+        else
+            ActivityInfo.COLOR_MODE_DEFAULT
         activity?.window?.colorMode = colorMode
     }
 
@@ -216,7 +224,7 @@ fun FullScreenMediaScreen(
         ) {
             // HDR 标志
             AnimatedVisibility(
-                visible = controlsVisible && isHdr,
+                visible = controlsVisible && isHdr && appSettings.showHdr,
                 enter = fadeIn(),
                 exit = fadeOut(),
                 modifier = Modifier
