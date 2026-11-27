@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,8 +52,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.wanderer.journal.R
+import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
+import com.wanderer.journal.helpers.file.getMediaDetail
 import com.wanderer.journal.helpers.file.isHdrImage
 import com.wanderer.journal.helpers.file.saveMediaToGallery
 import com.wanderer.journal.helpers.file.shareFile
@@ -61,6 +64,7 @@ import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import java.io.File
+import java.time.LocalDateTime
 
 @Composable
 fun FullScreenMediaScreen(
@@ -94,16 +98,19 @@ fun FullScreenMediaScreen(
         pageCount = { uris.size }
     )
 
-    // 当前页的 HDR 状态
-    var isHdr by remember { mutableStateOf(true) }
+    var isHdr by remember { mutableStateOf(true) }                          // 当前页的 HDR 状态
+    var mediaDateTime by remember { mutableStateOf<LocalDateTime>(LocalDateTime.now()) }  // 当前标题
 
-    // 翻页时异步检测 HDR
+    // 翻页时异步获取文件信息
     LaunchedEffect(pagerState.currentPage) {
         val pos = pagerState.currentPage
         val uriStr = uris.getOrNull(pos) ?: return@LaunchedEffect
         if (!MediaPreference.getHdrDisplay(context)) return@LaunchedEffect
         try {
-            isHdr = isHdrImage(context, uriStr.toUri())
+            val uri = uriStr.toUri()
+            isHdr = isHdrImage(context, uri)
+            val mediaDetail = getMediaDetail(context, uri)
+            mediaDateTime = mediaDetail.dateTime
         } catch (e: Exception) {
             errorMessage = e.message ?: "检测 HDR 失败"
             isHdr = false
@@ -165,7 +172,17 @@ fun FullScreenMediaScreen(
                         }
                     },
                     title = {
-                        // TODO:标题
+                        val dateStr = mediaDateTime.format(CustomDateTimeFormatter.LocalDate)
+                        val timeStr = mediaDateTime.format(CustomDateTimeFormatter.Time)
+
+                        Column {
+                            Text(dateStr)
+                            Text(
+                                text = timeStr,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         MaterialTheme.colorScheme.background.copy(
