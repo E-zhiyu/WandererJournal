@@ -9,7 +9,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -44,7 +42,6 @@ import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import coil.compose.AsyncImage
 import com.wanderer.journal.R
 import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.preference.MediaPreference
@@ -146,12 +143,6 @@ fun FullScreenMediaScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            // 点击切换控件显隐
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { controlsVisible = !controlsVisible }
-                )
-            }
     ) {
         HorizontalPager(
             state = pagerState,
@@ -159,8 +150,8 @@ fun FullScreenMediaScreen(
         ) { page ->
             val uri = uris.getOrNull(page)
             if (uri != null) {
-                // TODO:改为可缩放，但是要注意手指点击时能否隐藏按钮（已知存在手势冲突）
-                AsyncImage(
+                ZoomableAsyncImage(
+                    onClick = { controlsVisible = !controlsVisible },
                     model = uri.toUri(),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
@@ -200,15 +191,12 @@ fun FullScreenMediaScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp)
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.large,
-                color = Color.Black.copy(alpha = 0.4f)
+            Row(
+                modifier = Modifier.padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconButton(onClick = {
+                IconButton(
+                    onClick = {
                         val pos = pagerState.currentPage
                         val uriStr = uris.getOrNull(pos) ?: return@IconButton
                         scope.launch {
@@ -223,14 +211,19 @@ fun FullScreenMediaScreen(
                                 errorMessage = e.message ?: "分享失败"
                             }
                         }
-                    }) {
-                        Icon(
-                            painterResource(R.drawable.outline_share_24),
-                            contentDescription = stringResource(R.string.btn_share),
-                            tint = Color.White
-                        )
-                    }
-                    IconButton(onClick = {
+                    },
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                        MaterialTheme.shapes.extraLarge
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.outline_share_24),
+                        contentDescription = stringResource(R.string.btn_share),
+                    )
+                }
+                IconButton(
+                    onClick = {
                         val pos = pagerState.currentPage
                         val uriStr = uris.getOrNull(pos) ?: return@IconButton
                         scope.launch {
@@ -241,13 +234,16 @@ fun FullScreenMediaScreen(
                                 errorMessage = e.message ?: "保存失败"
                             }
                         }
-                    }) {
-                        Icon(
-                            painterResource(R.drawable.outline_download_24),
-                            contentDescription = stringResource(R.string.btn_save),
-                            tint = Color.White
-                        )
-                    }
+                    },
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                        MaterialTheme.shapes.extraLarge
+                    )
+                ) {
+                    Icon(
+                        painterResource(R.drawable.outline_download_24),
+                        contentDescription = stringResource(R.string.btn_save),
+                    )
                 }
             }
         }
@@ -264,21 +260,20 @@ fun FullScreenMediaScreen(
             IconButton(
                 onClick = {
                     val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
-                    // 过渡期仍启动原 Activity；迁移后改为 navController.navigate(MediaInfoRoute(...))
+                    // TODO:过渡期仍启动原 Activity；迁移后改为 navController.navigate(MediaInfoRoute(...))
                     val intent = Intent(context, MediaInfoActivity::class.java).apply {
                         putExtra(KeyStrings.FILE_URIS.v(), uriStr)
                     }
                     context.startActivity(intent)
                 },
                 modifier = Modifier.background(
-                    Color.Black.copy(alpha = 0.4f),
-                    MaterialTheme.shapes.large
+                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                    MaterialTheme.shapes.extraLarge
                 )
             ) {
                 Icon(
                     painterResource(R.drawable.outline_info_24),
                     contentDescription = null,
-                    tint = Color.White
                 )
             }
         }
