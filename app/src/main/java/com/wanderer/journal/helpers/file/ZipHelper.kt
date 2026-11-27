@@ -94,7 +94,7 @@ object ZipHelper {
             }
         } finally {
             // 3. 无论成功失败，清理临时 JSON 目录
-            FileHelper.clearTempDataDir(context)
+            clearTempDataDir(context)
         }
     }
 
@@ -164,7 +164,7 @@ object ZipHelper {
 
         // 清空媒体文件目录
         if (includeMedia && mediaDir != null) {
-            FileHelper.clearMediaDir(context)
+            clearMediaDir(context)
         }
 
         // 创建共享缓冲区，防止频繁 GC

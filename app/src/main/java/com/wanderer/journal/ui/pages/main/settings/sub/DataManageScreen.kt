@@ -40,6 +40,7 @@ import com.wanderer.journal.auxiliary.enums.unique.KeyStrings
 import com.wanderer.journal.data.save.store.viewmodels.AutoBackupViewModel
 import com.wanderer.journal.data.save.store.viewmodels.dsAutoBackupViewModel
 import com.wanderer.journal.helpers.file.FileHelper
+import com.wanderer.journal.helpers.file.generateBackupFileName
 import com.wanderer.journal.helpers.file.getReadablePathFromSafUri
 import com.wanderer.journal.helpers.file.rememberCreateDocumentLauncherManual
 import com.wanderer.journal.helpers.file.rememberDocumentLauncher
@@ -161,7 +162,7 @@ fun DataManageScreen(
                     onConfirm = {
                         createDocumentLauncher(
                             "application/zip",
-                            FileHelper.generateBackupFileName()
+                            generateBackupFileName()
                         )
                     },
                     title = stringResource(R.string.export_data)

@@ -242,7 +242,7 @@ suspend fun readMediaDir(context: Context): List<MediaFileInfo> =
         val mimeTypeMap = MimeTypeMap.getSingleton()
 
         val childFiles = mediaDir.listFiles { _, name ->
-            val extension = FileHelper.getFileExtension(name) ?: return@listFiles false
+            val extension = getFileExtension(name) ?: return@listFiles false
             val mimeType = mimeTypeMap.getMimeTypeFromExtension(extension.lowercase(Locale.ROOT))
             mimeType?.startsWith("image/") == true
         } ?: return@withContext result
@@ -277,8 +277,8 @@ suspend fun getMediaDetail(context: Context, uri: Uri): MediaDetail =
         var flashFired = false
         var time: LocalDateTime? = null
 
-        val fileSize = FileHelper.getFileSizeByUri(context, uri)
-        val fileName = FileHelper.getFileNameByUri(context, uri)
+        val fileSize = getFileSizeByUri(context, uri)
+        val fileName = getFileNameByUri(context, uri)
 
         try {
             resolver.openInputStream(uri)?.use { inputStream ->
@@ -289,7 +289,7 @@ suspend fun getMediaDetail(context: Context, uri: Uri): MediaDetail =
                 time = if (timeStr != null) {
                     LocalDateTime.parse(timeStr, CustomDateTimeFormatter.DateTimeSecond)
                 } else {
-                    val lastModified = FileHelper.getLastModifyTimeByUri(context, uri)
+                    val lastModified = getLastModifyTimeByUri(context, uri)
                     TypeConverter.toLocalDateTime(lastModified)
                 }
 

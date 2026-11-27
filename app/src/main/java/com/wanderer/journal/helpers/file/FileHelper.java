@@ -14,62 +14,22 @@ import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
-import com.wanderer.journal.auxiliary.classes.CustomDateTimeFormatter;
-import com.wanderer.journal.auxiliary.classes.file.TextFileData;
 import com.wanderer.journal.auxiliary.enums.DirectoryPaths;
 import com.wanderer.journal.auxiliary.enums.unique.LogTags;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
 
 public class FileHelper {
-    private final static String BACKUP_FILE_NAME = "Wanderer Journal Backup";
-
-    /**
-     * 获取文件扩展名
-     */
-    @Nullable
-    public static String getFileExtension(@NonNull String fileName) {
-        int lastDotIndex = fileName.lastIndexOf('.');
-        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
-            return fileName.substring(lastDotIndex + 1);
-        }
-        return null;
-    }
-
-    /**
-     * 生成备份文件名称
-     *
-     * @return 备份文件名称
-     */
-    @NonNull
-    public static String generateBackupFileName() {
-        return String.format(
-                Locale.getDefault(),
-                "%s_%s.zip",
-                BACKUP_FILE_NAME,
-                LocalDateTime.now().format(CustomDateTimeFormatter.Backup)
-        );
-    }
-
     /**
      * 分享单个图片
      *
@@ -253,41 +213,6 @@ public class FileHelper {
     }
 
     /**
-     * 通过多线程读取文件内容以及最后编辑时间
-     *
-     * @param uri     待读取的文件的 Uri
-     * @param context 上下文
-     * @return 文件数据实例
-     */
-    public static Single<TextFileData> readContentWithLastModifyTime(Uri uri, Context context) {
-        return Single.fromCallable(() -> {
-            String content = readContent(uri, context);
-            LocalDateTime lastModifyTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(getLastModifyTimeByUri(context, uri)), ZoneId.systemDefault());
-            return new TextFileData(content, lastModifyTime);
-        });
-    }
-
-    /**
-     * 获取文本文件的总行数
-     *
-     * @param uri     待获取行数的文件 Uri
-     * @param context 上下文
-     * @return 总行数
-     * @throws IOException 文件读取失败引发的异常
-     */
-    public static int getLinesCount(Uri uri, Context context) throws IOException {
-        int lineCount = 0;
-        try (InputStream is = context.getContentResolver().openInputStream(uri);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            while (reader.readLine() != null) {
-                lineCount++;
-            }
-        }
-
-        return lineCount;
-    }
-
-    /**
      * 通过 Uri 获取文件大小
      *
      * @param context 上下文
@@ -406,99 +331,6 @@ public class FileHelper {
         }
 
         return -1;
-    }
-
-    /**
-     * 读取文本文件的内容
-     *
-     * @param uri     待读取的文本文件的 Uri
-     * @param context 上下文
-     * @return 文本文件的内容字符串
-     * @throws IOException 文件内容读取失败引发的异常
-     */
-    @NonNull
-    public static String readContent(Uri uri, Context context) throws IOException {
-        StringBuilder builder = new StringBuilder();
-
-        try (InputStream is = context.getContentResolver().openInputStream(uri);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-                builder.append("\n");
-            }
-        }
-
-        return builder.toString();
-    }
-
-    /**
-     * 读取文本文件内容
-     *
-     * @param file 待读取的文本文件
-     * @return 文件内容字符串
-     * @throws IOException 文件内容读取失败引发的异常
-     */
-    @NonNull
-    public static String readContent(File file) throws IOException {
-        StringBuilder content = new StringBuilder();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line);
-            }
-        }
-
-        return content.toString();
-    }
-
-    /**
-     * 将字符串写入到临时数据文件中
-     *
-     * @param context  上下文
-     * @param fileName 临时数据文件名称
-     * @param content  文件内容
-     * @throws IOException 写入失败引发的异常
-     */
-    public static void writeContentToTempDataFile(Context context, String fileName, String content) throws IOException {
-        File tempDataDir = DirectoryPaths.DATA_TEMP.getDir(context);
-        createFileAndWrite(tempDataDir, fileName, content);
-    }
-
-    /**
-     * 创建文件并写入指定的字符串
-     *
-     * @param dir      文件所在目录
-     * @param fileName 文件名称
-     * @param content  文件内容
-     * @throws IOException 无法将字符串写入文件时引发的异常
-     */
-    public static void createFileAndWrite(File dir, String fileName, String content) throws IOException {
-        File targetFile = new File(dir, fileName);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetFile))) {
-            writer.write(content);
-        }
-    }
-
-    /**
-     * 清空临时数据文件目录
-     *
-     * @param context 上下文
-     */
-    public static void clearTempDataDir(Context context) {
-        File tempDataDir = DirectoryPaths.DATA_TEMP.getDir(context);
-        clearDir(tempDataDir);
-    }
-
-    /**
-     * 清空媒体文件夹
-     *
-     * @param context 上下文
-     */
-    public static void clearMediaDir(Context context) {
-        File mediaDir = DirectoryPaths.MEDIA.getDir(context);
-        clearDir(mediaDir);
     }
 
     /**

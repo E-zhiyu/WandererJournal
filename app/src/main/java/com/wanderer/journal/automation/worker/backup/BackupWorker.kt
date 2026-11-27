@@ -28,6 +28,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import com.wanderer.journal.helpers.file.generateBackupFileName
+import com.wanderer.journal.helpers.file.writeContentToTempDataFile
 
 /**
  * 数据导出 Worker。
@@ -68,7 +70,7 @@ class BackupWorker(
             }
 
             // 创建备份文件
-            val fileName = FileHelper.generateBackupFileName()
+            val fileName = generateBackupFileName()
             val backupDir = DocumentFile.fromTreeUri(context, Uri.parse(savedBackupTarget))
             if (backupDir == null) {
                 Log.e(LogTags.BACKUP_WORKER.n(), "无法将目标位置 Uri 转换为 DocumentFile")
@@ -121,7 +123,7 @@ class BackupWorker(
         withContext(Dispatchers.IO) {
             val infoMap = BackupHelperBase.generateDataInfo(context, choice)
             val content = BackupJson.encodeToString(DataInfoMap.serializer(), infoMap)
-            FileHelper.writeContentToTempDataFile(
+            writeContentToTempDataFile(
                 context,
                 BackupHelperBase.DATA_INFO_JSON,
                 content,

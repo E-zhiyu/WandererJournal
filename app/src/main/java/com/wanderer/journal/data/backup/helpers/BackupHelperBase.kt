@@ -10,6 +10,8 @@ import com.wanderer.journal.data.backup.BackupJson
 import com.wanderer.journal.data.backup.maps.DataInfoMap
 import com.wanderer.journal.helpers.AboutHelper
 import com.wanderer.journal.helpers.file.FileHelper
+import com.wanderer.journal.helpers.file.readContent
+import com.wanderer.journal.helpers.file.writeContentToTempDataFile
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -67,7 +69,7 @@ abstract class BackupHelperBase<D : RoomDatabase, M : Any>(
         versionType: ImportDataVersionType,
     ): ImportResult = withContext(Dispatchers.IO) {
         // 读取文件内容
-        val json = FileHelper.readContent(file)
+        val json = readContent(file)
 
         // 得到数据字典实例
         val dataMap = getDataMap(json, versionType)
@@ -86,7 +88,7 @@ abstract class BackupHelperBase<D : RoomDatabase, M : Any>(
         val content = BackupJson.encodeToString(dataSerializer, getAllDataInMap())
 
         // 写入临时数据文件
-        FileHelper.writeContentToTempDataFile(context, tempDataFileName, content)
+        writeContentToTempDataFile(context, tempDataFileName, content)
     }
 
     companion object {
