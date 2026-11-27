@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -130,8 +131,6 @@ fun FullScreenMediaScreen(
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             controller.systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.isAppearanceLightStatusBars = false
-            controller.isAppearanceLightNavigationBars = false
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         onDispose {
@@ -148,28 +147,27 @@ fun FullScreenMediaScreen(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackHostState) }
     ) { innerPadding ->
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val uri = uris.getOrNull(page)
+            if (uri != null) {
+                ZoomableAsyncImage(
+                    onClick = { controlsVisible = !controlsVisible },
+                    model = uri.toUri(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                val uri = uris.getOrNull(page)
-                if (uri != null) {
-                    ZoomableAsyncImage(
-                        onClick = { controlsVisible = !controlsVisible },
-                        model = uri.toUri(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-
             // HDR 标志
             AnimatedVisibility(
                 visible = controlsVisible && isHdr,
@@ -198,6 +196,7 @@ fun FullScreenMediaScreen(
                 enter = fadeIn(),
                 exit = fadeOut(),
                 modifier = Modifier
+                    .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 20.dp)
             ) {
@@ -255,35 +254,25 @@ fun FullScreenMediaScreen(
                             contentDescription = stringResource(R.string.btn_save),
                         )
                     }
-                }
-            }
 
-            // 详情按钮
-            AnimatedVisibility(
-                visible = controlsVisible,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 25.dp, bottom = 20.dp)
-            ) {
-                IconButton(
-                    onClick = {
-                        val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
-                        val intent = Intent(context, MediaInfoActivity::class.java).apply {
-                            putExtra(KeyStrings.FILE_URIS.v(), uriStr)
-                        }
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
-                        MaterialTheme.shapes.extraLarge
-                    )
-                ) {
-                    Icon(
-                        painterResource(R.drawable.outline_info_24),
-                        contentDescription = null,
-                    )
+                    IconButton(
+                        onClick = {
+                            val uriStr = uris.getOrNull(pagerState.currentPage) ?: return@IconButton
+                            val intent = Intent(context, MediaInfoActivity::class.java).apply {
+                                putExtra(KeyStrings.FILE_URIS.v(), uriStr)
+                            }
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+                            MaterialTheme.shapes.extraLarge
+                        )
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.outline_info_24),
+                            contentDescription = null,
+                        )
+                    }
                 }
             }
         }
