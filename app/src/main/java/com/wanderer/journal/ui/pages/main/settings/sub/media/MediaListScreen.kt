@@ -74,6 +74,7 @@ import com.wanderer.journal.auxiliary.classes.Interval
 import com.wanderer.journal.auxiliary.classes.Radius
 import com.wanderer.journal.auxiliary.classes.file.MediaFileInfo
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback
+import com.wanderer.journal.helpers.file.clearMediaTempDir
 import com.wanderer.journal.helpers.file.compressImage
 import com.wanderer.journal.helpers.text.shortenFileSize
 import com.wanderer.journal.ui.components.LargeRadiusDropdownMenu
@@ -136,11 +137,13 @@ fun MediaListScreen(
                             scope.launch {
                                 isCompressing = false
                                 snackHostState.showSnackbar(message)
+                                clearMediaTempDir(context)
                             }
                         }
 
                         override fun succeed() {
                             scope.launch {
+                                clearMediaTempDir(context)
                                 isCompressing = false
                                 viewModel.refresh()
                                 snackHostState.showSnackbar(tipCompressSuccess)
@@ -262,7 +265,6 @@ private fun MediaListContent(
     onDeleteMedia: (MediaListItem) -> Unit,
     snackHostState: SnackbarHostState,
 ) {
-    val title = stringResource(R.string.media_list)
     val configuration = LocalConfiguration.current
     val columnCount = if (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         9
@@ -290,7 +292,7 @@ private fun MediaListContent(
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                title = { Text(title) },
+                title = { Text(stringResource(R.string.media_list)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(

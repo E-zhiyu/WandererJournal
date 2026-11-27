@@ -23,7 +23,6 @@ import com.wanderer.journal.auxiliary.enums.DirectoryPaths
 import com.wanderer.journal.auxiliary.enums.unique.LogTags
 import com.wanderer.journal.auxiliary.interfaces.ImageCompressCallback
 import com.wanderer.journal.data.save.db.TypeConverter
-import com.wanderer.journal.helpers.ExceptionHelper
 import com.wanderer.journal.helpers.appearance.AppearanceHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -363,6 +362,22 @@ suspend fun getMediaDetail(context: Context, uri: Uri): MediaDetail =
  */
 suspend fun getExifFromFile(target: File): Map<String, String> =
     withContext(Dispatchers.IO) {
+        /**
+         * 获取所有 EXIF 的标签
+         */
+        fun getAllExifTags(): List<String> {
+            val tags = mutableListOf<String>()
+            val fields: Array<Field> = ExifInterface::class.java.fields
+            for (field in fields) {
+                try {
+                    val value = field.get(null)
+                    if (value is String) tags.add(value)
+                } catch (_: IllegalAccessException) {
+                }
+            }
+            return tags
+        }
+
         val sourceExif = ExifInterface(target)
         val exifMap = mutableMapOf<String, String>()
         for (tag in getAllExifTags()) {
@@ -385,24 +400,6 @@ suspend fun writeExifToFile(target: File, exifMap: Map<String, String>?) =
         targetExif.saveAttributes()
     }
 
-/**
- * 获取所有 EXIF 的标签
- */
-fun getAllExifTags(): List<String> {
-    val tags = mutableListOf<String>()
-    val fields: Array<Field> = ExifInterface::class.java.fields
-    for (field in fields) {
-        if (field.name.startsWith("TAG_")) {
-            try {
-                val value = field.get(null)
-                if (value is String) tags.add(value)
-            } catch (_: IllegalAccessException) {
-            }
-        }
-    }
-    return tags
-}
-
 // ==================== 图片压缩 ====================
 
 /**
@@ -424,12 +421,26 @@ suspend fun compressImage(
         return@withContext
     }
 
+    // 获取输出目录
     val outputDir = DirectoryPaths.MEDIA_TEMP.getDir(context)
     if (outputDir == null) {
         Log.e(LogTags.MEDIA_HELPER.n(), "无法获取压缩图片输出目录")
         callback?.failed("无法获取图片输出目录")
         return@withContext
     }
+
+    // 获取原始文件数据
+    val path = uri.path ?: run {
+        Log.e(LogTags.MEDIA_HELPER.n(), "无法从Uri中获取路径")
+        callback?.failed("无法获取原图文件")
+        return@withContext
+    }
+    val originFile = File(path)
+    val originExifMap = getExifFromFile(originFile)
+    val originSize = Files.readAttributes(
+        originFile.toPath(), BasicFileAttributes::class.java
+    ).size()
+    val originModifiedTime = originFile.lastModified()
 
     // Luban 的 launch() 要求在带 Looper 的线程调用，
     // 通过 suspendCancellableCoroutine 切回 Main 触发
@@ -441,56 +452,32 @@ suspend fun compressImage(
                 .setTargetDir(outputDir)
                 .setCompressListener(object : OnCompressListener {
                     override fun onStart() {
-                        // 无需处理
                     }
 
                     override fun onSuccess(file: File) {
-                        try {
-                            val path = uri.path ?: run {
-                                Log.e(LogTags.MEDIA_HELPER.n(), "无法从Uri中获取路径")
-                                callback?.failed("无法获取原图文件")
-                                cont.resume(Unit)
-                                return
-                            }
+                        val newSize = Files.readAttributes(
+                            file.toPath(), BasicFileAttributes::class.java
+                        ).size()
 
-                            val originFile = File(path)
-                            // 注意：以下 IO 操作在 Luban 回调线程（非 IO 调度器），
-                            // 但本身属于轻量读写，若需严格可在外层再做一次 withContext(IO)
-                            val originExifMap = runBlocking { getExifFromFile(originFile) }
-
-                            val originSize = Files.readAttributes(
-                                originFile.toPath(), BasicFileAttributes::class.java
-                            ).size()
-                            val newSize = Files.readAttributes(
-                                file.toPath(), BasicFileAttributes::class.java
-                            ).size()
-
-                            if (originSize <= newSize) {
-                                Log.w(LogTags.MEDIA_HELPER.n(), "压缩后大小无变化或者更大")
-                                callback?.failed("图片已无法继续压缩")
-                                cont.resume(Unit)
-                                return
-                            }
-
-                            val originModifiedTime = originFile.lastModified()
-                            val copiedPath = Files.copy(
-                                file.toPath(),
-                                originFile.toPath(),
-                                StandardCopyOption.REPLACE_EXISTING
-                            )
-                            if (!copiedPath.toFile().setLastModified(originModifiedTime)) {
-                                Log.w(LogTags.MEDIA_HELPER.n(), "无法恢复原来的最后编辑时间")
-                            }
-                            runBlocking { writeExifToFile(copiedPath.toFile(), originExifMap) }
-
-                            callback?.succeed()
+                        if (originSize <= newSize) {
+                            Log.w(LogTags.MEDIA_HELPER.n(), "压缩后大小无变化或者更大")
+                            callback?.failed("图片已无法继续压缩")
                             cont.resume(Unit)
-                        } catch (e: IOException) {
-                            ExceptionHelper.showExceptionDialog(context, e)
-                            cont.resume(Unit)
-                        } finally {
-                            FileHelper.clearMediaTempDir(context)
+                            return
                         }
+
+                        val copiedPath = Files.copy(
+                            file.toPath(),
+                            originFile.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                        )
+                        if (!copiedPath.toFile().setLastModified(originModifiedTime)) {
+                            Log.w(LogTags.MEDIA_HELPER.n(), "无法恢复原来的最后编辑时间")
+                        }
+                        runBlocking { writeExifToFile(copiedPath.toFile(), originExifMap) }
+
+                        callback?.succeed()
+                        cont.resume(Unit)
                     }
 
                     override fun onError(e: Throwable) {
