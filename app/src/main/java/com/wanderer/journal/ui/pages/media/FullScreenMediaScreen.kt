@@ -1,10 +1,13 @@
 package com.wanderer.journal.ui.pages.media
 
 import android.app.Activity
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Bundle
 import android.webkit.MimeTypeMap
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -71,12 +74,35 @@ import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import java.io.File
 import java.time.LocalDateTime
 
+// TODO:重构写日记和读日记界面后删除该类
+class FullScreenMediaActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+
+        val bundle = intent.extras
+        val uris = bundle?.getStringArray(KeyStrings.FILE_URIS.v())
+        val position = bundle?.getInt(KeyStrings.VIEW_HOLDER_POSITION.v())
+
+        setContent {
+            MaterialAppTheme {
+                FullScreenMediaScreen(
+                    uris = uris?.toList() ?: emptyList(),
+                    initialPos = position ?: 0,
+                    onNavigateBack = { finish() },
+                    onNavigateInfo = {}
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun FullScreenMediaScreen(
     uris: List<String>,
     initialPos: Int,
     onNavigateBack: () -> Unit,
-    onNavigateInfo:(ScreenRoutes.MediaInfo) -> Unit,
+    onNavigateInfo: (ScreenRoutes.MediaInfo) -> Unit,
     vm: AppSettingsViewModel = dsAppSettingsViewModel()
 ) {
     val context = LocalContext.current
