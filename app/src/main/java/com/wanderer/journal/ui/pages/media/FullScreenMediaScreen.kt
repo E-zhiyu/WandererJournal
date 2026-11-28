@@ -64,6 +64,7 @@ import com.wanderer.journal.helpers.file.isHdrImage
 import com.wanderer.journal.helpers.file.saveMediaToGallery
 import com.wanderer.journal.helpers.file.shareFile
 import com.wanderer.journal.ui.components.dialogs.ExceptionDialog
+import com.wanderer.journal.ui.pages.ScreenRoutes
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import kotlinx.coroutines.launch
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
@@ -75,6 +76,7 @@ fun FullScreenMediaScreen(
     uris: List<String>,
     initialPos: Int,
     onNavigateBack: () -> Unit,
+    onNavigateInfo:(ScreenRoutes.MediaInfo) -> Unit,
     vm: AppSettingsViewModel = dsAppSettingsViewModel()
 ) {
     val context = LocalContext.current
@@ -328,11 +330,8 @@ fun FullScreenMediaScreen(
                         onClick = {
                             val uriStr = uris.getOrNull(pagerState.currentPage)
                                 ?: return@IconButton
-                            val intent =
-                                Intent(context, MediaInfoActivity::class.java).apply {
-                                    putExtra(KeyStrings.FILE_URIS.v(), uriStr)
-                                }
-                            context.startActivity(intent)
+                            val route = ScreenRoutes.MediaInfo(uri = uriStr)
+                            onNavigateInfo(route)
                         },
                         modifier = Modifier
                             .padding(end = Interval.SidePadding)
@@ -370,7 +369,8 @@ private fun FullScreenMediaScreenPreview() {
         FullScreenMediaScreen(
             uris = emptyList(),
             initialPos = 0,
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onNavigateInfo = {}
         )
     }
 }

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun MediaInfoScreen(
-    onNavigationBack:() -> Unit,
+    onNavigateBack:() -> Unit,
     uri: String
 ) {
 

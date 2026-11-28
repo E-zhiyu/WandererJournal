@@ -194,6 +194,7 @@ private fun MainScreen(
                     val route: ScreenRoutes.FullScreenMedia = backStackEntry.toRoute()
                     FullScreenMediaScreen(
                         onNavigateBack = { navController.popBackStack() },
+                        onNavigateInfo = { route -> navController.navigate(route) },
                         uris = route.uris,
                         initialPos = route.initialPos
                     )
@@ -203,7 +204,7 @@ private fun MainScreen(
                 composable<ScreenRoutes.MediaInfo> { backStackEntry ->
                     val route: ScreenRoutes.MediaInfo = backStackEntry.toRoute()
                     MediaInfoScreen(
-                        onNavigationBack = { navController.popBackStack() },
+                        onNavigateBack = { navController.popBackStack() },
                         uri = route.uri
                     )
                 }
