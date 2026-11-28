@@ -58,6 +58,7 @@ import com.wanderer.journal.ui.pages.main.settings.sub.ShareSettingsScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.TroubleshootingScreen
 import com.wanderer.journal.ui.pages.main.settings.sub.media.MediaListScreen
 import com.wanderer.journal.ui.pages.media.FullScreenMediaScreen
+import com.wanderer.journal.ui.pages.media.MediaInfoScreen
 import com.wanderer.journal.ui.theme.MaterialAppTheme
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.launch
@@ -195,6 +196,15 @@ private fun MainScreen(
                         onNavigateBack = { navController.popBackStack() },
                         uris = route.uris,
                         initialPos = route.initialPos
+                    )
+                }
+
+                // 媒体详情界面
+                composable<ScreenRoutes.MediaInfo> { backStackEntry ->
+                    val route: ScreenRoutes.MediaInfo = backStackEntry.toRoute()
+                    MediaInfoScreen(
+                        onNavigationBack = { navController.popBackStack() },
+                        uri = route.uri
                     )
                 }
             }
